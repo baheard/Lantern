@@ -181,8 +181,14 @@ function createMapUI() {
         </button>
       </div>
 
-      <!-- Legend -->
+      <!-- Legend with help toggle for mobile -->
+      <button class="map-legend-toggle" id="mapLegendToggle" aria-label="Show legend" title="Legend">
+        <span class="material-icons">help_outline</span>
+      </button>
       <div class="map-legend" id="mapLegend">
+        <button class="legend-close" id="legendCloseBtn" aria-label="Close legend">
+          <span class="material-icons">close</span>
+        </button>
         <div class="legend-item">
           <span class="legend-dot legend-auto"></span>
           <span>Auto-mapped</span>
@@ -374,6 +380,10 @@ function setupEventListeners() {
   document.getElementById('ctxAddNode').addEventListener('click', handleCtxAddNode);
   document.getElementById('ctxCenterView').addEventListener('click', handleCtxCenterView);
 
+  // Legend toggle for mobile
+  document.getElementById('mapLegendToggle').addEventListener('click', toggleLegend);
+  document.getElementById('legendCloseBtn').addEventListener('click', hideLegend);
+
   // Close context menu on click outside
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mapContextMenu');
@@ -435,6 +445,22 @@ function toggleAutoMap() {
   }
 
   saveMapForGame();
+}
+
+/**
+ * Toggle legend visibility (for mobile)
+ */
+function toggleLegend() {
+  const legend = document.getElementById('mapLegend');
+  legend.classList.toggle('legend-visible');
+}
+
+/**
+ * Hide legend
+ */
+function hideLegend() {
+  const legend = document.getElementById('mapLegend');
+  legend.classList.remove('legend-visible');
 }
 
 /**
