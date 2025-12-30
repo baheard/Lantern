@@ -233,6 +233,17 @@
   color: #ffffff;
 }
 
+/* FAB auto-hide during interaction */
+.map-fab-container.fab-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+.map-fab-container {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
 /* Legend */
 .map-legend {
   position: absolute;

@@ -70,7 +70,7 @@ const NODE_COLORS = {
 const NODE_RADIUS = 28;
 const TOUCH_TARGET = 44;  // Minimum touch target size (iOS HIG)
 const LONG_PRESS_DURATION = 400;
-const DOUBLE_TAP_DELAY = 300;
+const FIRST_USE_KEY = 'iftalk_map_first_use_shown';
 
 // Map state
 let mapState = {
@@ -91,9 +91,7 @@ let mapState = {
   isCreatingEdge: false,
   edgeStartNode: null,
   currentPointer: null,       // Track current pointer position for edge preview
-  isAddingNode: false,        // FAB add mode active
-  lastTapTime: 0,
-  lastTapPosition: null
+  isAddingNode: false         // FAB add mode active
 };
 
 // Canvas elements
@@ -108,6 +106,15 @@ let lastTouchCenter = { x: 0, y: 0 };
 let touchStartTime = 0;
 let longPressTimer = null;
 let longPressTriggered = false;
+let longPressProgress = 0;
+let longPressAnimationFrame = null;
+let longPressStartTime = 0;
+let longPressNode = null;
+
+// FAB visibility
+let fabHideTimer = null;
+let fabVisible = true;
+let isInteracting = false;
 
 /**
  * Initialize the map canvas
@@ -948,6 +955,130 @@ function drawAddModeCrosshair(width, height) {
 }
 
 /**
+ * Draw long-press progress ring around a node
+ * Shows visual feedback during the 400ms hold
+ */
+function drawLongPressProgress() {
+  if (!longPressNode || longPressProgress <= 0) return;
+
+  const node = mapState.nodes.get(longPressNode);
+  if (!node) return;
+
+  const width = canvas.width / window.devicePixelRatio;
+  const height = canvas.height / window.devicePixelRatio;
+
+  // Transform to canvas coordinates
+  ctx.save();
+  ctx.translate(width / 2 + mapState.viewport.x, height / 2 + mapState.viewport.y);
+  ctx.scale(mapState.viewport.scale, mapState.viewport.scale);
+
+  // Draw progress arc
+  const radius = NODE_RADIUS + 8;
+  const startAngle = -Math.PI / 2; // Start from top
+  const endAngle = startAngle + (Math.PI * 2 * longPressProgress);
+
+  // Background ring
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(251, 191, 36, 0.2)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Progress ring
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, radius, startAngle, endAngle);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Pulsing glow effect
+  const pulseScale = 1 + Math.sin(Date.now() / 100) * 0.1 * longPressProgress;
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, radius * pulseScale, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(251, 191, 36, ${0.3 * longPressProgress})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * Start long-press animation
+ */
+function startLongPressAnimation(nodeId) {
+  longPressNode = nodeId;
+  longPressStartTime = Date.now();
+  longPressProgress = 0;
+
+  function animate() {
+    const elapsed = Date.now() - longPressStartTime;
+    longPressProgress = Math.min(elapsed / LONG_PRESS_DURATION, 1);
+
+    render();
+    drawLongPressProgress();
+
+    if (longPressProgress < 1 && longPressNode) {
+      longPressAnimationFrame = requestAnimationFrame(animate);
+    }
+  }
+
+  longPressAnimationFrame = requestAnimationFrame(animate);
+}
+
+/**
+ * Stop long-press animation
+ */
+function stopLongPressAnimation() {
+  if (longPressAnimationFrame) {
+    cancelAnimationFrame(longPressAnimationFrame);
+    longPressAnimationFrame = null;
+  }
+  longPressNode = null;
+  longPressProgress = 0;
+  longPressStartTime = 0;
+}
+
+/**
+ * Show FAB buttons
+ */
+function showFab() {
+  if (!fabVisible) {
+    fabVisible = true;
+    const fabContainer = document.querySelector('.map-fab-container');
+    if (fabContainer) {
+      fabContainer.classList.remove('fab-hidden');
+    }
+  }
+  // Reset hide timer
+  clearTimeout(fabHideTimer);
+}
+
+/**
+ * Hide FAB buttons (during interaction)
+ */
+function hideFab() {
+  if (fabVisible && isInteracting) {
+    fabVisible = false;
+    const fabContainer = document.querySelector('.map-fab-container');
+    if (fabContainer) {
+      fabContainer.classList.add('fab-hidden');
+    }
+  }
+}
+
+/**
+ * Schedule FAB to show after idle period
+ */
+function scheduleFabShow() {
+  clearTimeout(fabHideTimer);
+  fabHideTimer = setTimeout(() => {
+    isInteracting = false;
+    showFab();
+  }, 300);
+}
+
+/**
  * Handle pointer down (mouse)
  */
 function handlePointerDown(e) {
@@ -961,20 +1092,9 @@ function handlePointerDown(e) {
   const canvasPoint = screenToCanvas(x, y);
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
-  // Check for double-tap to add node
-  const now = Date.now();
-  if (mapState.lastTapPosition && now - mapState.lastTapTime < DOUBLE_TAP_DELAY) {
-    const dx = x - mapState.lastTapPosition.x;
-    const dy = y - mapState.lastTapPosition.y;
-    if (Math.sqrt(dx * dx + dy * dy) < 30 && !hitNode) {
-      // Double tap on empty space - add node
-      addNodeAtPosition(canvasPoint.x, canvasPoint.y);
-      mapState.lastTapTime = 0;
-      return;
-    }
-  }
-  mapState.lastTapTime = now;
-  mapState.lastTapPosition = { x, y };
+  // Start interaction - hide FAB
+  isInteracting = true;
+  hideFab();
 
   // Handle add node mode
   if (mapState.isAddingNode && !hitNode) {
@@ -1008,9 +1128,13 @@ function handlePointerDown(e) {
     touchStartTime = Date.now();
     longPressTriggered = false;
 
+    // Start long-press animation for visual feedback
+    startLongPressAnimation(hitNode.id);
+
     // Long press timer for context actions
     longPressTimer = setTimeout(() => {
       longPressTriggered = true;
+      stopLongPressAnimation();
       // Start edge creation from this node
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = hitNode.id;
@@ -1051,6 +1175,7 @@ function handlePointerMove(e) {
     // Cancel long press if moved
     if (Math.sqrt(dx * dx + dy * dy) > 10) {
       clearTimeout(longPressTimer);
+      stopLongPressAnimation();
 
       // Move the node - marks it as user-edited
       const canvasDx = dx / mapState.viewport.scale;
@@ -1080,6 +1205,7 @@ function handlePointerMove(e) {
  */
 function handlePointerUp(e) {
   clearTimeout(longPressTimer);
+  stopLongPressAnimation();
 
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -1113,6 +1239,9 @@ function handlePointerUp(e) {
   longPressTriggered = false;
   canvas.style.cursor = mapState.isAddingNode ? 'crosshair' : 'grab';
 
+  // Schedule FAB to reappear
+  scheduleFabShow();
+
   render();
 }
 
@@ -1130,10 +1259,15 @@ function handleTouchStart(e) {
       button: 0
     });
   } else if (e.touches.length === 2) {
-    // Pinch zoom - cancel any drag
+    // Pinch zoom - cancel any drag and long-press
     clearTimeout(longPressTimer);
+    stopLongPressAnimation();
     mapState.isDragging = false;
     mapState.dragNode = null;
+
+    // Hide FAB during pinch
+    isInteracting = true;
+    hideFab();
 
     const dx = e.touches[1].clientX - e.touches[0].clientX;
     const dy = e.touches[1].clientY - e.touches[0].clientY;
@@ -1191,6 +1325,8 @@ function handleTouchEnd(e) {
     if (touch) {
       handlePointerUp({ clientX: touch.clientX, clientY: touch.clientY });
     }
+    // Schedule FAB to reappear after all fingers lifted
+    scheduleFabShow();
   }
   lastTouchDistance = 0;
 }
@@ -1638,13 +1774,58 @@ export function showMap() {
   // Restore auto-map toggle state
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
 
+  // Reset FAB visibility
+  fabVisible = true;
+  isInteracting = false;
+  const fabContainer = document.querySelector('.map-fab-container');
+  if (fabContainer) {
+    fabContainer.classList.remove('fab-hidden');
+  }
+
   resizeCanvas();
   updateNodeCount();
   centerOnCurrentLocation();
 
-  if (mapState.autoMapEnabled && mapState.nodes.size === 0) {
+  // Show first-use onboarding or standard hint
+  showOnboardingOrHint();
+}
+
+/**
+ * Show first-use onboarding tips or standard hint
+ */
+function showOnboardingOrHint() {
+  const hasSeenOnboarding = localStorage.getItem(FIRST_USE_KEY);
+
+  if (!hasSeenOnboarding) {
+    // First time user - show detailed tips
+    localStorage.setItem(FIRST_USE_KEY, 'true');
+    showOnboardingSequence();
+  } else if (mapState.autoMapEnabled && mapState.nodes.size === 0) {
     showHint('Explore the game to start auto-mapping locations');
   }
+}
+
+/**
+ * Show onboarding tips sequence
+ */
+function showOnboardingSequence() {
+  const tips = [
+    'Welcome to Game Map! Locations are added automatically as you explore.',
+    'Tip: Hold a location to connect it to another.',
+    'Tap the + button to add your own locations.'
+  ];
+
+  let tipIndex = 0;
+
+  function showNextTip() {
+    if (tipIndex < tips.length) {
+      showHint(tips[tipIndex]);
+      tipIndex++;
+      setTimeout(showNextTip, 3500);
+    }
+  }
+
+  showNextTip();
 }
 
 /**
