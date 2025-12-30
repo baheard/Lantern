@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.3.0';
+const CACHE_VERSION = 'v1.4.0';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -23,6 +23,7 @@ const CORE_ASSETS = [
   './styles/fonts.css',
   './styles/game-output.css',
   './styles/lock-screen.css',
+  './styles/map-canvas.css',
   './styles/main.css',
   './styles/mobile.css',
   './styles/modals.css',
@@ -37,6 +38,7 @@ const CORE_ASSETS = [
   './js/core/state.js',
   './js/features/hints.js',
   './js/features/auto-mapper.js',
+  './js/features/map-canvas.js',
   './js/game/commands/command-router.js',
   './js/game/commands/index.js',
   './js/game/commands/meta-command-handlers.js',
