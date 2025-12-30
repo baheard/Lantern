@@ -8,6 +8,7 @@
 import { renderUpdate } from './voxglk-renderer.js';
 import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
+import { checkLocationChange } from '../features/auto-mapper.js';
 
 /**
  * State
@@ -409,6 +410,10 @@ export function createVoxGlk(textOutputCallback) {
           generation = arg.gen;
           // Clear watchdog since VM responded with a new generation
           clearWatchdog();
+
+          // Check for location change (for auto-mapping)
+          // Runs after each turn when VM has processed player input
+          checkLocationChange(generation);
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
