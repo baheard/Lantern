@@ -6,6 +6,7 @@ import { getCurrentLocation } from './auto-mapper.js';
 import {
   canvas, ctx, container, mapState,
   NODE_RADIUS, NODE_COLORS, NODE_ICONS,
+  CONNECTION_STYLES, DIRECTION_TO_TYPE, COMMAND_DIRECTIONS,
   timers
 } from './map-config.js';
 
@@ -72,24 +73,49 @@ function drawEdges() {
   for (const edge of mapState.edges.values()) {
     const from = mapState.nodes.get(edge.from), to = mapState.nodes.get(edge.to);
     if (!from || !to) continue;
+
     const isUser = edge.isManual || edge.isEdited;
+    const connectionType = getConnectionType(edge);
+    const style = CONNECTION_STYLES[connectionType] || CONNECTION_STYLES.cardinal;
+
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = isUser ? '#a78bfa' : '#60a5fa';
-    ctx.setLineDash(isUser ? [8, 4] : []);
+    ctx.strokeStyle = style.color;
+    ctx.setLineDash(style.dash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
-    drawArrow(from.x, from.y, to.x, to.y);
+    drawArrow(from.x, from.y, to.x, to.y, style.color);
     ctx.globalAlpha = 1; ctx.setLineDash([]);
+
+    // User edit indicator - small dot at midpoint
+    if (isUser) {
+      const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+      ctx.beginPath(); ctx.arc(mx, my, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#a78bfa'; ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
   }
 }
 
-function drawArrow(x1, y1, x2, y2) {
+// Determine connection type from edge command or explicit type
+function getConnectionType(edge) {
+  // User can override the type
+  if (edge.connectionType) return edge.connectionType;
+  // Derive from command
+  if (edge.command) {
+    const direction = COMMAND_DIRECTIONS[edge.command.toLowerCase().trim()];
+    if (direction && DIRECTION_TO_TYPE[direction]) return DIRECTION_TO_TYPE[direction];
+  }
+  return 'cardinal';
+}
+
+function drawArrow(x1, y1, x2, y2, color) {
   const angle = Math.atan2(y2 - y1, x2 - x1), length = 12;
   const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
   if (dist < NODE_RADIUS * 2) return;
   const ratio = (dist - NODE_RADIUS - 5) / dist;
   const ax = x1 + (x2 - x1) * ratio, ay = y1 + (y2 - y1) * ratio;
   ctx.setLineDash([]);
+  ctx.strokeStyle = color;
   ctx.beginPath();
   ctx.moveTo(ax, ay); ctx.lineTo(ax - length * Math.cos(angle - Math.PI / 6), ay - length * Math.sin(angle - Math.PI / 6));
   ctx.moveTo(ax, ay); ctx.lineTo(ax - length * Math.cos(angle + Math.PI / 6), ay - length * Math.sin(angle + Math.PI / 6));

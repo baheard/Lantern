@@ -128,9 +128,14 @@ function createMapUI() {
         <button class="legend-close" id="legendCloseBtn" aria-label="Close legend">
           <span class="material-icons">close</span>
         </button>
+        <div class="legend-section">Locations</div>
         <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
         <div class="legend-item"><span class="legend-dot legend-user"></span><span>Your edits</span></div>
         <div class="legend-item"><span class="legend-dot legend-current"></span><span>Current</span></div>
+        <div class="legend-section">Connections</div>
+        <div class="legend-item"><span class="legend-line legend-cardinal"></span><span>Cardinal (N/S/E/W)</span></div>
+        <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Vertical (Up/Down)</span></div>
+        <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal (Enter/Exit)</span></div>
       </div>
     </div>
     <div class="map-hint hidden" id="mapHint"></div>

@@ -4,7 +4,7 @@
 
 import {
   container, mapState, domRefs,
-  NODE_ICONS
+  NODE_ICONS, CONNECTION_TYPES
 } from './map-config.js';
 import { render } from './map-render.js';
 
@@ -127,15 +127,41 @@ function populateConnectionsList(node) {
     else if (edge.to === node.id) { const n = mapState.nodes.get(edge.from); if (n) conns.push({ dir: '←', node: n, edge, key }); }
   }
   if (!conns.length) { list.innerHTML = '<div class="no-connections">No connections yet</div>'; return; }
-  list.innerHTML = conns.map(c => `
-    <div class="connection-item ${c.edge.isManual ? 'user' : 'auto'}">
-      <span class="connection-direction">${c.dir}</span>
-      <span class="connection-name">${c.node.name}</span>
-      ${c.edge.command ? `<span class="connection-cmd">${c.edge.command}</span>` : ''}
-      <button class="connection-delete" data-edge="${c.key}" aria-label="Delete connection"><span class="material-icons">close</span></button>
-    </div>
-  `).join('');
+
+  const typeIcons = { cardinal: 'straight', vertical: 'stairs', portal: 'door_front' };
+  const typeLabels = { cardinal: 'Cardinal', vertical: 'Vertical', portal: 'Portal' };
+
+  list.innerHTML = conns.map(c => {
+    const currentType = c.edge.connectionType || 'cardinal';
+    return `
+      <div class="connection-item ${c.edge.isManual || c.edge.isEdited ? 'user' : 'auto'}">
+        <span class="connection-direction">${c.dir}</span>
+        <span class="connection-name">${c.node.name}</span>
+        ${c.edge.command ? `<span class="connection-cmd">${c.edge.command}</span>` : ''}
+        <select class="connection-type-picker" data-edge="${c.key}" title="Connection type">
+          ${Object.keys(CONNECTION_TYPES).map(t =>
+            `<option value="${t}" ${currentType === t ? 'selected' : ''}>${typeLabels[t]}</option>`
+          ).join('')}
+        </select>
+        <button class="connection-delete" data-edge="${c.key}" aria-label="Delete connection"><span class="material-icons">close</span></button>
+      </div>
+    `;
+  }).join('');
+
+  // Delete handlers
   list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', () => { deleteEdge(btn.dataset.edge); populateConnectionsList(node); }));
+
+  // Type change handlers
+  list.querySelectorAll('.connection-type-picker').forEach(sel => sel.addEventListener('change', (e) => {
+    const edge = mapState.edges.get(e.target.dataset.edge);
+    if (edge) {
+      edge.connectionType = e.target.value;
+      edge.isEdited = true;
+      mapState.protectedEdges.add(e.target.dataset.edge);
+      render();
+      callbacks.saveMapForGame();
+    }
+  }));
 }
 
 export function startConnectionFromSheet() {

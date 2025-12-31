@@ -7,13 +7,38 @@
 // ============================================================================
 
 export const DIRECTION_OFFSETS = {
+  // Cardinal directions
   north: { x: 0, y: -100 }, south: { x: 0, y: 100 },
   east: { x: 100, y: 0 }, west: { x: -100, y: 0 },
   northeast: { x: 70, y: -70 }, northwest: { x: -70, y: -70 },
   southeast: { x: 70, y: 70 }, southwest: { x: -70, y: 70 },
-  up: { x: 0, y: -50 }, down: { x: 0, y: 50 },
-  enter: { x: 60, y: 0 }, exit: { x: -60, y: 0 },
-  'in': { x: 60, y: 0 }, out: { x: -60, y: 0 }
+  // Vertical - offset horizontally to distinguish from N/S, larger distance
+  up: { x: 50, y: -120 }, down: { x: -50, y: 120 },
+  // Portal/special exits - offset diagonally
+  enter: { x: 80, y: -40 }, exit: { x: -80, y: 40 },
+  'in': { x: 80, y: -40 }, out: { x: -80, y: 40 }
+};
+
+// Connection types for visual distinction
+export const CONNECTION_TYPES = {
+  cardinal: 'cardinal',   // N, S, E, W, NE, NW, SE, SW - solid line
+  vertical: 'vertical',   // Up, Down - dashed line
+  portal: 'portal'        // Enter, Exit, In, Out - dotted line
+};
+
+// Map directions to connection types
+export const DIRECTION_TO_TYPE = {
+  north: 'cardinal', south: 'cardinal', east: 'cardinal', west: 'cardinal',
+  northeast: 'cardinal', northwest: 'cardinal', southeast: 'cardinal', southwest: 'cardinal',
+  up: 'vertical', down: 'vertical',
+  enter: 'portal', exit: 'portal', 'in': 'portal', out: 'portal'
+};
+
+// Connection type styles
+export const CONNECTION_STYLES = {
+  cardinal: { dash: [], color: '#60a5fa' },
+  vertical: { dash: [8, 4], color: '#a78bfa' },
+  portal: { dash: [3, 3], color: '#fbbf24' }
 };
 
 export const COMMAND_DIRECTIONS = {
