@@ -252,7 +252,7 @@
   left: 12px;
   width: 40px;
   height: 40px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.9);
   color: #94a3b8;
@@ -260,7 +260,6 @@
   z-index: 6;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   -webkit-tap-highlight-color: transparent;
 }
 

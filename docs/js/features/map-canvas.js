@@ -100,6 +100,15 @@ let ctx = null;
 let container = null;
 let isVisible = false;
 
+// Cached DOM references (populated in setupEventListeners)
+let domRefs = {
+  modeIndicator: null,
+  contextMenu: null,
+  fabContainer: null,
+  hint: null,
+  legend: null
+};
+
 // Touch handling
 let lastTouchDistance = 0;
 let lastTouchCenter = { x: 0, y: 0 };
@@ -115,6 +124,9 @@ let longPressNode = null;
 let fabHideTimer = null;
 let fabVisible = true;
 let isInteracting = false;
+
+// Onboarding timeout tracking
+let onboardingTimeout = null;
 
 /**
  * Initialize the map canvas
@@ -334,6 +346,13 @@ function createContextMenu() {
  * Set up event listeners
  */
 function setupEventListeners() {
+  // Cache frequently accessed DOM elements
+  domRefs.modeIndicator = document.getElementById('mapModeIndicator');
+  domRefs.contextMenu = document.getElementById('mapContextMenu');
+  domRefs.fabContainer = document.querySelector('.map-fab-container');
+  domRefs.hint = document.getElementById('mapHint');
+  domRefs.legend = document.getElementById('mapLegend');
+
   // Toolbar buttons
   document.getElementById('mapCloseBtn').addEventListener('click', hideMap);
   document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
@@ -386,9 +405,8 @@ function setupEventListeners() {
 
   // Close context menu on click outside
   document.addEventListener('click', (e) => {
-    const menu = document.getElementById('mapContextMenu');
-    if (!menu.contains(e.target)) {
-      menu.classList.add('hidden');
+    if (!domRefs.contextMenu.contains(e.target)) {
+      domRefs.contextMenu.classList.add('hidden');
     }
   });
 
@@ -451,16 +469,14 @@ function toggleAutoMap() {
  * Toggle legend visibility (for mobile)
  */
 function toggleLegend() {
-  const legend = document.getElementById('mapLegend');
-  legend.classList.toggle('legend-visible');
+  domRefs.legend.classList.toggle('legend-visible');
 }
 
 /**
  * Hide legend
  */
 function hideLegend() {
-  const legend = document.getElementById('mapLegend');
-  legend.classList.remove('legend-visible');
+  domRefs.legend.classList.remove('legend-visible');
 }
 
 /**
@@ -468,8 +484,8 @@ function hideLegend() {
  */
 function enterAddNodeMode() {
   mapState.isAddingNode = true;
-  document.getElementById('mapModeIndicator').classList.remove('hidden');
-  document.getElementById('mapModeIndicator').querySelector('span:nth-child(2)').textContent = 'Tap to add location';
+  domRefs.modeIndicator.classList.remove('hidden');
+  domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap to add location';
   canvas.style.cursor = 'crosshair';
   showHint('Tap anywhere on the map to add a new location');
 }
@@ -484,8 +500,8 @@ function enterAddEdgeMode() {
   }
   mapState.isCreatingEdge = true;
   mapState.edgeStartNode = null;
-  document.getElementById('mapModeIndicator').classList.remove('hidden');
-  document.getElementById('mapModeIndicator').querySelector('span:nth-child(2)').textContent = 'Tap first location';
+  domRefs.modeIndicator.classList.remove('hidden');
+  domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap first location';
   canvas.style.cursor = 'crosshair';
   showHint('Tap the first location, then tap the second to connect them');
 }
@@ -497,7 +513,7 @@ function exitAddMode() {
   mapState.isAddingNode = false;
   mapState.isCreatingEdge = false;
   mapState.edgeStartNode = null;
-  document.getElementById('mapModeIndicator').classList.add('hidden');
+  domRefs.modeIndicator?.classList.add('hidden');
   canvas.style.cursor = 'grab';
   hideHint();
   render();
@@ -510,13 +526,16 @@ function resizeCanvas() {
   if (!canvas || !container) return;
 
   const rect = container.querySelector('.map-canvas-container').getBoundingClientRect();
+  const dpr = window.devicePixelRatio;
 
-  canvas.width = rect.width * window.devicePixelRatio;
-  canvas.height = rect.height * window.devicePixelRatio;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
   canvas.style.width = rect.width + 'px';
   canvas.style.height = rect.height + 'px';
 
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // Reset transform before scaling to prevent accumulation
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
 
   render();
 }
@@ -589,20 +608,14 @@ function handleLocationChange(e) {
     });
   }
 
-  // Add edge from previous location
+  // Add edge from previous location (if not deleted/protected/existing)
   if (previousLocationId && previousLocationId !== locationId) {
     const edgeKey = `${previousLocationId}-${locationId}`;
+    const shouldSkip = mapState.deletedEdges.has(edgeKey) ||
+                       mapState.protectedEdges.has(edgeKey) ||
+                       mapState.edges.has(edgeKey);
 
-    // SAFETY: Never recreate deleted edges
-    if (mapState.deletedEdges.has(edgeKey)) {
-      // Edge was deleted by user - respect that decision
-    }
-    // SAFETY: Never modify protected edges
-    else if (mapState.protectedEdges.has(edgeKey)) {
-      // Edge was edited by user - don't touch it
-    }
-    // Only add if edge doesn't exist
-    else if (!mapState.edges.has(edgeKey)) {
+    if (!shouldSkip) {
       mapState.edges.set(edgeKey, {
         from: previousLocationId,
         to: locationId,
@@ -1071,12 +1084,8 @@ function stopLongPressAnimation() {
 function showFab() {
   if (!fabVisible) {
     fabVisible = true;
-    const fabContainer = document.querySelector('.map-fab-container');
-    if (fabContainer) {
-      fabContainer.classList.remove('fab-hidden');
-    }
+    domRefs.fabContainer?.classList.remove('fab-hidden');
   }
-  // Reset hide timer
   clearTimeout(fabHideTimer);
 }
 
@@ -1086,10 +1095,7 @@ function showFab() {
 function hideFab() {
   if (fabVisible && isInteracting) {
     fabVisible = false;
-    const fabContainer = document.querySelector('.map-fab-container');
-    if (fabContainer) {
-      fabContainer.classList.add('fab-hidden');
-    }
+    domRefs.fabContainer?.classList.add('fab-hidden');
   }
 }
 
@@ -1135,7 +1141,7 @@ function handlePointerDown(e) {
       if (!mapState.edgeStartNode) {
         // First node selected
         mapState.edgeStartNode = hitNode.id;
-        document.getElementById('mapModeIndicator').querySelector('span:nth-child(2)').textContent = 'Tap second location';
+        domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap second location';
         showHint(`Selected "${hitNode.name}" - now tap destination`);
         render();
       } else if (hitNode.id !== mapState.edgeStartNode) {
@@ -1351,8 +1357,7 @@ function handleTouchEnd(e) {
     if (touch) {
       handlePointerUp({ clientX: touch.clientX, clientY: touch.clientY });
     }
-    // Schedule FAB to reappear after all fingers lifted
-    scheduleFabShow();
+    // Note: scheduleFabShow is already called in handlePointerUp
   }
   lastTouchDistance = 0;
 }
@@ -1378,17 +1383,16 @@ function handleContextMenu(e) {
 
   mapState.currentPointer = { x, y };
 
-  const menu = document.getElementById('mapContextMenu');
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
-  menu.classList.remove('hidden');
+  domRefs.contextMenu.style.left = e.clientX + 'px';
+  domRefs.contextMenu.style.top = e.clientY + 'px';
+  domRefs.contextMenu.classList.remove('hidden');
 }
 
 /**
  * Handle context menu: Add node
  */
 function handleCtxAddNode() {
-  document.getElementById('mapContextMenu').classList.add('hidden');
+  domRefs.contextMenu.classList.add('hidden');
 
   if (mapState.currentPointer) {
     const canvasPoint = screenToCanvas(mapState.currentPointer.x, mapState.currentPointer.y);
@@ -1400,7 +1404,7 @@ function handleCtxAddNode() {
  * Handle context menu: Center view
  */
 function handleCtxCenterView() {
-  document.getElementById('mapContextMenu').classList.add('hidden');
+  domRefs.contextMenu.classList.add('hidden');
 
   if (mapState.currentPointer) {
     const canvasPoint = screenToCanvas(mapState.currentPointer.x, mapState.currentPointer.y);
@@ -1639,8 +1643,8 @@ function startConnectionFromSheet() {
   mapState.isCreatingEdge = true;
   mapState.edgeStartNode = nodeId;
 
-  document.getElementById('mapModeIndicator').classList.remove('hidden');
-  document.getElementById('mapModeIndicator').querySelector('span:nth-child(2)').textContent = 'Tap destination';
+  domRefs.modeIndicator.classList.remove('hidden');
+  domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap destination';
 
   const node = mapState.nodes.get(nodeId);
   showHint(`Tap a location to connect from "${node?.name}"`);
@@ -1752,17 +1756,19 @@ function handleNodeDelete() {
   showHint(`Deleted "${node?.name}"`);
 }
 
+// Hint timeout tracking
+let hintTimeout = null;
+
 /**
  * Show hint toast
  */
 function showHint(message) {
-  const hint = document.getElementById('mapHint');
-  hint.textContent = message;
-  hint.classList.remove('hidden');
+  domRefs.hint.textContent = message;
+  domRefs.hint.classList.remove('hidden');
 
-  clearTimeout(hint._timeout);
-  hint._timeout = setTimeout(() => {
-    hint.classList.add('hidden');
+  clearTimeout(hintTimeout);
+  hintTimeout = setTimeout(() => {
+    domRefs.hint.classList.add('hidden');
   }, 3000);
 }
 
@@ -1770,9 +1776,8 @@ function showHint(message) {
  * Hide hint toast
  */
 function hideHint() {
-  const hint = document.getElementById('mapHint');
-  clearTimeout(hint._timeout);
-  hint.classList.add('hidden');
+  clearTimeout(hintTimeout);
+  domRefs.hint?.classList.add('hidden');
 }
 
 /**
@@ -1803,10 +1808,7 @@ export function showMap() {
   // Reset FAB visibility
   fabVisible = true;
   isInteracting = false;
-  const fabContainer = document.querySelector('.map-fab-container');
-  if (fabContainer) {
-    fabContainer.classList.remove('fab-hidden');
-  }
+  domRefs.fabContainer?.classList.remove('fab-hidden');
 
   resizeCanvas();
   updateNodeCount();
@@ -1844,10 +1846,10 @@ function showOnboardingSequence() {
   let tipIndex = 0;
 
   function showNextTip() {
-    if (tipIndex < tips.length) {
+    if (tipIndex < tips.length && isVisible) {
       showHint(tips[tipIndex]);
       tipIndex++;
-      setTimeout(showNextTip, 3500);
+      onboardingTimeout = setTimeout(showNextTip, 3500);
     }
   }
 
@@ -1862,6 +1864,12 @@ export function hideMap() {
     container.classList.add('hidden');
   }
   isVisible = false;
+
+  // Cleanup animations and timers
+  stopLongPressAnimation();
+  clearTimeout(onboardingTimeout);
+  clearTimeout(fabHideTimer);
+
   exitAddMode();
   saveMapForGame();
 }
