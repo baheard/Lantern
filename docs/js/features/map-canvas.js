@@ -279,7 +279,7 @@ function handleLocationChange(e) {
     return;
   }
 
-  // Add new node
+  // Add new node (and immediately protect it from future auto-mapper changes)
   if (!existingNode) {
     const direction = command ? getDirectionFromCommand(command) : null;
     const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
@@ -296,14 +296,18 @@ function handleLocationChange(e) {
       id: locationId, name: locationName, x: position.x, y: position.y,
       type: 'room', notes: '', isManual: false, isEdited: false
     });
+    // Protect from future auto-mapper modifications
+    mapState.protectedNodes.add(locationId);
   }
 
-  // Add edge (if not skipped)
+  // Add edge (and immediately protect it from future auto-mapper changes)
   if (previousLocationId && previousLocationId !== locationId) {
     const edgeKey = `${previousLocationId}-${locationId}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
       mapState.edges.set(edgeKey, { from: previousLocationId, to: locationId, command: command || '', isManual: false, isEdited: false });
+      // Protect from future auto-mapper modifications
+      mapState.protectedEdges.add(edgeKey);
     }
   }
 
