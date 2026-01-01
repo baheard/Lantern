@@ -300,11 +300,15 @@ FAB buttons and controls stay visible during all interactions (panning, pinch-zo
 | Indicator | Meaning |
 |-----------|---------|
 | Blue node | Auto-mapped location |
-| Purple node | User-edited location |
+| Purple node | Manually created location (user added) |
 | Green node + glow | Current player location |
+| Orange node + ? badge | Potential duplicate (same name, different route) |
 | Small purple dot on node | User-edited node |
 | Small purple dot on edge | User-edited edge |
-| Dashed node border | User-edited |
+| Dashed white border | User-edited (moved, renamed, etc.) |
+| Dashed yellow border | Potential duplicate |
+
+Note: Auto-mapped nodes stay blue even when edited - only the dashed border indicates editing. Only manually created nodes get purple fill.
 
 ## Persistence
 

@@ -145,32 +145,40 @@ function drawNodes() {
     const isCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
     const isUser = node.isManual || node.isEdited;
     const isEdgeStart = mapState.edgeStartNode === node.id;
-    const isDuplicate = node.isDuplicate || node.hasDuplicates;
+    // Only actual duplicates get special styling, not originals that have duplicates
+    const isDuplicateNode = node.isDuplicate === true;
 
-    // Determine fill color: duplicates get orange, otherwise normal colors
+    // Determine fill color:
+    // - Duplicates get orange
+    // - Current location gets green
+    // - Manually created nodes get purple
+    // - Auto-mapped nodes stay blue even if edited (dashed border shows edits)
     let fillColor;
-    if (isDuplicate) {
+    if (isDuplicateNode) {
       fillColor = '#f97316';  // Orange for potential duplicates
     } else if (isCurrent) {
       fillColor = NODE_COLORS.current;
-    } else if (isUser) {
-      fillColor = NODE_COLORS.user;
+    } else if (node.isManual) {
+      fillColor = NODE_COLORS.user;  // Purple only for manually created nodes
     } else {
-      fillColor = NODE_COLORS.auto;
+      fillColor = NODE_COLORS.auto;  // Blue for auto-mapped (even if edited)
     }
 
     // Shadow & fill
     ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
     ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = fillColor; ctx.fill();
 
-    // Border - duplicates get dashed orange border
+    // Border - user edits get dashed white, duplicates get dashed yellow
     ctx.lineWidth = isSelected || isEdgeStart ? 3 : 2;
-    if (isDuplicate) {
+    if (isDuplicateNode) {
       ctx.strokeStyle = '#fbbf24';  // Yellow border for duplicates
       ctx.setLineDash([4, 3]);
+    } else if (isUser) {
+      ctx.strokeStyle = '#ffffff';  // White dashed for user edits
+      ctx.setLineDash([4, 3]);
     } else {
-      ctx.strokeStyle = isUser ? '#ffffff' : (isSelected || isEdgeStart ? '#ffffff' : 'rgba(255,255,255,0.4)');
-      ctx.setLineDash(isUser ? [4, 3] : []);
+      ctx.strokeStyle = isSelected || isEdgeStart ? '#ffffff' : 'rgba(255,255,255,0.4)';
+      ctx.setLineDash([]);
     }
     ctx.stroke(); ctx.setLineDash([]);
 
