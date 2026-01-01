@@ -51,9 +51,11 @@ export function getCurrentLocation() {
  */
 export function checkLocationChange(generation) {
   const location = getCurrentLocation();
+  console.log('[AutoMapper] checkLocationChange called, generation:', generation, 'location:', location);
   if (!location) return;
 
   const locationChanged = location.id !== lastLocationId;
+  console.log('[AutoMapper] Location changed?', locationChanged, 'lastLocationId:', lastLocationId, 'currentId:', location.id);
 
   if (locationChanged) {
     const previousLocationId = lastLocationId;
@@ -68,6 +70,12 @@ export function checkLocationChange(generation) {
     }
 
     // Dispatch event for other modules to listen
+    console.log('[AutoMapper] Dispatching locationChanged event:', {
+      locationId: location.id,
+      locationName: location.name,
+      previousLocationId,
+      command: lastCommand
+    });
     window.dispatchEvent(new CustomEvent('locationChanged', {
       detail: {
         locationId: location.id,

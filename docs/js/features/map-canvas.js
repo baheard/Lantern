@@ -267,7 +267,11 @@ function handleGameLoaded(e) {
 }
 
 function handleLocationChange(e) {
-  if (!mapState.autoMapEnabled) return;
+  console.log('[MapCanvas] handleLocationChange received:', e.detail);
+  if (!mapState.autoMapEnabled) {
+    console.log('[MapCanvas] Auto-map disabled, ignoring');
+    return;
+  }
   const { locationId, locationName, previousLocationId, command } = e.detail;
 
   // Safety: Never add deleted nodes or modify protected nodes
@@ -292,12 +296,15 @@ function handleLocationChange(e) {
       position = findAvailablePosition({ x: 0, y: 0 });
     }
 
+    console.log('[MapCanvas] Creating new node:', locationId, locationName, 'at', position);
     mapState.nodes.set(locationId, {
       id: locationId, name: locationName, x: position.x, y: position.y,
       type: 'room', notes: '', isManual: false, isEdited: false
     });
     // Protect from future auto-mapper modifications
     mapState.protectedNodes.add(locationId);
+  } else {
+    console.log('[MapCanvas] Node already exists:', locationId);
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
