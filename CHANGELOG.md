@@ -1,5 +1,39 @@
 # IFTalk Changelog
 
+## January 2025
+
+### January 1, 2025 - Auto-Mapper & Map Canvas
+
+1. **Auto-Mapper Z-machine v5+ Support** (v1.4.12 - v1.4.15)
+   - Fixed location detection for Z-machine v5+ games (Dreamhold, etc.)
+   - **Method 1**: Global variable 0 (works for Z-machine v3)
+   - **Method 2**: Player object scanning (works for v5+)
+     - Scans object table for player names: "yourself", "(self object)", "self", "cretin", "player"
+     - Gets player's parent object as current room
+   - Object table layout differs by version: v3 = 9 bytes/entry, v4+ = 14 bytes/entry
+   - Removed hash-based status bar fallback (could cause incorrect merging of same-named rooms)
+   - Files: `docs/js/features/auto-mapper.js`, `docs/js/game/voxglk.js`
+
+2. **Starting Location Detection** (v1.4.14)
+   - Added delayed initial location check (500ms after game load)
+   - Moved `checkLocationChange()` call to after render for proper timing
+   - Ensures starting room appears on map without requiring movement
+   - File: `docs/js/features/auto-mapper.js`
+
+3. **Map Canvas UX Improvements** (v1.4.16)
+   - **Controls stay visible** during panning/pinch-zoom (removed auto-hide)
+   - **Tap legend to collapse** (not just close button)
+   - **Double-tap to add node** on empty canvas
+     - 300ms tap window, 30px distance threshold
+     - Added `hasDragged` state to distinguish taps from pans
+   - Files: `docs/js/features/map-handlers.js`, `docs/js/features/map-canvas.js`, `docs/js/features/map-config.js`
+
+4. **Connection Editing** - Via node edit sheet
+   - Tap node → Connections section shows all edges
+   - Change connection type (Cardinal/Vertical/Portal) via dropdown
+   - Delete connections via × button
+   - File: `docs/js/features/map-sheet.js`
+
 ## December 2024
 
 ### December 15, 2024 - Core Fixes

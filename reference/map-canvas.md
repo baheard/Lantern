@@ -93,9 +93,38 @@ The player object's parent is always the current room. When the player moves, th
 
 ### Key Functions
 
-- `getCurrentLocation()` - Returns `{ id, name }` of current location
-- `checkLocationChange()` - Called after each game turn to detect movement
+- `getCurrentLocation()` - Returns `{ id, name }` of current location (object IDs only, no hash-based fallbacks)
+- `checkLocationChange(generation)` - Called after each game turn to detect movement
 - `setLastCommand(cmd)` - Records the last command (for edge labels)
+- `initAutoMapper(gameName)` - Initializes mapper, includes delayed starting location check
+
+### Starting Location Detection
+
+The auto-mapper captures the starting location via a delayed check after game initialization:
+
+```javascript
+// In initAutoMapper()
+setTimeout(() => {
+  checkLocationChange(0);  // Check after VM fully initialized
+}, 500);
+```
+
+This 500ms delay ensures the VM has valid object data before the first location check.
+
+### Direction/Command Tracking
+
+Commands are tracked via `setLastCommand()` called from `command-router.js` before sending to VM:
+
+```javascript
+// command-router.js:376
+setLastCommand(input);  // e.g., "north"
+sendCommandToGame(input);
+
+// When location changes, the edge stores the command
+recordConnection(previousLocationId, newLocationId, lastCommand);
+```
+
+The command becomes the edge label in the map.
 
 ### Common Player Object Names
 
@@ -206,12 +235,37 @@ enter/in: { x: 80, y: -40 }, exit/out: { x: -80, y: 40 }
 | Gesture | Action |
 |---------|--------|
 | Tap node | Open edit sheet |
+| Double-tap empty canvas | Add new node at position |
 | Drag node | Move node (marks as edited) |
 | Long-press node | Start creating edge (drag to destination) |
 | Drag canvas | Pan viewport |
 | Pinch | Zoom in/out |
 | Scroll wheel | Zoom in/out |
 | Right-click | Context menu |
+| Tap legend | Collapse legend |
+
+### Double-Tap Detection
+
+Double-tap to add nodes uses `hasDragged` state to distinguish taps from pans:
+
+```javascript
+// In map-config.js
+mapState.hasDragged = false;  // Reset on pointer down
+
+// In handlePointerMove - set true if actual movement
+if (Math.abs(dx) > 5 || Math.abs(dy) > 5) mapState.hasDragged = true;
+
+// In handlePointerUp - only detect double-tap if no drag
+if (!hitNode && !mapState.hasDragged) {
+  if (now - touchState.lastTapTime < 300 && tapDist < 30) {
+    callbacks.addNodeAtPosition(canvasPoint.x, canvasPoint.y);
+  }
+}
+```
+
+### Controls Visibility
+
+FAB buttons and controls stay visible during all interactions (panning, pinch-zoom). No auto-hide behavior.
 
 ### FAB Buttons
 
