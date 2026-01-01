@@ -295,14 +295,41 @@ function handleLocationChange(e) {
       !hasEdgeBetween(previousLocationId, locationName);
 
     if (hasNoDirectEdge) {
-      // Arrived via different route - create potential duplicate
-      // User can merge if it's actually the same place
-      const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
-      if (duplicateId) {
-        mapState.selectedNode = duplicateId;
-        showHint(`Found "${locationName}" via different route. Merge if same place.`);
-      } else {
+      // Calculate where we'd expect to be based on direction traveled
+      const direction = command ? getDirectionFromCommand(command) : null;
+      const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
+      let expectedPos = null;
+      if (parentNode && direction && DIRECTION_OFFSETS[direction]) {
+        const offset = DIRECTION_OFFSETS[direction];
+        expectedPos = { x: parentNode.x + offset.x, y: parentNode.y + offset.y };
+      }
+
+      // If expected position matches the existing node's position (within tolerance),
+      // it's the same room - just add an edge. Otherwise create a duplicate.
+      const positionMatches = expectedPos &&
+        Math.abs(expectedPos.x - existingNode.x) < 50 &&
+        Math.abs(expectedPos.y - existingNode.y) < 50;
+
+      if (positionMatches) {
+        // Same room via different route - add edge
+        const edgeKey = `${previousLocationId}-${locationName}`;
+        if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
+          mapState.edges.set(edgeKey, {
+            from: previousLocationId, to: locationName,
+            command: command || '', isManual: false, isEdited: false
+          });
+          mapState.protectedEdges.add(edgeKey);
+        }
         mapState.selectedNode = locationName;
+      } else {
+        // Different position - likely a duplicate room with same name
+        const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
+        if (duplicateId) {
+          mapState.selectedNode = duplicateId;
+          showHint(`Found "${locationName}" via different route. Merge if same place.`);
+        } else {
+          mapState.selectedNode = locationName;
+        }
       }
     } else {
       mapState.selectedNode = locationName;
