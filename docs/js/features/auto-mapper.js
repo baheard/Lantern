@@ -28,11 +28,13 @@ export function getCurrentLocation() {
   try {
     const vm = window.zvmInstance;
     if (!vm || !vm.m || !vm.globals || !vm.objects) {
+      console.log('[AutoMapper] VM not ready');
       return null;
     }
 
     const version = vm.m.getUint8(0x00);
     const isV3 = version === 3;
+    console.log('[AutoMapper] Z-machine version:', version, 'isV3:', isV3);
 
     // Object table layout differs by version
     // v3: 9 bytes per entry (4 attrs + 3 links + 2 props)
@@ -42,17 +44,21 @@ export function getCurrentLocation() {
     const propTableOffset = isV3 ? 7 : 12;
 
     let locationId = null;
+    let method = null;
 
     // Method 1: Try global 0 (standard Inform location)
     const global0 = vm.m.getUint16(vm.globals);
+    console.log('[AutoMapper] Global 0 value:', global0);
     if (global0 > 0 && global0 < 65535) {
       locationId = global0;
+      method = 'global0';
     }
 
     // Method 2: If global 0 failed, try finding player object's parent
     // In Inform, the player is typically object 1 or a low-numbered object
     // The player's parent should be the current room
     if (!locationId || locationId === 0) {
+      console.log('[AutoMapper] Global 0 failed, trying object tree...');
       // Try common player object IDs (usually 1-5 in Inform games)
       for (const playerId of [1, 2, 3, 4, 5]) {
         try {
@@ -64,6 +70,7 @@ export function getCurrentLocation() {
           } else {
             parentId = vm.m.getUint16(objAddr + parentOffset);
           }
+          console.log(`[AutoMapper] Object ${playerId} parent:`, parentId);
 
           if (parentId > 0) {
             // Check if parent looks like a room (has a valid property table with a name)
@@ -71,20 +78,25 @@ export function getCurrentLocation() {
             const propTable = vm.m.getUint16(parentAddr + propTableOffset);
             if (propTable > 0) {
               const nameLen = vm.m.getUint8(propTable);
+              console.log(`[AutoMapper] Parent ${parentId} propTable:`, propTable, 'nameLen:', nameLen);
               if (nameLen > 0 && nameLen < 100) {
                 // This looks like a valid room
                 locationId = parentId;
+                method = `object${playerId}-parent`;
                 break;
               }
             }
           }
         } catch (e) {
-          // Invalid object, continue
+          console.log(`[AutoMapper] Error checking object ${playerId}:`, e.message);
         }
       }
     }
 
-    if (!locationId || locationId === 0) return null;
+    if (!locationId || locationId === 0) {
+      console.log('[AutoMapper] No location found');
+      return null;
+    }
 
     // Decode room name
     const objAddr = vm.objects + objEntrySize * locationId;
@@ -92,6 +104,7 @@ export function getCurrentLocation() {
     const nameLength = vm.m.getUint8(proptable) * 2;
     const roomName = vm.decode(proptable + 1, nameLength);
 
+    console.log('[AutoMapper] Found location via', method, '- id:', locationId, 'name:', roomName);
     return { id: locationId, name: roomName };
   } catch (e) {
     console.error('[AutoMapper] Error in getCurrentLocation:', e);
