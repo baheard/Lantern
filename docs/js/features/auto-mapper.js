@@ -1,30 +1,67 @@
 /**
  * Auto-Mapper - Location Tracking for Interactive Fiction
  *
- * Captures unique location IDs from the Z-machine to enable auto-mapping.
- * Uses the same technique ZVM uses internally for the status bar.
+ * Version 6: Name-based tracking using status bar text.
+ * No VM memory reading - uses direction traveled + location name only.
+ * This avoids exposing internal object IDs and works across all game types.
  */
-
-// Version 5: Z-machine v3-v8 support (object IDs only, no hash-based fallback)
 
 // Map data structure per game
 let mapData = {
   gameName: null,
-  locations: new Map(),  // locationId -> { id, name, visits, firstVisit, lastVisit }
-  journey: [],           // Array of { locationId, turn, timestamp, command }
-  connections: new Map() // locationId -> Set of connected locationIds
+  locations: new Map(),  // locationName -> { name, visits, firstVisit, lastVisit }
+  journey: [],           // Array of { locationName, turn, timestamp, command }
+  connections: new Map() // locationName -> Map of connected locationNames with commands
 };
 
 // Track last known location and command
-let lastLocationId = null;
+let lastLocationName = null;
 let lastCommand = null;
 
 /**
- * Get current location from ZVM
- * Uses object IDs only - no hash-based fallbacks to ensure mapping accuracy
- * @returns {{ id: number, name: string } | null}
+ * Get current location from status bar text
+ * Extracts location name from the left side of the status bar
+ * @param {string} statusBarText - Raw status bar text from the game
+ * @returns {{ name: string } | null}
  */
-export function getCurrentLocation() {
+export function getCurrentLocation(statusBarText) {
+  if (!statusBarText || !statusBarText.trim()) {
+    return null;
+  }
+
+  // Status bar typically has format: "Location Name    Score: X  Moves: Y"
+  // Extract the location name (left part before score/moves)
+  let locationName = statusBarText.trim();
+
+  // Remove common suffixes like "Score:", "Moves:", "Time:", etc.
+  const suffixPatterns = [
+    /\s+Score:\s*\d+.*/i,
+    /\s+Moves:\s*\d+.*/i,
+    /\s+Time:\s*.*/i,
+    /\s+Turns:\s*\d+.*/i,
+    /\s{3,}.*$/,  // Multiple spaces often separate location from stats
+  ];
+
+  for (const pattern of suffixPatterns) {
+    locationName = locationName.replace(pattern, '');
+  }
+
+  locationName = locationName.trim();
+
+  if (!locationName) {
+    return null;
+  }
+
+  return { name: locationName };
+}
+
+// ============================================================================
+// COMMENTED OUT: VM Memory Reading (v5 approach)
+// Kept for reference but no longer used - was exposing internal object IDs
+// and breaking some games. Now using status bar text instead.
+// ============================================================================
+/*
+function getCurrentLocationFromVM() {
   try {
     const vm = window.zvmInstance;
     if (!vm || !vm.m || !vm.globals || !vm.objects) {
@@ -33,16 +70,11 @@ export function getCurrentLocation() {
 
     const version = vm.m.getUint8(0x00);
     const isV3 = version === 3;
-
-    // Object table layout differs by version
-    // v3: 9 bytes per entry (4 attrs + 3 links + 2 props)
-    // v4+: 14 bytes per entry (6 attrs + 6 links + 2 props)
     const objEntrySize = isV3 ? 9 : 14;
-    const parentOffset = isV3 ? 4 : 6;  // Offset to parent object number
+    const parentOffset = isV3 ? 4 : 6;
     const propTableOffset = isV3 ? 7 : 12;
 
     let locationId = null;
-    let roomName = null;
 
     // Method 1: Try global 0 (standard Inform location)
     const global0 = vm.m.getUint16(vm.globals);
@@ -51,9 +83,7 @@ export function getCurrentLocation() {
     }
 
     // Method 2: If global 0 failed, find the player object by scanning
-    // Then get its parent (the current room)
     if (!locationId || locationId === 0) {
-      // Scan all objects looking for the player
       for (let objId = 1; objId < 1000; objId++) {
         try {
           const objAddr = vm.objects + objEntrySize * objId;
@@ -64,78 +94,75 @@ export function getCurrentLocation() {
           if (nameLen <= 0 || nameLen > 50) continue;
 
           const objName = vm.decode(propTable + 1, nameLen * 2);
-
-          // Look for player object (common names: "yourself", "self object", "self", "cretin")
           const lowerName = objName.toLowerCase();
           if (objName && (lowerName.includes('yourself') ||
                           lowerName.includes('self object') ||
                           lowerName === 'self' ||
                           lowerName === 'cretin' ||
                           lowerName === 'player')) {
-            // Get player's parent (the room)
             let parentId;
             if (isV3) {
               parentId = vm.m.getUint8(objAddr + parentOffset);
             } else {
               parentId = vm.m.getUint16(objAddr + parentOffset);
             }
-
             if (parentId > 0) {
               locationId = parentId;
               break;
             }
           }
-        } catch (e) {
-          // Skip invalid objects
-        }
+        } catch (e) {}
       }
     }
 
     if (!locationId || locationId === 0) return null;
 
-    // Decode room name from object
     const objAddr = vm.objects + objEntrySize * locationId;
     const proptable = vm.m.getUint16(objAddr + propTableOffset);
     const nameLength = vm.m.getUint8(proptable) * 2;
-    roomName = vm.decode(proptable + 1, nameLength);
+    const roomName = vm.decode(proptable + 1, nameLength);
 
     return { id: locationId, name: roomName };
   } catch (e) {
-    console.error('[AutoMapper] Error in getCurrentLocation:', e);
+    console.error('[AutoMapper] Error in getCurrentLocationFromVM:', e);
     return null;
   }
 }
+*/
 
 /**
  * Check for location change and dispatch event if changed
  * Called after each game turn from voxglk.js
+ * @param {string} statusBarText - Status bar text from the game
  * @param {number} generation - Current game turn number
  */
-export function checkLocationChange(generation) {
-  const location = getCurrentLocation();
+export function checkLocationChange(statusBarText, generation) {
+  const location = getCurrentLocation(statusBarText);
   if (!location) return;
 
-  const locationChanged = location.id !== lastLocationId;
+  const locationChanged = location.name !== lastLocationName;
 
   if (locationChanged) {
-    console.log('[AutoMapper] Location changed:', location.name, `(${location.id})`);
-    const previousLocationId = lastLocationId;
-    lastLocationId = location.id;
+    console.log('[AutoMapper] Location changed:', location.name);
+    const previousLocationName = lastLocationName;
+    lastLocationName = location.name;
 
     // Record the location
     recordLocation(location, generation);
 
     // Record connection if we moved from a previous location
-    if (previousLocationId !== null && lastCommand) {
-      recordConnection(previousLocationId, location.id, lastCommand);
+    if (previousLocationName !== null && lastCommand) {
+      recordConnection(previousLocationName, location.name, lastCommand);
     }
 
     // Dispatch event for other modules to listen
+    // Use location name as the identifier (no more object IDs)
     window.dispatchEvent(new CustomEvent('locationChanged', {
       detail: {
-        locationId: location.id,
+        locationId: location.name,  // Use name as ID for compatibility
         locationName: location.name,
-        previousLocationId,
+        previousLocationId: previousLocationName,
+        previousLocationName,
         generation,
         command: lastCommand
       }
@@ -145,11 +172,11 @@ export function checkLocationChange(generation) {
 
 /**
  * Record a location visit
- * @param {{ id: number, name: string }} location
+ * @param {{ name: string }} location
  * @param {number} generation
  */
 function recordLocation(location, generation) {
-  const existing = mapData.locations.get(location.id);
+  const existing = mapData.locations.get(location.name);
   const now = Date.now();
 
   if (existing) {
@@ -157,8 +184,7 @@ function recordLocation(location, generation) {
     existing.lastVisit = now;
     existing.lastTurn = generation;
   } else {
-    mapData.locations.set(location.id, {
-      id: location.id,
+    mapData.locations.set(location.name, {
       name: location.name,
       visits: 1,
       firstVisit: now,
@@ -170,7 +196,6 @@ function recordLocation(location, generation) {
 
   // Add to journey
   mapData.journey.push({
-    locationId: location.id,
     locationName: location.name,
     turn: generation,
     timestamp: now,
@@ -180,22 +205,22 @@ function recordLocation(location, generation) {
 
 /**
  * Record a connection between two locations
- * @param {number} fromId
- * @param {number} toId
+ * @param {string} fromName - Source location name
+ * @param {string} toName - Destination location name
  * @param {string} command - The command that caused the movement
  */
-function recordConnection(fromId, toId, command) {
-  if (!mapData.connections.has(fromId)) {
-    mapData.connections.set(fromId, new Map());
+function recordConnection(fromName, toName, command) {
+  if (!mapData.connections.has(fromName)) {
+    mapData.connections.set(fromName, new Map());
   }
 
-  const fromConnections = mapData.connections.get(fromId);
+  const fromConnections = mapData.connections.get(fromName);
 
   // Store the command used to reach this destination
-  if (!fromConnections.has(toId)) {
-    fromConnections.set(toId, new Set());
+  if (!fromConnections.has(toName)) {
+    fromConnections.set(toName, new Set());
   }
-  fromConnections.get(toId).add(command);
+  fromConnections.get(toName).add(command);
 }
 
 /**
@@ -252,7 +277,7 @@ export function initAutoMapper(gameName) {
     journey: [],
     connections: new Map()
   };
-  lastLocationId = null;
+  lastLocationName = null;
   lastCommand = null;
 
   // Expose helper to window for debugging
@@ -261,11 +286,8 @@ export function initAutoMapper(gameName) {
 
   console.log('[AutoMapper] Initialized for:', gameName);
 
-  // Check for starting location after VM is fully initialized
-  // The VM may need a moment after gameLoaded to have valid object data
-  setTimeout(() => {
-    checkLocationChange(0);
-  }, 500);
+  // Starting location will be detected on first status bar update
+  // No need for delayed VM check since we use status bar text now
 }
 
 /**
@@ -278,8 +300,16 @@ export function resetAutoMapper() {
     journey: [],
     connections: new Map()
   };
-  lastLocationId = null;
+  lastLocationName = null;
   lastCommand = null;
+}
+
+/**
+ * Get the last known location name
+ * @returns {string|null}
+ */
+export function getLastLocationName() {
+  return lastLocationName;
 }
 
 // Listen for game load events

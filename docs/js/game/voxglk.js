@@ -613,7 +613,8 @@ export function createVoxGlk(textOutputCallback) {
           }
 
           // Check for location change (for auto-mapping)
-          checkLocationChange(generation);
+          // Pass status bar text for name-based location tracking
+          checkLocationChange(statusBarText, generation);
         }
 
         // Handle special input requests (file dialogs for save/restore)

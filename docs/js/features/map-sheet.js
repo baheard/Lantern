@@ -62,6 +62,13 @@ export function createNodeEditSheet() {
           <label>Connections</label>
           <div class="node-connections-list" id="nodeConnectionsList"></div>
         </div>
+        <div class="sheet-merge-section hidden" id="nodeMergeSection">
+          <label>This may be a duplicate</label>
+          <p class="merge-hint">If this is the same location as the original, merge them.</p>
+          <button class="sheet-btn sheet-btn-merge" id="nodeMergeBtn">
+            <span class="material-icons">merge</span> Merge with Original
+          </button>
+        </div>
         <div class="sheet-actions">
           <button class="sheet-btn sheet-btn-secondary" id="nodeConnectBtn">
             <span class="material-icons">add_link</span> Add Connection
@@ -98,9 +105,21 @@ export function createContextMenu() {
 export function openNodeSheet(node) {
   mapState.selectedNode = node.id;
   const isUser = node.isManual || node.isEdited;
+  const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
-  badge.textContent = isUser ? 'Your edit' : 'Auto-mapped';
-  badge.className = `sheet-node-badge ${isUser ? 'user' : 'auto'}`;
+
+  // Set badge based on node type
+  if (isDuplicate) {
+    badge.textContent = 'Possible duplicate';
+    badge.className = 'sheet-node-badge duplicate';
+  } else if (isUser) {
+    badge.textContent = 'Your edit';
+    badge.className = 'sheet-node-badge user';
+  } else {
+    badge.textContent = 'Auto-mapped';
+    badge.className = 'sheet-node-badge auto';
+  }
+
   document.getElementById('sheetNodeName').textContent = node.name || 'Edit Location';
   document.getElementById('nodeNameInput').value = node.name || '';
   document.getElementById('nodeNotesInput').value = node.notes || '';
@@ -109,6 +128,20 @@ export function openNodeSheet(node) {
     btn.setAttribute('aria-checked', btn.dataset.type === node.type);
   });
   populateConnectionsList(node);
+
+  // Show/hide merge section for duplicates
+  const mergeSection = document.getElementById('nodeMergeSection');
+  if (node.isDuplicate && node.originalNodeId) {
+    mergeSection.classList.remove('hidden');
+    const originalNode = mapState.nodes.get(node.originalNodeId);
+    if (originalNode) {
+      mergeSection.querySelector('.merge-hint').textContent =
+        `If this is the same as "${originalNode.name}", merge to combine their connections.`;
+    }
+  } else {
+    mergeSection.classList.add('hidden');
+  }
+
   document.getElementById('nodeEditSheet').classList.remove('hidden');
   render();
   setTimeout(() => { document.getElementById('nodeNameInput').focus(); document.getElementById('nodeNameInput').select(); }, 100);
@@ -236,4 +269,79 @@ export function deleteEdge(key) {
   mapState.deletedEdges.add(key);
   callbacks.saveMapForGame(); render();
   callbacks.showHint('Connection removed');
+}
+
+// ============================================================================
+// MERGE DUPLICATES
+// ============================================================================
+
+/**
+ * Merge a duplicate node with its original
+ * Transfers all connections from duplicate to original, then deletes duplicate
+ */
+export function handleNodeMerge() {
+  const nodeId = mapState.selectedNode;
+  const node = mapState.nodes.get(nodeId);
+  if (!node || !node.isDuplicate || !node.originalNodeId) {
+    callbacks.showHint('Cannot merge this node');
+    return;
+  }
+
+  const originalId = node.originalNodeId;
+  const originalNode = mapState.nodes.get(originalId);
+  if (!originalNode) {
+    callbacks.showHint('Original node not found');
+    return;
+  }
+
+  // Transfer all connections from duplicate to original
+  const edgesToAdd = [];
+  const edgesToDelete = [];
+
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === nodeId) {
+      // Outgoing edge from duplicate -> redirect to original
+      const newKey = `${originalId}-${edge.to}`;
+      if (!mapState.edges.has(newKey) && edge.to !== originalId) {
+        edgesToAdd.push([newKey, { ...edge, from: originalId }]);
+      }
+      edgesToDelete.push(key);
+    } else if (edge.to === nodeId) {
+      // Incoming edge to duplicate -> redirect to original
+      const newKey = `${edge.from}-${originalId}`;
+      if (!mapState.edges.has(newKey) && edge.from !== originalId) {
+        edgesToAdd.push([newKey, { ...edge, to: originalId }]);
+      }
+      edgesToDelete.push(key);
+    }
+  }
+
+  // Apply edge changes
+  for (const key of edgesToDelete) {
+    mapState.edges.delete(key);
+  }
+  for (const [key, edge] of edgesToAdd) {
+    mapState.edges.set(key, edge);
+    mapState.protectedEdges.add(key);
+  }
+
+  // Delete the duplicate node
+  mapState.nodes.delete(nodeId);
+  mapState.deletedNodes.add(nodeId);
+
+  // Clear hasDuplicates flag if no more duplicates exist
+  const remainingDuplicates = [...mapState.nodes.values()].filter(
+    n => n.isDuplicate && n.originalNodeId === originalId
+  );
+  if (remainingDuplicates.length === 0) {
+    originalNode.hasDuplicates = false;
+    delete originalNode.duplicateGroup;
+  }
+
+  // Select the original node
+  mapState.selectedNode = originalId;
+
+  closeNodeSheet();
+  callbacks.showHint(`Merged with "${originalNode.name}"`);
+  callbacks.saveMapForGame();
 }

@@ -15,7 +15,7 @@
  * - map-canvas.js   : Core orchestrator (this file)
  */
 
-import { getCurrentLocation } from './auto-mapper.js';
+import { getCurrentLocation, getLastLocationName } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
@@ -31,7 +31,7 @@ import {
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeDelete,
-  startConnectionFromSheet, setSheetCallbacks
+  startConnectionFromSheet, setSheetCallbacks, handleNodeMerge
 } from './map-sheet.js';
 
 // ============================================================================
@@ -207,6 +207,7 @@ function setupEventListeners() {
   document.getElementById('nodeNotesInput').addEventListener('input', handleNodeNotesChange);
   document.getElementById('nodeDeleteBtn').addEventListener('click', handleNodeDelete);
   document.getElementById('nodeConnectBtn').addEventListener('click', startConnectionFromSheet);
+  document.getElementById('nodeMergeBtn').addEventListener('click', handleNodeMerge);
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });
@@ -278,12 +279,35 @@ function handleLocationChange(e) {
   }
   const { locationId, locationName, previousLocationId, command } = e.detail;
 
-  // Safety: Never add deleted nodes or modify protected nodes
-  if (mapState.deletedNodes.has(locationId)) return;
-  const existingNode = mapState.nodes.get(locationId);
-  if (existingNode && mapState.protectedNodes.has(locationId)) {
-    mapState.selectedNode = locationId;
+  // locationId is now the location NAME (name-based tracking)
+  // Check if we already have a node with this name
+  const existingNode = mapState.nodes.get(locationName);
+
+  // Safety: Never add deleted nodes
+  if (mapState.deletedNodes.has(locationName)) return;
+
+  // If node exists and is protected, just select it and maybe add edge
+  if (existingNode && mapState.protectedNodes.has(locationName)) {
+    // Check if we're coming from a different previous location than expected
+    // This could indicate a potential duplicate room with the same name
+    const isPotentialDuplicate = previousLocationId &&
+      previousLocationId !== locationName &&
+      !hasEdgeBetween(previousLocationId, locationName);
+
+    if (isPotentialDuplicate) {
+      // Create a duplicate node for the user to review
+      const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
+      if (duplicateId) {
+        mapState.selectedNode = duplicateId;
+        showHint(`Found "${locationName}" via different route. Merge if same place.`);
+      } else {
+        mapState.selectedNode = locationName;
+      }
+    } else {
+      mapState.selectedNode = locationName;
+    }
     render();
+    saveMapForGame();
     return;
   }
 
@@ -300,32 +324,106 @@ function handleLocationChange(e) {
       position = findAvailablePosition({ x: 0, y: 0 });
     }
 
-    console.log('[MapCanvas] Creating new node:', locationId, locationName, 'at', position);
-    mapState.nodes.set(locationId, {
-      id: locationId, name: locationName, x: position.x, y: position.y,
+    console.log('[MapCanvas] Creating new node:', locationName, 'at', position);
+    mapState.nodes.set(locationName, {
+      id: locationName, name: locationName, x: position.x, y: position.y,
       type: 'room', notes: '', isManual: false, isEdited: false
     });
     // Protect from future auto-mapper modifications
-    mapState.protectedNodes.add(locationId);
+    mapState.protectedNodes.add(locationName);
   } else {
-    console.log('[MapCanvas] Node already exists:', locationId);
+    console.log('[MapCanvas] Node already exists:', locationName);
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
-  if (previousLocationId && previousLocationId !== locationId) {
-    const edgeKey = `${previousLocationId}-${locationId}`;
+  if (previousLocationId && previousLocationId !== locationName) {
+    const edgeKey = `${previousLocationId}-${locationName}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
-      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationId, command: command || '', isManual: false, isEdited: false });
+      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationName, command: command || '', isManual: false, isEdited: false });
       // Protect from future auto-mapper modifications
       mapState.protectedEdges.add(edgeKey);
     }
   }
 
-  mapState.selectedNode = locationId;
+  mapState.selectedNode = locationName;
   updateNodeCount();
   render();
   saveMapForGame();
+}
+
+/**
+ * Check if there's an edge between two nodes (in either direction)
+ */
+function hasEdgeBetween(nodeA, nodeB) {
+  return mapState.edges.has(`${nodeA}-${nodeB}`) || mapState.edges.has(`${nodeB}-${nodeA}`);
+}
+
+/**
+ * Create a duplicate node when same-named location reached via different route
+ * Places it close to the original with special coloring
+ */
+function createDuplicateNode(locationName, originalNode, previousLocationId, command) {
+  // Generate unique ID for duplicate
+  let duplicateNum = 2;
+  let duplicateId = `${locationName} (${duplicateNum})`;
+  while (mapState.nodes.has(duplicateId) || mapState.deletedNodes.has(duplicateId)) {
+    duplicateNum++;
+    duplicateId = `${locationName} (${duplicateNum})`;
+  }
+
+  // Position close to original but offset
+  const direction = command ? getDirectionFromCommand(command) : null;
+  const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
+  let position;
+
+  if (parentNode && direction && DIRECTION_OFFSETS[direction]) {
+    // Place based on direction from previous location
+    const offset = DIRECTION_OFFSETS[direction];
+    position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
+  } else {
+    // Place near the original with slight offset
+    position = findAvailablePosition({ x: originalNode.x + 50, y: originalNode.y + 50 });
+  }
+
+  console.log('[MapCanvas] Creating duplicate node:', duplicateId, 'near', locationName);
+
+  // Mark original as having duplicates
+  originalNode.hasDuplicates = true;
+  originalNode.duplicateGroup = locationName;
+
+  // Create the duplicate node
+  mapState.nodes.set(duplicateId, {
+    id: duplicateId,
+    name: locationName,  // Same display name
+    x: position.x,
+    y: position.y,
+    type: 'room',
+    notes: `Possible duplicate of "${locationName}". Merge if same location.`,
+    isManual: false,
+    isEdited: false,
+    isDuplicate: true,
+    duplicateGroup: locationName,  // Group for merging
+    originalNodeId: locationName
+  });
+  mapState.protectedNodes.add(duplicateId);
+
+  // Add edge from previous location to duplicate
+  if (previousLocationId) {
+    const edgeKey = `${previousLocationId}-${duplicateId}`;
+    if (!mapState.edges.has(edgeKey)) {
+      mapState.edges.set(edgeKey, {
+        from: previousLocationId,
+        to: duplicateId,
+        command: command || '',
+        isManual: false,
+        isEdited: false
+      });
+      mapState.protectedEdges.add(edgeKey);
+    }
+  }
+
+  return duplicateId;
 }
 
 function getDirectionFromCommand(command) {
@@ -432,8 +530,9 @@ export function toggleMap() { isVisible ? hideMap() : showMap(); }
 export function isMapVisible() { return isVisible; }
 
 export function centerOnCurrentLocation() {
-  const current = getCurrentLocation();
-  let target = current ? mapState.nodes.get(current.id) : null;
+  // Use last known location name (from status bar tracking)
+  const currentName = getLastLocationName();
+  let target = currentName ? mapState.nodes.get(currentName) : null;
   if (!target && mapState.nodes.size > 0) target = mapState.nodes.values().next().value;
   if (target) {
     mapState.viewport.x = -target.x * mapState.viewport.scale;

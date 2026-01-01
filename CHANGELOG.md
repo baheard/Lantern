@@ -2,6 +2,30 @@
 
 ## January 2025
 
+### January 1, 2025 - Name-Based Auto-Mapper (v1.4.17)
+
+5. **Name-Based Location Tracking** (v1.4.17)
+   - **Removed VM memory reading** - No longer scans object tables or reads global variables
+   - Uses **status bar text** to identify locations (room name only)
+   - Avoids exposing internal object IDs to the user
+   - Works consistently across all Z-machine versions
+   - Files: `docs/js/features/auto-mapper.js`, `docs/js/game/voxglk.js`
+
+6. **Duplicate Location Handling** (v1.4.17)
+   - When same room name is reached via different route, creates a **potential duplicate** node
+   - Duplicates shown in **orange** with `?` badge for easy identification
+   - Placed close to original node for easy comparison
+   - **Merge button** in node sheet combines duplicates with original
+   - Transfers all connections when merging
+   - Files: `docs/js/features/map-canvas.js`, `docs/js/features/map-render.js`, `docs/js/features/map-sheet.js`
+
+7. **Duplicate Visual Indicators**
+   - Orange fill color for potential duplicates
+   - Yellow dashed border
+   - Question mark badge in corner
+   - Orange label background
+   - Original node also marked with `?` when it has duplicates
+
 ### January 1, 2025 - Auto-Mapper & Map Canvas
 
 1. **Auto-Mapper Z-machine v5+ Support** (v1.4.12 - v1.4.15)

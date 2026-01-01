@@ -26,41 +26,91 @@ docs/js/features/
 
 ## Auto-Mapper (`auto-mapper.js`)
 
-### How It Works
+### How It Works (v1.4.17+)
 
-The auto-mapper hooks into the Z-machine VM to detect player location changes. It uses a two-method approach to support different Z-machine versions and game implementations.
+The auto-mapper uses **name-based tracking** via the status bar text. This approach:
+- Avoids exposing internal VM object IDs to the user
+- Works consistently across all Z-machine versions
+- Is simpler and more reliable than VM memory reading
 
-#### Method 1: Global Variable 0 (Z-machine v3)
-
-For Z-machine version 3 games, the interpreter automatically maintains the player's location in global variable 0:
-
-```javascript
-const locationId = vm.m.getUint16(vm.globals); // Global 0 = current location
-```
-
-This is defined by the [Z-Machine Standard](https://inform-fiction.org/zmachine/standards/z1point1/sect08.html): *"The short name of the object whose number is in the first global variable should be printed on the left hand side of the [status] line."*
-
-#### Method 2: Player Object Scanning (Z-machine v5+)
-
-For Z-machine version 5+ games (like Dreamhold), global 0 may not contain the location. Instead, we scan the object table to find the player object, then get its parent (the current room):
+#### Location Detection from Status Bar
 
 ```javascript
-// Scan objects looking for the player
-for (let objId = 1; objId < 1000; objId++) {
-  const objName = vm.decode(propTable + 1, nameLen * 2);
+// Status bar typically has format: "Location Name    Score: X  Moves: Y"
+// Extract the location name (left part before score/moves)
+export function getCurrentLocation(statusBarText) {
+  let locationName = statusBarText.trim();
 
-  // Player object names: "yourself", "(self object)", "self", "cretin", "player"
-  if (lowerName.includes('yourself') || lowerName.includes('self object') || ...) {
-    const parentId = vm.m.getUint16(objAddr + parentOffset);
-    if (parentId > 0) {
-      locationId = parentId; // Parent is the current room
-      break;
-    }
+  // Remove common suffixes
+  const suffixPatterns = [
+    /\s+Score:\s*\d+.*/i,
+    /\s+Moves:\s*\d+.*/i,
+    /\s+Time:\s*.*/i,
+    /\s{3,}.*$/,  // Multiple spaces separate location from stats
+  ];
+
+  for (const pattern of suffixPatterns) {
+    locationName = locationName.replace(pattern, '');
   }
+
+  return { name: locationName.trim() };
 }
 ```
 
-### Z-Machine Object Table Layout
+#### Why Name-Based (not ID-Based)
+
+Previous versions (v1.4.12-v1.4.16) used VM memory reading to get object IDs. This was problematic:
+- Exposed internal game data to users (confusing object IDs like "14", "127")
+- Broke some games that use non-standard object layouts
+- Required version-specific code paths (v3 vs v5+)
+
+Name-based tracking is more user-friendly and consistent.
+
+### Handling Same-Named Locations
+
+When the player reaches a location with the same name via a different route, the mapper creates a **potential duplicate**:
+
+```javascript
+// If node exists but we arrived from an unexpected direction
+const isPotentialDuplicate = previousLocationId &&
+  !hasEdgeBetween(previousLocationId, locationName);
+
+if (isPotentialDuplicate) {
+  createDuplicateNode(locationName, existingNode, previousLocationId, command);
+}
+```
+
+Duplicates are:
+- Placed close to the original node
+- Colored orange with a `?` badge
+- Can be merged via the node edit sheet
+
+### Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `locationChanged` | `{ locationId, locationName, previousLocationId, previousLocationName, command }` | Fired when player moves (locationId = locationName for compatibility) |
+| `gameLoaded` | `{ gameName }` | Fired when a game is loaded |
+
+### Key Functions
+
+- `getCurrentLocation(statusBarText)` - Extracts location name from status bar text
+- `checkLocationChange(statusBarText, generation)` - Called after each game turn with status bar text
+- `setLastCommand(cmd)` - Records the last command (for edge labels)
+- `getLastLocationName()` - Returns the last known location name
+- `initAutoMapper(gameName)` - Initializes mapper for a game
+
+### Starting Location Detection
+
+The starting location is detected on the first status bar update after game load. No delayed VM check is needed since we use status bar text.
+
+---
+
+## Historical Reference: VM Memory Reading (v1.4.12-v1.4.16)
+
+> **Note:** This approach was removed in v1.4.17. Kept for reference only.
+
+### Z-Machine Object Table Layout (Historical)
 
 The object table layout differs by Z-machine version:
 
@@ -69,7 +119,7 @@ The object table layout differs by Z-machine version:
 | v3      | 9 bytes    | 4 (1-byte)    | 7                    |
 | v4+     | 14 bytes   | 6 (2-byte)    | 12                   |
 
-### Object Tree in Inform Games
+### Object Tree in Inform Games (Historical)
 
 Inform games have a standard object hierarchy:
 
@@ -78,38 +128,11 @@ Object 1: "Class" (parent: 0) - metaclass
 Object 2: "Object" (parent: 0) - base class
 Object 3-9: Other system classes
 Object 10: "(self object)" (parent: 0) - player class definition
-Object 14: "(self object)" (parent: room_id) - actual player instance ← THIS IS THE PLAYER
+Object 14: "(self object)" (parent: room_id) - actual player instance
 Object 50+: Rooms, items, etc.
 ```
 
-The player object's parent is always the current room. When the player moves, the parent changes.
-
-### Events
-
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `locationChanged` | `{ locationId, locationName, previousLocationId, command }` | Fired when player moves |
-| `gameLoaded` | `{ gameName }` | Fired when a game is loaded |
-
-### Key Functions
-
-- `getCurrentLocation()` - Returns `{ id, name }` of current location (object IDs only, no hash-based fallbacks)
-- `checkLocationChange(generation)` - Called after each game turn to detect movement
-- `setLastCommand(cmd)` - Records the last command (for edge labels)
-- `initAutoMapper(gameName)` - Initializes mapper, includes delayed starting location check
-
-### Starting Location Detection
-
-The auto-mapper captures the starting location via a delayed check after game initialization:
-
-```javascript
-// In initAutoMapper()
-setTimeout(() => {
-  checkLocationChange(0);  // Check after VM fully initialized
-}, 500);
-```
-
-This 500ms delay ensures the VM has valid object data before the first location check.
+---
 
 ### Direction/Command Tracking
 

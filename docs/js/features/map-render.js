@@ -2,7 +2,7 @@
  * Map Canvas - Rendering Functions
  */
 
-import { getCurrentLocation } from './auto-mapper.js';
+import { getLastLocationName } from './auto-mapper.js';
 import {
   canvas, ctx, container, mapState,
   NODE_RADIUS, NODE_COLORS, NODE_ICONS,
@@ -136,28 +136,46 @@ function drawEdgePreview() {
 // ============================================================================
 
 function drawNodes() {
-  const currentLocation = getCurrentLocation();
+  const currentLocationName = getLastLocationName();
   for (const node of mapState.nodes.values()) {
     const isSelected = mapState.selectedNode === node.id;
-    const isCurrent = currentLocation?.id === node.id;
+    // Current location check: match by name (node.name) or by ID if it's the primary node
+    const isCurrent = currentLocationName && (node.name === currentLocationName || node.id === currentLocationName);
     const isUser = node.isManual || node.isEdited;
     const isEdgeStart = mapState.edgeStartNode === node.id;
-    const fillColor = isCurrent ? NODE_COLORS.current : isUser ? NODE_COLORS.user : NODE_COLORS.auto;
+    const isDuplicate = node.isDuplicate || node.hasDuplicates;
+
+    // Determine fill color: duplicates get orange, otherwise normal colors
+    let fillColor;
+    if (isDuplicate) {
+      fillColor = '#f97316';  // Orange for potential duplicates
+    } else if (isCurrent) {
+      fillColor = NODE_COLORS.current;
+    } else if (isUser) {
+      fillColor = NODE_COLORS.user;
+    } else {
+      fillColor = NODE_COLORS.auto;
+    }
 
     // Shadow & fill
     ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
     ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = fillColor; ctx.fill();
 
-    // Border
+    // Border - duplicates get dashed orange border
     ctx.lineWidth = isSelected || isEdgeStart ? 3 : 2;
-    ctx.strokeStyle = isUser ? '#ffffff' : (isSelected || isEdgeStart ? '#ffffff' : 'rgba(255,255,255,0.4)');
-    ctx.setLineDash(isUser ? [4, 3] : []);
+    if (isDuplicate) {
+      ctx.strokeStyle = '#fbbf24';  // Yellow border for duplicates
+      ctx.setLineDash([4, 3]);
+    } else {
+      ctx.strokeStyle = isUser ? '#ffffff' : (isSelected || isEdgeStart ? '#ffffff' : 'rgba(255,255,255,0.4)');
+      ctx.setLineDash(isUser ? [4, 3] : []);
+    }
     ctx.stroke(); ctx.setLineDash([]);
 
     // Glow
     if (isCurrent || isSelected || isEdgeStart) {
       ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = isCurrent ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.3)';
+      ctx.strokeStyle = isCurrent ? 'rgba(34,197,94,0.5)' : isDuplicate ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 2; ctx.stroke();
     }
 
@@ -165,18 +183,36 @@ function drawNodes() {
     ctx.fillStyle = '#ffffff'; ctx.font = '18px Material Icons'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(NODE_ICONS[node.type] || NODE_ICONS.room, node.x, node.y);
 
-    // Label
+    // Label - show (2), (3), etc. for duplicates
     ctx.font = '11px system-ui, -apple-system, sans-serif';
     let name = node.name || 'Unknown';
-    if (name.length > 18) name = name.substring(0, 15) + '...';
+    // If this is a duplicate node, the ID contains the number like "Kitchen (2)"
+    // but we show just the name. Add a small indicator.
+    if (node.isDuplicate) {
+      const match = node.id.match(/\((\d+)\)$/);
+      if (match) name = `${name} ?${match[1]}`;
+    } else if (node.hasDuplicates) {
+      name = `${name} ?`;
+    }
+    if (name.length > 20) name = name.substring(0, 17) + '...';
     const tw = ctx.measureText(name).width, ly = node.y + NODE_RADIUS + 8;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - 6, tw + 8, 14, 4); ctx.fill();
+    // Duplicates get orange background label
+    ctx.fillStyle = isDuplicate ? 'rgba(249,115,22,0.8)' : 'rgba(0,0,0,0.6)';
+    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - 6, tw + 8, 14, 4); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
 
-    // User indicator
-    if (isUser && !isCurrent) {
+    // User indicator (but not for duplicates - they have their own indicator)
+    if (isUser && !isCurrent && !isDuplicate) {
       ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 5, 0, Math.PI * 2);
       ctx.fillStyle = '#a78bfa'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Duplicate indicator - question mark badge
+    if (isDuplicate) {
+      ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#fbbf24'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#000000'; ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('?', node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 5);
     }
   }
 }
