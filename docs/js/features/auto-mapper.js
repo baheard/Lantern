@@ -17,6 +17,7 @@ let mapData = {
 // Track last known location and command
 let lastLocationName = null;
 let lastCommand = null;
+let startCheckTimeout = null;
 
 /**
  * Get current location from status bar text
@@ -286,6 +287,12 @@ export function initAutoMapper(gameName) {
 
   console.log('[AutoMapper] Initialized for:', gameName);
 
+  // Cancel any pending start check from previous init
+  if (startCheckTimeout) {
+    clearTimeout(startCheckTimeout);
+    startCheckTimeout = null;
+  }
+
   // Check for starting location from existing status bar
   // Status bar may have already been rendered before this init
   // Use retry mechanism since game may still be initializing
@@ -296,12 +303,15 @@ export function initAutoMapper(gameName) {
     if (statusText && statusText.length > 0) {
       console.log('[AutoMapper] Found starting location:', statusText);
       checkLocationChange(statusText, 0);
+      startCheckTimeout = null;
     } else if (attempts < 5) {
       attempts++;
-      setTimeout(checkStartingLocation, 200);  // Retry every 200ms up to 5 times
+      startCheckTimeout = setTimeout(checkStartingLocation, 200);
+    } else {
+      startCheckTimeout = null;
     }
   };
-  setTimeout(checkStartingLocation, 100);
+  startCheckTimeout = setTimeout(checkStartingLocation, 100);
 }
 
 /**
