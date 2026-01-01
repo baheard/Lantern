@@ -23,11 +23,11 @@ let lastCommand = null;
  * @returns {{ id: number, name: string } | null}
  */
 export function getCurrentLocation() {
-  const vm = window.zvmInstance;
-  console.log('[AutoMapper] getCurrentLocation - vm:', !!vm, 'vm.m:', !!vm?.m, 'vm.globals:', vm?.globals);
-  if (!vm || !vm.m || !vm.globals) return null;
-
   try {
+    const vm = window.zvmInstance;
+    console.log('[AutoMapper] getCurrentLocation - vm:', !!vm, 'vm.m:', !!vm?.m, 'vm.globals:', vm?.globals);
+    if (!vm || !vm.m || !vm.globals) return null;
+
     // Read location object ID from global 0 (first global variable)
     const locationId = vm.m.getUint16(vm.globals);
     console.log('[AutoMapper] locationId:', locationId);
