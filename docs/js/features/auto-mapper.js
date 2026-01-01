@@ -5,8 +5,7 @@
  * Uses the same technique ZVM uses internally for the status bar.
  */
 
-// DEBUG: Version marker to verify fresh code is loaded
-console.log('[AutoMapper] Module loaded - v2');
+// Version 3: Supports Z-machine v3-v8 games
 
 // Map data structure per game
 let mapData = {
@@ -26,27 +25,70 @@ let lastCommand = null;
  * @returns {{ id: number, name: string } | null}
  */
 export function getCurrentLocation() {
-  console.log('[AutoMapper] getCurrentLocation called - v2');
   try {
     const vm = window.zvmInstance;
-    console.log('[AutoMapper] vm exists:', !!vm);
-    if (vm) {
-      console.log('[AutoMapper] vm properties:', Object.keys(vm).slice(0, 20));
-      console.log('[AutoMapper] vm.m:', vm.m, 'vm.globals:', vm.globals);
-    }
-    if (!vm || !vm.m || !vm.globals) {
-      console.log('[AutoMapper] Missing required vm properties, returning null');
+    if (!vm || !vm.m || !vm.globals || !vm.objects) {
       return null;
     }
 
-    // Read location object ID from global 0 (first global variable)
-    const locationId = vm.m.getUint16(vm.globals);
-    console.log('[AutoMapper] locationId:', locationId);
+    const version = vm.m.getUint8(0x00);
+    const isV3 = version === 3;
+
+    // Object table layout differs by version
+    // v3: 9 bytes per entry (4 attrs + 3 links + 2 props)
+    // v4+: 14 bytes per entry (6 attrs + 6 links + 2 props)
+    const objEntrySize = isV3 ? 9 : 14;
+    const parentOffset = isV3 ? 4 : 6;  // Offset to parent object number
+    const propTableOffset = isV3 ? 7 : 12;
+
+    let locationId = null;
+
+    // Method 1: Try global 0 (standard Inform location)
+    const global0 = vm.m.getUint16(vm.globals);
+    if (global0 > 0 && global0 < 65535) {
+      locationId = global0;
+    }
+
+    // Method 2: If global 0 failed, try finding player object's parent
+    // In Inform, the player is typically object 1 or a low-numbered object
+    // The player's parent should be the current room
+    if (!locationId || locationId === 0) {
+      // Try common player object IDs (usually 1-5 in Inform games)
+      for (const playerId of [1, 2, 3, 4, 5]) {
+        try {
+          // Get parent of this object
+          const objAddr = vm.objects + objEntrySize * playerId;
+          let parentId;
+          if (isV3) {
+            parentId = vm.m.getUint8(objAddr + parentOffset);
+          } else {
+            parentId = vm.m.getUint16(objAddr + parentOffset);
+          }
+
+          if (parentId > 0) {
+            // Check if parent looks like a room (has a valid property table with a name)
+            const parentAddr = vm.objects + objEntrySize * parentId;
+            const propTable = vm.m.getUint16(parentAddr + propTableOffset);
+            if (propTable > 0) {
+              const nameLen = vm.m.getUint8(propTable);
+              if (nameLen > 0 && nameLen < 100) {
+                // This looks like a valid room
+                locationId = parentId;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Invalid object, continue
+        }
+      }
+    }
 
     if (!locationId || locationId === 0) return null;
 
-    // Decode room name using ZVM's method (same as status bar)
-    const proptable = vm.m.getUint16(vm.objects + 9 * locationId + 7);
+    // Decode room name
+    const objAddr = vm.objects + objEntrySize * locationId;
+    const proptable = vm.m.getUint16(objAddr + propTableOffset);
     const nameLength = vm.m.getUint8(proptable) * 2;
     const roomName = vm.decode(proptable + 1, nameLength);
 
@@ -64,13 +106,12 @@ export function getCurrentLocation() {
  */
 export function checkLocationChange(generation) {
   const location = getCurrentLocation();
-  console.log('[AutoMapper] checkLocationChange called, generation:', generation, 'location:', location);
   if (!location) return;
 
   const locationChanged = location.id !== lastLocationId;
-  console.log('[AutoMapper] Location changed?', locationChanged, 'lastLocationId:', lastLocationId, 'currentId:', location.id);
 
   if (locationChanged) {
+    console.log('[AutoMapper] Location changed:', location.name, `(${location.id})`);
     const previousLocationId = lastLocationId;
     lastLocationId = location.id;
 
@@ -83,12 +124,6 @@ export function checkLocationChange(generation) {
     }
 
     // Dispatch event for other modules to listen
-    console.log('[AutoMapper] Dispatching locationChanged event:', {
-      locationId: location.id,
-      locationName: location.name,
-      previousLocationId,
-      command: lastCommand
-    });
     window.dispatchEvent(new CustomEvent('locationChanged', {
       detail: {
         locationId: location.id,
