@@ -410,9 +410,7 @@ export function createVoxGlk(textOutputCallback) {
           // Clear watchdog since VM responded with a new generation
           clearWatchdog();
 
-          // Check for location change (for auto-mapping)
-          // Runs after each turn when VM has processed player input
-          checkLocationChange(generation);
+          // Location check moved to after render (needs statusBarText)
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
@@ -613,6 +611,10 @@ export function createVoxGlk(textOutputCallback) {
           if (textForTTS.trim() && onTextOutput) {
             onTextOutput(textForTTS);
           }
+
+          // Check for location change (for auto-mapping)
+          // Runs after render so we have statusBarText as fallback
+          checkLocationChange(generation, statusBarText);
         }
 
         // Handle special input requests (file dialogs for save/restore)

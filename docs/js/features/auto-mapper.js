@@ -5,7 +5,7 @@
  * Uses the same technique ZVM uses internally for the status bar.
  */
 
-// Version 3: Supports Z-machine v3-v8 games
+// Version 4: Supports Z-machine v3-v8 games with status bar fallback
 
 // Map data structure per game
 let mapData = {
@@ -20,14 +20,60 @@ let lastLocationId = null;
 let lastCommand = null;
 
 /**
+ * Simple hash function to create numeric ID from string
+ * @param {string} str
+ * @returns {number}
+ */
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Return positive number, offset to avoid collision with real object IDs
+  return Math.abs(hash) + 100000;
+}
+
+/**
+ * Extract room name from status bar text
+ * Status bar format: "Room Name          Score: 0  Moves: 1"
+ * @param {string} statusBarText
+ * @returns {string|null}
+ */
+function parseRoomNameFromStatusBar(statusBarText) {
+  if (!statusBarText || typeof statusBarText !== 'string') return null;
+
+  // Remove common right-side elements
+  let roomName = statusBarText
+    .replace(/\s*(Score|Moves|Turns|Time):\s*\d+.*/gi, '')
+    .replace(/\s*\d+:\d+\s*(AM|PM)?.*/gi, '')  // Time format
+    .trim();
+
+  // If we have something left, use it
+  if (roomName && roomName.length > 0 && roomName.length < 100) {
+    return roomName;
+  }
+  return null;
+}
+
+/**
  * Get current location from ZVM
- * Uses the same method ZVM uses for status bar display
+ * Uses multiple methods to find the current room
+ * @param {string} [statusBarText] - Optional status bar text for fallback
  * @returns {{ id: number, name: string } | null}
  */
-export function getCurrentLocation() {
+export function getCurrentLocation(statusBarText = null) {
   try {
     const vm = window.zvmInstance;
     if (!vm || !vm.m || !vm.globals || !vm.objects) {
+      // Method 3: Use status bar as last resort (even without VM)
+      if (statusBarText) {
+        const roomName = parseRoomNameFromStatusBar(statusBarText);
+        if (roomName) {
+          return { id: hashString(roomName), name: roomName };
+        }
+      }
       return null;
     }
 
@@ -42,6 +88,7 @@ export function getCurrentLocation() {
     const propTableOffset = isV3 ? 7 : 12;
 
     let locationId = null;
+    let roomName = null;
 
     // Method 1: Try global 0 (standard Inform location)
     const global0 = vm.m.getUint16(vm.globals);
@@ -90,13 +137,21 @@ export function getCurrentLocation() {
       }
     }
 
+    // Method 3: If still no location, use status bar text
+    if ((!locationId || locationId === 0) && statusBarText) {
+      roomName = parseRoomNameFromStatusBar(statusBarText);
+      if (roomName) {
+        return { id: hashString(roomName), name: roomName };
+      }
+    }
+
     if (!locationId || locationId === 0) return null;
 
-    // Decode room name
+    // Decode room name from object
     const objAddr = vm.objects + objEntrySize * locationId;
     const proptable = vm.m.getUint16(objAddr + propTableOffset);
     const nameLength = vm.m.getUint8(proptable) * 2;
-    const roomName = vm.decode(proptable + 1, nameLength);
+    roomName = vm.decode(proptable + 1, nameLength);
 
     return { id: locationId, name: roomName };
   } catch (e) {
@@ -109,9 +164,10 @@ export function getCurrentLocation() {
  * Check for location change and dispatch event if changed
  * Called after each game turn from voxglk.js
  * @param {number} generation - Current game turn number
+ * @param {string} [statusBarText] - Optional status bar text for fallback detection
  */
-export function checkLocationChange(generation) {
-  const location = getCurrentLocation();
+export function checkLocationChange(generation, statusBarText = null) {
+  const location = getCurrentLocation(statusBarText);
   if (!location) return;
 
   const locationChanged = location.id !== lastLocationId;
@@ -259,6 +315,14 @@ export function initAutoMapper(gameName) {
   window.getMapData = getMapData;
 
   console.log('[AutoMapper] Initialized for:', gameName);
+
+  // Check for starting location after VM is fully initialized
+  // The VM may need a moment after gameLoaded to have valid object data
+  setTimeout(() => {
+    const statusBarEl = document.getElementById('statusBar');
+    const statusBarText = statusBarEl?.textContent || null;
+    checkLocationChange(0, statusBarText);
+  }, 500);
 }
 
 /**
