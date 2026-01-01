@@ -84,6 +84,7 @@ export const mapState = {
   autoMapEnabled: true,
   // Interaction state
   isDragging: false,
+  hasDragged: false,  // True if actual movement occurred during drag
   dragStart: null,
   dragNode: null,
   isCreatingEdge: false,
@@ -125,5 +126,8 @@ export const timers = {
 export const touchState = {
   lastTouchDistance: 0,
   lastTouchCenter: { x: 0, y: 0 },
-  touchStartTime: 0
+  touchStartTime: 0,
+  // Double-tap detection
+  lastTapTime: 0,
+  lastTapPosition: { x: 0, y: 0 }
 };

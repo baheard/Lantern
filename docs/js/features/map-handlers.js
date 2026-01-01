@@ -38,7 +38,8 @@ export function handlePointerDown(e) {
   const canvasPoint = screenToCanvas(x, y);
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
-  timers.isInteracting = true; hideFab();
+  timers.isInteracting = true;
+  // Controls stay visible during panning - no hideFab() call
 
   if (mapState.isAddingNode && !hitNode) { callbacks.addNodeAtPosition(canvasPoint.x, canvasPoint.y); callbacks.exitAddMode(); return; }
 
@@ -64,7 +65,9 @@ export function handlePointerDown(e) {
       callbacks.showHint('Drag to another location to create connection'); render();
     }, LONG_PRESS_DURATION);
   } else {
-    mapState.isDragging = true; mapState.dragStart = { x, y }; canvas.style.cursor = 'grabbing';
+    mapState.isDragging = true; mapState.dragStart = { x, y }; mapState.hasDragged = false;
+    touchState.touchStartTime = Date.now();
+    canvas.style.cursor = 'grabbing';
   }
 }
 
@@ -74,8 +77,10 @@ export function handlePointerMove(e) {
   mapState.currentPointer = { x, y };
 
   if (mapState.isDragging && mapState.dragStart) {
-    mapState.viewport.x += x - mapState.dragStart.x;
-    mapState.viewport.y += y - mapState.dragStart.y;
+    const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) mapState.hasDragged = true;
+    mapState.viewport.x += dx;
+    mapState.viewport.y += dy;
     mapState.dragStart = { x, y };
     render();
   } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge) {
@@ -98,17 +103,31 @@ export function handlePointerUp(e) {
   clearTimeout(timers.longPressTimer); stopLongPressAnimation();
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const canvasPoint = screenToCanvas(x, y);
+  const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
   if (mapState.isCreatingEdge && mapState.edgeStartNode && timers.longPressTriggered) {
-    const hitNode = getNodeAtPoint(...Object.values(screenToCanvas(x, y)));
     if (hitNode && hitNode.id !== mapState.edgeStartNode) createManualEdge(mapState.edgeStartNode, hitNode.id);
     mapState.isCreatingEdge = false; mapState.edgeStartNode = null; callbacks.hideHint();
   } else if (mapState.dragNode && !mapState.isDragging && !timers.longPressTriggered) {
     if (Date.now() - touchState.touchStartTime < 250) openNodeSheet(mapState.dragNode);
     else callbacks.saveMapForGame();
+  } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode) {
+    // Double-tap detection: add node on empty canvas (only if no drag movement)
+    const now = Date.now();
+    const tapDx = x - touchState.lastTapPosition.x;
+    const tapDy = y - touchState.lastTapPosition.y;
+    const tapDist = Math.sqrt(tapDx * tapDx + tapDy * tapDy);
+    if (now - touchState.lastTapTime < 300 && tapDist < 30) {
+      callbacks.addNodeAtPosition(canvasPoint.x, canvasPoint.y);
+      touchState.lastTapTime = 0; // Reset to prevent triple-tap
+    } else {
+      touchState.lastTapTime = now;
+      touchState.lastTapPosition = { x, y };
+    }
   }
 
-  mapState.isDragging = false; mapState.dragStart = null; mapState.dragNode = null; timers.longPressTriggered = false;
+  mapState.isDragging = false; mapState.dragStart = null; mapState.dragNode = null; mapState.hasDragged = false; timers.longPressTriggered = false;
   canvas.style.cursor = mapState.isAddingNode ? 'crosshair' : 'grab';
   scheduleFabShow(); render();
 }
@@ -124,7 +143,8 @@ export function handleTouchStart(e) {
   } else if (e.touches.length === 2) {
     clearTimeout(timers.longPressTimer); stopLongPressAnimation();
     mapState.isDragging = false; mapState.dragNode = null;
-    timers.isInteracting = true; hideFab();
+    timers.isInteracting = true;
+    // Controls stay visible during pinch-zoom
     const dx = e.touches[1].clientX - e.touches[0].clientX, dy = e.touches[1].clientY - e.touches[0].clientY;
     touchState.lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
     touchState.lastTouchCenter = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };

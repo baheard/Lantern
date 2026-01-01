@@ -183,6 +183,10 @@ function setupEventListeners() {
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
   document.getElementById('mapLegendToggle').addEventListener('click', () => domRefs.legend.classList.toggle('legend-visible'));
   document.getElementById('legendCloseBtn').addEventListener('click', () => domRefs.legend.classList.remove('legend-visible'));
+  // Tap anywhere on legend to collapse it
+  domRefs.legend.addEventListener('click', (e) => {
+    if (e.target.id !== 'legendCloseBtn') domRefs.legend.classList.remove('legend-visible');
+  });
 
   // Canvas
   const canvasEl = document.getElementById('mapCanvas');
