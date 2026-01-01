@@ -87,12 +87,13 @@ export function getCurrentLocation() {
 
           const objName = vm.decode(propTable + 1, nameLen * 2);
 
-          // Look for player object (common names: "yourself", "self", "cretin", "you")
-          if (objName && (objName.toLowerCase().includes('yourself') ||
-                          objName.toLowerCase().includes('you') ||
-                          objName.toLowerCase() === 'self' ||
-                          objName.toLowerCase() === 'cretin' ||
-                          objName.toLowerCase() === 'player')) {
+          // Look for player object (common names: "yourself", "self object", "self", "cretin")
+          const lowerName = objName.toLowerCase();
+          if (objName && (lowerName.includes('yourself') ||
+                          lowerName.includes('self object') ||
+                          lowerName === 'self' ||
+                          lowerName === 'cretin' ||
+                          lowerName === 'player')) {
             console.log(`[AutoMapper] Found player object ${objId}: "${objName}"`);
 
             // Get player's parent (the room)
