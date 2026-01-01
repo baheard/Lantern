@@ -28,12 +28,61 @@ docs/js/features/
 
 ### How It Works
 
-The auto-mapper hooks into the Z-machine VM to detect player location changes:
+The auto-mapper hooks into the Z-machine VM to detect player location changes. It uses a two-method approach to support different Z-machine versions and game implementations.
+
+#### Method 1: Global Variable 0 (Z-machine v3)
+
+For Z-machine version 3 games, the interpreter automatically maintains the player's location in global variable 0:
 
 ```javascript
-// Read player location from ZVM global variable 0
-const locationId = window.zvmInstance.m.getUint16(window.zvmInstance.globals);
+const locationId = vm.m.getUint16(vm.globals); // Global 0 = current location
 ```
+
+This is defined by the [Z-Machine Standard](https://inform-fiction.org/zmachine/standards/z1point1/sect08.html): *"The short name of the object whose number is in the first global variable should be printed on the left hand side of the [status] line."*
+
+#### Method 2: Player Object Scanning (Z-machine v5+)
+
+For Z-machine version 5+ games (like Dreamhold), global 0 may not contain the location. Instead, we scan the object table to find the player object, then get its parent (the current room):
+
+```javascript
+// Scan objects looking for the player
+for (let objId = 1; objId < 1000; objId++) {
+  const objName = vm.decode(propTable + 1, nameLen * 2);
+
+  // Player object names: "yourself", "(self object)", "self", "cretin", "player"
+  if (lowerName.includes('yourself') || lowerName.includes('self object') || ...) {
+    const parentId = vm.m.getUint16(objAddr + parentOffset);
+    if (parentId > 0) {
+      locationId = parentId; // Parent is the current room
+      break;
+    }
+  }
+}
+```
+
+### Z-Machine Object Table Layout
+
+The object table layout differs by Z-machine version:
+
+| Version | Entry Size | Parent Offset | Property Table Offset |
+|---------|------------|---------------|----------------------|
+| v3      | 9 bytes    | 4 (1-byte)    | 7                    |
+| v4+     | 14 bytes   | 6 (2-byte)    | 12                   |
+
+### Object Tree in Inform Games
+
+Inform games have a standard object hierarchy:
+
+```
+Object 1: "Class" (parent: 0) - metaclass
+Object 2: "Object" (parent: 0) - base class
+Object 3-9: Other system classes
+Object 10: "(self object)" (parent: 0) - player class definition
+Object 14: "(self object)" (parent: room_id) - actual player instance ← THIS IS THE PLAYER
+Object 50+: Rooms, items, etc.
+```
+
+The player object's parent is always the current room. When the player moves, the parent changes.
 
 ### Events
 
@@ -47,6 +96,25 @@ const locationId = window.zvmInstance.m.getUint16(window.zvmInstance.globals);
 - `getCurrentLocation()` - Returns `{ id, name }` of current location
 - `checkLocationChange()` - Called after each game turn to detect movement
 - `setLastCommand(cmd)` - Records the last command (for edge labels)
+
+### Common Player Object Names
+
+Different Inform games use different names for the player object:
+
+| Name Pattern | Example Games |
+|--------------|---------------|
+| `"yourself"` | Most Inform 6/7 games |
+| `"(self object)"` | Dreamhold, some custom libraries |
+| `"self"` | Older Inform games |
+| `"cretin"` | Some adventure games |
+| `"player"` | Custom implementations |
+
+### Debugging Location Detection
+
+To debug location issues, temporarily enable logging in `getCurrentLocation()`:
+- Check `vm.m.getUint8(0x00)` for Z-machine version (3, 5, or 8)
+- Log objects 1-50 to see the object hierarchy
+- Look for player object's parent changing between turns
 
 ## Map Canvas (`map-canvas.js`)
 
