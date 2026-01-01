@@ -47,6 +47,8 @@ cd /e/Project/IFTalk && npm start
 
 ## Working with Claude
 
+**Current Branch:** `claude/map-canvas-4hYUa` - Auto-mapper and interactive map canvas feature development
+
 **Context Management:** Claude will warn when context usage reaches 85% (15% remaining). Use `/context` to check current usage.
 
 ## Version Management
