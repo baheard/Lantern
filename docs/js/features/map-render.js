@@ -139,8 +139,10 @@ function drawNodes() {
   const currentLocationName = getLastLocationName();
   for (const node of mapState.nodes.values()) {
     const isSelected = mapState.selectedNode === node.id;
-    // Current location check: match by name (node.name) or by ID if it's the primary node
-    const isCurrent = currentLocationName && (node.name === currentLocationName || node.id === currentLocationName);
+    // Current location check: only mark the PRIMARY node as current (not duplicates)
+    // Primary node has id === name, duplicates have id like "Kitchen (2)"
+    const isPrimaryNode = node.id === node.name;
+    const isCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
     const isUser = node.isManual || node.isEdited;
     const isEdgeStart = mapState.edgeStartNode === node.id;
     const isDuplicate = node.isDuplicate || node.hasDuplicates;

@@ -290,12 +290,18 @@ function handleLocationChange(e) {
   if (existingNode && mapState.protectedNodes.has(locationName)) {
     // Check if we're coming from a different previous location than expected
     // This could indicate a potential duplicate room with the same name
-    const isPotentialDuplicate = previousLocationId &&
+    const previousNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
+    const hasNoDirectEdge = previousLocationId &&
       previousLocationId !== locationName &&
       !hasEdgeBetween(previousLocationId, locationName);
 
-    if (isPotentialDuplicate) {
-      // Create a duplicate node for the user to review
+    // Distance heuristic: if previous location is close to the original node,
+    // it's probably the same room (e.g., different entrance) - just add an edge
+    const isCloseToOriginal = previousNode && existingNode &&
+      getNodeDistance(previousNode, existingNode) < 250;  // ~2.5 grid squares
+
+    if (hasNoDirectEdge && !isCloseToOriginal) {
+      // Far away - likely a different room with the same name
       const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
       if (duplicateId) {
         mapState.selectedNode = duplicateId;
@@ -303,6 +309,20 @@ function handleLocationChange(e) {
       } else {
         mapState.selectedNode = locationName;
       }
+    } else if (hasNoDirectEdge && isCloseToOriginal) {
+      // Close by - probably same room, just add an edge
+      const edgeKey = `${previousLocationId}-${locationName}`;
+      if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
+        mapState.edges.set(edgeKey, {
+          from: previousLocationId,
+          to: locationName,
+          command: command || '',
+          isManual: false,
+          isEdited: false
+        });
+        mapState.protectedEdges.add(edgeKey);
+      }
+      mapState.selectedNode = locationName;
     } else {
       mapState.selectedNode = locationName;
     }
@@ -357,6 +377,15 @@ function handleLocationChange(e) {
  */
 function hasEdgeBetween(nodeA, nodeB) {
   return mapState.edges.has(`${nodeA}-${nodeB}`) || mapState.edges.has(`${nodeB}-${nodeA}`);
+}
+
+/**
+ * Calculate distance between two nodes on the canvas
+ */
+function getNodeDistance(nodeA, nodeB) {
+  const dx = nodeA.x - nodeB.x;
+  const dy = nodeA.y - nodeB.y;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 /**

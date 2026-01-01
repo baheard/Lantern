@@ -131,12 +131,23 @@ export function openNodeSheet(node) {
 
   // Show/hide merge section for duplicates
   const mergeSection = document.getElementById('nodeMergeSection');
+  const mergeBtn = document.getElementById('nodeMergeBtn');
   if (node.isDuplicate && node.originalNodeId) {
-    mergeSection.classList.remove('hidden');
     const originalNode = mapState.nodes.get(node.originalNodeId);
     if (originalNode) {
+      // Original exists - allow merge
+      mergeSection.classList.remove('hidden');
       mergeSection.querySelector('.merge-hint').textContent =
         `If this is the same as "${originalNode.name}", merge to combine their connections.`;
+      mergeBtn.disabled = false;
+      mergeBtn.innerHTML = '<span class="material-icons">merge</span> Merge with Original';
+    } else {
+      // Original was deleted - offer to promote this to primary
+      mergeSection.classList.remove('hidden');
+      mergeSection.querySelector('.merge-hint').textContent =
+        `The original "${node.name}" was deleted. Make this the primary location?`;
+      mergeBtn.disabled = false;
+      mergeBtn.innerHTML = '<span class="material-icons">check_circle</span> Make Primary';
     }
   } else {
     mergeSection.classList.add('hidden');
@@ -289,8 +300,10 @@ export function handleNodeMerge() {
 
   const originalId = node.originalNodeId;
   const originalNode = mapState.nodes.get(originalId);
+
+  // If original was deleted, promote this duplicate to primary
   if (!originalNode) {
-    callbacks.showHint('Original node not found');
+    promoteToPrimary(node);
     return;
   }
 
@@ -343,5 +356,54 @@ export function handleNodeMerge() {
 
   closeNodeSheet();
   callbacks.showHint(`Merged with "${originalNode.name}"`);
+  callbacks.saveMapForGame();
+}
+
+/**
+ * Promote a duplicate node to be the primary when original was deleted
+ * Clears duplicate flags and renames to the original name
+ */
+function promoteToPrimary(node) {
+  const oldId = node.id;
+  const newId = node.name;  // Use the location name as the new ID
+
+  // Update the node
+  node.id = newId;
+  node.isDuplicate = false;
+  delete node.duplicateGroup;
+  delete node.originalNodeId;
+  node.notes = '';  // Clear the "possible duplicate" note
+
+  // Re-add with new ID
+  mapState.nodes.delete(oldId);
+  mapState.nodes.set(newId, node);
+  mapState.protectedNodes.delete(oldId);
+  mapState.protectedNodes.add(newId);
+  mapState.deletedNodes.add(oldId);
+
+  // Update all edges that reference the old ID
+  const edgesToUpdate = [];
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === oldId || edge.to === oldId) {
+      edgesToUpdate.push([key, edge]);
+    }
+  }
+
+  for (const [oldKey, edge] of edgesToUpdate) {
+    mapState.edges.delete(oldKey);
+    mapState.protectedEdges.delete(oldKey);
+
+    const newFrom = edge.from === oldId ? newId : edge.from;
+    const newTo = edge.to === oldId ? newId : edge.to;
+    const newKey = `${newFrom}-${newTo}`;
+
+    mapState.edges.set(newKey, { ...edge, from: newFrom, to: newTo });
+    mapState.protectedEdges.add(newKey);
+  }
+
+  mapState.selectedNode = newId;
+
+  closeNodeSheet();
+  callbacks.showHint(`"${node.name}" is now the primary location`);
   callbacks.saveMapForGame();
 }
