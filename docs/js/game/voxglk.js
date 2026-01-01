@@ -403,6 +403,7 @@ export function createVoxGlk(textOutputCallback) {
      */
     update: async function(arg) {
       try {
+        console.log('[VoxGlk] update called, arg.gen:', arg.gen, 'keys:', Object.keys(arg));
 
         // Track generation (Glk uses this to prevent old input)
         // Always update generation from Glk - this is the current turn number
