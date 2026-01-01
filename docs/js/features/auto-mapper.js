@@ -288,12 +288,20 @@ export function initAutoMapper(gameName) {
 
   // Check for starting location from existing status bar
   // Status bar may have already been rendered before this init
-  setTimeout(() => {
+  // Use retry mechanism since game may still be initializing
+  let attempts = 0;
+  const checkStartingLocation = () => {
     const statusBarEl = document.getElementById('statusBar');
-    if (statusBarEl && statusBarEl.textContent) {
-      checkLocationChange(statusBarEl.textContent, 0);
+    const statusText = statusBarEl?.textContent?.trim();
+    if (statusText && statusText.length > 0) {
+      console.log('[AutoMapper] Found starting location:', statusText);
+      checkLocationChange(statusText, 0);
+    } else if (attempts < 5) {
+      attempts++;
+      setTimeout(checkStartingLocation, 200);  // Retry every 200ms up to 5 times
     }
-  }, 100);
+  };
+  setTimeout(checkStartingLocation, 100);
 }
 
 /**

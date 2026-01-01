@@ -7,13 +7,14 @@
 // ============================================================================
 
 export const DIRECTION_OFFSETS = {
-  // Cardinal directions
+  // Cardinal directions - 100px grid
   north: { x: 0, y: -100 }, south: { x: 0, y: 100 },
   east: { x: 100, y: 0 }, west: { x: -100, y: 0 },
-  northeast: { x: 70, y: -70 }, northwest: { x: -70, y: -70 },
-  southeast: { x: 70, y: 70 }, southwest: { x: -70, y: 70 },
-  // Vertical - offset horizontally to distinguish from N/S, larger distance
-  up: { x: 50, y: -120 }, down: { x: -50, y: 120 },
+  // Diagonals: NW = N + W, etc. Forms a proper grid
+  northeast: { x: 100, y: -100 }, northwest: { x: -100, y: -100 },
+  southeast: { x: 100, y: 100 }, southwest: { x: -100, y: 100 },
+  // Vertical - offset horizontally to distinguish from N/S
+  up: { x: 50, y: -100 }, down: { x: -50, y: 100 },
   // Portal/special exits - offset diagonally
   enter: { x: 80, y: -40 }, exit: { x: -80, y: 40 },
   'in': { x: 80, y: -40 }, out: { x: -80, y: 40 }
