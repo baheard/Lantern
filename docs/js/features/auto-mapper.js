@@ -54,41 +54,48 @@ export function getCurrentLocation() {
       method = 'global0';
     }
 
-    // Method 2: If global 0 failed, try finding player object's parent
-    // In Inform, the player is typically object 1 or a low-numbered object
-    // The player's parent should be the current room
+    // Method 2: If global 0 failed, find the player object by scanning for "yourself"
+    // Then get its parent (the current room)
     if (!locationId || locationId === 0) {
-      console.log('[AutoMapper] Global 0 failed, trying object tree...');
-      // Try common player object IDs (usually 1-5 in Inform games)
-      for (const playerId of [1, 2, 3, 4, 5]) {
-        try {
-          // Get parent of this object
-          const objAddr = vm.objects + objEntrySize * playerId;
-          let parentId;
-          if (isV3) {
-            parentId = vm.m.getUint8(objAddr + parentOffset);
-          } else {
-            parentId = vm.m.getUint16(objAddr + parentOffset);
-          }
-          console.log(`[AutoMapper] Object ${playerId} parent:`, parentId);
+      console.log('[AutoMapper] Global 0 failed, scanning for player object...');
 
-          if (parentId > 0) {
-            // Check if parent looks like a room (has a valid property table with a name)
-            const parentAddr = vm.objects + objEntrySize * parentId;
-            const propTable = vm.m.getUint16(parentAddr + propTableOffset);
-            if (propTable > 0) {
-              const nameLen = vm.m.getUint8(propTable);
-              console.log(`[AutoMapper] Parent ${parentId} propTable:`, propTable, 'nameLen:', nameLen);
-              if (nameLen > 0 && nameLen < 100) {
-                // This looks like a valid room
-                locationId = parentId;
-                method = `object${playerId}-parent`;
-                break;
-              }
+      // Scan objects looking for the player (usually named "yourself" or "self")
+      // Skip first ~10 objects as they're typically class definitions
+      for (let objId = 10; objId < 500; objId++) {
+        try {
+          const objAddr = vm.objects + objEntrySize * objId;
+          const propTable = vm.m.getUint16(objAddr + propTableOffset);
+          if (propTable <= 0) continue;
+
+          const nameLen = vm.m.getUint8(propTable);
+          if (nameLen <= 0 || nameLen > 50) continue;
+
+          const objName = vm.decode(propTable + 1, nameLen * 2);
+
+          // Look for player object (common names: "yourself", "self", "cretin")
+          if (objName && (objName.toLowerCase().includes('yourself') ||
+                          objName.toLowerCase() === 'self' ||
+                          objName.toLowerCase() === 'cretin')) {
+            console.log(`[AutoMapper] Found player object ${objId}: "${objName}"`);
+
+            // Get player's parent (the room)
+            let parentId;
+            if (isV3) {
+              parentId = vm.m.getUint8(objAddr + parentOffset);
+            } else {
+              parentId = vm.m.getUint16(objAddr + parentOffset);
+            }
+
+            console.log(`[AutoMapper] Player parent (room):`, parentId);
+
+            if (parentId > 0) {
+              locationId = parentId;
+              method = `player-parent`;
+              break;
             }
           }
         } catch (e) {
-          console.log(`[AutoMapper] Error checking object ${playerId}:`, e.message);
+          // Skip invalid objects
         }
       }
     }
