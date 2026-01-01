@@ -5,6 +5,9 @@
  * Uses the same technique ZVM uses internally for the status bar.
  */
 
+// DEBUG: Version marker to verify fresh code is loaded
+console.log('[AutoMapper] Module loaded - v2');
+
 // Map data structure per game
 let mapData = {
   gameName: null,
@@ -23,10 +26,18 @@ let lastCommand = null;
  * @returns {{ id: number, name: string } | null}
  */
 export function getCurrentLocation() {
+  console.log('[AutoMapper] getCurrentLocation called - v2');
   try {
     const vm = window.zvmInstance;
-    console.log('[AutoMapper] getCurrentLocation - vm:', !!vm, 'vm.m:', !!vm?.m, 'vm.globals:', vm?.globals);
-    if (!vm || !vm.m || !vm.globals) return null;
+    console.log('[AutoMapper] vm exists:', !!vm);
+    if (vm) {
+      console.log('[AutoMapper] vm properties:', Object.keys(vm).slice(0, 20));
+      console.log('[AutoMapper] vm.m:', vm.m, 'vm.globals:', vm.globals);
+    }
+    if (!vm || !vm.m || !vm.globals) {
+      console.log('[AutoMapper] Missing required vm properties, returning null');
+      return null;
+    }
 
     // Read location object ID from global 0 (first global variable)
     const locationId = vm.m.getUint16(vm.globals);
@@ -41,7 +52,7 @@ export function getCurrentLocation() {
 
     return { id: locationId, name: roomName };
   } catch (e) {
-    // VM not ready or invalid state
+    console.error('[AutoMapper] Error in getCurrentLocation:', e);
     return null;
   }
 }
