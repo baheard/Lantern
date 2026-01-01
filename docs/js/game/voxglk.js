@@ -613,8 +613,7 @@ export function createVoxGlk(textOutputCallback) {
           }
 
           // Check for location change (for auto-mapping)
-          // Runs after render so we have statusBarText as fallback
-          checkLocationChange(generation, statusBarText);
+          checkLocationChange(generation);
         }
 
         // Handle special input requests (file dialogs for save/restore)
