@@ -54,14 +54,29 @@ export function getCurrentLocation() {
       method = 'global0';
     }
 
-    // Method 2: If global 0 failed, find the player object by scanning for "yourself"
+    // Method 2: If global 0 failed, find the player object by scanning
     // Then get its parent (the current room)
     if (!locationId || locationId === 0) {
       console.log('[AutoMapper] Global 0 failed, scanning for player object...');
 
-      // Scan objects looking for the player (usually named "yourself" or "self")
-      // Skip first ~10 objects as they're typically class definitions
-      for (let objId = 10; objId < 500; objId++) {
+      // Log first 50 objects to find the player
+      const objectNames = [];
+      for (let objId = 1; objId < 50; objId++) {
+        try {
+          const objAddr = vm.objects + objEntrySize * objId;
+          const propTable = vm.m.getUint16(objAddr + propTableOffset);
+          if (propTable <= 0) continue;
+          const nameLen = vm.m.getUint8(propTable);
+          if (nameLen <= 0 || nameLen > 50) continue;
+          const objName = vm.decode(propTable + 1, nameLen * 2);
+          let parentId = isV3 ? vm.m.getUint8(objAddr + parentOffset) : vm.m.getUint16(objAddr + parentOffset);
+          objectNames.push(`${objId}:"${objName}"(p:${parentId})`);
+        } catch (e) {}
+      }
+      console.log('[AutoMapper] Objects 1-49:', objectNames.join(', '));
+
+      // Scan all objects looking for the player
+      for (let objId = 1; objId < 1000; objId++) {
         try {
           const objAddr = vm.objects + objEntrySize * objId;
           const propTable = vm.m.getUint16(objAddr + propTableOffset);
@@ -72,10 +87,12 @@ export function getCurrentLocation() {
 
           const objName = vm.decode(propTable + 1, nameLen * 2);
 
-          // Look for player object (common names: "yourself", "self", "cretin")
+          // Look for player object (common names: "yourself", "self", "cretin", "you")
           if (objName && (objName.toLowerCase().includes('yourself') ||
+                          objName.toLowerCase().includes('you') ||
                           objName.toLowerCase() === 'self' ||
-                          objName.toLowerCase() === 'cretin')) {
+                          objName.toLowerCase() === 'cretin' ||
+                          objName.toLowerCase() === 'player')) {
             console.log(`[AutoMapper] Found player object ${objId}: "${objName}"`);
 
             // Get player's parent (the room)
