@@ -43,6 +43,10 @@ import { sendCommand, sendCommandDirect, initDialogInterceptor } from './game/co
 import { initSaveHandlers, quickSave, quickLoad } from './game/save-manager.js';
 import { initGameSelection } from './game/game-loader.js';
 
+// Features
+import './features/auto-mapper.js';  // Auto-mapping location tracker
+import { initMapCanvas, toggleMap, showMap } from './features/map-canvas.js';  // Interactive game map
+
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus } from './utils/lock-screen.js';
@@ -670,6 +674,15 @@ async function initApp() {
   if (lockScreenBtn) {
     lockScreenBtn.addEventListener('click', () => {
       lockScreen();
+    });
+  }
+
+  // Initialize map canvas
+  initMapCanvas();
+  const mapBtn = document.getElementById('mapBtn');
+  if (mapBtn) {
+    mapBtn.addEventListener('click', () => {
+      showMap();
     });
   }
 

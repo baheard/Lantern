@@ -175,6 +175,11 @@ export async function startGame(gamePath, onOutput) {
 
     updateStatus('Ready - Game loaded');
 
+    // Dispatch gameLoaded event for auto-mapper and other listeners
+    window.dispatchEvent(new CustomEvent('gameLoaded', {
+      detail: { gameName: state.currentGameName, gamePath }
+    }));
+
     // Start autosave backup timer (every 2 minutes, max 5 backups)
     import('./save-manager.js').then(({ startAutosaveBackupTimer }) => {
       startAutosaveBackupTimer();
