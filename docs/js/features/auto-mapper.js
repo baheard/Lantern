@@ -286,8 +286,14 @@ export function initAutoMapper(gameName) {
 
   console.log('[AutoMapper] Initialized for:', gameName);
 
-  // Starting location will be detected on first status bar update
-  // No need for delayed VM check since we use status bar text now
+  // Check for starting location from existing status bar
+  // Status bar may have already been rendered before this init
+  setTimeout(() => {
+    const statusBarEl = document.getElementById('statusBar');
+    if (statusBarEl && statusBarEl.textContent) {
+      checkLocationChange(statusBarEl.textContent, 0);
+    }
+  }, 100);
 }
 
 /**
