@@ -57,7 +57,8 @@ function setupCallbacks() {
     saveMapForGame,
     hideMap,
     enterAddNodeMode,
-    centerOnCurrentLocation
+    centerOnCurrentLocation,
+    pushUndo
   });
 
   // Pass callbacks to sheet module

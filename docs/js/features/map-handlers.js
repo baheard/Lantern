@@ -19,7 +19,8 @@ let callbacks = {
   saveMapForGame: () => {},
   hideMap: () => {},
   enterAddNodeMode: () => {},
-  centerOnCurrentLocation: () => {}
+  centerOnCurrentLocation: () => {},
+  pushUndo: () => {}
 };
 
 export function setHandlerCallbacks(cbs) {
@@ -58,6 +59,7 @@ export function handlePointerDown(e) {
 
   if (hitNode) {
     mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
+    touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };  // Track for undo
   } else {
     mapState.isDragging = true; mapState.dragStart = { x, y }; mapState.hasDragged = false;
     touchState.touchStartTime = Date.now();
@@ -99,9 +101,23 @@ export function handlePointerUp(e) {
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
   if (mapState.dragNode && !mapState.isDragging) {
-    // Tapped on a node - open the sheet
-    if (Date.now() - touchState.touchStartTime < 250) openNodeSheet(mapState.dragNode);
-    else callbacks.saveMapForGame();
+    // Check if node was moved (not just tapped)
+    const wasMoved = touchState.nodeStartPos &&
+      (mapState.dragNode.x !== touchState.nodeStartPos.x || mapState.dragNode.y !== touchState.nodeStartPos.y);
+
+    if (wasMoved) {
+      // Push undo for the move
+      callbacks.pushUndo({
+        type: 'moveNode',
+        nodeId: mapState.dragNode.id,
+        oldX: touchState.nodeStartPos.x,
+        oldY: touchState.nodeStartPos.y
+      });
+      callbacks.saveMapForGame();
+    } else if (Date.now() - touchState.touchStartTime < 250) {
+      // Tapped on a node - open the sheet
+      openNodeSheet(mapState.dragNode);
+    }
   } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode) {
     // Tapped on empty canvas - unselect any selected node
     if (mapState.selectedNode) {
