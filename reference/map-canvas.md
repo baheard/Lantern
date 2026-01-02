@@ -417,7 +417,6 @@ localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify({
 |-----|--------|
 | `Escape` | Close sheet / exit mode / close map |
 | `+` or `=` | Enter add-node mode |
-| `C` | Center on current location |
 
 ## Circular Dependency Solution
 

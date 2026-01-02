@@ -221,7 +221,6 @@ export function handleKeyDown(e) {
   if (isTyping) return;  // Don't process other shortcuts when typing
 
   if (e.key === '+' || e.key === '=') { callbacks.enterAddNodeMode(); e.preventDefault(); }
-  if (e.key === 'c' || e.key === 'C') { callbacks.centerOnCurrentLocation(); e.preventDefault(); }
 }
 
 // ============================================================================
