@@ -422,6 +422,7 @@ export function handleNodeDelete() {
   mapState.deletedNodes.add(nodeId);
   mapState.selectedNode = null;
   closeNodeSheet();
+  render();
   callbacks.showHint(`Deleted "${node?.name}"`);
 }
 

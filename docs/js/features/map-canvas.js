@@ -95,9 +95,6 @@ function createMapUI() {
         <span class="map-node-count" id="mapNodeCount"></span>
       </div>
       <div class="map-toolbar-actions">
-        <button class="map-btn" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
-          <span class="material-icons">undo</span>
-        </button>
         <button class="map-btn" id="mapCenterBtn" title="Center on current location" aria-label="Center view">
           <span class="material-icons">my_location</span>
         </button>
@@ -119,6 +116,9 @@ function createMapUI() {
     <div class="map-canvas-container">
       <canvas id="mapCanvas"></canvas>
       <div class="map-fab-container">
+        <button class="map-fab map-fab-undo" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
+          <span class="material-icons">undo</span>
+        </button>
         <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
           <span class="material-icons">timeline</span>
         </button>
@@ -697,7 +697,12 @@ function performUndo() {
       break;
     case 'moveNode':
       const node = mapState.nodes.get(action.nodeId);
-      if (node) { node.x = action.oldX; node.y = action.oldY; }
+      if (node) {
+        node.x = action.oldX;
+        node.y = action.oldY;
+        node.isEdited = action.wasEdited || false;
+        if (!node.isEdited) mapState.protectedNodes.delete(action.nodeId);
+      }
       break;
   }
 

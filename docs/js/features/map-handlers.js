@@ -59,7 +59,7 @@ export function handlePointerDown(e) {
 
   if (hitNode) {
     mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
-    touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };  // Track for undo
+    touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y, wasEdited: hitNode.isEdited };  // Track for undo
   } else {
     mapState.isDragging = true; mapState.dragStart = { x, y }; mapState.hasDragged = false;
     touchState.touchStartTime = Date.now();
@@ -81,7 +81,7 @@ export function handlePointerMove(e) {
     render();
   } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge) {
     const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
-    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+    if (Math.sqrt(dx * dx + dy * dy) > 3) {  // Fine control for alignment
       mapState.dragNode.x += dx / mapState.viewport.scale;
       mapState.dragNode.y += dy / mapState.viewport.scale;
       mapState.dragNode.isEdited = true;
@@ -111,7 +111,8 @@ export function handlePointerUp(e) {
         type: 'moveNode',
         nodeId: mapState.dragNode.id,
         oldX: touchState.nodeStartPos.x,
-        oldY: touchState.nodeStartPos.y
+        oldY: touchState.nodeStartPos.y,
+        wasEdited: touchState.nodeStartPos.wasEdited
       });
       callbacks.saveMapForGame();
     } else if (Date.now() - touchState.touchStartTime < 250) {
