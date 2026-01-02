@@ -292,50 +292,35 @@ function showHintPromptDialog(prompt) {
 
   // Copy & Open ChatGPT button (primary action)
   const copyAndOpenBtn = dialog.querySelector('#copyAndOpenBtn');
-  console.log('[Hints] Copy & Open button found:', !!copyAndOpenBtn);
 
   // Ensure button is clickable (fix potential CSS issues)
   if (copyAndOpenBtn) {
     copyAndOpenBtn.style.pointerEvents = 'auto';
     copyAndOpenBtn.style.touchAction = 'manipulation';
-    console.log('[Hints] Button styles set for iOS compatibility');
   }
 
   const handleCopyAndOpen = async (e) => {
-    console.log('[Hints] 🔘 Copy & Open button clicked!', e.type);
     e.preventDefault();
     e.stopPropagation();
 
     // Visual feedback immediately (so user knows button was tapped)
     const btn = dialog.querySelector('#copyAndOpenBtn');
-    const originalHTML = btn.innerHTML;
     btn.innerHTML = '<span class="material-icons">check_circle</span> Copying...';
     btn.style.background = 'var(--success,#66BB6A)';
-    console.log('[Hints] Button UI updated to "Copying..."');
 
     // Try to copy to clipboard using modern API (better for iOS)
     let copySuccess = false;
     const promptText = textarea.value;
-
-    console.log('[Hints] Clipboard API available:', {
-      hasNavigatorClipboard: !!navigator.clipboard,
-      hasWriteText: !!(navigator.clipboard && navigator.clipboard.writeText),
-      isSecureContext: window.isSecureContext
-    });
 
     // Try modern Clipboard API first (iOS 13.4+)
     // IMPORTANT: Await the promise so clipboard operation completes before opening window
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(promptText);
-        console.log('[Hints] ✅ Copy to clipboard: SUCCESS (modern API)');
         copySuccess = true;
       } catch (err) {
-        console.log('[Hints] ⚠️ Modern clipboard API failed:', err.message);
         // Fall through to legacy method
       }
-    } else {
-      console.log('[Hints] Modern clipboard API not available, using legacy method');
     }
 
     // Fallback to legacy method if modern API not available or failed
@@ -343,51 +328,37 @@ function showHintPromptDialog(prompt) {
       textarea.select();
       try {
         copySuccess = document.execCommand('copy');
-        console.log('[Hints] Copy to clipboard (legacy):', copySuccess ? 'SUCCESS' : 'FAILED');
       } catch (err) {
-        console.log('[Hints] Legacy copy error:', err.message);
+        // Ignore legacy copy errors
       }
     }
 
     // Both mobile and desktop: Use URL parameter with hints mode
-    // Now working on both platforms!
     // Format: https://chatgpt.com/?hints=research&q=<prompt>
-    // The hints parameter activates a specific mode which makes ?q= more reliable
     const maxUrlLength = 8000;
     let chatGPTUrl;
 
     try {
       const encodedPrompt = encodeURIComponent(promptText);
-      // Use hints=research mode for better reliability (discovered Jan 2025)
       const urlWithPrompt = `https://chatgpt.com/?hints=research&q=${encodedPrompt}`;
 
       if (urlWithPrompt.length <= maxUrlLength) {
         chatGPTUrl = urlWithPrompt;
-        console.log('[Hints] Using hints+q URL parameters to pre-fill prompt (length:', urlWithPrompt.length, ')');
       } else {
-        // Prompt too long for URL - fallback to clipboard only
         chatGPTUrl = 'https://chat.openai.com/';
-        console.log('[Hints] Prompt too long for URL parameter (', urlWithPrompt.length, 'chars), using clipboard only');
       }
     } catch (err) {
-      // Encoding error - fallback to clipboard only
       chatGPTUrl = 'https://chat.openai.com/';
-      console.log('[Hints] Error encoding prompt for URL:', err.message);
     }
 
-    console.log('[Hints] Opening ChatGPT:', chatGPTUrl);
     const newWindow = window.open(chatGPTUrl, '_blank');
-    console.log('[Hints] window.open returned:', newWindow ? 'window object' : 'null/undefined');
 
-    // If window.open was blocked (returns null on some browsers), use location.href
+    // If window.open was blocked, use location.href
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      console.log('[Hints] ⚠️ window.open blocked - using location.href fallback');
       window.location.href = chatGPTUrl;
-      return; // Don't close dialog since we're navigating away
+      return;
     }
 
-    // Update button text
-    console.log('[Hints] ✅ ChatGPT opened successfully');
     btn.innerHTML = '<span class="material-icons">check_circle</span> Opened!';
 
     // Show appropriate status based on whether URL parameter was used
@@ -402,12 +373,10 @@ function showHintPromptDialog(prompt) {
 
     // Close dialog after brief delay
     setTimeout(() => {
-      console.log('[Hints] Closing dialog');
       document.body.removeChild(overlay);
 
       // Resume narration if it was paused by hint
       if (state.pausedByHint) {
-        console.log('[Hints] Resuming narration');
         state.pausedByHint = false;
         state.isPaused = false;
       }
@@ -417,7 +386,6 @@ function showHintPromptDialog(prompt) {
   // Register event listeners - use both click and touchend for iOS compatibility
   copyAndOpenBtn.addEventListener('click', handleCopyAndOpen);
   copyAndOpenBtn.addEventListener('touchend', handleCopyAndOpen);
-  console.log('[Hints] Event listeners registered (click + touchend)');
 
   // Copy Only button (secondary action)
   dialog.querySelector('#copyOnlyBtn').onclick = () => {

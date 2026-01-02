@@ -45,7 +45,6 @@ export function initMapCanvas() {
   setupCallbacks();
   window.addEventListener('locationChanged', handleLocationChange);
   window.addEventListener('gameLoaded', handleGameLoaded);
-  console.log('[MapCanvas] Initialized');
 }
 
 function setupCallbacks() {
@@ -279,11 +278,7 @@ function handleGameLoaded(e) {
 }
 
 function handleLocationChange(e) {
-  console.log('[MapCanvas] handleLocationChange received:', e.detail);
-  if (!mapState.autoMapEnabled) {
-    console.log('[MapCanvas] Auto-map disabled, ignoring');
-    return;
-  }
+  if (!mapState.autoMapEnabled) return;
   const { locationId, locationName, previousLocationId, command } = e.detail;
 
   // Validate location name - reject empty or invalid names
@@ -341,7 +336,6 @@ function handleLocationChange(e) {
         if (duplicateId) {
           mapState.selectedNode = duplicateId;
           mapState.currentNodeId = duplicateId;  // Duplicate is the current location
-          console.log('[MapCanvas] Duplicate created, currentNodeId =', duplicateId);
           showHint(`Found "${locationName}" via different route. Merge if same place.`);
         } else {
           mapState.selectedNode = locationName;
@@ -370,15 +364,12 @@ function handleLocationChange(e) {
       position = findAvailablePosition({ x: 0, y: 0 });
     }
 
-    console.log('[MapCanvas] Creating new node:', locationName, 'at', position);
     mapState.nodes.set(locationName, {
       id: locationName, name: locationName, x: position.x, y: position.y,
       type: 'room', notes: '', isManual: false, isEdited: false
     });
     // Protect from future auto-mapper modifications
     mapState.protectedNodes.add(locationName);
-  } else {
-    console.log('[MapCanvas] Node already exists:', locationName);
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
@@ -441,8 +432,6 @@ function createDuplicateNode(locationName, originalNode, previousLocationId, com
     // Place near the original with slight offset
     position = findAvailablePosition({ x: originalNode.x + 50, y: originalNode.y + 50 });
   }
-
-  console.log('[MapCanvas] Creating duplicate node:', duplicateId, 'near', locationName);
 
   // Mark original as having duplicates
   originalNode.hasDuplicates = true;
@@ -632,7 +621,6 @@ function loadMapForGame(gameName) {
       }
       if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
       if (data.currentNodeId) mapState.currentNodeId = data.currentNodeId;
-      console.log('[MapCanvas] Loaded map for:', gameName, 'with', mapState.nodes.size, 'nodes');
     } catch (e) { console.error('[MapCanvas] Failed to load map:', e); resetMap(); }
   } else { resetMap(); }
   updateNodeCount();

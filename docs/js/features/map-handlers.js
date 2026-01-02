@@ -207,12 +207,19 @@ export function handleCtxCenterView() {
 
 export function handleKeyDown(e) {
   if (!isVisible) return;
+
+  // Ignore shortcuts when typing in input fields (except Escape)
+  const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+
   if (e.key === 'Escape') {
     if (mapState.isAddingNode || mapState.isCreatingEdge) callbacks.exitAddMode();
     else if (!document.getElementById('nodeEditSheet').classList.contains('hidden')) closeNodeSheet();
     else callbacks.hideMap();
     e.preventDefault();
   }
+
+  if (isTyping) return;  // Don't process other shortcuts when typing
+
   if (e.key === '+' || e.key === '=') { callbacks.enterAddNodeMode(); e.preventDefault(); }
   if (e.key === 'c' || e.key === 'C') { callbacks.centerOnCurrentLocation(); e.preventDefault(); }
 }
