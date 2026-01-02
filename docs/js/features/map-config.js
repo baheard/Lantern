@@ -7,17 +7,17 @@
 // ============================================================================
 
 export const DIRECTION_OFFSETS = {
-  // Cardinal directions - 100px grid
-  north: { x: 0, y: -100 }, south: { x: 0, y: 100 },
-  east: { x: 100, y: 0 }, west: { x: -100, y: 0 },
+  // Cardinal directions - 120px grid
+  north: { x: 0, y: -120 }, south: { x: 0, y: 120 },
+  east: { x: 120, y: 0 }, west: { x: -120, y: 0 },
   // Diagonals: NW = N + W, etc. Forms a proper grid
-  northeast: { x: 100, y: -100 }, northwest: { x: -100, y: -100 },
-  southeast: { x: 100, y: 100 }, southwest: { x: -100, y: 100 },
+  northeast: { x: 120, y: -120 }, northwest: { x: -120, y: -120 },
+  southeast: { x: 120, y: 120 }, southwest: { x: -120, y: 120 },
   // Vertical - straight up/down with more distance to avoid N/S collision
-  up: { x: 0, y: -150 }, down: { x: 0, y: 150 },
+  up: { x: 0, y: -170 }, down: { x: 0, y: 170 },
   // Portal/special exits - offset diagonally
-  enter: { x: 80, y: -40 }, exit: { x: -80, y: 40 },
-  'in': { x: 80, y: -40 }, out: { x: -80, y: 40 }
+  enter: { x: 100, y: -60 }, exit: { x: -100, y: 60 },
+  'in': { x: 100, y: -60 }, out: { x: -100, y: 60 }
 };
 
 // Connection types for visual distinction
@@ -35,11 +35,11 @@ export const DIRECTION_TO_TYPE = {
   enter: 'portal', exit: 'portal', 'in': 'portal', out: 'portal'
 };
 
-// Connection type styles
+// Connection type styles (all auto-mapped connections are blue)
 export const CONNECTION_STYLES = {
   cardinal: { dash: [], color: '#60a5fa' },
-  vertical: { dash: [8, 4], color: '#a78bfa' },
-  portal: { dash: [3, 3], color: '#fbbf24' }
+  vertical: { dash: [8, 4], color: '#60a5fa' },
+  portal: { dash: [3, 3], color: '#60a5fa' }
 };
 
 export const COMMAND_DIRECTIONS = {

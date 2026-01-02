@@ -261,7 +261,7 @@ Nodes can be marked as "small" (60% size) via the node sheet toggle:
 
 ### Edge Behavior
 
-- **Color by provenance**: Auto-mapped connections use the connection type color (blue/purple/yellow). Player-created connections are always purple (#8b5cf6).
+- **Color by provenance**: Auto-mapped connections are always blue (#60a5fa). Player-created connections are always purple (#8b5cf6).
 - **Arrows are opt-in**: Connections don't show arrows by default. Toggle arrows via the node sheet to indicate one-way paths.
 - **Deleted edges stay deleted**: Deleted connections are tracked in `deletedEdges` to prevent auto-mapper from recreating them.
 
@@ -270,25 +270,25 @@ Nodes can be marked as "small" (60% size) via the node sheet toggle:
 | Type | Directions | Visual Style | Color |
 |------|------------|--------------|-------|
 | `cardinal` | N, S, E, W, NE, NW, SE, SW | Solid line | Blue `#60a5fa` |
-| `vertical` | Up, Down | Dashed `[8,4]` | Purple `#a78bfa` |
-| `portal` | Enter, Exit, In, Out | Dotted `[3,3]` | Yellow `#fbbf24` |
+| `vertical` | Up, Down | Dashed `[8,4]` | Blue `#60a5fa` |
+| `portal` | Enter, Exit, In, Out | Dotted `[3,3]` | Blue `#60a5fa` |
 
 ### Direction Offsets
 
 ```javascript
-// Cardinal - 100px grid
-north: { x: 0, y: -100 }, south: { x: 0, y: 100 }
-east: { x: 100, y: 0 }, west: { x: -100, y: 0 }
+// Cardinal - 120px grid
+north: { x: 0, y: -120 }, south: { x: 0, y: 120 }
+east: { x: 120, y: 0 }, west: { x: -120, y: 0 }
 
 // Diagonals - NW = N + W, forms proper grid
-northeast: { x: 100, y: -100 }, northwest: { x: -100, y: -100 }
-southeast: { x: 100, y: 100 }, southwest: { x: -100, y: 100 }
+northeast: { x: 120, y: -120 }, northwest: { x: -120, y: -120 }
+southeast: { x: 120, y: 120 }, southwest: { x: -120, y: 120 }
 
 // Vertical - straight up/down with more distance to avoid N/S collision
-up: { x: 0, y: -150 }, down: { x: 0, y: 150 }
+up: { x: 0, y: -170 }, down: { x: 0, y: 170 }
 
 // Portal - diagonal offset
-enter/in: { x: 80, y: -40 }, exit/out: { x: -80, y: 40 }
+enter/in: { x: 100, y: -60 }, exit/out: { x: -100, y: 60 }
 ```
 
 ## User Interactions
