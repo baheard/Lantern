@@ -178,11 +178,15 @@ function populateConnectionsList(node) {
 
   list.innerHTML = conns.map(c => {
     const currentType = c.edge.connectionType || 'cardinal';
+    const hasArrow = c.edge.showArrow || false;
     return `
       <div class="connection-item ${c.edge.isManual || c.edge.isEdited ? 'user' : 'auto'}">
         <span class="connection-direction">${c.dir}</span>
         <span class="connection-name">${c.node.name}</span>
         ${c.edge.command ? `<span class="connection-cmd">${c.edge.command}</span>` : ''}
+        <button class="connection-arrow-toggle ${hasArrow ? 'active' : ''}" data-edge="${c.key}" aria-label="Toggle arrow" title="${hasArrow ? 'Remove arrow' : 'Add arrow (one-way)'}">
+          <span class="material-icons">${hasArrow ? 'arrow_forward' : 'arrow_right_alt'}</span>
+        </button>
         <select class="connection-type-picker" data-edge="${c.key}" title="Connection type">
           ${Object.keys(CONNECTION_TYPES).map(t =>
             `<option value="${t}" ${currentType === t ? 'selected' : ''}>${typeLabels[t]}</option>`
@@ -195,6 +199,20 @@ function populateConnectionsList(node) {
 
   // Delete handlers
   list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', () => { deleteEdge(btn.dataset.edge); populateConnectionsList(node); }));
+
+  // Arrow toggle handlers
+  list.querySelectorAll('.connection-arrow-toggle').forEach(btn => btn.addEventListener('click', (e) => {
+    const edgeKey = e.currentTarget.dataset.edge;
+    const edge = mapState.edges.get(edgeKey);
+    if (edge) {
+      edge.showArrow = !edge.showArrow;
+      edge.isEdited = true;
+      mapState.protectedEdges.add(edgeKey);
+      render();
+      callbacks.saveMapForGame();
+      populateConnectionsList(node);
+    }
+  }));
 
   // Type change handlers
   list.querySelectorAll('.connection-type-picker').forEach(sel => sel.addEventListener('change', (e) => {
@@ -277,6 +295,22 @@ export function createManualEdge(fromId, toId) {
 }
 
 export function deleteEdge(key) {
+  const edge = mapState.edges.get(key);
+
+  // If deleting an auto-mapped edge, mark connected nodes as edited
+  if (edge && !edge.isManual && !edge.isEdited) {
+    const fromNode = mapState.nodes.get(edge.from);
+    const toNode = mapState.nodes.get(edge.to);
+    if (fromNode) {
+      fromNode.isEdited = true;
+      mapState.protectedNodes.add(fromNode.id);
+    }
+    if (toNode) {
+      toNode.isEdited = true;
+      mapState.protectedNodes.add(toNode.id);
+    }
+  }
+
   mapState.edges.delete(key);
   mapState.deletedEdges.add(key);
   callbacks.saveMapForGame(); render();

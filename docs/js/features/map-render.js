@@ -83,9 +83,8 @@ function drawEdges() {
     ctx.setLineDash(style.dash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
-    // Only draw arrows on user-created edges (to indicate one-way paths)
-    // Auto-mapped edges don't have arrows since most IF rooms are bidirectional
-    if (isUser) {
+    // Only draw arrows when explicitly enabled (for one-way paths)
+    if (edge.showArrow) {
       drawArrow(from.x, from.y, to.x, to.y, style.color);
     }
     ctx.globalAlpha = 1; ctx.setLineDash([]);

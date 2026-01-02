@@ -2,6 +2,18 @@
 
 ## January 2025
 
+### January 2, 2025 - Connection Editing (v1.4.19)
+
+1. **Arrows Now Opt-In**
+   - Arrows are no longer shown by default on any connections
+   - Toggle arrows manually via the connection list in the node sheet
+   - Use arrows to indicate one-way paths in the game
+
+2. **Deleting Connections Marks Nodes as Edited**
+   - When an auto-mapped connection is deleted, both connected nodes are marked as edited
+   - Ensures nodes show the edited badge (purple dot)
+   - Prevents auto-mapper from recreating the deleted connection
+
 ### January 2, 2025 - Auto-Mapper Improvements (v1.4.18)
 
 1. **Grid-Based Direction Offsets**
@@ -22,8 +34,7 @@
 
 4. **Visual Indicator Cleanup**
    - Removed redundant "Your edit" badge (dashed border already shows edits)
-   - Removed arrows from auto-mapped edges (most IF rooms are bidirectional)
-   - Arrows only shown on user-created edges for indicating one-way paths
+   - Simplified badge priority system (merge conflict > notes > edited)
 
 5. **Bug Fixes**
    - Fixed `isDuplicate` variable rename causing render crashes

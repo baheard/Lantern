@@ -232,10 +232,16 @@ Once an item is created (by auto-mapper OR user), it's immediately added to the 
   to: string,                // Destination node ID
   command: string,           // Command that created this edge (e.g., "north")
   connectionType: string,    // 'cardinal', 'vertical', or 'portal'
+  showArrow: boolean,        // Show directional arrow (opt-in, for one-way paths)
   isManual: boolean,         // Created by user
   isEdited: boolean          // Modified by user
 }
 ```
+
+### Edge Behavior
+
+- **Arrows are opt-in**: Connections don't show arrows by default. Toggle arrows via the node sheet to indicate one-way paths.
+- **Deleting auto-mapped edges**: When a user deletes an auto-mapped connection, both connected nodes are marked as `isEdited`. This ensures they display the edited badge and prevents the auto-mapper from recreating the connection.
 
 ## Connection Types
 
