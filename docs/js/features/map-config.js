@@ -68,8 +68,8 @@ export const NODE_COLORS = {
   current: '#22c55e'  // Green
 };
 
-export const NODE_RADIUS = 28;
-export const NODE_RADIUS_SMALL = 17;  // 60% of normal
+export const NODE_RADIUS = 23;
+export const NODE_RADIUS_SMALL = 14;  // 60% of normal
 export const SMALL_NODE_FADE_SCALE = 0.6;  // Fade out small nodes below this zoom
 export const TOUCH_TARGET = 44;
 export const LONG_PRESS_DURATION = 400;

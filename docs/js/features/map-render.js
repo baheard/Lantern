@@ -87,9 +87,12 @@ function drawEdges() {
     ctx.setLineDash(edgeDash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
-    // Only draw arrows when explicitly enabled (for one-way paths)
-    if (edge.showArrow) {
+    // Draw arrows when explicitly enabled
+    if (edge.showEndArrow) {
       drawArrow(from.x, from.y, to.x, to.y, edgeColor);
+    }
+    if (edge.showStartArrow) {
+      drawArrow(to.x, to.y, from.x, from.y, edgeColor);
     }
     ctx.globalAlpha = 1; ctx.setLineDash([]);
   }
