@@ -309,21 +309,38 @@ FAB buttons and controls stay visible during all interactions (panning, pinch-zo
 
 ### Visual Indicators
 
-| Indicator | Meaning |
-|-----------|---------|
-| Blue node | Auto-mapped location |
-| Purple node | Manually created location (user added) |
-| Green node + glow | Current player location |
-| Orange node + ? badge | Potential duplicate (same name, different route) |
-| Dashed white border | User-edited (moved, renamed, etc.) |
-| Dashed yellow border | Potential duplicate |
-| Small purple dot on edge | User-edited edge |
+The visual system follows three rules with distinct channels:
 
-**Notes:**
-- Auto-mapped nodes stay blue even when edited - the dashed border indicates editing
-- Only manually created nodes get purple fill
-- Duplicate nodes show as current (green) when the player just arrived there
-- Arrows only appear on user-created edges (auto-mapped edges are bidirectional)
+#### Fill = Provenance (who made it)
+| Fill Color | Meaning |
+|------------|---------|
+| Blue | Auto-mapped location |
+| Purple | Manually created by player |
+
+Fill color never changes for current location, duplicates, or edits.
+
+#### Halo = Attention (where you are)
+| Halo | Meaning |
+|------|---------|
+| Green glow + border | Current player location |
+| White glow + border | Selected/focused node |
+| Subtle white border | Default state |
+
+Halo is never used for metadata or warnings.
+
+#### Badge = Player-relevant info (one at a time)
+| Priority | Badge | Meaning |
+|----------|-------|---------|
+| 1 (highest) | Yellow ? | Merge conflict (potential duplicate) |
+| 2 | Blue 📝 | Has notes |
+| 3 | Purple ✎ | Edited by player |
+
+Only one badge shows at a time - highest priority wins.
+
+**Mental model:**
+- Color = who made it
+- Glow = where I am
+- Badge = what needs attention
 
 ## Persistence
 

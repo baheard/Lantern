@@ -150,86 +150,87 @@ function drawNodes() {
     const isPrimaryCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
     const isDuplicateCurrent = currentLocationName && node.isDuplicate && isSelected && node.name === currentLocationName;
     const isCurrent = isPrimaryCurrent || isDuplicateCurrent;
-    const isUser = node.isManual || node.isEdited;
     const isEdgeStart = mapState.edgeStartNode === node.id;
-    // Only actual duplicates get special styling, not originals that have duplicates
-    const isDuplicateNode = node.isDuplicate === true;
+    const hasMergeConflict = node.isDuplicate === true;
+    const hasNotes = node.notes && node.notes.trim().length > 0;
+    const isEdited = node.isEdited && !node.isManual;
 
-    // Determine fill color:
-    // - Duplicates get orange
-    // - Current location gets green
-    // - Manually created nodes get purple
-    // - Auto-mapped nodes stay blue even if edited (dashed border shows edits)
-    let fillColor;
-    if (isDuplicateNode) {
-      fillColor = '#f97316';  // Orange for potential duplicates
-    } else if (isCurrent) {
-      fillColor = NODE_COLORS.current;
-    } else if (node.isManual) {
-      fillColor = NODE_COLORS.user;  // Purple only for manually created nodes
-    } else {
-      fillColor = NODE_COLORS.auto;  // Blue for auto-mapped (even if edited)
-    }
+    // ========================================
+    // FILL = Provenance (who made it)
+    // ========================================
+    // Blue = auto-mapped, Purple = player-created
+    // Never changes for current location, duplicates, or edits
+    const fillColor = node.isManual ? NODE_COLORS.user : NODE_COLORS.auto;
 
     // Shadow & fill
     ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
     ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = fillColor; ctx.fill();
 
-    // Border - user edits get dashed white, duplicates get dashed yellow
-    ctx.lineWidth = isSelected || isEdgeStart ? 3 : 2;
-    if (isDuplicateNode) {
-      ctx.strokeStyle = '#fbbf24';  // Yellow border for duplicates
-      ctx.setLineDash([4, 3]);
-    } else if (isUser) {
-      ctx.strokeStyle = '#ffffff';  // White dashed for user edits
-      ctx.setLineDash([4, 3]);
-    } else {
-      ctx.strokeStyle = isSelected || isEdgeStart ? '#ffffff' : 'rgba(255,255,255,0.4)';
-      ctx.setLineDash([]);
-    }
-    ctx.stroke(); ctx.setLineDash([]);
-
-    // Glow
-    if (isCurrent || isSelected || isEdgeStart) {
+    // ========================================
+    // HALO = Attention (where you are)
+    // ========================================
+    // Green glow = current location, White glow = selected/focus
+    // Never used for metadata or warnings
+    ctx.lineWidth = 2;
+    if (isCurrent) {
+      // Strong green halo for current location
       ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = isCurrent ? 'rgba(34,197,94,0.5)' : isDuplicateNode ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(34,197,94,0.6)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS);
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3; ctx.stroke();
+    } else if (isSelected || isEdgeStart) {
+      // Weaker white halo for selection
+      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+    } else {
+      // Default subtle border
+      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.stroke();
     }
 
     // Icon
     ctx.fillStyle = '#ffffff'; ctx.font = '18px Material Icons'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(NODE_ICONS[node.type] || NODE_ICONS.room, node.x, node.y);
 
-    // Label - show (2), (3), etc. for duplicates
+    // Label
     ctx.font = '11px system-ui, -apple-system, sans-serif';
     let name = (node.name || '').trim() || 'Unknown';
-    // If this is a duplicate node, the ID contains the number like "Kitchen (2)"
-    // but we show just the name. Add a small indicator.
-    if (node.isDuplicate) {
-      const match = node.id.match(/\((\d+)\)$/);
-      if (match) name = `${name} ?${match[1]}`;
-    } else if (node.hasDuplicates) {
-      name = `${name} ?`;
-    }
     if (name.length > 20) name = name.substring(0, 17) + '...';
     const tw = ctx.measureText(name).width, ly = node.y + NODE_RADIUS + 8;
-    // Duplicates get orange background label
-    ctx.fillStyle = isDuplicateNode ? 'rgba(249,115,22,0.8)' : 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - 6, tw + 8, 14, 4); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
 
-    // User indicator (but not for duplicates - they have their own indicator)
-    if (isUser && !isCurrent && !isDuplicateNode) {
-      ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#a78bfa'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-    }
+    // ========================================
+    // BADGE = Player-relevant info (one at a time)
+    // ========================================
+    // Priority: merge conflict > notes > edited
+    const badgeX = node.x + NODE_RADIUS - 4;
+    const badgeY = node.y - NODE_RADIUS + 4;
 
-    // Duplicate indicator - question mark badge
-    if (isDuplicateNode) {
-      ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 7, 0, Math.PI * 2);
-      ctx.fillStyle = '#fbbf24'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#000000'; ctx.font = 'bold 10px sans-serif';
-      ctx.fillText('?', node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 5);
+    if (hasMergeConflict) {
+      // Merge conflict badge - yellow with warning icon
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#fbbf24'; ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#000000'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('?', badgeX, badgeY + 1);
+    } else if (hasNotes) {
+      // Notes badge - blue with note icon
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#3b82f6'; ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = '10px Material Icons';
+      ctx.fillText('edit_note', badgeX, badgeY + 1);
+    } else if (isEdited) {
+      // Edited badge - purple with edit icon
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#a78bfa'; ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = '8px Material Icons';
+      ctx.fillText('edit', badgeX, badgeY + 1);
     }
   }
 }
