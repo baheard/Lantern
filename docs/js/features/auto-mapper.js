@@ -26,13 +26,16 @@ let startCheckTimeout = null;
  * @returns {{ name: string } | null}
  */
 export function getCurrentLocation(statusBarText) {
+  console.log('[AutoMapper] getCurrentLocation input:', JSON.stringify(statusBarText));
   if (!statusBarText || !statusBarText.trim()) {
+    console.log('[AutoMapper] Empty input, returning null');
     return null;
   }
 
   // Status bar typically has format: "Location Name    Score: X  Moves: Y"
   // Extract the location name (left part before score/moves)
   let locationName = statusBarText.trim();
+  console.log('[AutoMapper] After trim:', JSON.stringify(locationName));
 
   // Remove common suffixes like "Score:", "Moves:", "Time:", etc.
   const suffixPatterns = [
@@ -44,12 +47,18 @@ export function getCurrentLocation(statusBarText) {
   ];
 
   for (const pattern of suffixPatterns) {
+    const before = locationName;
     locationName = locationName.replace(pattern, '');
+    if (before !== locationName) {
+      console.log('[AutoMapper] Pattern matched, now:', JSON.stringify(locationName));
+    }
   }
 
   locationName = locationName.trim();
+  console.log('[AutoMapper] Final name:', JSON.stringify(locationName));
 
   if (!locationName) {
+    console.log('[AutoMapper] Empty after parsing, returning null');
     return null;
   }
 
