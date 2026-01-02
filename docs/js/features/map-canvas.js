@@ -31,7 +31,8 @@ import {
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
-  handleNodeDelete, startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate
+  handleNodeDelete, startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
+  setupSheetDragHandlers
 } from './map-sheet.js';
 
 // ============================================================================
@@ -224,6 +225,9 @@ function setupEventListeners() {
   // Global
   window.addEventListener('resize', resizeCanvas);
   document.addEventListener('keydown', handleKeyDown);
+
+  // Sheet drag-to-dismiss
+  setupSheetDragHandlers();
 }
 
 // ============================================================================

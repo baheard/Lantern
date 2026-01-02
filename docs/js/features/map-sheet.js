@@ -24,11 +24,19 @@ export function setSheetCallbacks(cbs) {
 // ============================================================================
 
 export function createNodeEditSheet() {
+  // Create backdrop for tap-to-close
+  const backdrop = document.createElement('div');
+  backdrop.id = 'nodeEditBackdrop';
+  backdrop.className = 'node-edit-backdrop hidden';
+  container.appendChild(backdrop);
+
   const sheet = document.createElement('div');
   sheet.id = 'nodeEditSheet';
   sheet.className = 'node-edit-sheet hidden';
   sheet.innerHTML = `
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle-area" id="sheetHandleArea">
+      <div class="sheet-handle" aria-hidden="true"></div>
+    </div>
     <div class="sheet-content">
       <div class="sheet-header">
         <div class="sheet-header-left">
@@ -176,6 +184,7 @@ export function openNodeSheet(node) {
     mergeSection.classList.add('hidden');
   }
 
+  document.getElementById('nodeEditBackdrop').classList.remove('hidden');
   document.getElementById('nodeEditSheet').classList.remove('hidden');
   render();
   setTimeout(() => { document.getElementById('nodeNameInput').focus(); document.getElementById('nodeNameInput').select(); }, 100);
@@ -183,7 +192,80 @@ export function openNodeSheet(node) {
 
 export function closeNodeSheet() {
   document.getElementById('nodeEditSheet').classList.add('hidden');
+  document.getElementById('nodeEditBackdrop').classList.add('hidden');
   callbacks.saveMapForGame();
+}
+
+// ============================================================================
+// SHEET DRAG-TO-DISMISS
+// ============================================================================
+
+let sheetDragState = { isDragging: false, startY: 0, currentY: 0 };
+
+export function setupSheetDragHandlers() {
+  const sheet = document.getElementById('nodeEditSheet');
+  const handleArea = document.getElementById('sheetHandleArea');
+  const backdrop = document.getElementById('nodeEditBackdrop');
+
+  // Tap backdrop to close
+  backdrop.addEventListener('click', closeNodeSheet);
+
+  // Drag to dismiss
+  handleArea.addEventListener('touchstart', onSheetDragStart, { passive: true });
+  handleArea.addEventListener('mousedown', onSheetDragStart);
+
+  document.addEventListener('touchmove', onSheetDragMove, { passive: false });
+  document.addEventListener('mousemove', onSheetDragMove);
+
+  document.addEventListener('touchend', onSheetDragEnd);
+  document.addEventListener('mouseup', onSheetDragEnd);
+}
+
+function onSheetDragStart(e) {
+  const sheet = document.getElementById('nodeEditSheet');
+  if (sheet.classList.contains('hidden')) return;
+
+  sheetDragState.isDragging = true;
+  sheetDragState.startY = e.touches ? e.touches[0].clientY : e.clientY;
+  sheetDragState.currentY = 0;
+  sheet.style.transition = 'none';
+}
+
+function onSheetDragMove(e) {
+  if (!sheetDragState.isDragging) return;
+
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const deltaY = clientY - sheetDragState.startY;
+
+  // Only allow dragging down
+  if (deltaY > 0) {
+    sheetDragState.currentY = deltaY;
+    const sheet = document.getElementById('nodeEditSheet');
+    sheet.style.transform = `translateY(${deltaY}px)`;
+    e.preventDefault();
+  }
+}
+
+function onSheetDragEnd() {
+  if (!sheetDragState.isDragging) return;
+
+  sheetDragState.isDragging = false;
+  const sheet = document.getElementById('nodeEditSheet');
+  sheet.style.transition = 'transform 0.2s ease-out';
+
+  // If dragged more than 100px, close the sheet
+  if (sheetDragState.currentY > 100) {
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+      sheet.style.transform = '';
+      sheet.style.transition = '';
+      closeNodeSheet();
+    }, 200);
+  } else {
+    // Snap back
+    sheet.style.transform = '';
+    setTimeout(() => { sheet.style.transition = ''; }, 200);
+  }
 }
 
 function populateConnectionsList(node) {
