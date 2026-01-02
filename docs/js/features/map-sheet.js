@@ -187,7 +187,6 @@ export function openNodeSheet(node) {
   document.getElementById('nodeEditBackdrop').classList.remove('hidden');
   document.getElementById('nodeEditSheet').classList.remove('hidden');
   render();
-  setTimeout(() => { document.getElementById('nodeNameInput').focus(); document.getElementById('nodeNameInput').select(); }, 100);
 }
 
 export function closeNodeSheet() {
