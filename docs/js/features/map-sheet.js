@@ -109,17 +109,13 @@ export function createContextMenu() {
 
 export function openNodeSheet(node) {
   mapState.selectedNode = node.id;
-  const isUser = node.isManual || node.isEdited;
   const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
 
-  // Set badge based on node type
+  // Set badge - only distinguish duplicates (user edits shown by dashed border on node)
   if (isDuplicate) {
     badge.textContent = 'Possible duplicate';
     badge.className = 'sheet-node-badge duplicate';
-  } else if (isUser) {
-    badge.textContent = 'Your edit';
-    badge.className = 'sheet-node-badge user';
   } else {
     badge.textContent = 'Auto-mapped';
     badge.className = 'sheet-node-badge auto';
