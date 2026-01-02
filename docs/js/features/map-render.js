@@ -87,13 +87,6 @@ function drawEdges() {
     ctx.setLineDash(edgeDash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
-    // Draw arrows when explicitly enabled
-    if (edge.showEndArrow) {
-      drawArrow(from.x, from.y, to.x, to.y, edgeColor);
-    }
-    if (edge.showStartArrow) {
-      drawArrow(to.x, to.y, from.x, from.y, edgeColor);
-    }
     ctx.globalAlpha = 1; ctx.setLineDash([]);
   }
 }
@@ -108,20 +101,6 @@ function getConnectionType(edge) {
     if (direction && DIRECTION_TO_TYPE[direction]) return DIRECTION_TO_TYPE[direction];
   }
   return 'cardinal';
-}
-
-function drawArrow(x1, y1, x2, y2, color) {
-  const angle = Math.atan2(y2 - y1, x2 - x1), length = 12;
-  const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  if (dist < NODE_RADIUS * 2) return;
-  const ratio = (dist - NODE_RADIUS - 5) / dist;
-  const ax = x1 + (x2 - x1) * ratio, ay = y1 + (y2 - y1) * ratio;
-  ctx.setLineDash([]);
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(ax, ay); ctx.lineTo(ax - length * Math.cos(angle - Math.PI / 6), ay - length * Math.sin(angle - Math.PI / 6));
-  ctx.moveTo(ax, ay); ctx.lineTo(ax - length * Math.cos(angle + Math.PI / 6), ay - length * Math.sin(angle + Math.PI / 6));
-  ctx.stroke();
 }
 
 function drawEdgePreview() {

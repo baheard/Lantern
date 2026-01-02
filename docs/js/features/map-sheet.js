@@ -282,18 +282,9 @@ function populateConnectionsList(node) {
 
   list.innerHTML = conns.map(c => {
     const currentType = c.edge.connectionType || 'cardinal';
-    const hasStartArrow = c.edge.showStartArrow || false;
-    const hasEndArrow = c.edge.showEndArrow || false;
     return `
       <div class="connection-item ${c.edge.isManual || c.edge.isEdited ? 'user' : 'auto'}">
         <span class="connection-name">${c.node.name}</span>
-        ${c.edge.command ? `<span class="connection-cmd">${c.edge.command}</span>` : ''}
-        <button class="connection-arrow-toggle ${hasStartArrow ? 'active' : ''}" data-edge="${c.key}" data-arrow="start" aria-label="Toggle start arrow" title="Arrow at start">
-          <span class="material-icons">arrow_back</span>
-        </button>
-        <button class="connection-arrow-toggle ${hasEndArrow ? 'active' : ''}" data-edge="${c.key}" data-arrow="end" aria-label="Toggle end arrow" title="Arrow at end">
-          <span class="material-icons">arrow_forward</span>
-        </button>
         <select class="connection-type-picker" data-edge="${c.key}" title="Connection type">
           ${Object.keys(CONNECTION_TYPES).map(t =>
             `<option value="${t}" ${currentType === t ? 'selected' : ''}>${typeLabels[t]}</option>`
@@ -306,25 +297,6 @@ function populateConnectionsList(node) {
 
   // Delete handlers
   list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', () => { deleteEdge(btn.dataset.edge); populateConnectionsList(node); }));
-
-  // Arrow toggle handlers
-  list.querySelectorAll('.connection-arrow-toggle').forEach(btn => btn.addEventListener('click', (e) => {
-    const edgeKey = e.currentTarget.dataset.edge;
-    const arrowEnd = e.currentTarget.dataset.arrow;
-    const edge = mapState.edges.get(edgeKey);
-    if (edge) {
-      if (arrowEnd === 'start') {
-        edge.showStartArrow = !edge.showStartArrow;
-      } else {
-        edge.showEndArrow = !edge.showEndArrow;
-      }
-      edge.isEdited = true;
-      mapState.protectedEdges.add(edgeKey);
-      render();
-      callbacks.saveMapForGame();
-      populateConnectionsList(node);
-    }
-  }));
 
   // Type change handlers
   list.querySelectorAll('.connection-type-picker').forEach(sel => sel.addEventListener('change', (e) => {
