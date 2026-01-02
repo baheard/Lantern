@@ -79,12 +79,13 @@ function drawEdges() {
     const connectionType = getConnectionType(edge);
     const style = CONNECTION_STYLES[connectionType] || CONNECTION_STYLES.cardinal;
 
-    // Color: purple for player-created, type color for auto-mapped
+    // Player-created: purple solid. Auto-mapped: type color with type dash pattern
     const edgeColor = isUser ? '#8b5cf6' : style.color;
+    const edgeDash = isUser ? [] : style.dash;  // Player-created always solid
 
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = edgeColor;
-    ctx.setLineDash(style.dash);
+    ctx.setLineDash(edgeDash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
     // Only draw arrows when explicitly enabled (for one-way paths)
@@ -151,23 +152,15 @@ function drawNodes() {
 
     const isSelected = mapState.selectedNode === node.id;
     // Current location check:
-    // - If a duplicate is selected and matches current location, only that duplicate shows as current
-    // - Primary node shows as current only if no duplicate of same name is selected
-    const isPrimaryNode = node.id === node.name;
-    const isDuplicateNode = node.isDuplicate === true;
+    // The "current" node is the one the player is at RIGHT NOW
+    // - If selectedNode matches currentLocationName, only that specific node is current
+    // - Otherwise, the primary node (id === name) matching currentLocationName is current
     const nameMatchesCurrent = currentLocationName && node.name === currentLocationName;
+    const selectedNodeData = mapState.selectedNode ? mapState.nodes.get(mapState.selectedNode) : null;
+    const selectedMatchesCurrent = selectedNodeData && selectedNodeData.name === currentLocationName;
 
-    // Check if any duplicate of this location is currently selected
-    const selectedNode = mapState.selectedNode ? mapState.nodes.get(mapState.selectedNode) : null;
-    const selectedDuplicateMatchesCurrent = selectedNode &&
-      selectedNode.isDuplicate &&
-      selectedNode.name === currentLocationName;
-
-    // Duplicate is current if: it's a duplicate, selected, and name matches current location
-    const isDuplicateCurrent = isDuplicateNode && isSelected && nameMatchesCurrent;
-    // Primary is current if: it's primary, name matches, AND no duplicate of same name is selected
-    const isPrimaryCurrent = isPrimaryNode && nameMatchesCurrent && !selectedDuplicateMatchesCurrent;
-    const isCurrent = isPrimaryCurrent || isDuplicateCurrent;
+    // Only show as current if: name matches AND (this node is selected OR no selection matches current)
+    const isCurrent = nameMatchesCurrent && (isSelected || !selectedMatchesCurrent);
     const isEdgeStart = mapState.edgeStartNode === node.id;
     const hasMergeConflict = node.isDuplicate === true;
     const hasNotes = node.notes && node.notes.trim().length > 0;
