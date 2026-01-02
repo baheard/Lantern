@@ -9,10 +9,10 @@
    - Toggle arrows manually via the connection list in the node sheet
    - Use arrows to indicate one-way paths in the game
 
-2. **Deleting Connections Marks Nodes as Edited**
-   - When an auto-mapped connection is deleted, both connected nodes are marked as edited
-   - Ensures nodes show the edited badge (purple dot)
-   - Prevents auto-mapper from recreating the deleted connection
+2. **Connection Color by Provenance**
+   - Auto-mapped connections use the connection type color (blue/purple/yellow)
+   - Player-created connections are always purple (#8b5cf6)
+   - Removed midpoint marker - color alone distinguishes player vs auto connections
 
 ### January 2, 2025 - Auto-Mapper Improvements (v1.4.18)
 

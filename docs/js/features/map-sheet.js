@@ -295,22 +295,6 @@ export function createManualEdge(fromId, toId) {
 }
 
 export function deleteEdge(key) {
-  const edge = mapState.edges.get(key);
-
-  // If deleting an auto-mapped edge, mark connected nodes as edited
-  if (edge && !edge.isManual && !edge.isEdited) {
-    const fromNode = mapState.nodes.get(edge.from);
-    const toNode = mapState.nodes.get(edge.to);
-    if (fromNode) {
-      fromNode.isEdited = true;
-      mapState.protectedNodes.add(fromNode.id);
-    }
-    if (toNode) {
-      toNode.isEdited = true;
-      mapState.protectedNodes.add(toNode.id);
-    }
-  }
-
   mapState.edges.delete(key);
   mapState.deletedEdges.add(key);
   callbacks.saveMapForGame(); render();

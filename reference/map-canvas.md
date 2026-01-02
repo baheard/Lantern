@@ -240,8 +240,9 @@ Once an item is created (by auto-mapper OR user), it's immediately added to the 
 
 ### Edge Behavior
 
+- **Color by provenance**: Auto-mapped connections use the connection type color (blue/purple/yellow). Player-created connections are always purple (#8b5cf6).
 - **Arrows are opt-in**: Connections don't show arrows by default. Toggle arrows via the node sheet to indicate one-way paths.
-- **Deleting auto-mapped edges**: When a user deletes an auto-mapped connection, both connected nodes are marked as `isEdited`. This ensures they display the edited badge and prevents the auto-mapper from recreating the connection.
+- **Deleted edges stay deleted**: Deleted connections are tracked in `deletedEdges` to prevent auto-mapper from recreating them.
 
 ## Connection Types
 

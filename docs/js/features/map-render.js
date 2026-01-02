@@ -74,28 +74,23 @@ function drawEdges() {
     const from = mapState.nodes.get(edge.from), to = mapState.nodes.get(edge.to);
     if (!from || !to) continue;
 
-    const isUser = edge.isManual || edge.isEdited;
+    const isUser = edge.isManual;
     const connectionType = getConnectionType(edge);
     const style = CONNECTION_STYLES[connectionType] || CONNECTION_STYLES.cardinal;
 
+    // Color: purple for player-created, type color for auto-mapped
+    const edgeColor = isUser ? '#8b5cf6' : style.color;
+
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = style.color;
+    ctx.strokeStyle = edgeColor;
     ctx.setLineDash(style.dash);
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
     // Only draw arrows when explicitly enabled (for one-way paths)
     if (edge.showArrow) {
-      drawArrow(from.x, from.y, to.x, to.y, style.color);
+      drawArrow(from.x, from.y, to.x, to.y, edgeColor);
     }
     ctx.globalAlpha = 1; ctx.setLineDash([]);
-
-    // User edit indicator - small dot at midpoint
-    if (isUser) {
-      const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
-      ctx.beginPath(); ctx.arc(mx, my, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#a78bfa'; ctx.fill();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-    }
   }
 }
 
