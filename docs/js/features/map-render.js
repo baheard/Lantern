@@ -208,11 +208,15 @@ function drawNodes() {
     // Label
     const fontSize = isSmall ? 9 : 11;
     ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     let name = (node.name || '').trim() || 'Unknown';
     if (name.length > 20) name = name.substring(0, 17) + '...';
-    const tw = ctx.measureText(name).width, ly = node.y + radius + (isSmall ? 6 : 8);
+    const tw = ctx.measureText(name).width;
+    const labelHeight = isSmall ? 12 : 14;
+    const ly = node.y + radius + (isSmall ? 6 : 8) + labelHeight / 2;
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - (isSmall ? 5 : 6), tw + 8, isSmall ? 12 : 14, 4); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - labelHeight / 2, tw + 8, labelHeight, 4); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
 
     // ========================================
