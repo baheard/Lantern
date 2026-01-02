@@ -151,11 +151,22 @@ function drawNodes() {
 
     const isSelected = mapState.selectedNode === node.id;
     // Current location check:
-    // - Primary node (id === name) is current if name matches
-    // - Duplicate node is current if it's selected AND name matches (player just arrived there)
+    // - If a duplicate is selected and matches current location, only that duplicate shows as current
+    // - Primary node shows as current only if no duplicate of same name is selected
     const isPrimaryNode = node.id === node.name;
-    const isPrimaryCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
-    const isDuplicateCurrent = currentLocationName && node.isDuplicate && isSelected && node.name === currentLocationName;
+    const isDuplicateNode = node.isDuplicate === true;
+    const nameMatchesCurrent = currentLocationName && node.name === currentLocationName;
+
+    // Check if any duplicate of this location is currently selected
+    const selectedNode = mapState.selectedNode ? mapState.nodes.get(mapState.selectedNode) : null;
+    const selectedDuplicateMatchesCurrent = selectedNode &&
+      selectedNode.isDuplicate &&
+      selectedNode.name === currentLocationName;
+
+    // Duplicate is current if: it's a duplicate, selected, and name matches current location
+    const isDuplicateCurrent = isDuplicateNode && isSelected && nameMatchesCurrent;
+    // Primary is current if: it's primary, name matches, AND no duplicate of same name is selected
+    const isPrimaryCurrent = isPrimaryNode && nameMatchesCurrent && !selectedDuplicateMatchesCurrent;
     const isCurrent = isPrimaryCurrent || isDuplicateCurrent;
     const isEdgeStart = mapState.edgeStartNode === node.id;
     const hasMergeConflict = node.isDuplicate === true;

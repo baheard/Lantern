@@ -125,10 +125,7 @@ function createMapUI() {
       <button class="map-legend-toggle" id="mapLegendToggle" aria-label="Show legend" title="Legend">
         <span class="material-icons">help_outline</span>
       </button>
-      <div class="map-legend" id="mapLegend">
-        <button class="legend-close" id="legendCloseBtn" aria-label="Close legend">
-          <span class="material-icons">close</span>
-        </button>
+      <div class="map-legend" id="mapLegend" title="Click to close">
         <div class="legend-section">Locations</div>
         <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
         <div class="legend-item"><span class="legend-dot legend-user"></span><span>Your edits</span></div>
@@ -182,12 +179,15 @@ function setupEventListeners() {
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
-  document.getElementById('mapLegendToggle').addEventListener('click', () => domRefs.legend.classList.toggle('legend-visible'));
-  document.getElementById('legendCloseBtn').addEventListener('click', () => domRefs.legend.classList.remove('legend-visible'));
-  // Tap anywhere on legend to collapse it
-  domRefs.legend.addEventListener('click', (e) => {
-    if (e.target.id !== 'legendCloseBtn') domRefs.legend.classList.remove('legend-visible');
-  });
+  // Legend toggle - click button to expand, click legend to collapse
+  const legendToggle = document.getElementById('mapLegendToggle');
+  const toggleLegend = (show) => {
+    const isVisible = show !== undefined ? show : !domRefs.legend.classList.contains('legend-visible');
+    domRefs.legend.classList.toggle('legend-visible', isVisible);
+    legendToggle.classList.toggle('legend-open', isVisible);
+  };
+  legendToggle.addEventListener('click', () => toggleLegend(true));
+  domRefs.legend.addEventListener('click', () => toggleLegend(false));
 
   // Canvas
   const canvasEl = document.getElementById('mapCanvas');

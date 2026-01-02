@@ -244,9 +244,9 @@
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* Legend Toggle Button (visible on small screens) */
+/* Legend Toggle Button - always visible when legend is collapsed */
 .map-legend-toggle {
-  display: none;
+  display: flex;
   position: absolute;
   top: 12px;
   left: 12px;
@@ -261,6 +261,7 @@
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s;
 }
 
 .map-legend-toggle:hover {
@@ -272,12 +273,19 @@
   font-size: 20px;
 }
 
-/* Legend */
+/* Hide toggle when legend is visible */
+.map-legend.legend-visible ~ .map-legend-toggle,
+.map-legend-toggle.legend-open {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Legend - hidden by default, shown when .legend-visible */
 .map-legend {
   position: absolute;
   top: 12px;
   left: 12px;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
@@ -285,27 +293,16 @@
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 5;
+  cursor: pointer;
 }
 
-/* Legend close button (visible on small screens) */
+.map-legend.legend-visible {
+  display: flex;
+}
+
+/* Legend close hint */
 .legend-close {
   display: none;
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-}
-
-.legend-close .material-icons {
-  font-size: 14px;
 }
 
 .legend-item {

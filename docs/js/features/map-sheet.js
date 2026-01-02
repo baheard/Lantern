@@ -494,6 +494,7 @@ export function handleNodeMerge() {
   mapState.selectedNode = originalId;
 
   closeNodeSheet();
+  render();  // Force re-render to show merged state
   callbacks.showHint(`Merged with "${originalNode.name}"`);
   callbacks.saveMapForGame();
 }
