@@ -211,12 +211,12 @@ function drawNodes() {
     if (name.length > 20) name = name.substring(0, 17) + '...';
     const tw = ctx.measureText(name).width, ly = node.y + NODE_RADIUS + 8;
     // Duplicates get orange background label
-    ctx.fillStyle = isDuplicate ? 'rgba(249,115,22,0.8)' : 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = isDuplicateNode ? 'rgba(249,115,22,0.8)' : 'rgba(0,0,0,0.6)';
     ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - 6, tw + 8, 14, 4); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
 
     // User indicator (but not for duplicates - they have their own indicator)
-    if (isUser && !isCurrent && !isDuplicate) {
+    if (isUser && !isCurrent && !isDuplicateNode) {
       ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 5, 0, Math.PI * 2);
       ctx.fillStyle = '#a78bfa'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
     }
