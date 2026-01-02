@@ -47,7 +47,8 @@ export function getCurrentLocation(statusBarText) {
     locationName = locationName.replace(pattern, '');
   }
 
-  locationName = locationName.trim();
+  // Clean up trailing punctuation (commas, periods, etc.)
+  locationName = locationName.trim().replace(/[,.:;!?]+$/, '').trim();
 
   if (!locationName) {
     return null;
