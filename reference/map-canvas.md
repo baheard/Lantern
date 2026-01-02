@@ -217,12 +217,32 @@ Once an item is created (by auto-mapper OR user), it's immediately added to the 
   name: string,         // Location name
   x: number,            // Canvas X position
   y: number,            // Canvas Y position
-  type: string,         // 'room', 'outdoor', 'shop', 'danger', etc.
+  type: string,         // Icon type: 'location' (blank), 'person', 'door', 'puzzle', 'star', 'question'
   notes: string,        // User notes
   isManual: boolean,    // Created by user (not auto-mapper)
-  isEdited: boolean     // Modified by user after creation
+  isEdited: boolean,    // Modified by user after creation
+  isSmall: boolean      // Small node (60% size, fades when zoomed out)
 }
 ```
+
+### Node Icons
+
+| Type | Icon | Use For |
+|------|------|---------|
+| `location` | (blank) | Standard locations (default) |
+| `person` | 👤 | NPCs or characters |
+| `door` | 🚪 | Exits or entrances |
+| `puzzle` | 🧩 | Puzzle elements |
+| `star` | ⭐ | Important/notable |
+| `question` | ❓ | Unknown or mystery |
+
+### Small Nodes
+
+Nodes can be marked as "small" (60% size) via the node sheet toggle:
+- Radius: 17px (vs 28px normal)
+- Fade out when zoomed below 0.6x scale
+- Completely hidden below 0.3x scale
+- Useful for minor locations or details
 
 ### Edge Object
 
@@ -285,6 +305,16 @@ enter/in: { x: 80, y: -40 }, exit/out: { x: -80, y: 40 }
 | Scroll wheel | Zoom in/out |
 | Right-click | Context menu |
 | Tap legend | Collapse legend |
+
+### Sheet Dismissal
+
+The node edit sheet can be closed by:
+| Gesture | Action |
+|---------|--------|
+| Tap backdrop | Tap the darkened area above the sheet to close |
+| Drag handle down | Drag the handle bar down >100px to dismiss |
+| Tap X button | Close button in sheet header |
+| Press Escape | Keyboard shortcut |
 
 ### Double-Tap Detection
 
