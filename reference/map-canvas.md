@@ -193,7 +193,8 @@ mapState = {
   deletedEdges: Set(),    // Keys that auto-mapper cannot recreate
   deletedNodes: Set(),    // IDs that auto-mapper cannot recreate
   viewport: { x, y, scale },
-  selectedNode: null,
+  selectedNode: null,     // Currently selected/focused node (for UI)
+  currentNodeId: null,    // Actual player location (specific node ID)
   autoMapEnabled: true
 }
 ```
@@ -379,6 +380,19 @@ Only one badge shows at a time - highest priority wins.
 - Glow = where I am
 - Badge = what needs attention
 
+## Current Location Tracking
+
+The `currentNodeId` field explicitly tracks which specific node the player is at. This is separate from `selectedNode` (UI focus) because:
+
+1. **Duplicate handling**: When the player reaches a same-named location via a different route, a duplicate node is created. `currentNodeId` is set to the duplicate's ID, so the duplicate shows the green "current" halo, not the original.
+
+2. **Selection independence**: The player can tap other nodes to view/edit them without losing track of their actual location.
+
+When the player moves:
+- New node created → `currentNodeId = newNodeId`
+- Duplicate created → `currentNodeId = duplicateId`
+- Existing node reached → `currentNodeId = existingNodeId`
+
 ## Persistence
 
 Maps are saved per-game in localStorage:
@@ -392,7 +406,8 @@ localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify({
   deletedEdges: [...],
   deletedNodes: [...],
   viewport: { x, y, scale },
-  autoMapEnabled: boolean
+  autoMapEnabled: boolean,
+  currentNodeId: string
 }));
 ```
 

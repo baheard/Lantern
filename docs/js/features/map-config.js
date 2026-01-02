@@ -89,6 +89,7 @@ export const mapState = {
   deletedNodes: new Set(),
   viewport: { x: 0, y: 0, scale: 1 },
   selectedNode: null,
+  currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
   autoMapEnabled: true,
   // Interaction state
   isDragging: false,

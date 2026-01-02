@@ -2,7 +2,6 @@
  * Map Canvas - Rendering Functions
  */
 
-import { getLastLocationName } from './auto-mapper.js';
 import {
   canvas, ctx, container, mapState,
   NODE_RADIUS, NODE_RADIUS_SMALL, SMALL_NODE_FADE_SCALE,
@@ -136,7 +135,6 @@ function drawEdgePreview() {
 // ============================================================================
 
 function drawNodes() {
-  const currentLocationName = getLastLocationName();
   for (const node of mapState.nodes.values()) {
     const isSmall = node.isSmall === true;
     const radius = isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
@@ -151,16 +149,9 @@ function drawNodes() {
     }
 
     const isSelected = mapState.selectedNode === node.id;
-    // Current location check:
-    // The "current" node is the one the player is at RIGHT NOW
-    // - If selectedNode matches currentLocationName, only that specific node is current
-    // - Otherwise, the primary node (id === name) matching currentLocationName is current
-    const nameMatchesCurrent = currentLocationName && node.name === currentLocationName;
-    const selectedNodeData = mapState.selectedNode ? mapState.nodes.get(mapState.selectedNode) : null;
-    const selectedMatchesCurrent = selectedNodeData && selectedNodeData.name === currentLocationName;
-
-    // Only show as current if: name matches AND (this node is selected OR no selection matches current)
-    const isCurrent = nameMatchesCurrent && (isSelected || !selectedMatchesCurrent);
+    // Current location check - use explicit currentNodeId for precise tracking
+    // This handles duplicates correctly: the specific node the player is at is marked current
+    const isCurrent = mapState.currentNodeId === node.id;
     const isEdgeStart = mapState.edgeStartNode === node.id;
     const hasMergeConflict = node.isDuplicate === true;
     const hasNotes = node.notes && node.notes.trim().length > 0;

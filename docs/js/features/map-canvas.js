@@ -334,19 +334,23 @@ function handleLocationChange(e) {
           mapState.protectedEdges.add(edgeKey);
         }
         mapState.selectedNode = locationName;
+        mapState.currentNodeId = locationName;
       } else {
         // Different position - likely a duplicate room with same name
         const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
         if (duplicateId) {
           mapState.selectedNode = duplicateId;
-          console.log('[MapCanvas] Duplicate created, selectedNode =', duplicateId);
+          mapState.currentNodeId = duplicateId;  // Duplicate is the current location
+          console.log('[MapCanvas] Duplicate created, currentNodeId =', duplicateId);
           showHint(`Found "${locationName}" via different route. Merge if same place.`);
         } else {
           mapState.selectedNode = locationName;
+          mapState.currentNodeId = locationName;
         }
       }
     } else {
       mapState.selectedNode = locationName;
+      mapState.currentNodeId = locationName;
     }
     render();
     saveMapForGame();
@@ -389,6 +393,7 @@ function handleLocationChange(e) {
   }
 
   mapState.selectedNode = locationName;
+  mapState.currentNodeId = locationName;  // New node is the current location
   updateNodeCount();
   render();
   saveMapForGame();
@@ -626,6 +631,7 @@ function loadMapForGame(gameName) {
         mapState.viewport = { x: 0, y: 0, scale: 1 };
       }
       if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
+      if (data.currentNodeId) mapState.currentNodeId = data.currentNodeId;
       console.log('[MapCanvas] Loaded map for:', gameName, 'with', mapState.nodes.size, 'nodes');
     } catch (e) { console.error('[MapCanvas] Failed to load map:', e); resetMap(); }
   } else { resetMap(); }
@@ -644,7 +650,8 @@ export function saveMapForGame() {
       deletedEdges: Array.from(mapState.deletedEdges),
       deletedNodes: Array.from(mapState.deletedNodes),
       viewport: mapState.viewport,
-      autoMapEnabled: mapState.autoMapEnabled
+      autoMapEnabled: mapState.autoMapEnabled,
+      currentNodeId: mapState.currentNodeId
     }));
   } catch (e) { console.error('[MapCanvas] Failed to save map:', e); }
 }
@@ -654,7 +661,8 @@ function resetMap() {
   mapState.protectedNodes = new Set(); mapState.protectedEdges = new Set();
   mapState.deletedEdges = new Set(); mapState.deletedNodes = new Set();
   mapState.viewport = { x: 0, y: 0, scale: 1 };
-  mapState.selectedNode = null; mapState.autoMapEnabled = true;
+  mapState.selectedNode = null; mapState.currentNodeId = null;
+  mapState.autoMapEnabled = true;
 }
 
 // Debug exports
