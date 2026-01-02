@@ -279,6 +279,12 @@ function handleLocationChange(e) {
   }
   const { locationId, locationName, previousLocationId, command } = e.detail;
 
+  // Validate location name - reject empty or invalid names
+  if (!locationName || typeof locationName !== 'string' || !locationName.trim()) {
+    console.warn('[MapCanvas] Invalid location name, ignoring:', locationName);
+    return;
+  }
+
   // locationId is now the location NAME (name-based tracking)
   // Check if we already have a node with this name
   const existingNode = mapState.nodes.get(locationName);
@@ -589,7 +595,9 @@ function loadMapForGame(gameName) {
   if (saved) {
     try {
       const data = JSON.parse(saved);
-      mapState.nodes = new Map((data.nodes || []).map(n => [n.id, n]));
+      // Filter out invalid nodes (no id or name)
+      const validNodes = (data.nodes || []).filter(n => n && n.id && n.name);
+      mapState.nodes = new Map(validNodes.map(n => [n.id, n]));
       mapState.edges = new Map((data.edges || []).map(e => [`${e.from}-${e.to}`, e]));
       mapState.protectedNodes = new Set(data.protectedNodes || []);
       mapState.protectedEdges = new Set(data.protectedEdges || []);
