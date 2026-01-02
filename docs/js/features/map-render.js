@@ -268,22 +268,6 @@ function drawAddModeCrosshair(width, height) {
   ctx.setLineDash([]);
 }
 
-export function drawLongPressProgress() {
-  if (!timers.longPressNode || timers.longPressProgress <= 0) return;
-  const node = mapState.nodes.get(timers.longPressNode);
-  if (!node) return;
-  const width = canvas.width / window.devicePixelRatio, height = canvas.height / window.devicePixelRatio;
-  ctx.save();
-  ctx.translate(width / 2 + mapState.viewport.x, height / 2 + mapState.viewport.y);
-  ctx.scale(mapState.viewport.scale, mapState.viewport.scale);
-  const radius = NODE_RADIUS + 8, startAngle = -Math.PI / 2, endAngle = startAngle + Math.PI * 2 * timers.longPressProgress;
-  ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(251,191,36,0.2)'; ctx.lineWidth = 4; ctx.stroke();
-  ctx.beginPath(); ctx.arc(node.x, node.y, radius, startAngle, endAngle); ctx.strokeStyle = '#fbbf24'; ctx.lineCap = 'round'; ctx.stroke();
-  const pulse = 1 + Math.sin(Date.now() / 100) * 0.1 * timers.longPressProgress;
-  ctx.beginPath(); ctx.arc(node.x, node.y, radius * pulse, 0, Math.PI * 2); ctx.strokeStyle = `rgba(251,191,36,${0.3 * timers.longPressProgress})`; ctx.lineWidth = 2; ctx.stroke();
-  ctx.restore();
-}
-
 // ============================================================================
 // VIEWPORT UTILITIES
 // ============================================================================

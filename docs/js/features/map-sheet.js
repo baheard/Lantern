@@ -12,7 +12,8 @@ import { render } from './map-render.js';
 let callbacks = {
   showHint: () => {},
   saveMapForGame: () => {},
-  startConnectionFromSheetCallback: () => {}
+  startConnectionFromSheetCallback: () => {},
+  pushUndo: () => {}
 };
 
 export function setSheetCallbacks(cbs) {
@@ -397,12 +398,28 @@ export function handleNodeSmallToggle() {
 
 export function handleNodeDelete() {
   const nodeId = mapState.selectedNode, node = mapState.nodes.get(nodeId);
-  if (!nodeId) return;
+  if (!nodeId || !node) return;
+
+  // Collect edges for undo
+  const deletedEdges = [];
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === nodeId || edge.to === nodeId) {
+      deletedEdges.push({ key, data: { ...edge }, wasProtected: mapState.protectedEdges.has(key) });
+      mapState.edges.delete(key);
+      mapState.deletedEdges.add(key);
+    }
+  }
+
+  // Push undo before deleting
+  callbacks.pushUndo({
+    type: 'deleteNode',
+    node: { ...node },
+    wasProtected: mapState.protectedNodes.has(nodeId),
+    edges: deletedEdges
+  });
+
   mapState.nodes.delete(nodeId);
   mapState.deletedNodes.add(nodeId);
-  for (const [key, edge] of mapState.edges) {
-    if (edge.from === nodeId || edge.to === nodeId) { mapState.edges.delete(key); mapState.deletedEdges.add(key); }
-  }
   mapState.selectedNode = null;
   closeNodeSheet();
   callbacks.showHint(`Deleted "${node?.name}"`);
@@ -422,6 +439,15 @@ export function createManualEdge(fromId, toId) {
 }
 
 export function deleteEdge(key) {
+  const edge = mapState.edges.get(key);
+  if (edge) {
+    callbacks.pushUndo({
+      type: 'deleteEdge',
+      key,
+      edge: { ...edge },
+      wasProtected: mapState.protectedEdges.has(key)
+    });
+  }
   mapState.edges.delete(key);
   mapState.deletedEdges.add(key);
   callbacks.saveMapForGame(); render();

@@ -91,6 +91,7 @@ export const mapState = {
   selectedNode: null,
   currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
   autoMapEnabled: true,
+  undoStack: [],  // Stack of undo actions
   // Interaction state
   isDragging: false,
   hasDragged: false,  // True if actual movement occurred during drag

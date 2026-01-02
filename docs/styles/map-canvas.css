@@ -224,8 +224,6 @@
 .map-fab-secondary {
   background: #334155;
   color: #94a3b8;
-  width: 48px;
-  height: 48px;
 }
 
 .map-fab-secondary:hover {
@@ -1030,11 +1028,6 @@
     height: 52px;
   }
 
-  .map-fab-secondary {
-    width: 44px;
-    height: 44px;
-  }
-
   /* Collapsible legend on small screens */
   .map-legend-toggle {
     display: flex;
@@ -1083,11 +1076,6 @@
   .map-fab {
     width: 48px;
     height: 48px;
-  }
-
-  .map-fab-secondary {
-    width: 40px;
-    height: 40px;
   }
 }
 

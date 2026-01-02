@@ -26,7 +26,7 @@ import {
   handlePointerDown, handlePointerMove, handlePointerUp,
   handleTouchStart, handleTouchMove, handleTouchEnd,
   handleWheel, handleContextMenu, handleCtxAddNode, handleCtxCenterView,
-  handleKeyDown, stopLongPressAnimation, showFab, setHandlerCallbacks
+  handleKeyDown, showFab, setHandlerCallbacks
 } from './map-handlers.js';
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
@@ -64,6 +64,7 @@ function setupCallbacks() {
   setSheetCallbacks({
     showHint,
     saveMapForGame,
+    pushUndo,
     startConnectionFromSheetCallback: (nodeId) => {
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = nodeId;
@@ -93,6 +94,9 @@ function createMapUI() {
         <span class="map-node-count" id="mapNodeCount"></span>
       </div>
       <div class="map-toolbar-actions">
+        <button class="map-btn" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
+          <span class="material-icons">undo</span>
+        </button>
         <button class="map-btn" id="mapCenterBtn" title="Center on current location" aria-label="Center view">
           <span class="material-icons">my_location</span>
         </button>
@@ -170,6 +174,7 @@ function setupEventListeners() {
 
   // Toolbar
   document.getElementById('mapCloseBtn').addEventListener('click', hideMap);
+  document.getElementById('mapUndoBtn').addEventListener('click', performUndo);
   document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
   document.getElementById('mapZoomInBtn').addEventListener('click', () => zoom(1.3));
   document.getElementById('mapZoomOutBtn').addEventListener('click', () => zoom(0.7));
@@ -205,6 +210,7 @@ function setupEventListeners() {
   // Sheet
   document.getElementById('sheetCloseBtn').addEventListener('click', closeNodeSheet);
   document.getElementById('nodeNameInput').addEventListener('input', handleNodeNameChange);
+  document.getElementById('nodeNameInput').addEventListener('focus', (e) => e.target.select());
   document.getElementById('nodeNotesInput').addEventListener('input', handleNodeNotesChange);
   document.getElementById('nodeDeleteBtn').addEventListener('click', handleNodeDelete);
   document.getElementById('nodeConnectBtn').addEventListener('click', startConnectionFromSheet);
@@ -564,7 +570,6 @@ export function showMap() {
 export function hideMap() {
   container?.classList.add('hidden');
   setIsVisible(false);
-  stopLongPressAnimation();
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
   exitAddMode();
@@ -651,6 +656,54 @@ function resetMap() {
   mapState.viewport = { x: 0, y: 0, scale: 1 };
   mapState.selectedNode = null; mapState.currentNodeId = null;
   mapState.autoMapEnabled = true;
+}
+
+// ============================================================================
+// UNDO SYSTEM
+// ============================================================================
+
+function updateUndoButton() {
+  const btn = document.getElementById('mapUndoBtn');
+  if (btn) btn.disabled = mapState.undoStack.length === 0;
+}
+
+export function pushUndo(action) {
+  mapState.undoStack.push(action);
+  if (mapState.undoStack.length > 50) mapState.undoStack.shift();  // Limit stack size
+  updateUndoButton();
+}
+
+function performUndo() {
+  if (mapState.undoStack.length === 0) return;
+  const action = mapState.undoStack.pop();
+
+  switch (action.type) {
+    case 'deleteNode':
+      mapState.nodes.set(action.node.id, action.node);
+      mapState.deletedNodes.delete(action.node.id);
+      if (action.wasProtected) mapState.protectedNodes.add(action.node.id);
+      // Restore edges
+      for (const edge of action.edges) {
+        mapState.edges.set(edge.key, edge.data);
+        mapState.deletedEdges.delete(edge.key);
+        if (edge.wasProtected) mapState.protectedEdges.add(edge.key);
+      }
+      break;
+    case 'deleteEdge':
+      mapState.edges.set(action.key, action.edge);
+      mapState.deletedEdges.delete(action.key);
+      if (action.wasProtected) mapState.protectedEdges.add(action.key);
+      break;
+    case 'moveNode':
+      const node = mapState.nodes.get(action.nodeId);
+      if (node) { node.x = action.oldX; node.y = action.oldY; }
+      break;
+  }
+
+  updateUndoButton();
+  updateNodeCount();
+  render();
+  saveMapForGame();
 }
 
 // Debug exports
