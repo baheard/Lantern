@@ -176,7 +176,7 @@ function drawNodes() {
       // Strong green halo for current location
       ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(34,197,94,0.6)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS);
+      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
       ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3; ctx.stroke();
     } else if (isSelected || isEdgeStart) {
       // Weaker white halo for selection
