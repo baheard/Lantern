@@ -189,7 +189,7 @@ function drawNodes() {
     // Glow
     if (isCurrent || isSelected || isEdgeStart) {
       ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = isCurrent ? 'rgba(34,197,94,0.5)' : isDuplicate ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.3)';
+      ctx.strokeStyle = isCurrent ? 'rgba(34,197,94,0.5)' : isDuplicateNode ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 2; ctx.stroke();
     }
 
@@ -222,7 +222,7 @@ function drawNodes() {
     }
 
     // Duplicate indicator - question mark badge
-    if (isDuplicate) {
+    if (isDuplicateNode) {
       ctx.beginPath(); ctx.arc(node.x + NODE_RADIUS - 4, node.y - NODE_RADIUS + 4, 7, 0, Math.PI * 2);
       ctx.fillStyle = '#fbbf24'; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.fillStyle = '#000000'; ctx.font = 'bold 10px sans-serif';
