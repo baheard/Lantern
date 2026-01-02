@@ -748,6 +748,65 @@
   font-size: 22px;
 }
 
+.type-btn .no-icon {
+  font-size: 18px;
+  color: #64748b;
+}
+
+.type-btn.active .no-icon {
+  color: #60a5fa;
+}
+
+/* Toggle Field */
+.sheet-toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-toggle-field label {
+  margin-bottom: 0;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-track {
+  display: block;
+  width: 44px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: #94a3b8;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active .toggle-track {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.toggle-btn.active .toggle-thumb {
+  background: #60a5fa;
+  left: 22px;
+}
+
 /* Connections List */
 .node-connections-list {
   display: flex;

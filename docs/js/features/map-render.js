@@ -5,7 +5,8 @@
 import { getLastLocationName } from './auto-mapper.js';
 import {
   canvas, ctx, container, mapState,
-  NODE_RADIUS, NODE_COLORS, NODE_ICONS,
+  NODE_RADIUS, NODE_RADIUS_SMALL, SMALL_NODE_FADE_SCALE,
+  NODE_COLORS, NODE_ICONS,
   CONNECTION_STYLES, DIRECTION_TO_TYPE, COMMAND_DIRECTIONS,
   timers
 } from './map-config.js';
@@ -136,6 +137,18 @@ function drawEdgePreview() {
 function drawNodes() {
   const currentLocationName = getLastLocationName();
   for (const node of mapState.nodes.values()) {
+    const isSmall = node.isSmall === true;
+    const radius = isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
+
+    // Small nodes fade out when zoomed out
+    if (isSmall && mapState.viewport.scale < SMALL_NODE_FADE_SCALE) {
+      const fadeStart = SMALL_NODE_FADE_SCALE;
+      const fadeEnd = SMALL_NODE_FADE_SCALE * 0.5;
+      const alpha = Math.max(0, (mapState.viewport.scale - fadeEnd) / (fadeStart - fadeEnd));
+      if (alpha <= 0) continue; // Skip drawing completely faded nodes
+      ctx.globalAlpha = alpha;
+    }
+
     const isSelected = mapState.selectedNode === node.id;
     // Current location check:
     // - Primary node (id === name) is current if name matches
@@ -157,75 +170,85 @@ function drawNodes() {
     const fillColor = node.isManual ? NODE_COLORS.user : NODE_COLORS.auto;
 
     // Shadow & fill
-    ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2); ctx.fillStyle = fillColor; ctx.fill();
+    ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, radius, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2); ctx.fillStyle = fillColor; ctx.fill();
 
     // ========================================
     // HALO = Attention (where you are)
     // ========================================
     // Green glow = current location, White glow = selected/focus
     // Never used for metadata or warnings
-    ctx.lineWidth = 2;
+    ctx.lineWidth = isSmall ? 1.5 : 2;
     if (isCurrent) {
       // Strong green halo for current location
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(34,197,94,0.6)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = isSmall ? 2 : 3; ctx.stroke();
     } else if (isSelected || isEdgeStart) {
       // Weaker white halo for selection
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = isSmall ? 1.5 : 2.5; ctx.stroke();
     } else {
       // Default subtle border
-      ctx.beginPath(); ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = isSmall ? 1.5 : 2; ctx.stroke();
     }
 
-    // Icon
-    ctx.fillStyle = '#ffffff'; ctx.font = '18px Material Icons'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(NODE_ICONS[node.type] || NODE_ICONS.room, node.x, node.y);
+    // Icon (only if node has an icon type with a non-empty value)
+    const iconChar = NODE_ICONS[node.type];
+    if (iconChar) {
+      const iconSize = isSmall ? 12 : 18;
+      ctx.fillStyle = '#ffffff'; ctx.font = `${iconSize}px Material Icons`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(iconChar, node.x, node.y);
+    }
 
     // Label
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
+    const fontSize = isSmall ? 9 : 11;
+    ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
     let name = (node.name || '').trim() || 'Unknown';
     if (name.length > 20) name = name.substring(0, 17) + '...';
-    const tw = ctx.measureText(name).width, ly = node.y + NODE_RADIUS + 8;
+    const tw = ctx.measureText(name).width, ly = node.y + radius + (isSmall ? 6 : 8);
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - 6, tw + 8, 14, 4); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - (isSmall ? 5 : 6), tw + 8, isSmall ? 12 : 14, 4); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
 
     // ========================================
     // BADGE = Player-relevant info (one at a time)
     // ========================================
     // Priority: merge conflict > notes > edited
-    const badgeX = node.x + NODE_RADIUS - 4;
-    const badgeY = node.y - NODE_RADIUS + 4;
+    // Badges scaled down for small nodes
+    const badgeScale = isSmall ? 0.7 : 1;
+    const badgeX = node.x + radius - 4 * badgeScale;
+    const badgeY = node.y - radius + 4 * badgeScale;
 
     if (hasMergeConflict) {
       // Merge conflict badge - yellow with warning icon
-      ctx.beginPath(); ctx.arc(badgeX, badgeY, 8, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 8 * badgeScale, 0, Math.PI * 2);
       ctx.fillStyle = '#fbbf24'; ctx.fill();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#000000'; ctx.font = 'bold 12px sans-serif';
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5 * badgeScale; ctx.stroke();
+      ctx.fillStyle = '#000000'; ctx.font = `bold ${12 * badgeScale}px sans-serif`;
       ctx.fillText('?', badgeX, badgeY + 1);
     } else if (hasNotes) {
       // Notes badge - blue with note icon
-      ctx.beginPath(); ctx.arc(badgeX, badgeY, 7, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 7 * badgeScale, 0, Math.PI * 2);
       ctx.fillStyle = '#3b82f6'; ctx.fill();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#ffffff'; ctx.font = '10px Material Icons';
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5 * badgeScale; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = `${10 * badgeScale}px Material Icons`;
       ctx.fillText('edit_note', badgeX, badgeY + 1);
     } else if (isEdited) {
       // Edited badge - purple with edit icon
-      ctx.beginPath(); ctx.arc(badgeX, badgeY, 6, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 6 * badgeScale, 0, Math.PI * 2);
       ctx.fillStyle = '#a78bfa'; ctx.fill();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#ffffff'; ctx.font = '8px Material Icons';
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5 * badgeScale; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = `${8 * badgeScale}px Material Icons`;
       ctx.fillText('edit', badgeX, badgeY + 1);
     }
+
+    // Reset alpha if we changed it for small nodes
+    ctx.globalAlpha = 1;
   }
 }
 

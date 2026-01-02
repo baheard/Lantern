@@ -2,6 +2,18 @@
 
 ## January 2025
 
+### January 2, 2025 - Small Nodes & Icons (v1.4.20)
+
+1. **Small Nodes**
+   - Toggle "Small node" in node sheet to reduce size to 60%
+   - Small nodes fade out when zooming out (below 0.6x scale)
+   - Useful for minor locations or details
+
+2. **New Icon System**
+   - Default icon is now blank (no icon) for standard locations
+   - Available icons: Person, Door, Puzzle, Star, Question
+   - Removed old room/outdoor/shop/danger icons
+
 ### January 2, 2025 - Connection Editing (v1.4.19)
 
 1. **Arrows Now Opt-In**

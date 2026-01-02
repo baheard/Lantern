@@ -30,8 +30,8 @@ import {
 } from './map-handlers.js';
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
-  handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeDelete,
-  startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate
+  handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
+  handleNodeDelete, startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate
 } from './map-sheet.js';
 
 // ============================================================================
@@ -212,6 +212,7 @@ function setupEventListeners() {
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });
+  document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
 
   // Context menu
   document.getElementById('ctxAddNode').addEventListener('click', handleCtxAddNode);

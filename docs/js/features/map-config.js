@@ -53,8 +53,13 @@ export const COMMAND_DIRECTIONS = {
 };
 
 export const NODE_ICONS = {
-  room: 'home', outdoor: 'park', shop: 'store', danger: 'warning',
-  npc: 'person', item: 'inventory_2', locked: 'lock', custom: 'place'
+  // Default is blank (no icon) - most common for locations
+  location: '',           // Blank - default
+  person: 'person',       // NPC or character
+  door: 'door_front',     // Exit or entrance
+  puzzle: 'extension',    // Puzzle element
+  star: 'star',           // Important/notable
+  question: 'help'        // Unknown or mystery
 };
 
 export const NODE_COLORS = {
@@ -64,6 +69,8 @@ export const NODE_COLORS = {
 };
 
 export const NODE_RADIUS = 28;
+export const NODE_RADIUS_SMALL = 17;  // 60% of normal
+export const SMALL_NODE_FADE_SCALE = 0.6;  // Fade out small nodes below this zoom
 export const TOUCH_TARGET = 44;
 export const LONG_PRESS_DURATION = 400;
 export const FIRST_USE_KEY = 'iftalk_map_first_use_shown';

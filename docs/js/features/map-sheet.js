@@ -49,14 +49,27 @@ export function createNodeEditSheet() {
           <textarea id="nodeNotesInput" placeholder="Add notes about this location..." rows="3"></textarea>
         </div>
         <div class="sheet-field">
-          <label>Type</label>
-          <div class="node-type-picker" id="nodeTypePicker" role="radiogroup" aria-label="Location type">
-            ${['room', 'outdoor', 'shop', 'danger', 'npc', 'item', 'locked'].map(t =>
-              `<button class="type-btn" data-type="${t}" aria-label="${t}" role="radio">
-                <span class="material-icons">${NODE_ICONS[t]}</span>
+          <label>Icon</label>
+          <div class="node-type-picker" id="nodeTypePicker" role="radiogroup" aria-label="Location icon">
+            ${[
+              { type: 'location', label: 'None', icon: '' },
+              { type: 'person', label: 'Person', icon: 'person' },
+              { type: 'door', label: 'Door', icon: 'door_front' },
+              { type: 'puzzle', label: 'Puzzle', icon: 'extension' },
+              { type: 'star', label: 'Star', icon: 'star' },
+              { type: 'question', label: 'Question', icon: 'help' }
+            ].map(t =>
+              `<button class="type-btn" data-type="${t.type}" aria-label="${t.label}" role="radio" title="${t.label}">
+                ${t.icon ? `<span class="material-icons">${t.icon}</span>` : '<span class="no-icon">—</span>'}
               </button>`
             ).join('')}
           </div>
+        </div>
+        <div class="sheet-field sheet-toggle-field">
+          <label for="nodeSmallToggle">Small node</label>
+          <button class="toggle-btn" id="nodeSmallToggle" role="switch" aria-checked="false">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </button>
         </div>
         <div class="sheet-field" id="nodeConnectionsField">
           <label>Connections</label>
@@ -124,10 +137,19 @@ export function openNodeSheet(node) {
   document.getElementById('sheetNodeName').textContent = node.name || 'Edit Location';
   document.getElementById('nodeNameInput').value = node.name || '';
   document.getElementById('nodeNotesInput').value = node.notes || '';
+
+  // Update type picker - default to 'location' if no type set
+  const nodeType = node.type || 'location';
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.type === node.type);
-    btn.setAttribute('aria-checked', btn.dataset.type === node.type);
+    btn.classList.toggle('active', btn.dataset.type === nodeType);
+    btn.setAttribute('aria-checked', btn.dataset.type === nodeType);
   });
+
+  // Update small toggle
+  const smallToggle = document.getElementById('nodeSmallToggle');
+  smallToggle.classList.toggle('active', node.isSmall === true);
+  smallToggle.setAttribute('aria-checked', node.isSmall === true);
+
   populateConnectionsList(node);
 
   // Show/hide merge section for duplicates
@@ -266,6 +288,22 @@ export function handleNodeTypeChange(type) {
   document.getElementById('sheetNodeBadge').textContent = 'Your edit';
   document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
   render();
+  callbacks.saveMapForGame();
+}
+
+export function handleNodeSmallToggle() {
+  const node = mapState.nodes.get(mapState.selectedNode);
+  if (!node) return;
+  node.isSmall = !node.isSmall;
+  node.isEdited = true;
+  mapState.protectedNodes.add(node.id);
+  const smallToggle = document.getElementById('nodeSmallToggle');
+  smallToggle.classList.toggle('active', node.isSmall);
+  smallToggle.setAttribute('aria-checked', node.isSmall);
+  document.getElementById('sheetNodeBadge').textContent = 'Your edit';
+  document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
+  render();
+  callbacks.saveMapForGame();
 }
 
 export function handleNodeDelete() {
