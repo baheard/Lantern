@@ -595,15 +595,28 @@ function loadMapForGame(gameName) {
   if (saved) {
     try {
       const data = JSON.parse(saved);
-      // Filter out invalid nodes (no id or name)
-      const validNodes = (data.nodes || []).filter(n => n && n.id && n.name);
+      // Filter out invalid nodes (no id or name) and fix corrupted coordinates
+      const validNodes = (data.nodes || []).filter(n => n && n.id && n.name).map(n => ({
+        ...n,
+        x: typeof n.x === 'number' && !isNaN(n.x) ? n.x : 0,
+        y: typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0
+      }));
       mapState.nodes = new Map(validNodes.map(n => [n.id, n]));
       mapState.edges = new Map((data.edges || []).map(e => [`${e.from}-${e.to}`, e]));
       mapState.protectedNodes = new Set(data.protectedNodes || []);
       mapState.protectedEdges = new Set(data.protectedEdges || []);
       mapState.deletedEdges = new Set(data.deletedEdges || []);
       mapState.deletedNodes = new Set(data.deletedNodes || []);
-      if (data.viewport) mapState.viewport = data.viewport;
+      // Validate viewport - reset if corrupted
+      if (data.viewport &&
+          typeof data.viewport.x === 'number' && !isNaN(data.viewport.x) &&
+          typeof data.viewport.y === 'number' && !isNaN(data.viewport.y) &&
+          typeof data.viewport.scale === 'number' && !isNaN(data.viewport.scale) &&
+          data.viewport.scale > 0) {
+        mapState.viewport = data.viewport;
+      } else {
+        mapState.viewport = { x: 0, y: 0, scale: 1 };
+      }
       if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
       console.log('[MapCanvas] Loaded map for:', gameName, 'with', mapState.nodes.size, 'nodes');
     } catch (e) { console.error('[MapCanvas] Failed to load map:', e); resetMap(); }

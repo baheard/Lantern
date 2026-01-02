@@ -199,7 +199,7 @@ function drawNodes() {
 
     // Label - show (2), (3), etc. for duplicates
     ctx.font = '11px system-ui, -apple-system, sans-serif';
-    let name = node.name || 'Unknown';
+    let name = (node.name || '').trim() || 'Unknown';
     // If this is a duplicate node, the ID contains the number like "Kitchen (2)"
     // but we show just the name. Add a small indicator.
     if (node.isDuplicate) {
