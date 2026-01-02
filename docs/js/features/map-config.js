@@ -13,8 +13,8 @@ export const DIRECTION_OFFSETS = {
   // Diagonals: NW = N + W, etc. Forms a proper grid
   northeast: { x: 100, y: -100 }, northwest: { x: -100, y: -100 },
   southeast: { x: 100, y: 100 }, southwest: { x: -100, y: 100 },
-  // Vertical - offset horizontally to distinguish from N/S, larger Y distance
-  up: { x: 50, y: -120 }, down: { x: -50, y: 120 },
+  // Vertical - straight up/down with more distance to avoid N/S collision
+  up: { x: 0, y: -150 }, down: { x: 0, y: 150 },
   // Portal/special exits - offset diagonally
   enter: { x: 80, y: -40 }, exit: { x: -80, y: 40 },
   'in': { x: 80, y: -40 }, out: { x: -80, y: 40 }

@@ -625,8 +625,13 @@
   line-height: 1.4;
 }
 
+.sheet-merge-section .merge-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .sheet-btn-merge {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -31,7 +31,7 @@ import {
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeDelete,
-  startConnectionFromSheet, setSheetCallbacks, handleNodeMerge
+  startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate
 } from './map-sheet.js';
 
 // ============================================================================
@@ -208,6 +208,7 @@ function setupEventListeners() {
   document.getElementById('nodeDeleteBtn').addEventListener('click', handleNodeDelete);
   document.getElementById('nodeConnectBtn').addEventListener('click', startConnectionFromSheet);
   document.getElementById('nodeMergeBtn').addEventListener('click', handleNodeMerge);
+  document.getElementById('nodeNotDuplicateBtn').addEventListener('click', handleNodeNotDuplicate);
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });

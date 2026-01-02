@@ -143,10 +143,13 @@ function drawNodes() {
   const currentLocationName = getLastLocationName();
   for (const node of mapState.nodes.values()) {
     const isSelected = mapState.selectedNode === node.id;
-    // Current location check: only mark the PRIMARY node as current (not duplicates)
-    // Primary node has id === name, duplicates have id like "Kitchen (2)"
+    // Current location check:
+    // - Primary node (id === name) is current if name matches
+    // - Duplicate node is current if it's selected AND name matches (player just arrived there)
     const isPrimaryNode = node.id === node.name;
-    const isCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
+    const isPrimaryCurrent = currentLocationName && isPrimaryNode && node.name === currentLocationName;
+    const isDuplicateCurrent = currentLocationName && node.isDuplicate && isSelected && node.name === currentLocationName;
+    const isCurrent = isPrimaryCurrent || isDuplicateCurrent;
     const isUser = node.isManual || node.isEdited;
     const isEdgeStart = mapState.edgeStartNode === node.id;
     // Only actual duplicates get special styling, not originals that have duplicates

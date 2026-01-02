@@ -64,10 +64,15 @@ export function createNodeEditSheet() {
         </div>
         <div class="sheet-merge-section hidden" id="nodeMergeSection">
           <label>This may be a duplicate</label>
-          <p class="merge-hint">If this is the same location as the original, merge them.</p>
-          <button class="sheet-btn sheet-btn-merge" id="nodeMergeBtn">
-            <span class="material-icons">merge</span> Merge with Original
-          </button>
+          <p class="merge-hint">If this is the same location as the original, merge them. Or mark as not a duplicate.</p>
+          <div class="merge-buttons">
+            <button class="sheet-btn sheet-btn-merge" id="nodeMergeBtn">
+              <span class="material-icons">merge</span> Merge
+            </button>
+            <button class="sheet-btn sheet-btn-secondary" id="nodeNotDuplicateBtn">
+              <span class="material-icons">link_off</span> Not a Duplicate
+            </button>
+          </div>
         </div>
         <div class="sheet-actions">
           <button class="sheet-btn sheet-btn-secondary" id="nodeConnectBtn">
@@ -406,4 +411,43 @@ function promoteToPrimary(node) {
   closeNodeSheet();
   callbacks.showHint(`"${node.name}" is now the primary location`);
   callbacks.saveMapForGame();
+}
+
+/**
+ * Mark a suspected duplicate as NOT a duplicate - it's a separate location with the same name
+ * Keeps the node but removes duplicate styling and link to original
+ */
+export function handleNodeNotDuplicate() {
+  const nodeId = mapState.selectedNode;
+  const node = mapState.nodes.get(nodeId);
+  if (!node || !node.isDuplicate) {
+    callbacks.showHint('This node is not marked as a duplicate');
+    return;
+  }
+
+  const originalId = node.originalNodeId;
+  const originalNode = mapState.nodes.get(originalId);
+
+  // Clear duplicate flags from this node
+  node.isDuplicate = false;
+  delete node.duplicateGroup;
+  delete node.originalNodeId;
+  node.notes = '';  // Clear the "possible duplicate" note
+  node.isEdited = true;  // Mark as user-edited since they made a decision
+
+  // Clear hasDuplicates from original if no more duplicates exist
+  if (originalNode) {
+    const remainingDuplicates = [...mapState.nodes.values()].filter(
+      n => n.isDuplicate && n.originalNodeId === originalId
+    );
+    if (remainingDuplicates.length === 0) {
+      originalNode.hasDuplicates = false;
+      delete originalNode.duplicateGroup;
+    }
+  }
+
+  closeNodeSheet();
+  callbacks.showHint(`"${node.name}" marked as separate location`);
+  callbacks.saveMapForGame();
+  render();
 }
