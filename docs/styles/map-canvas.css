@@ -389,6 +389,10 @@
   );
 }
 
+.legend-player {
+  background: #8b5cf6;
+}
+
 /* Hint Toast */
 .map-hint {
   position: absolute;

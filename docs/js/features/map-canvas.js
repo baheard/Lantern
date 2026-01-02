@@ -126,14 +126,15 @@ function createMapUI() {
         <span class="material-icons">help_outline</span>
       </button>
       <div class="map-legend" id="mapLegend" title="Click to close">
-        <div class="legend-section">Locations</div>
+        <div class="legend-section">Nodes</div>
         <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
-        <div class="legend-item"><span class="legend-dot legend-user"></span><span>Your edits</span></div>
-        <div class="legend-item"><span class="legend-dot legend-current"></span><span>Current</span></div>
+        <div class="legend-item"><span class="legend-dot legend-user"></span><span>Player-created</span></div>
+        <div class="legend-item"><span class="legend-dot legend-current"></span><span>Current location</span></div>
         <div class="legend-section">Connections</div>
-        <div class="legend-item"><span class="legend-line legend-cardinal"></span><span>Cardinal (N/S/E/W)</span></div>
-        <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Vertical (Up/Down)</span></div>
-        <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal (Enter/Exit)</span></div>
+        <div class="legend-item"><span class="legend-line legend-cardinal"></span><span>Cardinal</span></div>
+        <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Up/Down</span></div>
+        <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal</span></div>
+        <div class="legend-item"><span class="legend-line legend-player"></span><span>Player-created</span></div>
       </div>
     </div>
     <div class="map-hint hidden" id="mapHint"></div>
