@@ -8,7 +8,7 @@ import {
   timers, touchState, isVisible
 } from './map-config.js';
 import { render, screenToCanvas, zoom } from './map-render.js';
-import { openNodeSheet, createManualEdge, closeNodeSheet } from './map-sheet.js';
+import { openNodeSheet, createManualEdge, closeNodeSheet, performManualMerge } from './map-sheet.js';
 
 // Callbacks (set by map-canvas.js to avoid circular deps)
 let callbacks = {
@@ -57,6 +57,12 @@ export function handlePointerDown(e) {
     return;
   }
 
+  if (mapState.isMerging && hitNode && hitNode.id !== mapState.mergeSourceNode) {
+    performManualMerge(mapState.mergeSourceNode, hitNode.id);
+    callbacks.exitAddMode();
+    return;
+  }
+
   if (hitNode) {
     mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
     touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y, wasEdited: hitNode.isEdited };  // Track for undo
@@ -79,7 +85,7 @@ export function handlePointerMove(e) {
     mapState.viewport.y += dy;
     mapState.dragStart = { x, y };
     render();
-  } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge) {
+  } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge && !mapState.isMerging) {
     const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
     if (Math.sqrt(dx * dx + dy * dy) > 3) {  // Fine control for alignment
       mapState.dragNode.x += dx / mapState.viewport.scale;
@@ -89,7 +95,7 @@ export function handlePointerMove(e) {
       mapState.dragStart = { x, y };
       render();
     }
-  } else if ((mapState.isCreatingEdge && mapState.edgeStartNode) || mapState.isAddingNode) {
+  } else if ((mapState.isCreatingEdge && mapState.edgeStartNode) || mapState.isAddingNode || mapState.isMerging) {
     render();
   }
 }
@@ -119,7 +125,7 @@ export function handlePointerUp(e) {
       // Tapped on a node - open the sheet
       openNodeSheet(mapState.dragNode);
     }
-  } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode) {
+  } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode && !mapState.isMerging) {
     // Tapped on empty canvas - unselect any selected node
     if (mapState.selectedNode) {
       mapState.selectedNode = null;
@@ -211,7 +217,7 @@ export function handleKeyDown(e) {
   const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
 
   if (e.key === 'Escape') {
-    if (mapState.isAddingNode || mapState.isCreatingEdge) callbacks.exitAddMode();
+    if (mapState.isAddingNode || mapState.isCreatingEdge || mapState.isMerging) callbacks.exitAddMode();
     else if (!document.getElementById('nodeEditSheet').classList.contains('hidden')) closeNodeSheet();
     else callbacks.hideMap();
     e.preventDefault();

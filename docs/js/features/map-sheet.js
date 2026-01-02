@@ -13,6 +13,7 @@ let callbacks = {
   showHint: () => {},
   saveMapForGame: () => {},
   startConnectionFromSheetCallback: () => {},
+  startMergeFromSheetCallback: () => {},
   pushUndo: () => {}
 };
 
@@ -99,6 +100,9 @@ export function createNodeEditSheet() {
         <div class="sheet-actions">
           <button class="sheet-btn sheet-btn-secondary" id="nodeConnectBtn">
             <span class="material-icons">add_link</span> Add Connection
+          </button>
+          <button class="sheet-btn sheet-btn-secondary" id="nodeMergeWithBtn">
+            <span class="material-icons">merge</span> Merge with...
           </button>
           <button class="sheet-btn sheet-btn-danger" id="nodeDeleteBtn">
             <span class="material-icons">delete</span> Delete
@@ -316,6 +320,13 @@ export function startConnectionFromSheet() {
   if (!nodeId) return;
   closeNodeSheet();
   callbacks.startConnectionFromSheetCallback(nodeId);
+}
+
+export function startMergeFromSheet() {
+  const nodeId = mapState.selectedNode;
+  if (!nodeId) return;
+  closeNodeSheet();
+  callbacks.startMergeFromSheetCallback(nodeId);
 }
 
 // ============================================================================
@@ -591,4 +602,62 @@ export function handleNodeNotDuplicate() {
   callbacks.showHint(`"${node.name}" marked as separate location`);
   callbacks.saveMapForGame();
   render();
+}
+
+/**
+ * Merge one node into another (manual merge from UI)
+ * Transfers all connections from source to target, then deletes source
+ * @param {string} sourceId - Node to merge FROM (will be deleted)
+ * @param {string} targetId - Node to merge INTO (will receive connections)
+ */
+export function performManualMerge(sourceId, targetId) {
+  const sourceNode = mapState.nodes.get(sourceId);
+  const targetNode = mapState.nodes.get(targetId);
+
+  if (!sourceNode || !targetNode) {
+    callbacks.showHint('Cannot merge - node not found');
+    return;
+  }
+
+  // Transfer all connections from source to target
+  const edgesToAdd = [];
+  const edgesToDelete = [];
+
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === sourceId) {
+      // Outgoing edge from source -> redirect to target
+      const newKey = `${targetId}-${edge.to}`;
+      if (!mapState.edges.has(newKey) && edge.to !== targetId) {
+        edgesToAdd.push([newKey, { ...edge, from: targetId }]);
+      }
+      edgesToDelete.push(key);
+    } else if (edge.to === sourceId) {
+      // Incoming edge to source -> redirect to target
+      const newKey = `${edge.from}-${targetId}`;
+      if (!mapState.edges.has(newKey) && edge.from !== targetId) {
+        edgesToAdd.push([newKey, { ...edge, to: targetId }]);
+      }
+      edgesToDelete.push(key);
+    }
+  }
+
+  // Apply edge changes
+  for (const key of edgesToDelete) {
+    mapState.edges.delete(key);
+  }
+  for (const [key, edge] of edgesToAdd) {
+    mapState.edges.set(key, edge);
+    mapState.protectedEdges.add(key);
+  }
+
+  // Delete the source node
+  mapState.nodes.delete(sourceId);
+  mapState.deletedNodes.add(sourceId);
+
+  // Select the target node
+  mapState.selectedNode = targetId;
+
+  render();
+  callbacks.showHint(`Merged "${sourceNode.name}" into "${targetNode.name}"`);
+  callbacks.saveMapForGame();
 }

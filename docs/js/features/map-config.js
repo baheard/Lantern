@@ -100,7 +100,9 @@ export const mapState = {
   isCreatingEdge: false,
   edgeStartNode: null,
   currentPointer: null,
-  isAddingNode: false
+  isAddingNode: false,
+  isMerging: false,
+  mergeSourceNode: null
 };
 
 // Canvas & DOM references (set by map-canvas.js)

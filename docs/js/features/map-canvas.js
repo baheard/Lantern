@@ -31,7 +31,7 @@ import {
 import {
   createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
-  handleNodeDelete, startConnectionFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
+  handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
   setupSheetDragHandlers
 } from './map-sheet.js';
 
@@ -72,6 +72,14 @@ function setupCallbacks() {
       domRefs.modeIndicator.classList.remove('hidden');
       domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap destination';
       showHint(`Tap a location to connect from "${mapState.nodes.get(nodeId)?.name}"`);
+      render();
+    },
+    startMergeFromSheetCallback: (nodeId) => {
+      mapState.isMerging = true;
+      mapState.mergeSourceNode = nodeId;
+      domRefs.modeIndicator.classList.remove('hidden');
+      domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap location to merge into';
+      showHint(`Tap the location to merge "${mapState.nodes.get(nodeId)?.name}" into`);
       render();
     }
   });
@@ -215,6 +223,7 @@ function setupEventListeners() {
   document.getElementById('nodeNotesInput').addEventListener('input', handleNodeNotesChange);
   document.getElementById('nodeDeleteBtn').addEventListener('click', handleNodeDelete);
   document.getElementById('nodeConnectBtn').addEventListener('click', startConnectionFromSheet);
+  document.getElementById('nodeMergeWithBtn').addEventListener('click', startMergeFromSheet);
   document.getElementById('nodeMergeBtn').addEventListener('click', handleNodeMerge);
   document.getElementById('nodeNotDuplicateBtn').addEventListener('click', handleNodeNotDuplicate);
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
@@ -270,6 +279,8 @@ export function exitAddMode() {
   mapState.isAddingNode = false;
   mapState.isCreatingEdge = false;
   mapState.edgeStartNode = null;
+  mapState.isMerging = false;
+  mapState.mergeSourceNode = null;
   domRefs.modeIndicator?.classList.add('hidden');
   canvas.style.cursor = 'grab';
   hideHint();
