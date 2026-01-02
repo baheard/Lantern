@@ -339,6 +339,7 @@ function handleLocationChange(e) {
         const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
         if (duplicateId) {
           mapState.selectedNode = duplicateId;
+          console.log('[MapCanvas] Duplicate created, selectedNode =', duplicateId);
           showHint(`Found "${locationName}" via different route. Merge if same place.`);
         } else {
           mapState.selectedNode = locationName;
