@@ -68,22 +68,31 @@ Name-based tracking is more user-friendly and consistent.
 
 ### Handling Same-Named Locations
 
-When the player reaches a location with the same name via a different route, the mapper creates a **potential duplicate**:
+When the player reaches a location with the same name via a different route, the mapper checks if it's likely the same room or a true duplicate:
 
 ```javascript
-// If node exists but we arrived from an unexpected direction
-const isPotentialDuplicate = previousLocationId &&
-  !hasEdgeBetween(previousLocationId, locationName);
+// Calculate expected position based on direction traveled
+const expectedPos = { x: parentNode.x + offset.x, y: parentNode.y + offset.y };
 
-if (isPotentialDuplicate) {
+// If expected position matches existing node (within 50px), it's the same room
+const positionMatches = Math.abs(expectedPos.x - existingNode.x) < 50 &&
+                        Math.abs(expectedPos.y - existingNode.y) < 50;
+
+if (positionMatches) {
+  // Same room via different route - just add an edge
+  addEdge(previousLocationId, locationName);
+} else {
+  // Different position - create potential duplicate
   createDuplicateNode(locationName, existingNode, previousLocationId, command);
 }
 ```
 
 Duplicates are:
-- Placed close to the original node
+- Placed based on the direction traveled
 - Colored orange with a `?` badge
-- Can be merged via the node edit sheet
+- Shown as **current location** when player arrives there
+- Can be **merged** with original via the node sheet
+- Can be marked as **"Not a Duplicate"** if it's truly a separate location with the same name
 
 ### Events
 
@@ -239,13 +248,16 @@ Once an item is created (by auto-mapper OR user), it's immediately added to the 
 ### Direction Offsets
 
 ```javascript
-// Cardinal - standard grid layout
+// Cardinal - 100px grid
 north: { x: 0, y: -100 }, south: { x: 0, y: 100 }
 east: { x: 100, y: 0 }, west: { x: -100, y: 0 }
-northeast: { x: 70, y: -70 }, etc.
 
-// Vertical - larger offset, horizontally offset to distinguish from N/S
-up: { x: 50, y: -120 }, down: { x: -50, y: 120 }
+// Diagonals - NW = N + W, forms proper grid
+northeast: { x: 100, y: -100 }, northwest: { x: -100, y: -100 }
+southeast: { x: 100, y: 100 }, southwest: { x: -100, y: 100 }
+
+// Vertical - straight up/down with more distance to avoid N/S collision
+up: { x: 0, y: -150 }, down: { x: 0, y: 150 }
 
 // Portal - diagonal offset
 enter/in: { x: 80, y: -40 }, exit/out: { x: -80, y: 40 }
@@ -303,12 +315,15 @@ FAB buttons and controls stay visible during all interactions (panning, pinch-zo
 | Purple node | Manually created location (user added) |
 | Green node + glow | Current player location |
 | Orange node + ? badge | Potential duplicate (same name, different route) |
-| Small purple dot on node | User-edited node |
-| Small purple dot on edge | User-edited edge |
 | Dashed white border | User-edited (moved, renamed, etc.) |
 | Dashed yellow border | Potential duplicate |
+| Small purple dot on edge | User-edited edge |
 
-Note: Auto-mapped nodes stay blue even when edited - only the dashed border indicates editing. Only manually created nodes get purple fill.
+**Notes:**
+- Auto-mapped nodes stay blue even when edited - the dashed border indicates editing
+- Only manually created nodes get purple fill
+- Duplicate nodes show as current (green) when the player just arrived there
+- Arrows only appear on user-created edges (auto-mapped edges are bidirectional)
 
 ## Persistence
 

@@ -2,6 +2,34 @@
 
 ## January 2025
 
+### January 2, 2025 - Auto-Mapper Improvements (v1.4.18)
+
+1. **Grid-Based Direction Offsets**
+   - Diagonals now use proper grid math: NW = N + W = (-100, -100)
+   - Up/down are now straight vertical (0, ±150) instead of diagonal offset
+   - Creates more predictable, aligned map layouts
+
+2. **Smarter Duplicate Detection**
+   - Uses position-based matching to determine if same-named location is truly a duplicate
+   - If expected position (based on direction) matches existing node, adds edge instead of duplicate
+   - Only creates duplicate when positions don't match (likely different room with same name)
+
+3. **Duplicate Node UX Improvements**
+   - Duplicate nodes now show as **current location** (green) when player arrives there
+   - Added **"Not a Duplicate"** button to unmark false positives
+   - Keeps the node as a separate location with the same name
+   - Merge and Not-Duplicate buttons shown side-by-side
+
+4. **Visual Indicator Cleanup**
+   - Removed redundant "Your edit" badge (dashed border already shows edits)
+   - Removed arrows from auto-mapped edges (most IF rooms are bidirectional)
+   - Arrows only shown on user-created edges for indicating one-way paths
+
+5. **Bug Fixes**
+   - Fixed `isDuplicate` variable rename causing render crashes
+   - Added validation for corrupted localStorage data (NaN coordinates, invalid viewport)
+   - Added retry mechanism for starting location detection
+
 ### January 1, 2025 - Name-Based Auto-Mapper (v1.4.17)
 
 5. **Name-Based Location Tracking** (v1.4.17)
