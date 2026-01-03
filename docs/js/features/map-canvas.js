@@ -394,9 +394,15 @@ function handleLocationChange(e) {
     let position = { x: 0, y: 0 };
 
     if (parentNode && direction && DIRECTION_OFFSETS[direction]) {
+      // Known direction - use directional offset
       const offset = DIRECTION_OFFSETS[direction];
       position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
+    } else if (parentNode) {
+      // Unknown direction (e.g., "yes", "open door") - use portal offset from parent
+      const offset = DIRECTION_OFFSETS['enter'];  // { x: 100, y: -60 }
+      position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
     } else if (mapState.nodes.size > 0) {
+      // No parent node - place near origin
       position = findAvailablePosition({ x: 0, y: 0 });
     }
 
@@ -522,7 +528,8 @@ function getDirectionFromCommand(command) {
 function getConnectionTypeFromCommand(command) {
   const direction = getDirectionFromCommand(command);
   if (direction && DIRECTION_TO_TYPE[direction]) return DIRECTION_TO_TYPE[direction];
-  return 'cardinal';
+  // Unrecognized commands (like "yes", "open door") use portal type
+  return 'portal';
 }
 
 function findAvailablePosition(preferred) {
