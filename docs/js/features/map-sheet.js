@@ -51,12 +51,12 @@ export function createNodeEditSheet() {
       </div>
       <div class="sheet-body">
         <div class="sheet-field">
-          <label for="nodeNameInput">Name</label>
-          <input type="text" id="nodeNameInput" placeholder="Location name" autocomplete="off">
+          <label for="nodeNameInput">Name <span class="field-hint">(max 100 characters)</span></label>
+          <input type="text" id="nodeNameInput" placeholder="Location name" autocomplete="off" maxlength="100">
         </div>
         <div class="sheet-field">
-          <label for="nodeNotesInput">Notes</label>
-          <textarea id="nodeNotesInput" placeholder="Add notes about this location..." rows="3"></textarea>
+          <label for="nodeNotesInput">Notes <span class="field-hint">(max 500 characters)</span></label>
+          <textarea id="nodeNotesInput" placeholder="Add notes about this location..." rows="3" maxlength="500"></textarea>
         </div>
         <div class="sheet-field">
           <label>Icon</label>

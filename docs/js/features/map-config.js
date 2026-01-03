@@ -75,6 +75,11 @@ export const TOUCH_TARGET = 44;
 export const LONG_PRESS_DURATION = 400;
 export const FIRST_USE_KEY = 'iftalk_map_first_use_shown';
 
+// Map size limits (for performance and localStorage constraints)
+export const NODE_COUNT_WARNING = 200;  // Warn when approaching limits
+export const NODE_COUNT_MAX = 500;       // Hard limit (prevents localStorage overflow)
+export const EDGE_COUNT_MAX = 1000;      // Hard limit for edges
+
 // ============================================================================
 // SHARED STATE
 // ============================================================================
@@ -131,7 +136,8 @@ export const timers = {
   fabVisible: true,
   isInteracting: false,
   onboardingTimeout: null,
-  hintTimeout: null
+  hintTimeout: null,
+  saveTimer: null  // Debounce timer for localStorage saves
 };
 
 // Touch state

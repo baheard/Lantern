@@ -732,6 +732,14 @@
   font-weight: 500;
 }
 
+.sheet-field .field-hint {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: none;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
 .sheet-field input,
 .sheet-field textarea {
   padding: 12px 14px;

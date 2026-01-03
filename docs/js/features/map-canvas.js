@@ -19,7 +19,8 @@ import { getCurrentLocation, getLastLocationName, getMapData } from './auto-mapp
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
-  DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY
+  DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
+  NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
 import {
@@ -268,7 +269,7 @@ function clearMapWithConfirm() {
   }
   if (confirm('Clear entire map? This cannot be undone.')) {
     resetMap();
-    saveMapForGame();
+    saveMapForGame(true);  // Immediate save for critical operation
     render();
     showHint('Map cleared');
   }
@@ -429,8 +430,38 @@ function handleLocationChange(e) {
   mapState.selectedNode = locationName;
   mapState.currentNodeId = locationName;  // New node is the current location
   updateNodeCount();
+  checkMapLimits();  // Check if approaching limits
   render();
   saveMapForGame();
+}
+
+/**
+ * Check map size limits and show warnings/prevent additions if exceeded
+ * @returns {boolean} true if within limits, false if max exceeded
+ */
+function checkMapLimits() {
+  const nodeCount = mapState.nodes.size;
+  const edgeCount = mapState.edges.size;
+
+  // Hard limits - prevent further additions
+  if (nodeCount >= NODE_COUNT_MAX) {
+    showHint(`⚠️ Map limit reached (${NODE_COUNT_MAX} locations). Auto-mapping paused.`);
+    mapState.autoMapEnabled = false;
+    document.getElementById('mapAutoToggle')?.classList.remove('active');
+    return false;
+  }
+
+  if (edgeCount >= EDGE_COUNT_MAX) {
+    showHint(`⚠️ Connection limit reached (${EDGE_COUNT_MAX}). Map may slow down.`);
+    return false;
+  }
+
+  // Warning threshold - notify but allow
+  if (nodeCount === NODE_COUNT_WARNING) {
+    showHint(`ℹ️ Large map (${nodeCount} locations). Performance may degrade.`);
+  }
+
+  return true;
 }
 
 /**
@@ -549,22 +580,49 @@ function getLastDirectionFromHistory() {
   return null;
 }
 
+/**
+ * Find an available position near the preferred location
+ * Uses spiral search pattern with limited iterations for performance
+ * @param {Object} preferred - Preferred {x, y} position
+ * @returns {Object} Available {x, y} position
+ */
 function findAvailablePosition(preferred) {
   const MIN_DISTANCE = NODE_RADIUS * 3;
+
+  // Quick check: is preferred position already free?
   const hasCollision = [...mapState.nodes.values()].some(n =>
     Math.sqrt((n.x - preferred.x) ** 2 + (n.y - preferred.y) ** 2) < MIN_DISTANCE
   );
   if (!hasCollision) return preferred;
 
-  for (let radius = MIN_DISTANCE; radius < MIN_DISTANCE * 10; radius += 25) {
-    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-      const candidate = { x: preferred.x + Math.cos(angle) * radius, y: preferred.y + Math.sin(angle) * radius };
+  // Spiral search: 12 angles per ring, max 6 rings (72 total checks)
+  // This limits worst-case to O(72*n) instead of unbounded
+  const MAX_RINGS = 6;
+  const ANGLES_PER_RING = 12;
+  const RING_SPACING = 25;
+
+  for (let ring = 0; ring < MAX_RINGS; ring++) {
+    const radius = MIN_DISTANCE + (ring * RING_SPACING);
+    const angleStep = (Math.PI * 2) / ANGLES_PER_RING;
+
+    for (let i = 0; i < ANGLES_PER_RING; i++) {
+      const angle = i * angleStep;
+      const candidate = {
+        x: preferred.x + Math.cos(angle) * radius,
+        y: preferred.y + Math.sin(angle) * radius
+      };
+
+      // Check if this position is valid (no collisions)
       const valid = ![...mapState.nodes.values()].some(n =>
         Math.sqrt((n.x - candidate.x) ** 2 + (n.y - candidate.y) ** 2) < MIN_DISTANCE
       );
+
       if (valid) return candidate;
     }
   }
+
+  // Fallback: if no position found after 72 checks, accept overlap
+  // This prevents infinite loops in very dense maps
   return preferred;
 }
 
@@ -573,13 +631,19 @@ function findAvailablePosition(preferred) {
 // ============================================================================
 
 export function addNodeAtPosition(x, y) {
+  // Check limits before adding
+  if (mapState.nodes.size >= NODE_COUNT_MAX) {
+    showHint(`Cannot add location: map limit reached (${NODE_COUNT_MAX} locations)`);
+    return;
+  }
+
   const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const position = findAvailablePosition({ x, y });
   const node = { id, name: 'New Location', x: position.x, y: position.y, type: 'room', notes: '', isManual: true, isEdited: false };
   mapState.nodes.set(id, node);
   mapState.protectedNodes.add(id);
   mapState.selectedNode = id;
-  updateNodeCount(); render(); saveMapForGame();
+  updateNodeCount(); checkMapLimits(); render(); saveMapForGame();
   setTimeout(() => openNodeSheet(node), 100);
   showHint('Location added! Tap to edit the name.');
 }
@@ -637,7 +701,7 @@ export function hideMap() {
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
   exitAddMode();
-  saveMapForGame();
+  saveMapForGame(true);  // Immediate save when hiding map
 }
 
 export function toggleMap() { isVisible ? hideMap() : showMap(); }
@@ -701,7 +765,11 @@ function loadMapForGame(gameName) {
   if (isVisible) render();
 }
 
-export function saveMapForGame() {
+/**
+ * Save map data immediately (no debouncing)
+ * Use for critical operations: delete, undo, hide map, clear
+ */
+function saveMapImmediately() {
   if (!mapState.gameName) return;
   try {
     localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify({
@@ -716,6 +784,30 @@ export function saveMapForGame() {
       currentNodeId: mapState.currentNodeId
     }));
   } catch (e) { console.error('[MapCanvas] Failed to save map:', e); }
+}
+
+/**
+ * Save map data with debouncing (default 500ms)
+ * Reduces localStorage writes during frequent operations (drag, edit, auto-map)
+ * @param {boolean} immediate - If true, save immediately and cancel debounce
+ */
+export function saveMapForGame(immediate = false) {
+  // Cancel pending save
+  if (timers.saveTimer) {
+    clearTimeout(timers.saveTimer);
+    timers.saveTimer = null;
+  }
+
+  if (immediate) {
+    // Save immediately (for critical operations)
+    saveMapImmediately();
+  } else {
+    // Debounce save (for frequent operations)
+    timers.saveTimer = setTimeout(() => {
+      saveMapImmediately();
+      timers.saveTimer = null;
+    }, 500);
+  }
 }
 
 function resetMap() {
@@ -779,7 +871,7 @@ function performUndo() {
   updateUndoButton();
   updateNodeCount();
   render();
-  saveMapForGame();
+  saveMapForGame(true);  // Immediate save for undo operations
 }
 
 // Debug exports
