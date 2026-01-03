@@ -47,6 +47,8 @@ cd /e/Project/IFTalk && npm start
 
 ## Working with Claude
 
+**Current Branch:** `claude/map-canvas-4hYUa` - Auto-mapper and interactive map canvas feature development
+
 **Context Management:** Claude will warn when context usage reaches 85% (15% remaining). Use `/context` to check current usage.
 
 ## Version Management
@@ -73,7 +75,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.1.0): New features, significant improvements
    - Patch (v1.1.1): Bug fixes, small tweaks
 
-**Current Version:** v1.2.0
+**Current Version:** v1.4.21
 
 ## Third-Party Libraries
 
@@ -111,6 +113,7 @@ For detailed technical information, see the `reference/` folder:
 
 ### Implementation Details
 - **[Text Highlighting System](reference/text-highlighting-system.md)** - Marker-based highlighting for TTS narration
+- **[Map Canvas](reference/map-canvas.md)** - Auto-mapper and interactive map canvas
 - **[Bug Fixes History](reference/bug-fixes-history.md)** - Past bugs and solutions for context
 
 ### Development & Debugging
@@ -137,6 +140,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
 - ✅ ChatGPT hints integration
 - ✅ Lock screen mode
 - ✅ Fully offline-capable
+- ✅ Auto-mapper with interactive map canvas
 
 **Active Development:**
 - 🔄 Code refactoring (Phase 3 of 7 - see [refactoring plan](reference/refactoring-plan.md))

@@ -8,6 +8,7 @@
 import { renderUpdate } from './voxglk-renderer.js';
 import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
+import { checkLocationChange } from '../features/auto-mapper.js';
 
 /**
  * State
@@ -402,13 +403,14 @@ export function createVoxGlk(textOutputCallback) {
      */
     update: async function(arg) {
       try {
-
         // Track generation (Glk uses this to prevent old input)
         // Always update generation from Glk - this is the current turn number
         if (arg.gen !== undefined) {
           generation = arg.gen;
           // Clear watchdog since VM responded with a new generation
           clearWatchdog();
+
+          // Location check moved to after render (needs statusBarText)
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
@@ -609,6 +611,10 @@ export function createVoxGlk(textOutputCallback) {
           if (textForTTS.trim() && onTextOutput) {
             onTextOutput(textForTTS);
           }
+
+          // Check for location change (for auto-mapping)
+          // Pass status bar text for name-based location tracking
+          checkLocationChange(statusBarText, generation);
         }
 
         // Handle special input requests (file dialogs for save/restore)

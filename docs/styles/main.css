@@ -26,5 +26,8 @@
 /* 8. Modals (confirm dialog, resume dialog, backup modal) */
 @import url('modals.css');
 
-/* 9. Mobile Responsive Styles (must be last to override desktop styles) */
+/* 9. Map Canvas (interactive game map) */
+@import url('map-canvas.css');
+
+/* 10. Mobile Responsive Styles (must be last to override desktop styles) */
 @import url('mobile.css');

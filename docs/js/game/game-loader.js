@@ -175,6 +175,11 @@ export async function startGame(gamePath, onOutput) {
 
     updateStatus('Ready - Game loaded');
 
+    // Dispatch gameLoaded event for auto-mapper and other listeners
+    window.dispatchEvent(new CustomEvent('gameLoaded', {
+      detail: { gameName: state.currentGameName, gamePath }
+    }));
+
     // Start autosave backup timer (every 2 minutes, max 5 backups)
     import('./save-manager.js').then(({ startAutosaveBackupTimer }) => {
       startAutosaveBackupTimer();
@@ -561,13 +566,17 @@ export function initGameSelection(onOutput) {
     restartGameBtn.addEventListener('click', async () => {
       // Show confirmation dialog
       const confirmed = await confirmDialog(
-        'This will restart the game from the beginning.\nYour autosave will be lost.\n\nAre you sure you want to continue?',
+        'This will restart the game from the beginning.\nYour autosave and map will be cleared.\n\nAre you sure you want to continue?',
         { title: 'Restart Game?' }
       );
 
       if (confirmed) {
         // Set flag to skip autoload on next page load
         localStorage.setItem('iftalk_skip_autoload', 'true');
+        // Clear the map data for this game
+        if (state.currentGameName) {
+          localStorage.removeItem(`iftalk_map_${state.currentGameName}`);
+        }
         // Reload to restart the game from beginning
         location.reload();
       }

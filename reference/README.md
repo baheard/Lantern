@@ -26,6 +26,7 @@ Technical documentation for IFTalk internals.
 |----------|-------------|
 | [navigation-rules.md](navigation-rules.md) | Playback controls, text highlighting behavior |
 | [text-highlighting-system.md](text-highlighting-system.md) | Marker-based highlighting for TTS narration |
+| [map-canvas.md](map-canvas.md) | Interactive game map with auto-mapping |
 
 ### Development & Debugging
 

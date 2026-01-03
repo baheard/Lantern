@@ -10,7 +10,7 @@
  */
 export const APP_COMMANDS = {
   // Navigation commands
-  RESTART: ['restart', 'reset', 'repeat'],
+  REPEAT: ['repeat'],
   BACK: ['back'],
   PAUSE: ['pause', 'stop'],
   PLAY: ['play', 'resume'],

@@ -1,5 +1,114 @@
 # IFTalk Changelog
 
+## January 2025
+
+### January 2, 2025 - Small Nodes & Icons (v1.4.20)
+
+1. **Small Nodes**
+   - Toggle "Small node" in node sheet to reduce size to 60%
+   - Small nodes fade out when zooming out (below 0.6x scale)
+   - Useful for minor locations or details
+
+2. **New Icon System**
+   - Default icon is now blank (no icon) for standard locations
+   - Available icons: Person, Door, Puzzle, Star, Question
+   - Removed old room/outdoor/shop/danger icons
+
+### January 2, 2025 - Connection Editing (v1.4.19)
+
+1. **Arrows Now Opt-In**
+   - Arrows are no longer shown by default on any connections
+   - Toggle arrows manually via the connection list in the node sheet
+   - Use arrows to indicate one-way paths in the game
+
+2. **Connection Color by Provenance**
+   - Auto-mapped connections use the connection type color (blue/purple/yellow)
+   - Player-created connections are always purple (#8b5cf6)
+   - Removed midpoint marker - color alone distinguishes player vs auto connections
+
+### January 2, 2025 - Auto-Mapper Improvements (v1.4.18)
+
+1. **Grid-Based Direction Offsets**
+   - Diagonals now use proper grid math: NW = N + W = (-100, -100)
+   - Up/down are now straight vertical (0, ±150) instead of diagonal offset
+   - Creates more predictable, aligned map layouts
+
+2. **Smarter Duplicate Detection**
+   - Uses position-based matching to determine if same-named location is truly a duplicate
+   - If expected position (based on direction) matches existing node, adds edge instead of duplicate
+   - Only creates duplicate when positions don't match (likely different room with same name)
+
+3. **Duplicate Node UX Improvements**
+   - Duplicate nodes now show as **current location** (green) when player arrives there
+   - Added **"Not a Duplicate"** button to unmark false positives
+   - Keeps the node as a separate location with the same name
+   - Merge and Not-Duplicate buttons shown side-by-side
+
+4. **Visual Indicator Cleanup**
+   - Removed redundant "Your edit" badge (dashed border already shows edits)
+   - Simplified badge priority system (merge conflict > notes > edited)
+
+5. **Bug Fixes**
+   - Fixed `isDuplicate` variable rename causing render crashes
+   - Added validation for corrupted localStorage data (NaN coordinates, invalid viewport)
+   - Added retry mechanism for starting location detection
+
+### January 1, 2025 - Name-Based Auto-Mapper (v1.4.17)
+
+5. **Name-Based Location Tracking** (v1.4.17)
+   - **Removed VM memory reading** - No longer scans object tables or reads global variables
+   - Uses **status bar text** to identify locations (room name only)
+   - Avoids exposing internal object IDs to the user
+   - Works consistently across all Z-machine versions
+   - Files: `docs/js/features/auto-mapper.js`, `docs/js/game/voxglk.js`
+
+6. **Duplicate Location Handling** (v1.4.17)
+   - When same room name is reached via different route, creates a **potential duplicate** node
+   - Duplicates shown in **orange** with `?` badge for easy identification
+   - Placed close to original node for easy comparison
+   - **Merge button** in node sheet combines duplicates with original
+   - Transfers all connections when merging
+   - Files: `docs/js/features/map-canvas.js`, `docs/js/features/map-render.js`, `docs/js/features/map-sheet.js`
+
+7. **Duplicate Visual Indicators**
+   - Orange fill color for potential duplicates
+   - Yellow dashed border
+   - Question mark badge in corner
+   - Orange label background
+   - Original node also marked with `?` when it has duplicates
+
+### January 1, 2025 - Auto-Mapper & Map Canvas
+
+1. **Auto-Mapper Z-machine v5+ Support** (v1.4.12 - v1.4.15)
+   - Fixed location detection for Z-machine v5+ games (Dreamhold, etc.)
+   - **Method 1**: Global variable 0 (works for Z-machine v3)
+   - **Method 2**: Player object scanning (works for v5+)
+     - Scans object table for player names: "yourself", "(self object)", "self", "cretin", "player"
+     - Gets player's parent object as current room
+   - Object table layout differs by version: v3 = 9 bytes/entry, v4+ = 14 bytes/entry
+   - Removed hash-based status bar fallback (could cause incorrect merging of same-named rooms)
+   - Files: `docs/js/features/auto-mapper.js`, `docs/js/game/voxglk.js`
+
+2. **Starting Location Detection** (v1.4.14)
+   - Added delayed initial location check (500ms after game load)
+   - Moved `checkLocationChange()` call to after render for proper timing
+   - Ensures starting room appears on map without requiring movement
+   - File: `docs/js/features/auto-mapper.js`
+
+3. **Map Canvas UX Improvements** (v1.4.16)
+   - **Controls stay visible** during panning/pinch-zoom (removed auto-hide)
+   - **Tap legend to collapse** (not just close button)
+   - **Double-tap to add node** on empty canvas
+     - 300ms tap window, 30px distance threshold
+     - Added `hasDragged` state to distinguish taps from pans
+   - Files: `docs/js/features/map-handlers.js`, `docs/js/features/map-canvas.js`, `docs/js/features/map-config.js`
+
+4. **Connection Editing** - Via node edit sheet
+   - Tap node → Connections section shows all edges
+   - Change connection type (Cardinal/Vertical/Portal) via dropdown
+   - Delete connections via × button
+   - File: `docs/js/features/map-sheet.js`
+
 ## December 2024
 
 ### December 15, 2024 - Core Fixes

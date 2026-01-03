@@ -14,6 +14,7 @@ import { isSystemEntryMode } from '../../input/keyboard/index.js';
 import { getInputType, sendInput, isInputEnabled } from '../voxglk.js';
 import { isAppCommand } from '../../core/app-commands.js';
 import { LOW_CONFIDENCE_THRESHOLD, playAppCommand } from '../../utils/audio-feedback.js';
+import { setLastCommand } from '../../features/auto-mapper.js';
 import {
   handleSaveCommand,
   handleRestoreCommand,
@@ -158,8 +159,6 @@ See Settings panel for more help.
       return await handleDeleteCommand();
 
     // Navigation commands - work whether typed or spoken
-    case 'restart':
-    case 'reset':
     case 'repeat':
       playAppCommand();
       const handlers = await getVoiceCommandHandlers();
@@ -370,6 +369,9 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
     }, 100);
     return;
   }
+
+  // Track command for auto-mapper (before sending to VM)
+  setLastCommand(input);
 
   // Send to ZVM
   sendCommandToGame(input);
