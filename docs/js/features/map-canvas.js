@@ -119,6 +119,9 @@ function createMapUI() {
           <span class="material-icons">auto_fix_high</span>
           <span class="toggle-label">Auto</span>
         </button>
+        <button class="map-btn" id="mapClearBtn" title="Clear map" aria-label="Clear map">
+          <span class="material-icons">delete_sweep</span>
+        </button>
       </div>
     </div>
     <div class="map-canvas-container">
@@ -188,6 +191,7 @@ function setupEventListeners() {
   document.getElementById('mapZoomInBtn').addEventListener('click', () => zoom(1.3));
   document.getElementById('mapZoomOutBtn').addEventListener('click', () => zoom(0.7));
   document.getElementById('mapAutoToggle').addEventListener('click', toggleAutoMap);
+  document.getElementById('mapClearBtn').addEventListener('click', clearMapWithConfirm);
 
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
@@ -255,6 +259,19 @@ function toggleAutoMap() {
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
   showHint(mapState.autoMapEnabled ? 'Auto-mapping ON' : 'Auto-mapping OFF');
   saveMapForGame();
+}
+
+function clearMapWithConfirm() {
+  if (mapState.nodes.size === 0) {
+    showHint('Map is already empty');
+    return;
+  }
+  if (confirm('Clear entire map? This cannot be undone.')) {
+    resetMap();
+    saveMapForGame();
+    render();
+    showHint('Map cleared');
+  }
 }
 
 export function enterAddNodeMode() {
@@ -613,6 +630,11 @@ export function centerOnCurrentLocation() {
 
 function loadMapForGame(gameName) {
   mapState.gameName = gameName;
+  // Always reset undo stack and selection when loading a game
+  mapState.undoStack = [];
+  mapState.selectedNode = null;
+  updateUndoButton();
+
   const saved = localStorage.getItem(`iftalk_map_${gameName}`);
   if (saved) {
     try {
@@ -671,6 +693,8 @@ function resetMap() {
   mapState.viewport = { x: 0, y: 0, scale: 1 };
   mapState.selectedNode = null; mapState.currentNodeId = null;
   mapState.autoMapEnabled = true;
+  mapState.undoStack = [];
+  updateUndoButton();
 }
 
 // ============================================================================
