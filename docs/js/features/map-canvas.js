@@ -15,7 +15,7 @@
  * - map-canvas.js   : Core orchestrator (this file)
  */
 
-import { getCurrentLocation, getLastLocationName } from './auto-mapper.js';
+import { getCurrentLocation, getLastLocationName, getMapData } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
@@ -398,8 +398,9 @@ function handleLocationChange(e) {
       const offset = DIRECTION_OFFSETS[direction];
       position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
     } else if (parentNode) {
-      // Unknown direction (e.g., "yes", "open door") - use portal offset from parent
-      const offset = DIRECTION_OFFSETS['enter'];  // { x: 100, y: -60 }
+      // Unknown direction - use last known direction, or portal offset as fallback
+      const lastDir = getLastDirectionFromHistory();
+      const offset = (lastDir && DIRECTION_OFFSETS[lastDir]) ? DIRECTION_OFFSETS[lastDir] : DIRECTION_OFFSETS['enter'];
       position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
     } else if (mapState.nodes.size > 0) {
       // No parent node - place near origin
@@ -530,6 +531,22 @@ function getConnectionTypeFromCommand(command) {
   if (direction && DIRECTION_TO_TYPE[direction]) return DIRECTION_TO_TYPE[direction];
   // Unrecognized commands (like "yes", "open door") use portal type
   return 'portal';
+}
+
+/**
+ * Get the most recent cardinal direction from command history.
+ * @returns {string|null} Most recent direction, or null if none found
+ */
+function getLastDirectionFromHistory() {
+  const mapData = getMapData();
+  if (!mapData.journey || mapData.journey.length === 0) return null;
+
+  // Search backwards for most recent directional command
+  for (let i = mapData.journey.length - 1; i >= 0; i--) {
+    const dir = getDirectionFromCommand(mapData.journey[i].command);
+    if (dir) return dir;
+  }
+  return null;
 }
 
 function findAvailablePosition(preferred) {
