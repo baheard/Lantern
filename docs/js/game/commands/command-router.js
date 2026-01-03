@@ -159,8 +159,6 @@ See Settings panel for more help.
       return await handleDeleteCommand();
 
     // Navigation commands - work whether typed or spoken
-    case 'restart':
-    case 'reset':
     case 'repeat':
       playAppCommand();
       const handlers = await getVoiceCommandHandlers();
