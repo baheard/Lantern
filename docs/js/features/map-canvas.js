@@ -494,6 +494,9 @@ function getDirectionFromCommand(command) {
   const cmd = command.toLowerCase().trim();
   if (COMMAND_DIRECTIONS[cmd]) return COMMAND_DIRECTIONS[cmd];
   if (cmd.startsWith('go ')) return COMMAND_DIRECTIONS[cmd.substring(3).trim()] || null;
+  // Check if command starts with a direction word (e.g., "enter post office")
+  const firstWord = cmd.split(/\s+/)[0];
+  if (COMMAND_DIRECTIONS[firstWord]) return COMMAND_DIRECTIONS[firstWord];
   return null;
 }
 

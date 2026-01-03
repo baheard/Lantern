@@ -281,8 +281,7 @@ function populateConnectionsList(node) {
   }
   if (!conns.length) { list.innerHTML = '<div class="no-connections">No connections yet</div>'; return; }
 
-  const typeIcons = { cardinal: 'straight', vertical: 'stairs', portal: 'door_front' };
-  const typeLabels = { cardinal: 'Cardinal', vertical: 'Vertical', portal: 'Portal' };
+  const typeLabels = { cardinal: 'Solid', vertical: 'Dashed', portal: 'Dotted' };
 
   list.innerHTML = conns.map(c => {
     const currentType = c.edge.connectionType || 'cardinal';
