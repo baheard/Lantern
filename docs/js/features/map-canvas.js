@@ -19,7 +19,7 @@ import { getCurrentLocation, getLastLocationName } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
-  DIRECTION_OFFSETS, COMMAND_DIRECTIONS, NODE_RADIUS, FIRST_USE_KEY
+  DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
 import {
@@ -359,7 +359,8 @@ function handleLocationChange(e) {
         if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
           mapState.edges.set(edgeKey, {
             from: previousLocationId, to: locationName,
-            command: command || '', isManual: false, isEdited: false
+            command: command || '', connectionType: getConnectionTypeFromCommand(command),
+            isManual: false, isEdited: false
           });
           mapState.protectedEdges.add(edgeKey);
         }
@@ -412,7 +413,7 @@ function handleLocationChange(e) {
     const edgeKey = `${previousLocationId}-${locationName}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
-      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationName, command: command || '', isManual: false, isEdited: false });
+      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationName, command: command || '', connectionType: getConnectionTypeFromCommand(command), isManual: false, isEdited: false });
       // Protect from future auto-mapper modifications
       mapState.protectedEdges.add(edgeKey);
     }
@@ -496,6 +497,7 @@ function createDuplicateNode(locationName, originalNode, previousLocationId, com
         from: previousLocationId,
         to: duplicateId,
         command: command || '',
+        connectionType: getConnectionTypeFromCommand(command),
         isManual: false,
         isEdited: false
       });
@@ -515,6 +517,12 @@ function getDirectionFromCommand(command) {
   const firstWord = cmd.split(/\s+/)[0];
   if (COMMAND_DIRECTIONS[firstWord]) return COMMAND_DIRECTIONS[firstWord];
   return null;
+}
+
+function getConnectionTypeFromCommand(command) {
+  const direction = getDirectionFromCommand(command);
+  if (direction && DIRECTION_TO_TYPE[direction]) return DIRECTION_TO_TYPE[direction];
+  return 'cardinal';
 }
 
 function findAvailablePosition(preferred) {
