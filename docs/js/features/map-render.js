@@ -70,6 +70,8 @@ function drawGrid(width, height) {
 // ============================================================================
 
 function drawEdges() {
+  const portalEdgesToMark = [];
+
   for (const edge of mapState.edges.values()) {
     const from = mapState.nodes.get(edge.from), to = mapState.nodes.get(edge.to);
     if (!from || !to) continue;
@@ -88,6 +90,30 @@ function drawEdges() {
     ctx.globalAlpha = 0.8;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
     ctx.globalAlpha = 1; ctx.setLineDash([]);
+
+    // Track portal edges where neither node has been edited
+    if (connectionType === 'portal' && !isUser && !edge.isEdited && !from.isEdited && !to.isEdited) {
+      portalEdgesToMark.push({ from, to });
+    }
+  }
+
+  // Draw question marks on unverified portal edges
+  for (const { from, to } of portalEdgesToMark) {
+    const midX = (from.x + to.x) / 2;
+    const midY = (from.y + to.y) / 2;
+
+    // Draw background circle
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(midX, midY, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw question mark
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', midX, midY);
   }
 }
 
