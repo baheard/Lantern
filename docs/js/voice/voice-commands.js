@@ -98,9 +98,9 @@ export function processVoiceKeywords(transcript, handlers, confidence = null) {
     return false;
   }
 
-  if (lower === 'restart' || lower === 'reset' || lower === 'repeat') {
+  if (lower === 'repeat') {
     markCommandProcessed();
-    displayAppCommand('restart', confidence);
+    displayAppCommand('repeat', confidence);
     handlers.restart();
     return false;
   }
