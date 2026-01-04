@@ -184,7 +184,17 @@ export function handleTouchEnd(e) {
 // OTHER HANDLERS
 // ============================================================================
 
-export function handleWheel(e) { e.preventDefault(); zoom(e.deltaY > 0 ? 0.85 : 1.15); }
+export function handleWheel(e) {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  // Use deltaY for zoom amount (works well for instant-scroll mice)
+  const delta = Math.max(-150, Math.min(150, e.deltaY));
+  const zoomFactor = 1 - (delta * 0.003); // ~30% zoom per 100 deltaY
+  zoom(zoomFactor, mouseX, mouseY);
+}
 
 export function handleContextMenu(e) {
   e.preventDefault();

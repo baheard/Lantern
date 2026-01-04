@@ -161,5 +161,4 @@ if (INTERCEPT_ALL) {
       } catch (e) {}
     };
   });
-  console.log('[RemoteConsole] Intercepting all console methods');
 }

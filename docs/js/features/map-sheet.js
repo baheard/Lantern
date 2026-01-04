@@ -50,9 +50,17 @@ export function createNodeEditSheet() {
         </button>
       </div>
       <div class="sheet-body">
-        <div class="sheet-field">
-          <label for="nodeNameInput">Name <span class="field-hint">(max 100 characters)</span></label>
-          <input type="text" id="nodeNameInput" placeholder="Location name" autocomplete="off" maxlength="100">
+        <div class="sheet-field sheet-field-inline">
+          <div class="field-primary">
+            <label for="nodeNameInput">Name <span class="field-hint">(max 100 characters)</span></label>
+            <input type="text" id="nodeNameInput" placeholder="Location name" autocomplete="off" maxlength="100">
+          </div>
+          <div class="field-secondary">
+            <label for="nodeSmallToggle">Small</label>
+            <button class="toggle-btn" id="nodeSmallToggle" role="switch" aria-checked="false">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </button>
+          </div>
         </div>
         <div class="sheet-field">
           <label for="nodeNotesInput">Notes <span class="field-hint">(max 500 characters)</span></label>
@@ -74,12 +82,6 @@ export function createNodeEditSheet() {
               </button>`
             ).join('')}
           </div>
-        </div>
-        <div class="sheet-field sheet-toggle-field">
-          <label for="nodeSmallToggle">Small node</label>
-          <button class="toggle-btn" id="nodeSmallToggle" role="switch" aria-checked="false">
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </button>
         </div>
         <div class="sheet-field" id="nodeConnectionsField">
           <label>Connections</label>

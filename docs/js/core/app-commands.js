@@ -19,7 +19,7 @@ export const APP_COMMANDS = {
 
   // Audio control
   MUTE: ['mute'],
-  UNMUTE: [], // Disabled - use lock screen instead
+  UNMUTE: [], // Voice unmute disabled - mic fully off when muted (click button to unmute)
   STATUS: ['status'],
 
   // Quick save/load (voice commands)

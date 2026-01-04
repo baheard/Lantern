@@ -13,7 +13,8 @@
   background: var(--bg-surface);
   overflow-y: auto; /* Scroll when content exceeds viewport height */
   /* Use margin for safe area - doesn't scroll away like padding */
-  margin: max(10px, env(safe-area-inset-top)) auto 0 auto;
+  margin: max(0, env(safe-area-inset-top)) 0 0 0;
+  padding: 0;
 }
 
 .game-output-inner {
@@ -300,6 +301,7 @@ body.tap-to-examine-enabled .game-text {
   font-size: var(--font-m);
   color: var(--text-primary);
   line-height: 1.4;
+  width: 100%;
   flex-shrink: 0; /* Don't shrink when space is tight */
   /* Container will be styled by .grid-status.multiline */
 }
@@ -322,24 +324,6 @@ body.tap-to-examine-enabled .game-text {
 /* When tap-to-examine is enabled, use default cursor */
 body.tap-to-examine-enabled #lowerWindow {
   cursor: default;
-}
-
-/* Game output scrollbar styling */
-.game-output::-webkit-scrollbar {
-  width: 8px;
-}
-
-.game-output::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-.game-output::-webkit-scrollbar-thumb {
-  background: var(--text-secondary);  /* More visible on dark background */
-  border-radius: 4px;
-}
-
-.game-output::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
 }
 
 /* Inline command input */

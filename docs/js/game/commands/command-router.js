@@ -310,6 +310,12 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
     isVoiceCommand = !state.hasManualTyping;
   }
 
+  // Block ALL voice commands when muted (mic should be fully off)
+  if (state.isMuted && isVoiceCommand) {
+    // Silently ignore all voice commands when muted
+    return;
+  }
+
   // Mark that a command is being processed
   state.pendingCommandProcessed = true;
   state.pausedForSound = false;

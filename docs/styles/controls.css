@@ -5,12 +5,10 @@
   background: var(--bg-surface);
   width: 100%;
   border-top: 1px solid var(--border-subtle);
-  padding: 2px 8px;
-  /* Minimal bottom padding - no safe area needed, status bar handles it */
-  padding-bottom: 2px;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -462,6 +460,8 @@
   flex: 1;
   text-align: left;
   padding-left: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .status-version {
@@ -469,5 +469,7 @@
   color: var(--text-muted);
   font-size: 11px;
   font-family: var(--font-mono);
+  position: relative;
+  z-index: 1;
 }
 

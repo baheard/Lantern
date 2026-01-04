@@ -73,7 +73,7 @@ export function extractWordAtPoint(x, y) {
 
     // Verify click point is inside the word's bounding box (with padding for easier tapping)
     // Padding makes tap targets larger without changing font size
-    const tapPadding = 4; // pixels of extra tap area around each word
+    const tapPadding = 6; // pixels of extra tap area around each word
     const wordRect = wordRange.getBoundingClientRect();
     if (x < wordRect.left - tapPadding ||
         x > wordRect.right + tapPadding ||

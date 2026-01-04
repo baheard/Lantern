@@ -550,7 +550,7 @@
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
-  max-height: 70vh;
+  max-height: 80vh;
   overflow: hidden;
   z-index: 50;
   animation: sheetSlideUp 0.3s ease-out;
@@ -811,6 +811,38 @@
   color: #60a5fa;
 }
 
+/* Inline Field (Name + Small toggle) */
+.sheet-field-inline {
+  display: flex;
+  gap: 16px;
+  flex-direction: row;
+}
+
+.sheet-field-inline .field-primary {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-field-inline .field-secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sheet-field-inline .field-secondary label {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 0;
+}
+
+.sheet-field-inline .field-primary label,
+.sheet-field-inline .field-primary input {
+  display: block;
+  width: 100%;
+}
+
 /* Toggle Field */
 .sheet-toggle-field {
   display: flex;
@@ -1050,7 +1082,11 @@
   }
 
   .node-edit-sheet {
-    max-height: 80vh;
+    max-height: 92vh;
+  }
+
+  .sheet-content {
+    max-height: calc(92vh - 24px);
   }
 
   .map-fab-container {

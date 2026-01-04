@@ -14,6 +14,29 @@ import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand,
 import { scrollToBottom } from '../utils/scroll.js';
 
 /**
+ * Common single-word commands that can be sent immediately from interim results
+ * These are simple, unambiguous commands that players use frequently
+ */
+const INSTANT_COMMANDS = [
+  // App navigation commands (most important!)
+  'play', 'pause', 'resume', 'stop',
+  'skip', 'back', 'restart',
+  'mute',
+  'status',
+  // Directions
+  'north', 'south', 'east', 'west', 'up', 'down',
+  'n', 's', 'e', 'w', 'u', 'd',
+  'northeast', 'northwest', 'southeast', 'southwest',
+  'ne', 'nw', 'se', 'sw',
+  'in', 'out',
+  // Common verbs
+  'look', 'l', 'inventory', 'i', 'wait', 'z',
+  'yes', 'no',
+  // Navigation shortcuts
+  'again', 'g'
+];
+
+/**
  * Update the last heard text in voice panel
  * @param {string} text - Text that was heard
  * @param {boolean} isNavCommand - Whether this was a navigation command
@@ -177,6 +200,40 @@ export function initVoiceRecognition(processVoiceKeywords) {
         // Echo detection error (interim) - silently ignored
       }
 
+      // Check if interim transcript is a common instant command
+      const interimLower = interimTranscript.toLowerCase().trim();
+      if (INSTANT_COMMANDS.includes(interimLower) && !state.hasProcessedResult) {
+        // Found an instant command! Send it immediately without waiting for final result
+        state.hasProcessedResult = true; // Prevent duplicate processing
+        state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
+
+        // Process and send immediately with high confidence (0.95 = instant interim command)
+        const processed = processVoiceKeywords(interimTranscript, 0.95);
+        const isNavCommand = (processed === false);
+
+        // Show as confirmed with mic indicator
+        showConfirmedTranscript(interimTranscript, isNavCommand);
+
+        if (processed !== false) {
+          // Game command - send immediately
+          playCommandSent();
+          import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
+            sendCommandDirect(processed, true, 0.95);
+          });
+        } else {
+          // Navigation command
+          if (state.pendingCommandProcessed) {
+            playAppCommand();
+          }
+        }
+
+        // Stop recognition after instant command (will restart automatically)
+        if (state.recognition) {
+          state.recognition.stop();
+        }
+        return;
+      }
+
       // Update voice indicator with interim text
       updateVoiceTranscript(interimTranscript, 'interim');
 
@@ -203,18 +260,8 @@ export function initVoiceRecognition(processVoiceKeywords) {
       // Reset command processed flag
       state.pendingCommandProcessed = false;
 
-      // When muted, only process "unmute" command - ignore everything else silently
+      // When muted, mic should be off - ignore any stray results (shouldn't happen)
       if (state.isMuted) {
-        const lower = finalTranscript.toLowerCase().trim();
-        if (lower === 'unmute' || lower === 'on mute' || lower === 'un mute') {
-          // Process unmute command
-          const processed = processVoiceKeywords(finalTranscript, finalConfidence);
-          showConfirmedTranscript(finalTranscript, true);
-          if (state.pendingCommandProcessed) {
-            playAppCommand();
-          }
-        }
-        // Ignore all other commands when muted (no sound, no display)
         state.hasManualTyping = false;
         return;
       }
@@ -336,15 +383,20 @@ export function initVoiceRecognition(processVoiceKeywords) {
       return;
     }
 
-    // Always restart listening if enabled (even when muted - to listen for "unmute")
+    // Don't restart if muted - mic should be fully off
+    if (state.isMuted) {
+      return;
+    }
+
+    // Restart listening if enabled
     if (state.listeningEnabled) {
       setTimeout(() => {
-        if (state.listeningEnabled && !state.isRecognitionActive) {
+        if (state.listeningEnabled && !state.isRecognitionActive && !state.isMuted) {
           try {
             // Clear transcript display if not showing confirmed text
             if (dom.voiceTranscript && !dom.voiceTranscript.classList.contains('confirmed')) {
-              updateVoiceTranscript(state.isMuted ? 'Muted' : 'Listening...', 'listening');
-              dom.voiceTranscript.textContent = state.isMuted ? 'Muted' : 'Listening...';
+              updateVoiceTranscript('Listening...', 'listening');
+              dom.voiceTranscript.textContent = 'Listening...';
               dom.voiceTranscript.classList.remove('interim');
             }
 

@@ -6,7 +6,6 @@
     window.performanceMarks = {
       htmlStart: performance.now()
     };
-    console.log('[TIMING] HTML parsing started at:', window.performanceMarks.htmlStart, 'ms');
   </script>
 
   <meta charset="UTF-8">
@@ -43,13 +42,11 @@
 
   <script>
     window.performanceMarks.headComplete = performance.now();
-    console.log('[TIMING] Head complete at:', window.performanceMarks.headComplete, 'ms');
   </script>
 </head>
 <body>
   <script>
     window.performanceMarks.bodyStart = performance.now();
-    console.log('[TIMING] Body started at:', window.performanceMarks.bodyStart, 'ms');
   </script>
 
   <!-- Loading Overlay -->
@@ -116,69 +113,6 @@
             <button id="mapBtn" class="compact-btn quick-action-btn game-section-item" style="margin-top: 10px;">
               <span class="material-icons">map</span> Game Map
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Audio Section -->
-      <div class="settings-section collapsible collapsed" id="audioSection">
-        <h3 class="section-header">
-          <span class="material-icons">volume_up</span> Audio
-        </h3>
-        <div class="section-content">
-          <!-- Master Volume -->
-          <div class="setting-item">
-            <label>Master Volume</label>
-            <div class="slider-container">
-              <input type="range" id="masterVolume" min="0" max="100" step="5" value="100" class="slider">
-              <span id="masterVolumeValue" class="slider-value">100%</span>
-            </div>
-          </div>
-
-          <!-- Sound Effects (moved from bottom) -->
-          <div class="setting-item">
-            <label>
-              Sound Effects
-              <input type="checkbox" id="soundEffectsToggle" class="toggle-switch" checked>
-            </label>
-            <p class="setting-description">Audio feedback for commands and actions</p>
-          </div>
-
-          <!-- Speech Speed -->
-          <div class="setting-item">
-            <label>Speech Speed</label>
-            <div class="slider-container">
-              <span class="slider-label">0.5x</span>
-              <input type="range" id="speechRate" min="0.5" max="1.5" step="0.1" value="1.0" class="slider">
-              <span class="slider-label">1.5x</span>
-              <span id="speechRateValue" class="slider-value">1.0x</span>
-            </div>
-          </div>
-
-          <!-- Narration Voice -->
-          <div class="setting-item">
-            <label>Narration Voice</label>
-            <div class="voice-controls">
-              <select id="voiceSelect" class="voice-select">
-                <option value="">Loading voices...</option>
-              </select>
-              <button id="testVoiceBtn" class="test-voice-btn">
-                <span class="material-icons">play_arrow</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- App Voice -->
-          <div class="setting-item">
-            <label>App Voice</label>
-            <div class="voice-controls">
-              <select id="appVoiceSelect" class="voice-select">
-                <option value="">Loading voices...</option>
-              </select>
-              <button id="testAppVoiceBtn" class="test-voice-btn">
-                <span class="material-icons">play_arrow</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -268,7 +202,69 @@
           </div>
         </div>
       </div>
+      
+      <!-- Audio Section -->
+      <div class="settings-section collapsible collapsed" id="audioSection">
+        <h3 class="section-header">
+          <span class="material-icons">volume_up</span> Audio
+        </h3>
+        <div class="section-content">
+          <!-- Master Volume -->
+          <div class="setting-item">
+            <label>Master Volume</label>
+            <div class="slider-container">
+              <input type="range" id="masterVolume" min="0" max="100" step="5" value="100" class="slider">
+              <span id="masterVolumeValue" class="slider-value">100%</span>
+            </div>
+          </div>
 
+          <!-- Sound Effects (moved from bottom) -->
+          <div class="setting-item">
+            <label>
+              Sound Effects
+              <input type="checkbox" id="soundEffectsToggle" class="toggle-switch" checked>
+            </label>
+            <p class="setting-description">Audio feedback for commands and actions</p>
+          </div>
+
+          <!-- Speech Speed -->
+          <div class="setting-item">
+            <label>Speech Speed</label>
+            <div class="slider-container">
+              <span class="slider-label">0.5x</span>
+              <input type="range" id="speechRate" min="0.5" max="1.5" step="0.1" value="1.0" class="slider">
+              <span class="slider-label">1.5x</span>
+              <span id="speechRateValue" class="slider-value">1.0x</span>
+            </div>
+          </div>
+
+          <!-- Narration Voice -->
+          <div class="setting-item">
+            <label>Narration Voice</label>
+            <div class="voice-controls">
+              <select id="voiceSelect" class="voice-select">
+                <option value="">Loading voices...</option>
+              </select>
+              <button id="testVoiceBtn" class="test-voice-btn">
+                <span class="material-icons">play_arrow</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- App Voice -->
+          <div class="setting-item">
+            <label>App Voice</label>
+            <div class="voice-controls">
+              <select id="appVoiceSelect" class="voice-select">
+                <option value="">Loading voices...</option>
+              </select>
+              <button id="testAppVoiceBtn" class="test-voice-btn">
+                <span class="material-icons">play_arrow</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Saves & Data Section -->
       <div class="settings-section collapsible collapsed" id="savesDataSection">
@@ -687,7 +683,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.36-debug</span>
+    <span class="status-version">v1.4.38</span>
   </div>
 
   <!-- Lock Screen Overlay -->
@@ -734,12 +730,10 @@
 
   <script>
     window.performanceMarks.beforeAppJs = performance.now();
-    console.log('[TIMING] Before app.js at:', window.performanceMarks.beforeAppJs, 'ms');
   </script>
   <script type="module" src="js/app.js"></script>
   <script>
     window.performanceMarks.afterAppJs = performance.now();
-    console.log('[TIMING] After app.js queued at:', window.performanceMarks.afterAppJs, 'ms');
   </script>
 </body>
 </html>

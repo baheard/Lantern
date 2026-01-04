@@ -5,31 +5,16 @@
   position: relative;
   text-align: center;
   padding: 20px 20px;
-  max-width: 860px;
   width: 100%;
-  margin: 0 auto;
-  overflow-y: auto; /* Enable scrolling when content exceeds container height */
+  max-width: 800px;
+  margin: 0;
+  overflow-y: visible; /* Container expected to handle scrolling */
   height: 100%; /* Fill container height to enable scrolling */
   /* Add more top padding so text doesn't start too high */
   padding-top: max(40px, calc(25px + env(safe-area-inset-top)));
-}
-
-/* Welcome screen scrollbar styling */
-.welcome::-webkit-scrollbar {
-  width: 8px;
-}
-
-.welcome::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-.welcome::-webkit-scrollbar-thumb {
-  background: var(--text-secondary);
-  border-radius: 4px;
-}
-
-.welcome::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .welcome-settings-btn {
@@ -77,6 +62,7 @@
   flex-direction: column;
   gap: 40px;
   margin-top: 30px;
+  width: 100%;
 }
 
 .game-category {

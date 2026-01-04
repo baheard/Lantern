@@ -10,8 +10,7 @@
 import './utils/remote-console.js';
 
 // Offline debug console (for debugging load times)
-import { debugLog, showDebugOverlay } from './utils/offline-debug.js';
-debugLog('App.js start');
+import { showDebugOverlay } from './utils/offline-debug.js';
 
 // Core modules
 import { state } from './core/state.js';
@@ -58,28 +57,22 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(registration => {
-        console.log('[PWA] Service worker registered:', registration.scope);
+        // Service worker registered successfully
       })
       .catch(error => {
-        console.log('[PWA] Service worker registration failed:', error);
+        // Service worker registration failed
       });
   });
 }
 
 // Load Google Identity Services (OAuth) - only when online
 // This prevents 60-second timeout when offline
-debugLog('Checking if should load Google OAuth');
 if (navigator.onLine) {
   const script = document.createElement('script');
   script.src = 'https://accounts.google.com/gsi/client';
   script.async = true;
   script.defer = true;
   document.head.appendChild(script);
-  console.log('[OAuth] Loading Google Identity Services');
-  debugLog('Google OAuth script added');
-} else {
-  console.log('[OAuth] Offline - skipping Google Identity Services');
-  debugLog('Skipped Google OAuth (offline)');
 }
 
 // PWA Install Prompt Handling
@@ -95,7 +88,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if (pwaInstallSection) {
     pwaInstallSection.classList.remove('hidden');
   }
-  console.log('[PWA] Install prompt available');
 });
 
 // Handle install button click
@@ -104,14 +96,12 @@ window.addEventListener('load', () => {
   if (pwaInstallBtn) {
     pwaInstallBtn.addEventListener('click', async () => {
       if (!deferredPwaPrompt) {
-        console.log('[PWA] Install prompt not available');
         return;
       }
       // Show the install prompt
       deferredPwaPrompt.prompt();
       // Wait for the user to respond
       const { outcome } = await deferredPwaPrompt.userChoice;
-      console.log(`[PWA] User response: ${outcome}`);
       // Clear the deferred prompt
       deferredPwaPrompt = null;
       // Hide the install button
@@ -130,7 +120,6 @@ window.addEventListener('load', () => {
     || document.referrer.includes('android-app://');
 
   if (isStandalone) {
-    console.log('[PWA] App running in standalone mode');
     // Hide install button if already installed
     const pwaInstallSection = document.getElementById('pwaInstallSection');
     if (pwaInstallSection) {
@@ -155,8 +144,6 @@ window.addEventListener('load', () => {
         pwaInstallBtn.addEventListener('click', () => {
           alert('To install Voxi on iOS:\n\n1. Tap the Share button (□↑) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nVoxi will then appear on your home screen like a native app!');
         });
-
-        console.log('[PWA] iOS detected - showing manual install instructions');
       }
     }
   }
@@ -389,8 +376,7 @@ export const voiceCommandHandlers = {
     playMuteTone();
     state.isMuted = true;
     state.manuallyMuted = true;  // User manually muted - break auto-link to play/pause
-    // Keep listeningEnabled = true so recognition keeps running for "unmute"
-    // state.listeningEnabled = false; // DON'T disable - need to hear "unmute"
+    state.listeningEnabled = false;  // Fully disable mic when muted
     const icon = dom.muteBtn?.querySelector('.material-icons');
     if (icon) icon.textContent = 'mic_off';
     if (dom.muteBtn) {
@@ -399,17 +385,24 @@ export const voiceCommandHandlers = {
       dom.muteBtn.style.setProperty('--mic-intensity', '0');
     }
     stopVoiceMeter();
-    updateStatus('Microphone muted (say "unmute" to re-enable)');
+    updateStatus('Microphone muted');
     updateNavButtons();
     updateLockScreenMicStatus();
 
     // Update message input placeholder
     const messageInput = document.getElementById('messageInput');
     if (messageInput) {
-      messageInput.placeholder = 'Type or say "unmute"...';
+      messageInput.placeholder = 'Type a command...';
     }
 
-    // DON'T stop voice recognition - keep it running to listen for "unmute"
+    // Stop voice recognition completely when muted
+    if (state.recognition && state.isRecognitionActive) {
+      try {
+        state.recognition.stop();
+      } catch (err) {
+        // Ignore stop errors
+      }
+    }
   },
   sendCommandDirect: (cmd) => sendCommandDirect(cmd),
   getHint: async function() {
@@ -447,8 +440,6 @@ function handleGameOutput(text) {
 
 // Initialize app
 async function initApp() {
-  debugLog('initApp() start');
-
   // Fix mobile viewport height for browser chrome
   function setMobileViewportHeight() {
     const vh = window.innerHeight * 0.01;
@@ -457,7 +448,6 @@ async function initApp() {
 
   setMobileViewportHeight();
   window.addEventListener('resize', setMobileViewportHeight);
-  debugLog('Viewport height set');
   window.addEventListener('orientationchange', () => {
     setMobileViewportHeight();
     // Restart voice recognition after orientation change (can terminate recognition)
@@ -522,23 +512,18 @@ async function initApp() {
   });
 
   // Load voice configuration (with timeout, non-blocking)
-  debugLog('Loading voice config (background)...');
-  loadBrowserVoiceConfig().then(() => {
-    debugLog('Voice config loaded');
-  }).catch(() => {
-    debugLog('Voice config failed (expected offline)');
+  loadBrowserVoiceConfig().catch(() => {
+    // Voice config failed (expected offline)
   });
 
   // Initialize voice recognition in background (non-blocking)
   // This allows it to work offline if device supports it, but doesn't delay app load
-  debugLog('Initializing voice recognition (background)...');
   setTimeout(() => {
     try {
       const processVoice = (transcript, confidence) => processVoiceKeywords(transcript, voiceCommandHandlers, confidence);
       state.recognition = initVoiceRecognition(processVoice);
-      debugLog('Voice recognition ready');
     } catch (error) {
-      debugLog('Voice recognition failed: ' + error.message);
+      // Voice recognition failed
     }
   }, 100); // Small delay to let app finish loading first
 
@@ -575,13 +560,10 @@ async function initApp() {
   initScrollDetection();
 
   // Initialize Google Drive sync (optional, non-blocking)
-  debugLog('Initializing Google Drive (background)...');
   import('./utils/gdrive/index.js').then(({ initGDriveSync }) => {
     return initGDriveSync();
-  }).then(() => {
-    debugLog('Google Drive sync ready');
   }).catch(error => {
-    debugLog('Google Drive init failed (expected offline)');
+    // Google Drive init failed (expected offline)
     // Hide Cloud Sync section if init fails
     const cloudSyncSection = document.getElementById('cloudSyncSection');
     if (cloudSyncSection) cloudSyncSection.style.display = 'none';
@@ -1113,12 +1095,10 @@ function initHelpTooltips() {
 
 // Initialize when DOM is ready
 async function startApp() {
-  debugLog('startApp() called - DOM ready');
   try {
     await initApp();
-    debugLog('initApp() completed successfully');
   } catch (error) {
-    debugLog('ERROR in initApp(): ' + error.message);
+    console.error('ERROR in initApp():', error);
   }
 }
 

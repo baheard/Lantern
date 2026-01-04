@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.4.36-debug';
+const CACHE_VERSION = 'v1.4.38';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -149,28 +149,21 @@ const ICONS = [
 
 // Install event - precache all assets
 self.addEventListener('install', (event) => {
-  console.log('[PWA] Service worker installing...');
-
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAMES.core).then(cache => {
-        console.log('[PWA] Caching core assets...');
         return cache.addAll(CORE_ASSETS);
       }),
       caches.open(CACHE_NAMES.fonts).then(cache => {
-        console.log('[PWA] Caching fonts...');
         return cache.addAll(FONTS);
       }),
       caches.open(CACHE_NAMES.icons).then(cache => {
-        console.log('[PWA] Caching icons...');
         return cache.addAll(ICONS);
       }),
       caches.open(CACHE_NAMES.games).then(cache => {
-        console.log('[PWA] Caching bundled games...');
         return cache.addAll(BUNDLED_GAMES);
       })
     ]).then(() => {
-      console.log('[PWA] All assets cached successfully');
       // Don't skipWaiting - let user finish their session
       // New version will activate on next app launch
       // return self.skipWaiting();
@@ -180,8 +173,6 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[PWA] Service worker activating...');
-
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -191,12 +182,10 @@ self.addEventListener('activate', (event) => {
             return name.startsWith('iftalk-') && !Object.values(CACHE_NAMES).includes(name);
           })
           .map(name => {
-            console.log('[PWA] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log('[PWA] Service worker activated');
       // Don't claim clients immediately - can cause reloads on iOS
       // return self.clients.claim();
     })

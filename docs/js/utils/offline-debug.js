@@ -24,8 +24,7 @@ function logToStorage(message) {
 
     localStorage.setItem(DEBUG_KEY, JSON.stringify(logs));
 
-    // Also log to console
-    console.log('[DEBUG]', message);
+    // Don't log to console - only store in localStorage
   } catch (e) {
     console.error('Failed to store debug log:', e);
   }
@@ -169,23 +168,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Version info
-const APP_VERSION = 'v1.1.5';
-debugLog('=== APP VERSION: ' + APP_VERSION + ' ===');
-
-// Initial load marker
-debugLog('offline-debug.js loaded');
-
-// Log early performance marks from HTML
-if (window.performanceMarks) {
-  debugLog('HTML start: ' + window.performanceMarks.htmlStart.toFixed(0) + 'ms');
-  if (window.performanceMarks.headComplete) {
-    debugLog('Head complete: ' + window.performanceMarks.headComplete.toFixed(0) + 'ms');
-  }
-  if (window.performanceMarks.bodyStart) {
-    debugLog('Body start: ' + window.performanceMarks.bodyStart.toFixed(0) + 'ms');
-  }
-  if (window.performanceMarks.beforeAppJs) {
-    debugLog('Before app.js: ' + window.performanceMarks.beforeAppJs.toFixed(0) + 'ms');
-  }
-}
+// offline-debug.js loaded
+// Debug overlay can be accessed by triple-tapping the status bar or calling window.showDebugOverlay()

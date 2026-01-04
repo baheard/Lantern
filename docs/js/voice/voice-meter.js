@@ -16,6 +16,9 @@ export async function startVoiceMeter() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+    // Save stream so we can stop it later
+    state.microphoneStream = stream;
+
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     state.analyser = state.audioContext.createAnalyser();
     state.microphone = state.audioContext.createMediaStreamSource(stream);
@@ -79,6 +82,12 @@ export function stopVoiceMeter() {
   // Reset sound detection state
   state.soundDetected = false;
   state.pausedForSound = false;
+
+  // IMPORTANT: Stop all media stream tracks to release the microphone
+  if (state.microphoneStream) {
+    state.microphoneStream.getTracks().forEach(track => track.stop());
+    state.microphoneStream = null;
+  }
 
   // Cleanup audio context
   if (state.microphone) {

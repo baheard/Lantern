@@ -147,15 +147,6 @@ function drawNodes() {
     const isSmall = node.isSmall === true;
     const radius = isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
 
-    // Small nodes fade out when zoomed out
-    if (isSmall && mapState.viewport.scale < SMALL_NODE_FADE_SCALE) {
-      const fadeStart = SMALL_NODE_FADE_SCALE;
-      const fadeEnd = SMALL_NODE_FADE_SCALE * 0.5;
-      const alpha = Math.max(0, (mapState.viewport.scale - fadeEnd) / (fadeStart - fadeEnd));
-      if (alpha <= 0) continue; // Skip drawing completely faded nodes
-      ctx.globalAlpha = alpha;
-    }
-
     const isSelected = mapState.selectedNode === node.id;
     // Current location check - use explicit currentNodeId for precise tracking
     // This handles duplicates correctly: the specific node the player is at is marked current
@@ -253,9 +244,6 @@ function drawNodes() {
       ctx.fillStyle = '#ffffff'; ctx.font = `${8 * badgeScale}px Material Icons`;
       ctx.fillText('edit', badgeX, badgeY + 1);
     }
-
-    // Reset alpha if we changed it for small nodes
-    ctx.globalAlpha = 1;
   }
 }
 
@@ -282,7 +270,24 @@ export function screenToCanvas(sx, sy) {
   return { x: (sx - w / 2 - mapState.viewport.x) / mapState.viewport.scale, y: (sy - h / 2 - mapState.viewport.y) / mapState.viewport.scale };
 }
 
-export function zoom(factor) {
-  mapState.viewport.scale = Math.max(0.25, Math.min(4, mapState.viewport.scale * factor));
+export function zoom(factor, mouseX, mouseY) {
+  const oldScale = mapState.viewport.scale;
+  const newScale = Math.max(0.25, Math.min(4, oldScale * factor));
+
+  // Zoom toward cursor position (if provided)
+  if (mouseX !== undefined && mouseY !== undefined) {
+    const w = canvas.width / window.devicePixelRatio;
+    const h = canvas.height / window.devicePixelRatio;
+
+    // Get canvas coordinates of mouse position before zoom
+    const canvasX = (mouseX - w / 2 - mapState.viewport.x) / oldScale;
+    const canvasY = (mouseY - h / 2 - mapState.viewport.y) / oldScale;
+
+    // Adjust viewport so the canvas point stays under the cursor
+    mapState.viewport.x = mouseX - w / 2 - canvasX * newScale;
+    mapState.viewport.y = mouseY - h / 2 - canvasY * newScale;
+  }
+
+  mapState.viewport.scale = newScale;
   render();
 }

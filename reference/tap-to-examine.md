@@ -62,11 +62,11 @@ The tap-to-examine feature allows users to tap/click on words in the game text t
   - Objects (lamp, pig, etc.) - "x" prefix
 - **Additive building** - clicking multiple words builds up the command
 - **Prefix stays selected** - "x" or "go" remains selected for easy verb replacement
-- **Scroll detection** - dragging > 50px is treated as scrolling, not tapping (mobile)
+- **Scroll detection** - dragging > 10px is treated as scrolling, not tapping (industry standard threshold)
 - **Text selection works** - native text selection available when feature disabled
 - **Click whitespace clears** - clicking non-word area clears the entire input (when enabled)
 - **Works in line mode only** - feature only active when expecting line input
-- **No auto-scroll** - page stays put when selecting words
+- **No auto-scroll** - page stays put when selecting words (no scroll-to-bottom)
 - **Cursor indicates state**:
   - Enabled: default cursor (tap-to-examine active)
   - Disabled: text I-beam cursor (selection mode)
@@ -156,11 +156,12 @@ const handleGameClick = (e) => {
   const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') === 'true';
   if (!isTapExamineEnabled) return;
 
-  // 3. Detect scrolling - if moved > 50px, user was scrolling
+  // 3. Detect scrolling - if moved > 10px, user was scrolling
+  // Using industry standard threshold (10px) to distinguish tap from scroll
   if (touchStartX !== null && touchStartY !== null) {
     const deltaX = Math.abs(clientX - touchStartX);
     const deltaY = Math.abs(clientY - touchStartY);
-    if (deltaX > 50 || deltaY > 50) return; // Scrolling, not tapping
+    if (deltaX > 10 || deltaY > 10) return; // Scrolling, not tapping
   }
 
   // 4. If user selected text, don't process (allows copying)
@@ -471,3 +472,4 @@ if (x < wordRect.left || x > wordRect.right ||
 | 2024-12-22 | 2.2 | **UX Polish**: Increased highlight opacity (0.12), removed pointer cursor, fixed input selection handling, disabled hover on mobile to prevent artifacts |
 | 2024-12-22 | 2.3 | **Additive Building**: Clicking multiple words now appends instead of replacing. Prefix stays selected. Input uses default cursor. |
 | 2024-12-23 | 2.4 | **Mobile Improvements**: Increased scroll detection threshold (10px → 50px), removed duplicate event listeners (only lowerWindow, not gameOutput), fixed event bubbling bypass, added scrollIntoView for input visibility on mobile |
+| 2026-01-04 | 2.5 | **Strict Tap Detection**: Reduced scroll threshold to industry standard (50px → 10px), removed scroll-to-bottom behavior when tapping words to preserve user's scroll position |

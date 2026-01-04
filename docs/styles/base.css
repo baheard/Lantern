@@ -6,6 +6,31 @@
   box-sizing: border-box;
 }
 
+/* Global scrollbar styling - applies to all scrollable elements */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.3);
+}
+
 html {
   font-size: var(--html-font-size);
 }
@@ -22,24 +47,6 @@ body {
   flex-direction: column;
   overflow: hidden;
   /* Safe area insets handled per-section to avoid double padding */
-}
-
-/* Body scrollbar styling (for when overflow changes to auto/scroll) */
-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-body::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-body::-webkit-scrollbar-thumb {
-  background: var(--text-secondary);
-  border-radius: 4px;
-}
-
-body::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
 }
 
 /* Utility Classes */
@@ -200,26 +207,9 @@ body::-webkit-scrollbar-thumb:hover {
 /* Container */
 .container {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
-}
-
-/* Container scrollbar styling (for when overflow changes to auto/scroll) */
-.container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.container::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-.container::-webkit-scrollbar-thumb {
-  background: var(--text-secondary);
-  border-radius: 4px;
-}
-
-.container::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
+  justify-content: center;
 }
 
 /* Button Base Styles */

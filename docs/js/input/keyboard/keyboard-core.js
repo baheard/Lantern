@@ -350,17 +350,13 @@ export function initKeyboardInput() {
       populatedWordLength = word.length;
     }
 
-    // Focus on desktop, scroll to input on mobile
+    // Focus on desktop, scroll input horizontally on mobile (no vertical scroll)
     if (hasPhysicalKeyboard()) {
       messageInputEl.focus();
     } else {
-      // Mobile: scroll input into view and to end of game output
+      // Mobile: scroll input to end horizontally (keep page position unchanged)
       messageInputEl.scrollLeft = messageInputEl.scrollWidth;
-      // Scroll game output to show input at bottom
-      const gameOutput = document.getElementById('gameOutput');
-      if (gameOutput) {
-        scrollToBottom(gameOutput);
-      }
+      // Don't scroll game output - keep user's current scroll position
     }
   };
 
@@ -404,12 +400,13 @@ export function initKeyboardInput() {
       return; // Feature disabled by user
     }
 
-    // Detect scrolling/dragging - if finger moved more than 80px, user was scrolling
+    // Detect scrolling/dragging - if finger moved more than 10px, user was scrolling
+    // Using industry standard threshold (10px) to distinguish tap from scroll
     if (touchStartX !== null && touchStartY !== null) {
       const deltaX = Math.abs(clientX - touchStartX);
       const deltaY = Math.abs(clientY - touchStartY);
 
-      if (deltaX > 80 || deltaY > 80) {
+      if (deltaX > 10 || deltaY > 10) {
         // User was scrolling, not tapping
         e.preventDefault();
         e.stopPropagation(); // Prevent bubbling to parent gameOutput listener
