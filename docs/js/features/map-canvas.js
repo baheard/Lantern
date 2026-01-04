@@ -685,7 +685,15 @@ function showOnboardingOrHint() {
 // ============================================================================
 
 export function showMap() {
-  if (!container) initMapCanvas();
+  const wasFirstOpen = !container;
+  if (wasFirstOpen) initMapCanvas();
+
+  // On first open, load map for current game (gameLoaded event already fired before map module loaded)
+  if (wasFirstOpen && window._inGame) {
+    const gameName = localStorage.getItem('iftalk_last_game')?.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+    if (gameName) loadMapForGame(gameName);
+  }
+
   container.classList.remove('hidden');
   setIsVisible(true);
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
