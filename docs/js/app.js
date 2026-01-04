@@ -44,8 +44,9 @@ import { initSaveHandlers, quickSave, quickLoad } from './game/save-manager.js';
 import { initGameSelection } from './game/game-loader.js';
 
 // Features
-import './features/auto-mapper.js';  // Auto-mapping location tracker
-import { initMapCanvas, toggleMap, showMap } from './features/map-canvas.js';  // Interactive game map
+import './features/auto-mapper.js';  // Auto-mapping location tracker (lightweight, must run always)
+// Map canvas UI (~2500 lines) lazy loaded on demand
+let mapModule = null;
 
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
@@ -677,12 +678,16 @@ async function initApp() {
     });
   }
 
-  // Initialize map canvas
-  initMapCanvas();
+  // Initialize map canvas - lazy load on first use
   const mapBtn = document.getElementById('mapBtn');
   if (mapBtn) {
-    mapBtn.addEventListener('click', () => {
-      showMap();
+    mapBtn.addEventListener('click', async () => {
+      if (!mapModule) {
+        // First time opening map - load UI modules dynamically (~2500 lines)
+        mapModule = await import('./features/map-canvas.js');
+        mapModule.initMapCanvas();
+      }
+      mapModule.showMap();
     });
   }
 
