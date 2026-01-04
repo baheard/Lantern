@@ -10,7 +10,7 @@ import { updateStatus } from '../utils/status.js';
 import { updateNavButtons } from '../ui/nav-buttons.js';
 import { stopNarration } from '../narration/tts-player.js';
 import { createVoxGlk, sendInput, getInputType } from './voxglk.js';
-import { updateCurrentGameDisplay, reloadSettingsForGame } from '../ui/settings/index.js';
+import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
 
@@ -67,6 +67,9 @@ export async function startGame(gamePath, onOutput) {
     if (messageInputRow) messageInputRow.classList.remove('hidden');
     const charInputPanel = document.getElementById('charInputPanel');
     if (charInputPanel) charInputPanel.classList.add('hidden'); // Hidden initially, shown by updateInputVisibility
+
+    // Update settings context to show game-specific items (map button, etc.)
+    updateSettingsContext();
 
     // Initialize keyboard input
     const { initKeyboardInput } = await import('../input/keyboard/index.js');
@@ -236,6 +239,9 @@ export async function startGame(gamePath, onOutput) {
     // Clear last game so we don't auto-retry on refresh
     localStorage.removeItem('iftalk_last_game');
 
+    // Update settings context to hide game-specific items (map button, etc.)
+    updateSettingsContext();
+
     // Show error to user
     alert('Failed to load game: ' + error.message);
   }
@@ -277,6 +283,9 @@ export function unloadGame() {
   // Clear game state
   window._inGame = false;
   localStorage.removeItem('iftalk_last_game');
+
+  // Update settings context to hide game-specific items (map button, etc.)
+  updateSettingsContext();
 
   // Update status
   updateStatus('Select a game to start');
