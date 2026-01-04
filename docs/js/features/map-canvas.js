@@ -686,11 +686,13 @@ function showOnboardingOrHint() {
 
 export function showMap() {
   const wasFirstOpen = !container;
+  console.log('[MapCanvas] showMap() called, wasFirstOpen:', wasFirstOpen);
   if (wasFirstOpen) initMapCanvas();
 
   // On first open, load map for current game (gameLoaded event already fired before map module loaded)
   if (wasFirstOpen && window._inGame) {
     const gameName = localStorage.getItem('iftalk_last_game')?.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+    console.log('[MapCanvas] First open, loading map for game:', gameName);
     if (gameName) loadMapForGame(gameName);
   }
 
@@ -782,20 +784,42 @@ function loadMapForGame(gameName) {
  * This ensures we don't lose locations visited before opening the map
  */
 function syncFromAutoMapper() {
-  if (!mapState.autoMapEnabled) return;
+  console.log('[MapCanvas] syncFromAutoMapper() called');
+  console.log('[MapCanvas] autoMapEnabled:', mapState.autoMapEnabled);
 
-  const autoMapperData = getMapData();
-  if (!autoMapperData || !autoMapperData.journey || autoMapperData.journey.length === 0) {
+  if (!mapState.autoMapEnabled) {
+    console.log('[MapCanvas] Auto-map disabled, skipping sync');
     return;
   }
 
+  const autoMapperData = getMapData();
+  console.log('[MapCanvas] Auto-mapper data:', {
+    gameName: autoMapperData?.gameName,
+    locationCount: autoMapperData?.locations?.length,
+    journeyCount: autoMapperData?.journey?.length,
+    journey: autoMapperData?.journey
+  });
+
+  if (!autoMapperData || !autoMapperData.journey || autoMapperData.journey.length === 0) {
+    console.log('[MapCanvas] No journey data to sync');
+    return;
+  }
+
+  console.log('[MapCanvas] Starting journey replay...');
   // Replay the journey to create nodes/edges for locations we missed
   let previousLocation = null;
   for (const visit of autoMapperData.journey) {
     const locationName = visit.locationName;
+    console.log('[MapCanvas] Processing location:', locationName, 'from:', previousLocation, 'via:', visit.command);
 
     // Skip if location was deleted by user or already exists
-    if (mapState.deletedNodes.has(locationName) || mapState.nodes.has(locationName)) {
+    if (mapState.deletedNodes.has(locationName)) {
+      console.log('[MapCanvas] Skipping deleted location:', locationName);
+      previousLocation = locationName;
+      continue;
+    }
+    if (mapState.nodes.has(locationName)) {
+      console.log('[MapCanvas] Location already exists:', locationName);
       previousLocation = locationName;
       continue;
     }
@@ -810,11 +834,14 @@ function syncFromAutoMapper() {
       }
     };
 
+    console.log('[MapCanvas] Calling handleLocationChange for:', locationName);
     // Reuse the existing handleLocationChange logic
     handleLocationChange(event);
+    console.log('[MapCanvas] After handleLocationChange, node count:', mapState.nodes.size);
 
     previousLocation = locationName;
   }
+  console.log('[MapCanvas] Journey replay complete. Total nodes:', mapState.nodes.size);
 }
 
 /**
