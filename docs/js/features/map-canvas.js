@@ -686,14 +686,24 @@ function showOnboardingOrHint() {
 
 export function showMap() {
   const wasFirstOpen = !container;
-  console.log('[MapCanvas] showMap() called, wasFirstOpen:', wasFirstOpen);
-  if (wasFirstOpen) initMapCanvas();
+  console.log('[MapCanvas] showMap() called');
+  console.log('[MapCanvas]   - container exists:', !!container);
+  console.log('[MapCanvas]   - wasFirstOpen:', wasFirstOpen);
+  console.log('[MapCanvas]   - window._inGame:', window._inGame);
+  console.log('[MapCanvas]   - last game:', localStorage.getItem('iftalk_last_game'));
+
+  if (wasFirstOpen) {
+    console.log('[MapCanvas] First open - calling initMapCanvas()');
+    initMapCanvas();
+  }
 
   // On first open, load map for current game (gameLoaded event already fired before map module loaded)
   if (wasFirstOpen && window._inGame) {
     const gameName = localStorage.getItem('iftalk_last_game')?.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
     console.log('[MapCanvas] First open, loading map for game:', gameName);
     if (gameName) loadMapForGame(gameName);
+  } else {
+    console.log('[MapCanvas] NOT loading map - wasFirstOpen:', wasFirstOpen, 'inGame:', window._inGame);
   }
 
   container.classList.remove('hidden');
