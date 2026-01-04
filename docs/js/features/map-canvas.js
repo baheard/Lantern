@@ -761,8 +761,52 @@ function loadMapForGame(gameName) {
       if (data.currentNodeId) mapState.currentNodeId = data.currentNodeId;
     } catch (e) { console.error('[MapCanvas] Failed to load map:', e); resetMap(); }
   } else { resetMap(); }
+
+  // Sync any locations tracked by auto-mapper that aren't in the map yet
+  syncFromAutoMapper();
+
   updateNodeCount();
   if (isVisible) render();
+}
+
+/**
+ * Sync locations from auto-mapper that were tracked before map UI loaded
+ * This ensures we don't lose locations visited before opening the map
+ */
+function syncFromAutoMapper() {
+  if (!mapState.autoMapEnabled) return;
+
+  const autoMapperData = getMapData();
+  if (!autoMapperData || !autoMapperData.journey || autoMapperData.journey.length === 0) {
+    return;
+  }
+
+  // Replay the journey to create nodes/edges for locations we missed
+  let previousLocation = null;
+  for (const visit of autoMapperData.journey) {
+    const locationName = visit.locationName;
+
+    // Skip if location was deleted by user or already exists
+    if (mapState.deletedNodes.has(locationName) || mapState.nodes.has(locationName)) {
+      previousLocation = locationName;
+      continue;
+    }
+
+    // Create a "fake" locationChanged event to use existing logic
+    const event = {
+      detail: {
+        locationId: locationName,
+        locationName: locationName,
+        previousLocationId: previousLocation,
+        command: visit.command
+      }
+    };
+
+    // Reuse the existing handleLocationChange logic
+    handleLocationChange(event);
+
+    previousLocation = locationName;
+  }
 }
 
 /**

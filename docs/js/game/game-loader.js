@@ -208,14 +208,6 @@ export async function startGame(gamePath, onOutput) {
     // Save as last played game for auto-resume
     localStorage.setItem('iftalk_last_game', gamePath);
 
-    // Initialize map canvas (but don't show UI) so it can track locations from the start
-    // This is lazy-loaded but initialized early to capture all location changes
-    if (!window._mapModuleInitialized) {
-      const mapModule = await import('../features/map-canvas.js');
-      mapModule.initMapCanvas();
-      window._mapModuleInitialized = true;
-    }
-
     // Reset narration state
     resetNarrationState();
     updateNavButtons();

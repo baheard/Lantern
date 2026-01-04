@@ -678,18 +678,15 @@ async function initApp() {
     });
   }
 
-  // Initialize map canvas - lazy load on first use (or use already-initialized module)
+  // Initialize map canvas - lazy load on first use
   const mapBtn = document.getElementById('mapBtn');
   if (mapBtn) {
     mapBtn.addEventListener('click', async () => {
       if (!mapModule) {
-        // Load map module (may already be initialized by game-loader)
+        // First time opening map - load UI modules dynamically (~2500 lines)
+        // Auto-mapper has been tracking locations since game start
         mapModule = await import('./features/map-canvas.js');
-        // Init is safe to call multiple times (idempotent)
-        if (!window._mapModuleInitialized) {
-          mapModule.initMapCanvas();
-          window._mapModuleInitialized = true;
-        }
+        mapModule.initMapCanvas();
       }
       mapModule.showMap();
     });
