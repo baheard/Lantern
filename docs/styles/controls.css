@@ -430,7 +430,7 @@
 }
 
 /* Status Bar */
-.status {
+.status:not(.hidden) {
   position: relative; /* For ::after pseudo-element */
   padding: 6px 16px;
   background: var(--bg-surface);
