@@ -68,11 +68,25 @@ export function processVoiceKeywords(transcript, handlers, confidence = null) {
     return false;
   }
 
-  // During narration, block game commands but show what was said
+  // During narration, allow navigation commands but block game commands
   if (state.isNarrating && !state.pausedForSound) {
+    // Allow these navigation commands to interrupt narration
+    const navigationCommands = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
+                                'end', 'skip all', 'skip to end', 'skip to the end'];
+
+    // Also allow "skip N" and "back N" patterns
+    const skipNPattern = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+    const backNPattern = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+
+    if (navigationCommands.includes(lower) || skipNPattern.test(lower) || backNPattern.test(lower)) {
+      // Let navigation commands pass through
+      return transcript;
+    }
+
+    // Block other commands and show what was said
     displayBlockedCommand(transcript, confidence);
     playBlockedCommand();
-    updateStatus('Say "End" to stop narration');
+    updateStatus('Say "Stop" to skip narration');
     return false;
   }
 
