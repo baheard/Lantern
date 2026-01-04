@@ -301,7 +301,7 @@
   }
 
   /* Status bar - slim */
-  .status {
+  .status:not(.hidden) {
     padding: 2px 12px;
     font-size: 11px;
     display: flex !important;
@@ -333,10 +333,11 @@
     overflow-x: hidden;
   }
 
-  /* Status bar: fixed to top on mobile */
+  /* Status bar: fixed to top on mobile, accounting for phone status bar */
   #statusBar {
     position: sticky;
     top: 0;
+    padding-top: env(safe-area-inset-top);
   }
 
   /* Upper window: scrolls with content */

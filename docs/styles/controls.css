@@ -1,7 +1,7 @@
 /* Controls - Navigation Buttons, Input Controls, Message Row, Char Panel */
 
 /* Controls Wrapper */
-.controls-wrapper {
+.controls-wrapper:not(.hidden) {
   background: var(--bg-surface);
   width: 100%;
   border-top: 1px solid var(--border-subtle);
@@ -431,6 +431,7 @@
 
 /* Status Bar */
 .status {
+  position: relative; /* For ::after pseudo-element */
   padding: 6px 16px;
   background: var(--bg-surface);
   color: var(--text-secondary);
@@ -440,6 +441,21 @@
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  /* Safe area inset for iOS home indicator - reduced size (1/4 of default) */
+  padding-bottom: max(6px, calc(6px + env(safe-area-inset-bottom) * 0.25));
+}
+
+/* Extend dark background below status bar into safe area */
+.status::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
+  background: var(--bg-primary);
+  transform: translateY(100%);
+  z-index: -1;
 }
 
 .status-text {

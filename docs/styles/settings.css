@@ -1152,6 +1152,11 @@
   overflow: hidden;
 }
 
+/* Hide navigation controls when voice controls hidden */
+body.voice-controls-hidden .controls {
+  display: none !important;
+}
+
 /* Settings icon repositioning when voice controls hidden */
 body.voice-controls-hidden #settings-btn {
   position: absolute;

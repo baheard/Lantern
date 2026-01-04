@@ -146,8 +146,27 @@ export function initKeyboardInput() {
 
   // Send button - sends the command without opening keyboard
   if (sendBtnEl) {
+    // Capture keyboard state on mousedown/touchstart (before blur happens)
+    let sendBtnKeyboardCapture = false;
+    const captureSendBtnKeyboardState = () => {
+      const inputFocused = document.activeElement === messageInputEl;
+
+      // Restore focus if:
+      // - Input is focused AND keyboard is visible (mobile with keyboard up)
+      // - OR input is focused and no visualViewport API (desktop)
+      const shouldKeepFocus = inputFocused && (keyboardIsOpen || !window.visualViewport);
+
+      sendBtnKeyboardCapture = shouldKeepFocus;
+    };
+    sendBtnEl.addEventListener('mousedown', captureSendBtnKeyboardState);
+    sendBtnEl.addEventListener('touchstart', captureSendBtnKeyboardState, { passive: true });
+
     sendBtnEl.addEventListener('click', () => {
       sendCommand();
+      // Restore focus if it was focused before clicking send button
+      if (sendBtnKeyboardCapture && messageInputEl) {
+        messageInputEl.focus();
+      }
     });
   }
 
@@ -318,8 +337,8 @@ export function initKeyboardInput() {
         prefixLength = 1;
       }
 
-      // Append the new word
-      messageInputEl.value = `${currentValue} ${word}`;
+      // Append the new word with trailing space for easier continuation
+      messageInputEl.value = `${currentValue} ${word} `;
 
       // Re-select the prefix if it exists (only if input will be/is focused)
       if (prefixLength > 0 && (hasPhysicalKeyboard() || document.activeElement === messageInputEl)) {
@@ -331,9 +350,17 @@ export function initKeyboardInput() {
       populatedWordLength = word.length;
     }
 
-    // Focus on desktop only (mobile keyboard stays closed)
+    // Focus on desktop, scroll to input on mobile
     if (hasPhysicalKeyboard()) {
       messageInputEl.focus();
+    } else {
+      // Mobile: scroll input into view and to end of game output
+      messageInputEl.scrollLeft = messageInputEl.scrollWidth;
+      // Scroll game output to show input at bottom
+      const gameOutput = document.getElementById('gameOutput');
+      if (gameOutput) {
+        scrollToBottom(gameOutput);
+      }
     }
   };
 
@@ -377,12 +404,12 @@ export function initKeyboardInput() {
       return; // Feature disabled by user
     }
 
-    // Detect scrolling/dragging - if finger moved more than 50px, user was scrolling
+    // Detect scrolling/dragging - if finger moved more than 80px, user was scrolling
     if (touchStartX !== null && touchStartY !== null) {
       const deltaX = Math.abs(clientX - touchStartX);
       const deltaY = Math.abs(clientY - touchStartY);
 
-      if (deltaX > 50 || deltaY > 50) {
+      if (deltaX > 80 || deltaY > 80) {
         // User was scrolling, not tapping
         e.preventDefault();
         e.stopPropagation(); // Prevent bubbling to parent gameOutput listener
@@ -425,11 +452,8 @@ export function initKeyboardInput() {
       e.stopPropagation();
       populateInputWithWord(wordData.word);
     } else {
-      // No word found (whitespace) - clear input
-      e.preventDefault();
-      e.stopPropagation();
-      messageInputEl.value = '';
-      // Focus on desktop only (mobile keyboard stays closed)
+      // No word found (whitespace) - just focus on desktop
+      // Don't clear input to allow intentional blank clicks without losing work
       if (hasPhysicalKeyboard()) {
         messageInputEl.focus();
       }
@@ -459,16 +483,23 @@ export function initKeyboardInput() {
     'examine', 'x',
     'take', 'get',
     'drop', 'put',
+    'insert',
     'inventory', 'i',
     'open', 'close',
+    'lock', 'unlock',
     'push', 'pull',
     'turn', 'switch',
+    'move',
+    'climb', 'enter', 'exit',
     'read',
+    'listen', 'smell', 'taste',
     'eat', 'drink',
     'wear', 'remove',
     'give',
-    'talk', 'ask', 'tell',
+    'talk', 'ask', 'tell', 'say',
     'wait', 'z',
+    'search',
+    'light', 'extinguish',
     'save', 'restore',
     'quit', 'q',
     'help',
@@ -588,6 +619,15 @@ export function initKeyboardInput() {
       // Keyboard opened if viewport shrunk by >100px from baseline
       const wasOpen = keyboardIsOpen;
       keyboardIsOpen = heightDiff > 100;
+
+      // #7: Adjust container height to fit visual viewport when keyboard opens
+      // This prevents content from going off-screen at the top
+      const gameOutput = document.getElementById('gameOutput');
+      if (gameOutput) {
+        // Use visual viewport height as the container height
+        // This ensures content stays within visible area even with keyboard up
+        gameOutput.style.maxHeight = `${currentHeight}px`;
+      }
 
       if (wasOpen !== keyboardIsOpen) {
         // When keyboard closes, clear text selection and blur input

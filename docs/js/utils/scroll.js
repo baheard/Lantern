@@ -38,6 +38,7 @@ export function scrollToTop(container) {
  * Scrolls toward bottom, but stops if top of new content would go off-screen.
  * Rule: Always keep the top of new text visible.
  * Accounts for mobile keyboard using Visual Viewport API.
+ * Smart keyboard blur: If new content doesn't fit with keyboard up, blur keyboard first.
  *
  * @param {HTMLElement} newElement - The newly added content element
  * @param {HTMLElement} [container] - Container to scroll (defaults to gameOutput)
@@ -61,6 +62,27 @@ export function scrollToNewContent(newElement, container) {
   const visibleHeight = vv ? vv.height : window.innerHeight;
   const viewportOffset = vv ? vv.offsetTop : 0;
 
+  // Smart keyboard blur (#8): If new content won't fit in visible viewport, blur keyboard first
+  // This gives more screen space and prevents text from going off-screen
+  if (vv && vv.height < window.innerHeight) {
+    // Keyboard is open (visual viewport is smaller than window)
+    const newContentHeight = newElementRect.height;
+    const availableHeight = visibleHeight - 100; // Reserve space for controls/margins
+
+    // If new content is taller than available space, blur keyboard to show more
+    if (newContentHeight > availableHeight) {
+      const messageInput = document.getElementById('messageInput');
+      if (messageInput && document.activeElement === messageInput) {
+        messageInput.blur(); // Close keyboard
+        // Give time for keyboard to close and viewport to resize, then scroll
+        setTimeout(() => {
+          scrollToNewContentDelayed(newElement, el);
+        }, 150);
+        return;
+      }
+    }
+  }
+
   // Position text near the top of the visible area to maximize content shown
   // 22px buffer: tested sweet spot that prevents text cutoff while maximizing visible content
   // Add viewport offset to account for when visual viewport has shifted
@@ -76,6 +98,33 @@ export function scrollToNewContent(newElement, container) {
   const finalScroll = Math.min(scrollToBottom, targetScroll);
 
   el.scrollTo({
+    top: finalScroll,
+    behavior: 'smooth'
+  });
+}
+
+/**
+ * Helper function for delayed scroll after keyboard closes
+ * @param {HTMLElement} newElement - The newly added content element
+ * @param {HTMLElement} container - Container to scroll
+ */
+function scrollToNewContentDelayed(newElement, container) {
+  if (!container || !newElement) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const newElementRect = newElement.getBoundingClientRect();
+  const targetPositionInContent = container.scrollTop + (newElementRect.top - containerRect.top);
+
+  // After keyboard closes, use full window height
+  const vv = window.visualViewport;
+  const viewportOffset = vv ? vv.offsetTop : 0;
+  const bufferFromTop = 22 + viewportOffset;
+
+  const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
+  const scrollToBottom = container.scrollHeight - container.clientHeight;
+  const finalScroll = Math.min(scrollToBottom, targetScroll);
+
+  container.scrollTo({
     top: finalScroll,
     behavior: 'smooth'
   });

@@ -56,9 +56,11 @@ export async function startGame(gamePath, onOutput) {
       history.pushState({ screen: 'game', gamePath }, '', null);
     }
 
-    // Show controls wrapper and message input
+    // Show controls wrapper, status bar, and message input
     const controlsWrapper = document.getElementById('controlsWrapper');
+    const status = document.getElementById('status');
     if (controlsWrapper) controlsWrapper.classList.remove('hidden');
+    if (status) status.classList.remove('hidden');
     const controls = document.getElementById('controls');
     if (controls) controls.classList.remove('hidden');
     const messageInputRow = document.getElementById('messageInputRow');
@@ -225,9 +227,11 @@ export async function startGame(gamePath, onOutput) {
     const welcome = document.getElementById('welcome');
     const gameOutput = document.getElementById('gameOutput');
     const controlsWrapper = document.getElementById('controlsWrapper');
+    const status = document.getElementById('status');
     if (welcome) welcome.classList.remove('hidden');
     if (gameOutput) gameOutput.classList.add('hidden');
     if (controlsWrapper) controlsWrapper.classList.add('hidden');
+    if (status) status.classList.add('hidden');
 
     // Clear last game so we don't auto-retry on refresh
     localStorage.removeItem('iftalk_last_game');
@@ -264,9 +268,11 @@ export function unloadGame() {
   if (gameOutput) gameOutput.classList.add('hidden');
   if (welcome) welcome.classList.remove('hidden');
 
-  // Hide controls wrapper
+  // Hide controls wrapper and status bar
   const controlsWrapper = document.getElementById('controlsWrapper');
+  const status = document.getElementById('status');
   if (controlsWrapper) controlsWrapper.classList.add('hidden');
+  if (status) status.classList.add('hidden');
 
   // Clear game state
   window._inGame = false;

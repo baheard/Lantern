@@ -19,7 +19,7 @@ export const APP_COMMANDS = {
 
   // Audio control
   MUTE: ['mute'],
-  UNMUTE: ['unmute', 'on mute', 'un mute'],
+  UNMUTE: [], // Disabled - use lock screen instead
   STATUS: ['status'],
 
   // Quick save/load (voice commands)
@@ -30,7 +30,7 @@ export const APP_COMMANDS = {
   RESTORE_LATEST: ['load game', 'restore game'],
 
   // Meta-commands (typed commands that interact with save system)
-  HELP: ['help', 'commands'],
+  HELP: [], // Disabled to allow game's help command
   SAVE: ['save'],
   RESTORE_META: ['restore', 'load'],
   DELETE: ['delete save', 'delete'],

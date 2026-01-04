@@ -393,7 +393,7 @@ export function displayBlockedCommand(command, confidence = null) {
   const displayText = escapeHtml(command);
   const confidenceLabel = confidence !== null ? ` (${Math.round(confidence * 100)}%)` : '';
 
-  div.innerHTML = `<span class="command-label">&gt;</span><span class="command-text">${displayText}</span>${confidenceLabel} <span class="blocked-message">— game commands blocked during narration</span>`;
+  div.innerHTML = `<span class="command-label">&gt;</span><span class="command-text">${displayText}</span>${confidenceLabel} <span class="blocked-message">— game commands blocked during narration. Say "pause" or "skip" to control playback.</span>`;
 
   // Add to game output
   if (state.currentGameTextElement) {
