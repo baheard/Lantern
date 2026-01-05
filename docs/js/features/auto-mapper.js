@@ -7,11 +7,14 @@
  */
 
 // Map data structure per game
+// Journey is all we need! It contains:
+// - All locations (with revisits)
+// - All connections (implicit in sequence)
+// - All commands (for edge labels)
+// - Spatial info (via direction commands)
 let mapData = {
   gameName: null,
-  locations: new Map(),  // locationName -> { name, visits, firstVisit, lastVisit }
-  journey: [],           // Array of { locationName, turn, timestamp, command }
-  connections: new Map() // locationName -> Map of connected locationNames with commands
+  journey: []  // Array of { locationName, command }
 };
 
 // Track last known location and command
@@ -148,13 +151,11 @@ export function checkLocationChange(statusBarText, generation) {
     const previousLocationName = lastLocationName;
     lastLocationName = location.name;
 
-    // Record the location
-    recordLocation(location, generation);
-
-    // Record connection if we moved from a previous location
-    if (previousLocationName !== null && lastCommand) {
-      recordConnection(previousLocationName, location.name, lastCommand);
-    }
+    // Add to journey (that's all we need!)
+    mapData.journey.push({
+      locationName: location.name,
+      command: lastCommand
+    });
 
     // Dispatch event for other modules to listen
     // Use location name as the identifier (no more object IDs)
@@ -172,59 +173,6 @@ export function checkLocationChange(statusBarText, generation) {
 }
 
 /**
- * Record a location visit
- * @param {{ name: string }} location
- * @param {number} generation
- */
-function recordLocation(location, generation) {
-  const existing = mapData.locations.get(location.name);
-  const now = Date.now();
-
-  if (existing) {
-    existing.visits++;
-    existing.lastVisit = now;
-    existing.lastTurn = generation;
-  } else {
-    mapData.locations.set(location.name, {
-      name: location.name,
-      visits: 1,
-      firstVisit: now,
-      lastVisit: now,
-      firstTurn: generation,
-      lastTurn: generation
-    });
-  }
-
-  // Add to journey
-  mapData.journey.push({
-    locationName: location.name,
-    turn: generation,
-    timestamp: now,
-    command: lastCommand
-  });
-}
-
-/**
- * Record a connection between two locations
- * @param {string} fromName - Source location name
- * @param {string} toName - Destination location name
- * @param {string} command - The command that caused the movement
- */
-function recordConnection(fromName, toName, command) {
-  if (!mapData.connections.has(fromName)) {
-    mapData.connections.set(fromName, new Map());
-  }
-
-  const fromConnections = mapData.connections.get(fromName);
-
-  // Store the command used to reach this destination
-  if (!fromConnections.has(toName)) {
-    fromConnections.set(toName, new Set());
-  }
-  fromConnections.get(toName).add(command);
-}
-
-/**
  * Set the last command (called before VM processes it)
  * @param {string} command
  */
@@ -239,32 +187,17 @@ export function setLastCommand(command) {
 export function getMapData() {
   return {
     gameName: mapData.gameName,
-    locations: Array.from(mapData.locations.values()),
-    journey: mapData.journey,
-    connections: serializeConnections()
+    journey: mapData.journey
   };
 }
 
 /**
- * Serialize connections map for export
- */
-function serializeConnections() {
-  const result = {};
-  for (const [fromId, toMap] of mapData.connections) {
-    result[fromId] = {};
-    for (const [toId, commands] of toMap) {
-      result[fromId][toId] = Array.from(commands);
-    }
-  }
-  return result;
-}
-
-/**
- * Get visited locations count
+ * Get visited locations count (count unique names in journey)
  * @returns {number}
  */
 export function getVisitedCount() {
-  return mapData.locations.size;
+  const uniqueLocations = new Set(mapData.journey.map(j => j.locationName));
+  return uniqueLocations.size;
 }
 
 /**
@@ -272,13 +205,49 @@ export function getVisitedCount() {
  * @param {string} gameName
  */
 export function initAutoMapper(gameName) {
-  mapData = {
-    gameName,
-    locations: new Map(),
-    journey: [],
-    connections: new Map()
-  };
-  lastLocationName = null;
+  // Check for restored auto-mapper data from save file
+  const restoreKey = `iftalk_automapper_restore_${gameName}`;
+  const restoredDataStr = localStorage.getItem(restoreKey);
+
+  if (restoredDataStr) {
+    try {
+      const restoredData = JSON.parse(restoredDataStr);
+
+      mapData = {
+        gameName,
+        journey: restoredData.journey || []
+      };
+
+      // Set last location from journey
+      if (restoredData.journey && restoredData.journey.length > 0) {
+        const lastJourney = restoredData.journey[restoredData.journey.length - 1];
+        lastLocationName = lastJourney.locationName;
+      }
+
+      // Clean up restore key
+      localStorage.removeItem(restoreKey);
+
+      // Skip the starting location check since we restored from save
+      return;
+
+    } catch (error) {
+      console.error('Failed to restore auto-mapper data:', error);
+      // Fall back to fresh initialization
+      mapData = {
+        gameName,
+        journey: []
+      };
+      lastLocationName = null;
+    }
+  } else {
+    // No restored data - fresh start
+    mapData = {
+      gameName,
+      journey: []
+    };
+    lastLocationName = null;
+  }
+
   lastCommand = null;
 
   // Expose helper to window for debugging
@@ -317,9 +286,7 @@ export function initAutoMapper(gameName) {
 export function resetAutoMapper() {
   mapData = {
     gameName: null,
-    locations: new Map(),
-    journey: [],
-    connections: new Map()
+    journey: []
   };
   lastLocationName = null;
   lastCommand = null;
@@ -331,6 +298,25 @@ export function resetAutoMapper() {
  */
 export function getLastLocationName() {
   return lastLocationName;
+}
+
+/**
+ * Set current location (used when restoring from map canvas)
+ * @param {string} locationName - Current location name
+ * @param {string} gameName - Game name
+ */
+export function setCurrentLocation(locationName, gameName) {
+  lastLocationName = locationName;
+  mapData.gameName = gameName;
+}
+
+/**
+ * Clear journey after transferring to map canvas
+ * Journey will start fresh, tracking only new moves since map was last opened
+ * This keeps journey bounded and reduces save file size
+ */
+export function clearJourney() {
+  mapData.journey = [];
 }
 
 // Listen for game load events

@@ -167,13 +167,12 @@ async function getOptimizedMapData(gameName) {
 
             // Return BOTH map canvas and auto-mapper
             // Map canvas: positions, notes, edits (may be stale on nodes/edges)
-            // Auto-mapper: current graph state (always up-to-date)
+            // Auto-mapper: journey only (new moves since last map open)
+            // Journey will be cleared when map is opened, keeping saves small
             return {
                 mapCanvas: optimized,
                 autoMapper: {
-                    locations: autoMapperData.locations,
-                    connections: autoMapperData.connections,
-                    currentLocation: getLastLocationName()
+                    journey: autoMapperData.journey
                 }
             };
 
@@ -185,16 +184,14 @@ async function getOptimizedMapData(gameName) {
 
     // Map canvas doesn't exist - try auto-mapper data only
     try {
-        const { getMapData, getLastLocationName } = await import('../features/auto-mapper.js');
+        const { getMapData } = await import('../features/auto-mapper.js');
         const autoMapperData = getMapData();
-        if (autoMapperData && autoMapperData.locations && autoMapperData.locations.length > 0) {
+        if (autoMapperData && autoMapperData.journey && autoMapperData.journey.length > 0) {
             // Return ONLY auto-mapper (map never opened)
-            // Save graph only (locations + connections), not full journey
+            // Save journey only - will be parsed on first map open
             return {
                 autoMapper: {
-                    locations: autoMapperData.locations,
-                    connections: autoMapperData.connections,
-                    currentLocation: getLastLocationName()
+                    journey: autoMapperData.journey
                 }
             };
         }
@@ -218,21 +215,14 @@ async function restoreMapData(optimizedMapData, gameName) {
     // Restore auto-mapper data if present
     if (optimizedMapData.autoMapper) {
         try {
-            console.log('[RESTORE] Restoring auto-mapper data');
-            console.log('[RESTORE] Journey to restore:', optimizedMapData.autoMapper.journey?.map(j => j.locationName));
-
             const { initAutoMapper } = await import('../features/auto-mapper.js');
             // Store the data temporarily in a special key
             const autoMapperKey = `iftalk_automapper_restore_${gameName}`;
             localStorage.setItem(autoMapperKey, JSON.stringify(optimizedMapData.autoMapper));
 
-            console.log('[RESTORE] Stored in restore key, calling initAutoMapper()');
-
             // Immediately restore auto-mapper state to memory
             // (gameLoaded event doesn't fire on quickload/restore, only on initial game load)
             initAutoMapper(gameName);
-
-            console.log('[RESTORE] initAutoMapper() completed');
         } catch (error) {
             console.error('Failed to restore auto-mapper data:', error);
         }
@@ -285,11 +275,11 @@ async function restoreMapData(optimizedMapData, gameName) {
             localStorage.setItem(mapKey, JSON.stringify(mapData));
 
             // Set auto-mapper current location so it can track from here
-            // Then clear historical data since map canvas now has everything
-            // Auto-mapper will rebuild as player explores new areas
-            const { setCurrentLocation, clearHistoricalData } = await import('../features/auto-mapper.js');
+            // Then clear journey since map canvas now has everything
+            // Auto-mapper will track only new moves from this point
+            const { setCurrentLocation, clearJourney } = await import('../features/auto-mapper.js');
             setCurrentLocation(mapData.currentNodeId, gameName);
-            clearHistoricalData();
+            clearJourney();
 
         } catch (error) {
             console.error('Failed to restore map canvas data:', error);
@@ -566,25 +556,19 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             }
 
             // Restore map data if present
-            console.log('[RESTORE-CHECK] Has mapData:', !!saveData.mapData, 'Has gameName:', !!saveData.gameName);
             if (saveData.mapData && saveData.gameName) {
-                console.log('[RESTORE-CHECK] Condition passed, decompressing...');
                 let mapDataStr = saveData.mapData;
                 if (saveData.mapDataCompressed) {
                     mapDataStr = decompressString(saveData.mapData);
                 }
-                console.log('[RESTORE-CHECK] Decompressed, mapDataStr length:', mapDataStr?.length);
                 if (mapDataStr) {
                     try {
                         const optimizedMapData = JSON.parse(mapDataStr);
-                        console.log('[RESTORE-CHECK] Parsed, calling restoreMapData...');
                         await restoreMapData(optimizedMapData, saveData.gameName);
                     } catch (error) {
                         console.error('Failed to restore map data:', error);
                     }
                 }
-            } else {
-                console.log('[RESTORE-CHECK] Condition failed - skipping map restore');
             }
 
             // Restore narration position from old saves (backwards compatibility)
