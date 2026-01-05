@@ -59,6 +59,7 @@ export function initConfirmDialog() {
  * @param {string} options.title - Dialog title (default: 'Confirm')
  * @param {string} options.okText - OK button text (default: 'OK')
  * @param {string} options.cancelText - Cancel button text (default: 'Cancel')
+ * @param {boolean} options.okOnly - If true, hide cancel button (default: false)
  * @returns {Promise<boolean>} True if confirmed, false if cancelled
  */
 export function confirmDialog(message, options = {}) {
@@ -88,6 +89,13 @@ export function confirmDialog(message, options = {}) {
       cancelBtn.textContent = options.cancelText;
     } else if (cancelBtn) {
       cancelBtn.textContent = 'Cancel';
+    }
+
+    // Handle okOnly option - hide cancel button
+    if (options.okOnly && cancelBtn) {
+      cancelBtn.classList.add('hidden');
+    } else if (cancelBtn) {
+      cancelBtn.classList.remove('hidden');
     }
 
     // Show overlay

@@ -281,3 +281,83 @@ When user changes a setting:
 
 - `game-settings.js` - Storage API: `getGameSetting()`, `setGameSetting()`, `getAppDefault()`, `setAppDefault()`, `clearAllGameData()`, `clearAllAppData()`
 - `settings.js` - UI: `updateSettingsContext()`, `isOnWelcomeScreen()`
+
+## Save/Restore System (January 2026)
+
+### Save Naming Convention
+
+**All saves use `state.currentGameName` for consistency** (filename-based, not VM signature):
+
+```javascript
+state.currentGameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+// Example: "games/lostpig.z8" → "lostpig"
+```
+
+**Why filename, not VM signature?**
+- Available immediately (before VM loads)
+- Consistent with custom game tracking
+- Works for autosave checks on welcome screen
+- VM signature requires parsing game file first
+
+**All save types use the same naming:**
+- Autosave: `iftalk_autosave_${state.currentGameName}`
+- Quicksave: `iftalk_quicksave_${state.currentGameName}`
+- Custom save: `iftalk_customsave_${state.currentGameName}_${saveName}`
+
+### Save Data Structure
+
+Each save (compressed with pako.gzip):
+1. **Quetzal data** (VM state) - compressed, base64-encoded
+2. **Display HTML** - status bar, upper window, lower window (100 turns max, compressed)
+3. **Map data** (if auto-mapper used) - compressed
+4. **Metadata** - timestamp, game name, signature, VoxGlk state
+
+### Storage Estimates
+
+- **Per save**: 15-50KB (compressed, varies by game progress)
+- **Average**: ~30KB per save
+- **LocalStorage limit**: 5MB (Safari) to 10MB (Chrome/Firefox)
+- **Safe capacity** (50% buffer): ~2,560KB = **~85 total saves**
+- **For 10 games**:
+  - Auto/Quick system: 80 saves (8 per game: 1 autosave + 3 backups + 1 quicksave + 3 backups)
+  - Custom saves: **~5 total** across all games (or **3-4 per game** if playing fewer games)
+
+### Save Types
+
+**Autosave** (1 per game):
+- Saves automatically every turn
+- Restored on game load
+- Includes verification data (PC, stack depth, call stack depth)
+- **Backups**: 3 timestamped backups created every 5 minutes
+
+**Quicksave** (1 per game):
+- Manual save via Quick Save button or 'S' key
+- Loaded via Quick Load button or 'L' key
+- **Backups**: 3 timestamped backups created on each quicksave
+
+**Custom saves** (unlimited):
+- Created via in-game SAVE command
+- Loaded via in-game RESTORE command
+- Includes custom save name
+- **Backups**: 1 timestamped backup per custom save
+
+### Complete localStorage Key Reference
+
+| Key Pattern | Purpose |
+|-------------|---------|
+| `iftalk_app_defaults` | App-wide default settings (JSON) |
+| `gameSettings_{name}` | Per-game setting overrides (JSON) |
+| `iftalk_autosave_{name}` | Auto-save state for resume |
+| `iftalk_quicksave_{name}` | Manual quick save |
+| `iftalk_customsave_{name}_{saveName}` | Custom named saves |
+| `iftalk_backup_autosave_{name}_{timestamp}` | Autosave backups (3 per game, every 5 min) |
+| `iftalk_backup_quicksave_{name}_{timestamp}` | Quicksave backups (3 per game) |
+| `iftalk_backup_{type}_{name}_{timestamp}` | Other save type backups (1 each) |
+| `iftalk_last_game` | Last played game path (for auto-resume) |
+| `iftalk_custom_games` | User-uploaded game metadata |
+
+### Files
+
+- `save-manager.js` - Core save/restore system: `autoSave()`, `autoLoad()`, `quickSave()`, `quickLoad()`, `customSave()`, `customLoad()`
+- `game-loader.js` - Game loading and autosave detection
+- `storage-api.js` - Storage operations with compression

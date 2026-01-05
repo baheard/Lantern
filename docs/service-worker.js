@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.4.38';
+const CACHE_VERSION = 'v1.4.53';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -28,6 +28,7 @@ const CORE_ASSETS = [
   './styles/mobile.css',
   './styles/modals.css',
   './styles/settings.css',
+  './styles/sync-preview.css',
   './styles/variables.css',
   './styles/welcome.css',
   // JavaScript modules
@@ -60,6 +61,7 @@ const CORE_ASSETS = [
   './js/ui/game-output.js',
   './js/ui/history.js',
   './js/ui/nav-buttons.js',
+  './js/ui/sync-preview-modal.js',
   './js/ui/settings/data-management-ui.js',
   './js/ui/settings/gdrive-ui.js',
   './js/ui/settings/index.js',
@@ -72,6 +74,7 @@ const CORE_ASSETS = [
   './js/utils/gdrive/gdrive-auth.js',
   './js/utils/gdrive/gdrive-device.js',
   './js/utils/gdrive/gdrive-sync.js',
+  './js/utils/gdrive/gdrive-sync-preview.js',
   './js/utils/gdrive/index.js',
   './js/utils/lock-screen.js',
   './js/utils/offline-debug.js',
@@ -93,6 +96,7 @@ const CORE_ASSETS = [
   './lib/glkapi.js',
   './lib/glkote.css',
   './lib/glkote.js',
+  './lib/pako.min.js',
   './lib/zvm.js'
 ];
 

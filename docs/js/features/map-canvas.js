@@ -944,6 +944,116 @@ function performUndo() {
   saveMapForGame(true);  // Immediate save for undo operations
 }
 
+/**
+ * Sync map canvas from auto-mapper (for save operations)
+ * Updates the map canvas in localStorage without loading the full UI
+ * @param {string} gameName - Name of the current game
+ */
+export async function syncMapFromAutoMapper(gameName) {
+  if (!gameName) return;
+
+  // Get auto-mapper data
+  const { getMapData } = await import('./auto-mapper.js');
+  const autoMapperData = getMapData();
+
+  if (!autoMapperData || !autoMapperData.journey || autoMapperData.journey.length === 0) {
+    return; // No auto-mapper data to sync
+  }
+
+  // Load existing map canvas from localStorage
+  const mapKey = `iftalk_map_${gameName}`;
+  const existing = localStorage.getItem(mapKey);
+  if (!existing) {
+    return; // No map canvas to update
+  }
+
+  const mapData = JSON.parse(existing);
+  const existingNodes = new Map(mapData.nodes.map(n => [n.id, n]));
+  const existingEdges = new Map(mapData.edges.map(e => [e.from + '-' + e.to, e]));
+
+  // Track what we've added
+  let addedNodes = 0;
+  let addedEdges = 0;
+
+  // Replay journey to add missing nodes/edges
+  let previousLocation = null;
+  for (const visit of autoMapperData.journey) {
+    const locationName = visit.locationName;
+
+    // Skip deleted nodes
+    if (mapData.deletedNodes && mapData.deletedNodes.includes(locationName)) {
+      previousLocation = locationName;
+      continue;
+    }
+
+    // Add node if missing
+    if (!existingNodes.has(locationName)) {
+      // Auto-layout new node (simple positioning)
+      const x = existingNodes.size * 100;
+      const y = 0;
+
+      mapData.nodes.push({
+        id: locationName,
+        name: locationName,
+        x, y,
+        type: 'room',
+        notes: '',
+        isManual: false,
+        isEdited: false
+      });
+
+      existingNodes.set(locationName, true);
+      addedNodes++;
+
+      // Mark as protected (from auto-mapper)
+      if (!mapData.protectedNodes) mapData.protectedNodes = [];
+      if (!mapData.protectedNodes.includes(locationName)) {
+        mapData.protectedNodes.push(locationName);
+      }
+    }
+
+    // Add edge if missing
+    if (previousLocation && previousLocation !== locationName) {
+      const edgeKey = previousLocation + '-' + locationName;
+      const deletedEdgeKey = `${previousLocation}-${locationName}`;
+      const isDeleted = mapData.deletedEdges && mapData.deletedEdges.includes(deletedEdgeKey);
+
+      if (!existingEdges.has(edgeKey) && !isDeleted) {
+        mapData.edges.push({
+          from: previousLocation,
+          to: locationName,
+          command: visit.command || '',
+          connectionType: 'cardinal',
+          isManual: false,
+          isEdited: false
+        });
+
+        existingEdges.set(edgeKey, true);
+        addedEdges++;
+
+        // Mark edge as protected
+        if (!mapData.protectedEdges) mapData.protectedEdges = [];
+        if (!mapData.protectedEdges.includes(deletedEdgeKey)) {
+          mapData.protectedEdges.push(deletedEdgeKey);
+        }
+      }
+    }
+
+    previousLocation = locationName;
+  }
+
+  // Update current node if changed
+  if (autoMapperData.journey.length > 0) {
+    const lastVisit = autoMapperData.journey[autoMapperData.journey.length - 1];
+    mapData.currentNodeId = lastVisit.locationName;
+  }
+
+  // Save updated map canvas back to localStorage
+  if (addedNodes > 0 || addedEdges > 0) {
+    localStorage.setItem(mapKey, JSON.stringify(mapData));
+  }
+}
+
 // Debug exports
 window.showMap = showMap;
 window.hideMap = hideMap;

@@ -34,9 +34,13 @@
   <!-- ifvms ZVM interpreter -->
   <script src="lib/zvm.js"></script>
 
+  <!-- pako compression library (for save file compression) -->
+  <script src="lib/pako.min.js"></script>
+
   <!-- Google Identity Services loaded dynamically when online (see app.js) -->
 
   <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/sync-preview.css">
 
   <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content, viewport-fit=cover">
 
@@ -289,61 +293,33 @@
             <p class="setting-description" id="pwaInstallDescription">Install Voxi as a standalone app that works without internet</p>
           </div>
 
-          <!-- Cloud Sync submenu -->
-          <div class="settings-section collapsible collapsed" id="cloudSyncSubmenu">
-            <h4 class="section-header">Cloud Sync</h4>
-            <div class="section-content">
-              <!-- Auto-export toggle -->
-              <div class="setting-item">
-                <label>
-                  Auto-export
-                  <input type="checkbox" id="autoexportToggle" class="toggle-switch">
-                </label>
-                <p class="setting-description">Automatically sync saves to Google Drive</p>
-              </div>
+          <!-- Google Drive Sync -->
+          <div class="setting-item">
+            <!-- Not signed in: Show single sync button -->
+            <div id="gdriveSignInArea">
+              <button class="compact-btn quick-action-btn" id="gdriveSyncBtn">
+                <span class="material-icons">cloud</span> Sync with Google Drive
+              </button>
+              <p class="setting-description">Optional: Backup and sync saves across devices</p>
+            </div>
 
-              <!-- Sign-in area (shown when not signed in) -->
-              <div id="gdriveSignInArea">
-                <button class="btn btn-primary btn-full-width" id="gdriveSignInBtn">
-                  <span class="material-icons">cloud_upload</span>
-                  Sign in with Google
+            <!-- Signed in: Show import/export + connection status -->
+            <div id="gdriveAccountArea" class="hidden">
+              <div class="gdrive-header">
+                <span class="material-icons">cloud</span>
+                <span class="gdrive-label">Google Drive</span>
+              </div>
+              <div class="button-group">
+                <button class="compact-btn quick-action-btn" id="gdriveImportBtn">
+                  <span class="material-icons">cloud_download</span> Import Saves
                 </button>
-                <p class="settings-help">
-                  Optional: Enable cloud backup and sync across devices
-                </p>
+                <button class="compact-btn quick-action-btn" id="gdriveExportBtn">
+                  <span class="material-icons">cloud_upload</span> Export Saves
+                </button>
               </div>
-
-              <!-- Account area (shown when signed in) -->
-              <div id="gdriveAccountArea" class="hidden">
-                <div class="gdrive-account-info">
-                  <span class="material-icons">account_circle</span>
-                  <span id="gdriveEmail">user@example.com</span>
-                </div>
-
-                <div class="gdrive-sync-status">
-                  <span id="gdriveSyncStatus">Last synced: Never</span>
-                </div>
-
-                <div class="game-actions" style="margin-top: 15px;">
-                  <button class="btn btn-secondary btn-full-width" id="gdriveSyncToBtn">
-                    <span class="material-icons">cloud_upload</span>
-                    Sync to Drive
-                  </button>
-                </div>
-
-                <div class="game-actions" style="margin-top: 10px;">
-                  <button class="btn btn-secondary btn-full-width" id="gdriveSyncFromBtn">
-                    <span class="material-icons">cloud_download</span>
-                    Sync from Drive
-                  </button>
-                </div>
-
-                <div class="game-actions" style="margin-top: 10px;">
-                  <button class="btn btn-secondary btn-full-width" id="gdriveSignOutBtn">
-                    <span class="material-icons">logout</span>
-                    Sign Out
-                  </button>
-                </div>
+              <div class="gdrive-connection-status">
+                <span id="gdriveConnectionInfo"></span>
+                <button id="gdriveDisconnectBtn" class="link-button">Disconnect</button>
               </div>
             </div>
           </div>
@@ -683,7 +659,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.38</span>
+    <span class="status-version">v1.4.53</span>
   </div>
 
   <!-- Lock Screen Overlay -->
@@ -724,6 +700,57 @@
       <div class="confirm-dialog-buttons">
         <button class="btn-confirm-cancel" id="confirmCancelBtn">Cancel</button>
         <button class="btn-confirm-ok" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Preview Modal -->
+  <div class="sync-preview-overlay hidden" id="syncPreviewOverlay">
+    <div class="sync-preview-modal">
+      <div class="sync-preview-header">
+        <h3 id="syncPreviewTitle">Sync with Google Drive</h3>
+        <button class="sync-preview-close" id="syncPreviewClose">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <!-- Preview State -->
+      <div class="sync-preview-content" id="syncPreviewContent">
+        <div class="sync-preview-controls">
+          <label class="sync-select-all">
+            <input type="checkbox" id="syncSelectAll">
+            <span>Select All</span>
+          </label>
+        </div>
+        <div class="sync-items-list" id="syncItemsList">
+          <!-- Items will be populated by JS -->
+        </div>
+      </div>
+
+      <!-- Progress State -->
+      <div class="sync-progress-content hidden" id="syncProgressContent">
+        <div class="sync-progress-items" id="syncProgressItems">
+          <!-- Progress items will be populated by JS -->
+        </div>
+        <div class="sync-progress-bar">
+          <div class="sync-progress-fill" id="syncProgressFill"></div>
+        </div>
+        <div class="sync-progress-text" id="syncProgressText">Preparing...</div>
+      </div>
+
+      <!-- Summary State -->
+      <div class="sync-summary-content hidden" id="syncSummaryContent">
+        <div class="sync-summary-icon" id="syncSummaryIcon">
+          <span class="material-icons">check_circle</span>
+        </div>
+        <div class="sync-summary-message" id="syncSummaryMessage">
+          <!-- Summary will be populated by JS -->
+        </div>
+      </div>
+
+      <div class="sync-preview-footer">
+        <button class="btn btn-secondary" id="syncCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="syncConfirmBtn">Sync</button>
       </div>
     </div>
   </div>

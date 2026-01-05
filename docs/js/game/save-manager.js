@@ -12,6 +12,291 @@ import { scrollToBottom } from '../utils/scroll.js';
 import { addGameText } from '../ui/game-output.js';
 import { getItem, setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
 
+// ============================================================================
+// COMPRESSION HELPERS
+// ============================================================================
+
+/**
+ * Compress a string using gzip (pako)
+ * @param {string} str - String to compress
+ * @returns {string} Base64-encoded compressed data
+ */
+function compressString(str) {
+    if (!str || str.length === 0) return '';
+    try {
+        const uint8array = pako.gzip(str);
+        return btoa(String.fromCharCode(...uint8array));
+    } catch (error) {
+        console.error('Compression failed:', error);
+        return str; // Return original on error
+    }
+}
+
+/**
+ * Decompress a gzip-compressed base64 string
+ * @param {string} compressed - Base64-encoded compressed data
+ * @returns {string} Decompressed string
+ */
+function decompressString(compressed) {
+    if (!compressed || compressed.length === 0) return '';
+    try {
+        const binaryString = atob(compressed);
+        const uint8array = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            uint8array[i] = binaryString.charCodeAt(i);
+        }
+        const decompressed = pako.ungzip(uint8array, { to: 'string' });
+        return decompressed;
+    } catch (error) {
+        console.error('Decompression failed:', error);
+        return compressed; // Return original on error
+    }
+}
+
+// ============================================================================
+// HTML HISTORY LIMITING
+// ============================================================================
+
+/**
+ * Limit HTML history to most recent N turns (approximately 644 chars/turn)
+ * @param {string} html - Full HTML history
+ * @param {number} maxTurns - Maximum number of turns to keep (default: 100)
+ * @returns {string} Limited HTML
+ */
+function limitHTMLHistory(html, maxTurns = 100) {
+    if (!html || html.length === 0) return '';
+
+    const CHARS_PER_TURN = 644;
+    const maxChars = maxTurns * CHARS_PER_TURN;
+
+    if (html.length <= maxChars) {
+        return html;
+    }
+
+    // Keep only the most recent maxChars
+    return html.substring(html.length - maxChars);
+}
+
+// ============================================================================
+// MAP DATA OPTIMIZATION
+// ============================================================================
+
+/**
+ * Get optimized map data (remove default values)
+ * Returns BOTH map canvas and auto-mapper if map was opened, or just auto-mapper if not
+ * Map canvas may be stale (user closed map), auto-mapper always current (in memory)
+ * They merge when map opens
+ * @param {string} gameName - Name of the current game
+ * @returns {Promise<Object|null>} Optimized map data object, or null if no map data
+ */
+async function getOptimizedMapData(gameName) {
+    if (!gameName) return null;
+
+    // Check for map canvas data first (user opened the map)
+    const mapKey = `iftalk_map_${gameName}`;
+    const mapDataStr = localStorage.getItem(mapKey);
+
+    // If map canvas exists, save both map canvas AND auto-mapper
+    // Map canvas may be stale (user closed map and continued playing)
+    // Auto-mapper has current state in memory
+    // They'll merge when map opens
+    if (mapDataStr) {
+        try {
+            const mapData = JSON.parse(mapDataStr);
+
+            // Optimize nodes: remove default values
+            const optimizedNodes = (mapData.nodes || []).map(node => {
+                const optimized = {
+                    id: node.id,
+                    name: node.name,
+                    x: node.x,
+                    y: node.y
+                };
+
+                // Only include non-default values
+                if (node.type && node.type !== 'room') optimized.type = node.type;
+                if (node.notes && node.notes !== '') optimized.notes = node.notes;
+                if (node.isManual === true) optimized.isManual = true;
+                if (node.isEdited === true) optimized.isEdited = true;
+
+                return optimized;
+            });
+
+            // Optimize edges: remove default values, use shorter key 'cmd' instead of 'command'
+            const optimizedEdges = (mapData.edges || []).map(edge => {
+                const optimized = {
+                    from: edge.from,
+                    to: edge.to,
+                    cmd: edge.command || edge.cmd
+                };
+
+                // Only include non-default values
+                if (edge.connectionType && edge.connectionType !== 'cardinal') {
+                    optimized.connectionType = edge.connectionType;
+                }
+                if (edge.isManual === true) optimized.isManual = true;
+                if (edge.isEdited === true) optimized.isEdited = true;
+
+                return optimized;
+            });
+
+            // Build optimized map canvas data object
+            const optimized = {
+                nodes: optimizedNodes,
+                edges: optimizedEdges,
+                protectedNodes: mapData.protectedNodes || [],
+                protectedEdges: mapData.protectedEdges || []
+            };
+
+            // Include optional fields only if present
+            if (mapData.deletedEdges && mapData.deletedEdges.length > 0) {
+                optimized.deletedEdges = mapData.deletedEdges;
+            }
+            if (mapData.deletedNodes && mapData.deletedNodes.length > 0) {
+                optimized.deletedNodes = mapData.deletedNodes;
+            }
+            if (mapData.viewport) optimized.viewport = mapData.viewport;
+            if (mapData.currentNodeId) optimized.currentNodeId = mapData.currentNodeId;
+            if (typeof mapData.autoMapEnabled === 'boolean') {
+                optimized.autoMapEnabled = mapData.autoMapEnabled;
+            }
+
+            // Get auto-mapper data to save alongside map canvas
+            const { getMapData, getLastLocationName } = await import('../features/auto-mapper.js');
+            const autoMapperData = getMapData();
+
+            // Return BOTH map canvas and auto-mapper
+            // Map canvas: positions, notes, edits (may be stale on nodes/edges)
+            // Auto-mapper: current graph state (always up-to-date)
+            return {
+                mapCanvas: optimized,
+                autoMapper: {
+                    locations: autoMapperData.locations,
+                    connections: autoMapperData.connections,
+                    currentLocation: getLastLocationName()
+                }
+            };
+
+        } catch (error) {
+            console.error('Failed to optimize map data:', error);
+            // Fall through to try auto-mapper only
+        }
+    }
+
+    // Map canvas doesn't exist - try auto-mapper data only
+    try {
+        const { getMapData, getLastLocationName } = await import('../features/auto-mapper.js');
+        const autoMapperData = getMapData();
+        if (autoMapperData && autoMapperData.locations && autoMapperData.locations.length > 0) {
+            // Return ONLY auto-mapper (map never opened)
+            // Save graph only (locations + connections), not full journey
+            return {
+                autoMapper: {
+                    locations: autoMapperData.locations,
+                    connections: autoMapperData.connections,
+                    currentLocation: getLastLocationName()
+                }
+            };
+        }
+    } catch (error) {
+        // Auto-mapper not available
+    }
+
+    // No map data at all
+    return null;
+}
+
+/**
+ * Restore map data from optimized format
+ * Handles both auto-mapper journey data AND map canvas data
+ * @param {Object} optimizedMapData - Optimized map data with autoMapper and/or mapCanvas
+ * @param {string} gameName - Name of the current game
+ */
+async function restoreMapData(optimizedMapData, gameName) {
+    if (!optimizedMapData || !gameName) return;
+
+    // Restore auto-mapper data if present
+    if (optimizedMapData.autoMapper) {
+        try {
+            console.log('[RESTORE] Restoring auto-mapper data');
+            console.log('[RESTORE] Journey to restore:', optimizedMapData.autoMapper.journey?.map(j => j.locationName));
+
+            const { initAutoMapper } = await import('../features/auto-mapper.js');
+            // Store the data temporarily in a special key
+            const autoMapperKey = `iftalk_automapper_restore_${gameName}`;
+            localStorage.setItem(autoMapperKey, JSON.stringify(optimizedMapData.autoMapper));
+
+            console.log('[RESTORE] Stored in restore key, calling initAutoMapper()');
+
+            // Immediately restore auto-mapper state to memory
+            // (gameLoaded event doesn't fire on quickload/restore, only on initial game load)
+            initAutoMapper(gameName);
+
+            console.log('[RESTORE] initAutoMapper() completed');
+        } catch (error) {
+            console.error('Failed to restore auto-mapper data:', error);
+        }
+    }
+
+    // Restore map canvas data if present
+    if (optimizedMapData.mapCanvas) {
+        try {
+            const mapCanvasData = optimizedMapData.mapCanvas;
+
+            // Restore nodes with default values
+            const nodes = (mapCanvasData.nodes || []).map(node => ({
+                id: node.id,
+                name: node.name,
+                x: node.x,
+                y: node.y,
+                type: node.type || 'room',
+                notes: node.notes || '',
+                isManual: node.isManual || false,
+                isEdited: node.isEdited || false
+            }));
+
+            // Restore edges with default values, convert 'cmd' back to 'command'
+            const edges = (mapCanvasData.edges || []).map(edge => ({
+                from: edge.from,
+                to: edge.to,
+                command: edge.cmd || edge.command,
+                connectionType: edge.connectionType || 'cardinal',
+                isManual: edge.isManual || false,
+                isEdited: edge.isEdited || false
+            }));
+
+            // Build full map canvas data object
+            const mapData = {
+                nodes: nodes,
+                edges: edges,
+                protectedNodes: mapCanvasData.protectedNodes || [],
+                protectedEdges: mapCanvasData.protectedEdges || [],
+                deletedEdges: mapCanvasData.deletedEdges || [],
+                deletedNodes: mapCanvasData.deletedNodes || [],
+                viewport: mapCanvasData.viewport || { x: 0, y: 0, scale: 1 },
+                currentNodeId: mapCanvasData.currentNodeId || null,
+                autoMapEnabled: mapCanvasData.autoMapEnabled !== undefined
+                    ? mapCanvasData.autoMapEnabled
+                    : true
+            };
+
+            // Save to localStorage
+            const mapKey = `iftalk_map_${gameName}`;
+            localStorage.setItem(mapKey, JSON.stringify(mapData));
+
+            // Set auto-mapper current location so it can track from here
+            // Then clear historical data since map canvas now has everything
+            // Auto-mapper will rebuild as player explores new areas
+            const { setCurrentLocation, clearHistoricalData } = await import('../features/auto-mapper.js');
+            setCurrentLocation(mapData.currentNodeId, gameName);
+            clearHistoricalData();
+
+        } catch (error) {
+            console.error('Failed to restore map canvas data:', error);
+        }
+    }
+}
+
 /**
  * Get current game signature from ZVM
  */
@@ -96,7 +381,7 @@ function getCurrentDisplayState() {
 async function performSave(storageKey, displayName = null, additionalData = {}) {
     try {
         const gameSignature = getGameSignature();
-        if (!state.currentGameName) {
+        if (!gameSignature) {
             if (displayName) updateStatus('Error: No game loaded', 'error');
             return false;
         }
@@ -111,22 +396,38 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         // Get current display state (status bar, upper window, lower window)
         const displayHTML = getCurrentDisplayState();
 
+        // Limit lowerWindow to 100 turns and compress
+        const limitedLowerWindow = limitHTMLHistory(displayHTML.lowerWindowHTML, 100);
+        const compressedLowerWindow = compressString(limitedLowerWindow);
+
+        // Compress quetzalData
+        const compressedQuetzalData = compressString(base64Data);
+
+        // Get optimized map data (auto-mapper + map canvas) and compress
+        const optimizedMapData = await getOptimizedMapData(state.currentGameName);
+        const mapDataStr = optimizedMapData ? JSON.stringify(optimizedMapData) : '';
+        const compressedMapData = mapDataStr ? compressString(mapDataStr) : '';
+
         // Get VoxGlk state
         const { getGeneration, getInputWindowId } = await import('./voxglk.js');
         const savedGeneration = getGeneration();
         const savedInputWindowId = getInputWindowId();
 
-        // Build save data object
+        // Build save data object with compressed data
         const saveData = {
             timestamp: new Date().toISOString(),
             gameName: state.currentGameName,
             gameSignature: gameSignature,
-            quetzalData: base64Data,
+            quetzalData: compressedQuetzalData,
+            quetzalDataCompressed: true,
             displayHTML: {
                 statusBar: displayHTML.statusBarHTML,
                 upperWindow: displayHTML.upperWindowHTML,
-                lowerWindow: displayHTML.lowerWindowHTML
+                lowerWindow: compressedLowerWindow,
+                lowerWindowCompressed: true
             },
+            mapData: compressedMapData,
+            mapDataCompressed: compressedMapData ? true : false,
             voxglkState: {
                 generation: savedGeneration,
                 inputWindowId: savedInputWindowId
@@ -136,7 +437,25 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         };
 
         // Save to localStorage using storage API
-        setJSON(storageKey, saveData);
+        const saveSuccess = setJSON(storageKey, saveData);
+
+        if (!saveSuccess) {
+            // Check if it's a quota error
+            try {
+                const testKey = `__storage_test_${Date.now()}`;
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                // If we get here, it's not a quota issue
+                throw new Error('Failed to save data to localStorage');
+            } catch (quotaError) {
+                if (quotaError.name === 'QuotaExceededError' ||
+                    quotaError.message.includes('quota') ||
+                    quotaError.message.includes('storage')) {
+                    throw new Error('Storage quota exceeded - Try exporting old saves and clearing data');
+                }
+                throw new Error('Failed to save data to localStorage');
+            }
+        }
 
         // Auto-sync to Google Drive (if enabled)
         if (state.gdriveSyncEnabled && state.gdriveSignedIn) {
@@ -188,8 +507,14 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             return false;
         }
 
+        // Decompress quetzalData if compressed
+        let quetzalDataBase64 = saveData.quetzalData;
+        if (saveData.quetzalDataCompressed) {
+            quetzalDataBase64 = decompressString(saveData.quetzalData);
+        }
+
         // Decode base64 to binary
-        const binaryString = atob(saveData.quetzalData);
+        const binaryString = atob(quetzalDataBase64);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
             bytes[i] = binaryString.charCodeAt(i);
@@ -223,8 +548,14 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     }
                 }
                 if (lowerWindowEl && saveData.displayHTML.lowerWindow) {
+                    // Decompress lowerWindow if compressed
+                    let lowerWindowHTML = saveData.displayHTML.lowerWindow;
+                    if (saveData.displayHTML.lowerWindowCompressed) {
+                        lowerWindowHTML = decompressString(saveData.displayHTML.lowerWindow);
+                    }
+
                     const commandLine = document.getElementById('commandLine');
-                    lowerWindowEl.innerHTML = saveData.displayHTML.lowerWindow;
+                    lowerWindowEl.innerHTML = lowerWindowHTML;
                     if (commandLine) {
                         lowerWindowEl.appendChild(commandLine);
                     }
@@ -232,6 +563,28 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     showMessageInput();
                     scrollToBottom();
                 }
+            }
+
+            // Restore map data if present
+            console.log('[RESTORE-CHECK] Has mapData:', !!saveData.mapData, 'Has gameName:', !!saveData.gameName);
+            if (saveData.mapData && saveData.gameName) {
+                console.log('[RESTORE-CHECK] Condition passed, decompressing...');
+                let mapDataStr = saveData.mapData;
+                if (saveData.mapDataCompressed) {
+                    mapDataStr = decompressString(saveData.mapData);
+                }
+                console.log('[RESTORE-CHECK] Decompressed, mapDataStr length:', mapDataStr?.length);
+                if (mapDataStr) {
+                    try {
+                        const optimizedMapData = JSON.parse(mapDataStr);
+                        console.log('[RESTORE-CHECK] Parsed, calling restoreMapData...');
+                        await restoreMapData(optimizedMapData, saveData.gameName);
+                    } catch (error) {
+                        console.error('Failed to restore map data:', error);
+                    }
+                }
+            } else {
+                console.log('[RESTORE-CHECK] Condition failed - skipping map restore');
             }
 
             // Restore narration position from old saves (backwards compatibility)
@@ -279,14 +632,20 @@ async function performRestore(storageKey, displayName = null, options = {}) {
  * Uses same comprehensive approach as autosave
  */
 export async function quickSave() {
-    const gameSignature = getGameSignature();
-    if (!gameSignature) {
+    if (!state.currentGameName) {
         updateStatus('Error: No game loaded', 'error');
         return false;
     }
 
-    const key = `iftalk_quicksave_${gameSignature}`;
-    return await performSave(key, 'quicksave');
+    const key = `iftalk_quicksave_${state.currentGameName}`;
+    const success = await performSave(key, 'quicksave');
+
+    // Create backup after successful save
+    if (success) {
+        await createBackup('quicksave', false);
+    }
+
+    return success;
 }
 
 /**
@@ -356,13 +715,12 @@ export async function autoLoad() {
  * Uses same bootstrap technique as autoLoad
  */
 export async function quickLoad() {
-    const gameSignature = getGameSignature();
-    if (!gameSignature) {
+    if (!state.currentGameName) {
         updateStatus('Error: No game loaded', 'error');
         return false;
     }
 
-    const key = `iftalk_quicksave_${gameSignature}`;
+    const key = `iftalk_quicksave_${state.currentGameName}`;
     return await performRestore(key, 'quicksave', {
         showSystemMessage: true,
         restoreNarrationState: true,
@@ -376,14 +734,13 @@ export async function quickLoad() {
  */
 export function exportSaveToFile() {
     try {
-        const gameSignature = getGameSignature();
-        if (!gameSignature) {
+        if (!state.currentGameName) {
             updateStatus('Error: No game loaded', 'error');
             return;
         }
 
         // Get the quick save from localStorage
-        const key = `iftalk_quicksave_${gameSignature}`;
+        const key = `iftalk_quicksave_${state.currentGameName}`;
         const saveData = getJSON(key);
 
         if (!saveData) {
@@ -434,13 +791,17 @@ export function importSaveFromFile() {
             const saveData = JSON.parse(text);
 
             // Validate save data
-            if (!saveData.quetzalData || !saveData.gameSignature) {
+            if (!saveData.quetzalData || !saveData.gameName) {
                 updateStatus('Invalid save file format', 'error');
                 return;
             }
 
-            // Store in localStorage as quick save
-            const key = `iftalk_quicksave_${saveData.gameSignature}`;
+            // Store in localStorage as quick save using current game name
+            if (!state.currentGameName) {
+                updateStatus('Error: No game loaded', 'error');
+                return;
+            }
+            const key = `iftalk_quicksave_${state.currentGameName}`;
             setJSON(key, saveData);
 
             updateStatus('Save imported! Use Quick Load button to load', 'success');
@@ -456,7 +817,7 @@ export function importSaveFromFile() {
 
 // Autosave backup interval (5 minutes)
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
-const MAX_BACKUPS_PER_GAME = 5;
+const MAX_BACKUPS_PER_GAME = 3;
 let backupIntervalId = null;
 
 /**
@@ -483,10 +844,8 @@ export async function createBackup(saveType, exemptFromLimit = false) {
         return false;
     }
 
-    const gameId = state.currentGameName.replace(/\.[^.]+$/, '').toLowerCase();
-
     // Get current save
-    const saveKey = `iftalk_${saveType}_${gameId}`;
+    const saveKey = `iftalk_${saveType}_${state.currentGameName}`;
     const saveData = getJSON(saveKey);
 
     if (!saveData) {
@@ -496,14 +855,14 @@ export async function createBackup(saveType, exemptFromLimit = false) {
     // Create timestamped backup
     const timestamp = Date.now();
     const backupKey = exemptFromLimit
-        ? `iftalk_backup_${saveType}_${gameId}_${timestamp}_exempt`
-        : `iftalk_backup_${saveType}_${gameId}_${timestamp}`;
+        ? `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}_exempt`
+        : `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}`;
 
     setJSON(backupKey, saveData);
 
     // Clean up old backups (unless this is exempt)
     if (!exemptFromLimit) {
-        cleanupOldBackups(gameId, saveType);
+        cleanupOldBackups(state.currentGameName, saveType);
     }
 
     return true;
@@ -511,11 +870,11 @@ export async function createBackup(saveType, exemptFromLimit = false) {
 
 /**
  * Clean up old backups, keeping only the most recent backups per save type
- * @param {string} gameId - Game ID to clean up backups for
+ * @param {string} gameName - Game name to clean up backups for
  * @param {string} saveType - Save type ('autosave', 'quicksave', 'customsave')
  */
-function cleanupOldBackups(gameId, saveType = 'autosave') {
-    const prefix = `iftalk_backup_${saveType}_${gameId}_`;
+function cleanupOldBackups(gameName, saveType = 'autosave') {
+    const prefix = `iftalk_backup_${saveType}_${gameName}_`;
 
     // Find all backup keys for this game and save type (exclude exempt backups)
     const backupKeys = [];
@@ -533,9 +892,10 @@ function cleanupOldBackups(gameId, saveType = 'autosave') {
     backupKeys.sort((a, b) => b.timestamp - a.timestamp);
 
     // Different max backups for different save types
-    // Autosaves: 5 backups (more frequent, so keep more history)
+    // Autosaves: 3 backups (created every 5 minutes)
+    // Quicksaves: 3 backups (created on each quicksave)
     // Other types: 1 backup (manual saves, less frequent)
-    const maxBackups = saveType === 'autosave' ? 5 : 1;
+    const maxBackups = (saveType === 'autosave' || saveType === 'quicksave') ? 3 : 1;
 
     if (backupKeys.length > maxBackups) {
         const toRemove = backupKeys.slice(maxBackups);
@@ -594,12 +954,11 @@ export function initSaveHandlers() {
     if (quickRestoreBtn) {
         quickRestoreBtn.addEventListener('click', () => {
             // Manual restore requires page reload to reset glkapi.js state
-            const gameSignature = getGameSignature();
-            if (!gameSignature) {
+            if (!state.currentGameName) {
                 updateStatus('Error: No game loaded', 'error');
                 return;
             }
-            const key = `iftalk_quicksave_${gameSignature}`;
+            const key = `iftalk_quicksave_${state.currentGameName}`;
             if (!getItem(key)) {
                 updateStatus('No quick save found - Use Quick Save button first', 'error');
                 return;
@@ -607,8 +966,8 @@ export function initSaveHandlers() {
             // Set flag for autorestore to pick up after reload
             sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
                 type: 'quicksave',
-                key: gameSignature,
-                gameName: gameSignature
+                key: state.currentGameName,
+                gameName: state.currentGameName
             }));
             window.location.reload();
         });
@@ -619,12 +978,11 @@ export function initSaveHandlers() {
     if (quickLoadBtn) {
         quickLoadBtn.addEventListener('click', () => {
             // Manual restore requires page reload to reset glkapi.js state
-            const gameSignature = getGameSignature();
-            if (!gameSignature) {
+            if (!state.currentGameName) {
                 updateStatus('Error: No game loaded', 'error');
                 return;
             }
-            const key = `iftalk_quicksave_${gameSignature}`;
+            const key = `iftalk_quicksave_${state.currentGameName}`;
             if (!getItem(key)) {
                 updateStatus('No quick save found - Use Quick Save button first', 'error');
                 return;
@@ -632,8 +990,8 @@ export function initSaveHandlers() {
             // Set flag for autorestore to pick up after reload
             sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
                 type: 'quicksave',
-                key: gameSignature,
-                gameName: gameSignature
+                key: state.currentGameName,
+                gameName: state.currentGameName
             }));
             window.location.reload();
         });

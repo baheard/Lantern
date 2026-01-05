@@ -219,7 +219,9 @@ function showBackupSavesDialog() {
     backups.forEach(backup => {
       const date = new Date(backup.timestamp);
       const formattedDate = date.toLocaleString();
-      const saveType = backup.type === 'autosave' ? 'Auto-save' : 'Quick Save';
+      const saveType = backup.type === 'autosave' ? 'Autosave' :
+                       backup.type === 'quicksave' ? 'Quicksave' :
+                       'Save';
 
       backupListHTML += `
         <div class="backup-item">
