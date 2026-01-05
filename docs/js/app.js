@@ -79,25 +79,23 @@ if ('serviceWorker' in navigator) {
               updateBanner.id = 'updateBanner';
               updateBanner.innerHTML = `
                 <div style="position: fixed; top: 0; right: 0;
-                            background: rgba(42, 42, 42, 0.7); border: 1px solid rgba(232, 184, 109, 0.15);
-                            padding: 8px 12px; border-radius: 0 0 0 6px; z-index: 10001;
-                            display: flex; align-items: center; gap: 8px;
-                            font-size: 11px;">
-                  <span style="color: rgba(255, 255, 255, 0.4); font-family: var(--font-sans);">
+                            background: rgba(80, 80, 80, 0.25); border: none;
+                            padding: 6px 8px; border-radius: 0 0 0 4px; z-index: 10001;
+                            display: flex; align-items: center; gap: 6px;
+                            font-size: 10px;">
+                  <span style="color: rgba(180, 180, 180, 0.35); font-family: var(--font-sans);">
                     Update?
                   </span>
                   <button onclick="window.location.reload()"
-                          style="background: rgba(232, 184, 109, 0.15); color: rgba(232, 184, 109, 0.6);
-                                 border: 1px solid rgba(232, 184, 109, 0.2);
-                                 padding: 4px 8px; border-radius: 3px; cursor: pointer;
-                                 font-size: 10px; font-weight: 500;">
+                          style="background: rgba(120, 120, 120, 0.2); color: rgba(200, 200, 200, 0.4);
+                                 border: none; padding: 3px 6px; border-radius: 2px; cursor: pointer;
+                                 font-size: 9px; font-weight: 400;">
                     Yes
                   </button>
                   <button onclick="this.closest('#updateBanner').remove()"
-                          style="background: transparent; color: rgba(255, 255, 255, 0.2);
-                                 border: 1px solid rgba(255, 255, 255, 0.1);
-                                 padding: 4px 8px; border-radius: 3px; cursor: pointer;
-                                 font-size: 10px;">
+                          style="background: transparent; color: rgba(150, 150, 150, 0.25);
+                                 border: none; padding: 3px 6px; border-radius: 2px; cursor: pointer;
+                                 font-size: 9px;">
                     ✕
                   </button>
                 </div>
