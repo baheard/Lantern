@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.4.57';
+const CACHE_VERSION = 'v1.4.58';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -195,7 +195,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - cache-first strategy
+// Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -215,7 +215,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for everything else
+  // Network-first for HTML files (always get latest index.html)
+  if (request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Cache the response for offline use
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAMES.core).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Network failed - fall back to cache
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // Cache-first for everything else (CSS, JS, images, fonts, etc.)
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) {
@@ -232,8 +254,7 @@ self.addEventListener('fetch', (event) => {
         // Clone the response (can only be consumed once)
         const responseToCache = response.clone();
 
-        // Optionally cache new resources (runtime caching)
-        // This helps with dynamically loaded resources
+        // Cache new resources (runtime caching)
         caches.open(CACHE_NAMES.core).then(cache => {
           cache.put(request, responseToCache);
         });
@@ -241,7 +262,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       }).catch(error => {
         console.error('[PWA] Fetch failed:', error);
-        // Could return an offline page here
         throw error;
       });
     })

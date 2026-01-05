@@ -52,16 +52,41 @@ import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, a
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
-// PWA Service Worker Registration
+// PWA Service Worker Registration with Auto-Update
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(registration => {
-        // Service worker registered successfully
+        // Check for updates on page load
+        registration.update();
+
+        // Check for updates every 60 seconds
+        setInterval(() => {
+          registration.update();
+        }, 60000);
+
+        // Listen for new service worker waiting to activate
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New service worker is ready - reload the page to get updates
+              console.log('[PWA] New version available - reloading...');
+              window.location.reload();
+            }
+          });
+        });
       })
       .catch(error => {
-        // Service worker registration failed
+        console.error('[PWA] Service worker registration failed:', error);
       });
+
+    // Handle service worker updates (when service worker messages the page)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[PWA] Service worker updated - reloading page');
+      window.location.reload();
+    });
   });
 }
 
@@ -440,14 +465,29 @@ function handleGameOutput(text) {
 
 // Initialize app
 async function initApp() {
-  // Fix mobile viewport height for browser chrome
+  // Fix mobile viewport height for browser chrome and keyboard
   function setMobileViewportHeight() {
-    const vh = window.innerHeight * 0.01;
+    // Use visualViewport when available (better for mobile keyboard handling)
+    const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const vh = height * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+    // When keyboard opens, ensure content is scrolled into view
+    if (window.visualViewport && window.visualViewport.offsetTop > 0) {
+      // Visual viewport is offset from top - scroll to compensate
+      window.scrollTo(0, window.visualViewport.offsetTop);
+    }
   }
 
   setMobileViewportHeight();
   window.addEventListener('resize', setMobileViewportHeight);
+
+  // Also listen to visualViewport resize for better keyboard handling
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setMobileViewportHeight);
+    window.visualViewport.addEventListener('scroll', setMobileViewportHeight);
+  }
+
   window.addEventListener('orientationchange', () => {
     setMobileViewportHeight();
     // Restart voice recognition after orientation change (can terminate recognition)
