@@ -52,7 +52,7 @@ import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, a
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
-// PWA Service Worker Registration with Auto-Update
+// PWA Service Worker Registration with Update Notification
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
@@ -71,9 +71,36 @@ if ('serviceWorker' in navigator) {
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New service worker is ready - reload the page to get updates
-              console.log('[PWA] New version available - reloading...');
-              window.location.reload();
+              // New service worker is ready - ask user if they want to update
+              console.log('[PWA] New version available');
+
+              // Show update notification
+              const updateBanner = document.createElement('div');
+              updateBanner.id = 'updateBanner';
+              updateBanner.innerHTML = `
+                <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                            background: var(--bg-surface); border: 1px solid var(--accent-warm);
+                            padding: 16px 24px; border-radius: 8px; z-index: 10001;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex;
+                            align-items: center; gap: 16px; max-width: 90%;">
+                  <span style="color: var(--text-primary); font-family: var(--font-sans);">
+                    New version available! Reload to update?
+                  </span>
+                  <button onclick="window.location.reload()"
+                          style="background: var(--accent-warm); color: #000; border: none;
+                                 padding: 8px 16px; border-radius: 4px; cursor: pointer;
+                                 font-weight: 500;">
+                    Update Now
+                  </button>
+                  <button onclick="this.closest('#updateBanner').remove()"
+                          style="background: transparent; color: var(--text-muted);
+                                 border: 1px solid var(--border-subtle); padding: 8px 16px;
+                                 border-radius: 4px; cursor: pointer;">
+                    Later
+                  </button>
+                </div>
+              `;
+              document.body.appendChild(updateBanner);
             }
           });
         });
@@ -81,12 +108,6 @@ if ('serviceWorker' in navigator) {
       .catch(error => {
         console.error('[PWA] Service worker registration failed:', error);
       });
-
-    // Handle service worker updates (when service worker messages the page)
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[PWA] Service worker updated - reloading page');
-      window.location.reload();
-    });
   });
 }
 
