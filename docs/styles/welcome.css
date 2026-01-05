@@ -684,20 +684,24 @@
   font-style: italic;
 }
 
-/* Welcome Screen Status Bar */
+/* Welcome Screen Status Bar - Top Right */
 .welcome-status {
+  position: absolute;
+  top: max(16px, calc(10px + env(safe-area-inset-top)));
+  right: 60px; /* Leave space for settings button */
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--text-muted);
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.15); /* Very faded */
+  pointer-events: none; /* Don't interfere with clicks */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .welcome-status-protocol {
   font-weight: 600;
-  color: var(--accent-warm);
+  color: rgba(232, 184, 109, 0.25); /* Very faded accent-warm */
 }
 
