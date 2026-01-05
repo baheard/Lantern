@@ -78,25 +78,27 @@ if ('serviceWorker' in navigator) {
               const updateBanner = document.createElement('div');
               updateBanner.id = 'updateBanner';
               updateBanner.innerHTML = `
-                <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                            background: var(--bg-surface); border: 1px solid var(--accent-warm);
-                            padding: 16px 24px; border-radius: 8px; z-index: 10001;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex;
-                            align-items: center; gap: 16px; max-width: 90%;">
-                  <span style="color: var(--text-primary); font-family: var(--font-sans);">
-                    New version available! Reload to update?
+                <div style="position: fixed; top: 0; right: 0;
+                            background: rgba(42, 42, 42, 0.7); border: 1px solid rgba(232, 184, 109, 0.15);
+                            padding: 8px 12px; border-radius: 0 0 0 6px; z-index: 10001;
+                            display: flex; align-items: center; gap: 8px;
+                            font-size: 11px;">
+                  <span style="color: rgba(255, 255, 255, 0.4); font-family: var(--font-sans);">
+                    Update?
                   </span>
                   <button onclick="window.location.reload()"
-                          style="background: var(--accent-warm); color: #000; border: none;
-                                 padding: 8px 16px; border-radius: 4px; cursor: pointer;
-                                 font-weight: 500;">
-                    Update Now
+                          style="background: rgba(232, 184, 109, 0.15); color: rgba(232, 184, 109, 0.6);
+                                 border: 1px solid rgba(232, 184, 109, 0.2);
+                                 padding: 4px 8px; border-radius: 3px; cursor: pointer;
+                                 font-size: 10px; font-weight: 500;">
+                    Yes
                   </button>
                   <button onclick="this.closest('#updateBanner').remove()"
-                          style="background: transparent; color: var(--text-muted);
-                                 border: 1px solid var(--border-subtle); padding: 8px 16px;
-                                 border-radius: 4px; cursor: pointer;">
-                    Later
+                          style="background: transparent; color: rgba(255, 255, 255, 0.2);
+                                 border: 1px solid rgba(255, 255, 255, 0.1);
+                                 padding: 4px 8px; border-radius: 3px; cursor: pointer;
+                                 font-size: 10px;">
+                    ✕
                   </button>
                 </div>
               `;
@@ -492,12 +494,6 @@ async function initApp() {
     const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     const vh = height * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
-
-    // When keyboard opens, ensure content is scrolled into view
-    if (window.visualViewport && window.visualViewport.offsetTop > 0) {
-      // Visual viewport is offset from top - scroll to compensate
-      window.scrollTo(0, window.visualViewport.offsetTop);
-    }
   }
 
   setMobileViewportHeight();
@@ -506,7 +502,6 @@ async function initApp() {
   // Also listen to visualViewport resize for better keyboard handling
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', setMobileViewportHeight);
-    window.visualViewport.addEventListener('scroll', setMobileViewportHeight);
   }
 
   window.addEventListener('orientationchange', () => {
