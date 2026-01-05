@@ -465,6 +465,12 @@ async function initApp() {
   // Initialize DOM
   initDOM();
 
+  // Update welcome screen status bar with protocol indicator
+  const welcomeStatusProtocol = document.getElementById('welcomeStatusProtocol');
+  if (welcomeStatusProtocol && window.location.protocol === 'http:') {
+    welcomeStatusProtocol.textContent = 'HTTP';
+  }
+
   // Setup game card info icons - set data-title from parent game-title text
   // Click handling is done by initHelpTooltips() for all tooltips
   document.querySelectorAll('.game-meta').forEach(el => {

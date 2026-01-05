@@ -684,3 +684,20 @@
   font-style: italic;
 }
 
+/* Welcome Screen Status Bar */
+.welcome-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.welcome-status-protocol {
+  font-weight: 600;
+  color: var(--accent-warm);
+}
+

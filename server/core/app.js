@@ -5,7 +5,8 @@
  */
 
 import express from 'express';
-import { createServer } from 'https';
+import { createServer as createHttpsServer } from 'https';
+import { createServer as createHttpServer } from 'http';
 import { Server } from 'socket.io';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import path from 'path';
@@ -24,22 +25,32 @@ if (!existsSync(savesDir)) {
 
 /**
  * Create and configure Express app
- * @returns {Object} {app, httpServer, io}
+ * @returns {Object} {app, httpServer, httpsServer, io}
  */
 export function createApp() {
   const app = express();
 
-  // HTTPS options - load SSL certificates from project root
+  // Create HTTP server (always available)
+  const httpServer = createHttpServer(app);
+
+  // Create HTTPS server (if certificates exist)
+  let httpsServer = null;
   const certPath = path.join(__dirname, '../../localhost+3.pem');
   const keyPath = path.join(__dirname, '../../localhost+3-key.pem');
 
-  const httpsOptions = {
-    key: readFileSync(keyPath),
-    cert: readFileSync(certPath)
-  };
+  if (existsSync(certPath) && existsSync(keyPath)) {
+    const httpsOptions = {
+      key: readFileSync(keyPath),
+      cert: readFileSync(certPath)
+    };
+    httpsServer = createHttpsServer(httpsOptions, app);
+  }
 
-  const httpServer = createServer(httpsOptions, app);
+  // Create Socket.IO server and attach to both HTTP and HTTPS
   const io = new Server(httpServer);
+  if (httpsServer) {
+    io.attach(httpsServer);
+  }
 
   // Parse JSON bodies
   app.use(express.json());
@@ -310,7 +321,7 @@ export function createApp() {
     });
   });
 
-  return { app, httpServer, io };
+  return { app, httpServer, httpsServer, io };
 }
 
 /**
