@@ -26,12 +26,31 @@ docs/js/features/
 
 ## Auto-Mapper (`auto-mapper.js`)
 
-### How It Works (v1.4.17+)
+### How It Works (v1.4.57+)
 
-The auto-mapper uses **name-based tracking** via the status bar text. This approach:
+The auto-mapper uses a **journey-based architecture** with name-based tracking via the status bar text. This approach:
+- Stores only journey data (sequence of locations + commands)
 - Avoids exposing internal VM object IDs to the user
 - Works consistently across all Z-machine versions
 - Is simpler and more reliable than VM memory reading
+- Journey is transferred to map canvas when map first opens, then cleared
+
+#### Journey Data Structure
+
+```javascript
+let mapData = {
+  gameName: null,
+  journey: []  // Array of { locationName, command }
+};
+```
+
+The journey contains:
+- All locations visited (including revisits)
+- All connections (implicit in sequence)
+- All commands (for edge labels)
+- Spatial information (via direction commands)
+
+When the map canvas opens, it replays the journey to build nodes/edges with proper spatial positioning, then clears the journey to keep saves small
 
 #### Location Detection from Status Bar
 
@@ -107,7 +126,43 @@ Duplicates are:
 - `checkLocationChange(statusBarText, generation)` - Called after each game turn with status bar text
 - `setLastCommand(cmd)` - Records the last command (for edge labels)
 - `getLastLocationName()` - Returns the last known location name
+- `getMapData()` - Returns `{ gameName, journey }` for saving
+- `clearJourney()` - Clears journey after transfer to map canvas
 - `initAutoMapper(gameName)` - Initializes mapper for a game
+
+### Journey Replay (Map Canvas)
+
+When the map canvas opens, `syncFromAutoMapper()` replays the journey to build nodes/edges:
+
+```javascript
+// Direction offsets for spatial positioning
+const directionOffsets = {
+  'n': { x: 0, y: -120 }, 'e': { x: 120, y: 0 },  // Cardinals
+  'up': { x: 60, y: -180 }, 'down': { x: 60, y: 180 },  // Verticals
+  'enter': { x: 100, y: -60 }, 'exit': { x: -100, y: 60 }  // Portals
+};
+
+// Replay journey to create nodes with proper positions
+let previousNode = null;
+let lastKnownDirection = null;
+for (const visit of journey) {
+  const offset = directionOffsets[visit.command.toLowerCase()];
+
+  if (offset) {
+    // Known direction - use it
+    x = previousNode.x + offset.x;
+    y = previousNode.y + offset.y;
+    lastKnownDirection = visit.command;
+  } else {
+    // Unknown command - use last direction or portal fallback
+    const fallback = lastKnownDirection || 'enter';
+    x = previousNode.x + directionOffsets[fallback].x;
+    y = previousNode.y + directionOffsets[fallback].y;
+  }
+}
+```
+
+After replay completes, the journey is cleared via `clearJourney()` to keep saves bounded
 
 ### Starting Location Detection
 

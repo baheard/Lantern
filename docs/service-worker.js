@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.4.53';
+const CACHE_VERSION = 'v1.4.57';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -168,9 +168,8 @@ self.addEventListener('install', (event) => {
         return cache.addAll(BUNDLED_GAMES);
       })
     ]).then(() => {
-      // Don't skipWaiting - let user finish their session
-      // New version will activate on next app launch
-      // return self.skipWaiting();
+      // Force immediate activation of new service worker
+      return self.skipWaiting();
     })
   );
 });
@@ -190,8 +189,8 @@ self.addEventListener('activate', (event) => {
           })
       );
     }).then(() => {
-      // Don't claim clients immediately - can cause reloads on iOS
-      // return self.clients.claim();
+      // Take control of all pages immediately
+      return self.clients.claim();
     })
   );
 });

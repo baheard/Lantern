@@ -2,6 +2,32 @@
 
 ## January 2025
 
+### January 5, 2025 - Journey-Based Auto-Mapper (v1.4.57)
+
+1. **Simplified Auto-Mapper Architecture**
+   - Auto-mapper now stores only journey data (location sequence + commands)
+   - Removed redundant locations and connections Maps
+   - Journey is single source of truth for exploration history
+   - Reduced save file complexity and size
+
+2. **Journey Transfer to Map Canvas**
+   - Journey is replayed with spatial positioning when map first opens
+   - Direction commands (n, s, e, w, up, down, etc.) map to pixel offsets
+   - Journey automatically cleared after transfer to map canvas
+   - Keeps journey bounded and save files small
+
+3. **Improved Service Worker Updates**
+   - Enabled `skipWaiting()` and `clients.claim()` for immediate updates
+   - No longer need to close all tabs for updates to apply
+   - "Reset Game" now always loads current version
+   - Hard refresh no longer required for version updates
+
+4. **Spatial Positioning from Journey**
+   - Replays journey entries in order to calculate node positions
+   - Uses direction offsets: cardinals (120px), verticals (180px + 60px offset), portals (diagonal)
+   - Unknown commands use last known direction or portal offset as fallback
+   - Properly preserves map layout when restoring from save
+
 ### January 2, 2025 - Small Nodes & Icons (v1.4.20)
 
 1. **Small Nodes**

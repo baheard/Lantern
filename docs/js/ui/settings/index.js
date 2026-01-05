@@ -10,6 +10,7 @@ import { initVoiceSelection } from './voice-selection.js';
 import { initPronunciationUI } from './pronunciation-ui.js';
 import { initDataManagementUI } from './data-management-ui.js';
 import { initGDriveUI } from './gdrive-ui.js';
+import { initSyncPreview } from '../sync-preview-modal.js';
 
 // Settings Panel
 export {
@@ -55,4 +56,5 @@ export function initAllSettings() {
   initPronunciationUI();
   initDataManagementUI();
   initGDriveUI();
+  initSyncPreview();
 }

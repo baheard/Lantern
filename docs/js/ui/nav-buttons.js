@@ -40,9 +40,11 @@ export function updateNavButtons() {
     if (state.autoplayEnabled) {
       if (iconSpan) iconSpan.textContent = 'pause';
       pausePlayBtn.title = 'Pause (Exit Autoplay)';
+      pausePlayBtn.classList.add('playing');
     } else {
       if (iconSpan) iconSpan.textContent = 'play_arrow';
       pausePlayBtn.title = 'Play (Enter Autoplay)';
+      pausePlayBtn.classList.remove('playing');
     }
   }
 

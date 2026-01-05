@@ -134,7 +134,6 @@ export async function startGame(gamePath, onOutput) {
 
     // Prepare VM with story data
     vm.prepare(storyData, options);
-
     // Check if user requested to skip autoload (restart game)
     const skipAutoload = localStorage.getItem('iftalk_skip_autoload');
     if (skipAutoload === 'true') {

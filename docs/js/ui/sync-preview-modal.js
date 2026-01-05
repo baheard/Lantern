@@ -9,6 +9,10 @@ import { state } from '../core/state.js';
 import { updateStatus } from '../utils/status.js';
 import { getGameDisplayName } from './settings/settings-panel.js';
 
+// Timestamp comparison thresholds
+const SYNC_THRESHOLD_MS = 1000;      // Within 1 second = synced
+const CONFLICT_THRESHOLD_MS = 60000; // Within 1 minute = potential conflict
+
 // Modal state
 let syncDirection = null; // 'import' or 'export'
 let syncItems = [];

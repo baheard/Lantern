@@ -15,7 +15,7 @@
  * - map-canvas.js   : Core orchestrator (this file)
  */
 
-import { getCurrentLocation, getLastLocationName, getMapData } from './auto-mapper.js';
+import { getCurrentLocation, getLastLocationName, getMapData, clearJourney } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
@@ -789,8 +789,9 @@ function loadMapForGame(gameName) {
 }
 
 /**
- * Sync locations from auto-mapper that were tracked before map UI loaded
+ * Sync locations from auto-mapper journey that were tracked before map UI loaded
  * This ensures we don't lose locations visited before opening the map
+ * Replays journey to build nodes/edges with proper spatial positioning from directions
  */
 function syncFromAutoMapper() {
   if (!mapState.autoMapEnabled) {
@@ -803,44 +804,140 @@ function syncFromAutoMapper() {
     return;
   }
 
-  // Replay the journey to create nodes/edges for locations we missed
-  let previousLocation = null;
+  // Direction offsets for spatial positioning (120px grid)
+  const directionOffsets = {
+    // Cardinal
+    'n': { x: 0, y: -120 }, 'north': { x: 0, y: -120 },
+    's': { x: 0, y: 120 }, 'south': { x: 0, y: 120 },
+    'e': { x: 120, y: 0 }, 'east': { x: 120, y: 0 },
+    'w': { x: -120, y: 0 }, 'west': { x: -120, y: 0 },
+    // Diagonals
+    'ne': { x: 120, y: -120 }, 'northeast': { x: 120, y: -120 },
+    'nw': { x: -120, y: -120 }, 'northwest': { x: -120, y: -120 },
+    'se': { x: 120, y: 120 }, 'southeast': { x: 120, y: 120 },
+    'sw': { x: -120, y: 120 }, 'southwest': { x: -120, y: 120 },
+    // Vertical (1.5x N/S distance = 180px, offset by half E/W = 60px for clarity)
+    'u': { x: 60, y: -180 }, 'up': { x: 60, y: -180 },
+    'd': { x: 60, y: 180 }, 'down': { x: 60, y: 180 },
+    // Portal (diagonal offset)
+    'in': { x: 100, y: -60 }, 'enter': { x: 100, y: -60 },
+    'out': { x: -100, y: 60 }, 'exit': { x: -100, y: 60 }
+  };
+
+  // Replay journey to create nodes/edges with proper positions
+  let previousNode = null;
+  let lastKnownDirection = null; // Track last known direction for unknown commands
   for (const visit of autoMapperData.journey) {
     const locationName = visit.locationName;
 
-    // Skip if location was deleted by user or already exists
+    // Skip if location was deleted by user
     if (mapState.deletedNodes.has(locationName)) {
-      previousLocation = locationName;
-      continue;
-    }
-    if (mapState.nodes.has(locationName)) {
-      previousLocation = locationName;
+      // Update previousNode for edge creation even if deleted
+      previousNode = mapState.nodes.get(locationName) || { id: locationName, x: 0, y: 0 };
       continue;
     }
 
-    // Create a "fake" locationChanged event to use existing logic
-    const event = {
-      detail: {
-        locationId: locationName,
-        locationName: locationName,
-        previousLocationId: previousLocation,
-        command: visit.command
+    // Check if node already exists
+    let currentNode = mapState.nodes.get(locationName);
+
+    if (!currentNode) {
+      // Calculate position from direction command
+      let x = 0, y = 0;
+      if (previousNode && visit.command) {
+        const cmd = visit.command.toLowerCase();
+        const offset = directionOffsets[cmd];
+
+        if (offset) {
+          // Known direction - use it
+          x = previousNode.x + offset.x;
+          y = previousNode.y + offset.y;
+          lastKnownDirection = cmd; // Remember this direction
+        } else {
+          // Unknown command - use last known direction, or portal offset as fallback
+          const fallbackOffset = (lastKnownDirection && directionOffsets[lastKnownDirection])
+            ? directionOffsets[lastKnownDirection]
+            : directionOffsets['enter'];
+          x = previousNode.x + fallbackOffset.x;
+          y = previousNode.y + fallbackOffset.y;
+        }
+      } else if (previousNode) {
+        // No command - use portal offset as default
+        x = previousNode.x + directionOffsets['enter'].x;
+        y = previousNode.y + directionOffsets['enter'].y;
       }
-    };
+      // else: first node stays at (0, 0)
 
-    // Reuse the existing handleLocationChange logic
-    handleLocationChange(event);
+      // Create new node with spatial position
+      currentNode = {
+        id: locationName,
+        name: locationName,
+        x: x,
+        y: y,
+        type: 'room',
+        notes: '',
+        isManual: false,
+        isEdited: false
+      };
 
-    previousLocation = locationName;
+      mapState.nodes.set(locationName, currentNode);
+      mapState.protectedNodes.add(locationName);
+    }
+
+    // Create edge from previous to current
+    if (previousNode && previousNode.id !== locationName) {
+      const edgeKey = `${previousNode.id}-${locationName}`;
+
+      // Skip if edge was deleted by user or already exists
+      if (!mapState.deletedEdges.has(edgeKey) && !mapState.edges.has(edgeKey)) {
+        const command = visit.command || '';
+
+        // Determine connection type from command
+        let connectionType = 'cardinal';
+        const cmd = command.toLowerCase();
+        if (cmd === 'up' || cmd === 'down' || cmd === 'u' || cmd === 'd') {
+          connectionType = 'vertical';
+        } else if (cmd === 'in' || cmd === 'out' || cmd === 'enter' || cmd === 'exit') {
+          connectionType = 'portal';
+        }
+
+        const newEdge = {
+          from: previousNode.id,
+          to: locationName,
+          command: command,
+          connectionType: connectionType,
+          isManual: false,
+          isEdited: false
+        };
+
+        mapState.edges.set(edgeKey, newEdge);
+        mapState.protectedEdges.add(edgeKey);
+      }
+    }
+
+    previousNode = currentNode;
+  }
+
+  // Set current location (last in journey)
+  const currentLocation = getLastLocationName();
+  if (currentLocation) {
+    mapState.currentNodeId = currentLocation;
+  }
+
+  // Save map data, then clear journey only if save succeeded
+  const saveSuccess = saveMapImmediately();
+  if (saveSuccess) {
+    // Clear journey after successful sync (journey transferred to map canvas!)
+    clearJourney();
   }
 }
 
 /**
  * Save map data immediately (no debouncing)
  * Use for critical operations: delete, undo, hide map, clear
+ * @returns {boolean} True if save succeeded, false otherwise
  */
 function saveMapImmediately() {
-  if (!mapState.gameName) return;
+  if (!mapState.gameName) return false;
   try {
     localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify({
       nodes: Array.from(mapState.nodes.values()),
@@ -853,7 +950,10 @@ function saveMapImmediately() {
       autoMapEnabled: mapState.autoMapEnabled,
       currentNodeId: mapState.currentNodeId
     }));
-  } catch (e) { /* Failed to save map */ }
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /**

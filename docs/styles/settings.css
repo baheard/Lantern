@@ -1200,3 +1200,51 @@ body.voice-controls-hidden #settings-btn {
   padding: 8px 0;
   margin-bottom: 10px;
 }
+
+.gdrive-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+}
+
+.gdrive-header .material-icons {
+  font-size: 20px;
+  color: var(--accent-warm, #e8b86d);
+}
+
+.gdrive-label {
+  font-size: 0.95em;
+}
+
+.gdrive-connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: var(--text-muted, #888);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent-warm, #e8b86d);
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+.link-button:hover {
+  opacity: 0.8;
+}
+
+.link-button:active {
+  opacity: 0.6;
+}

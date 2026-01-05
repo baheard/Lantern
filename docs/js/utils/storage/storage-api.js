@@ -203,10 +203,17 @@ export function getStorageInfo() {
         const iftalkKeys = keys.filter(k => k.startsWith('iftalk_'));
 
         let totalSize = 0;
+        const sizeByType = {};
+
         iftalkKeys.forEach(key => {
             const value = localStorage.getItem(key);
             if (value) {
-                totalSize += key.length + value.length;
+                const size = key.length + value.length;
+                totalSize += size;
+
+                // Categorize by type (autosave, quicksave, backup, etc.)
+                const type = key.split('_')[1] || 'other';
+                sizeByType[type] = (sizeByType[type] || 0) + size;
             }
         });
 
@@ -214,9 +221,54 @@ export function getStorageInfo() {
             totalKeys: keys.length,
             iftalkKeys: iftalkKeys.length,
             estimatedSizeKB: (totalSize / 1024).toFixed(2),
+            estimatedSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
+            sizeByType: Object.entries(sizeByType).map(([type, bytes]) => ({
+                type,
+                sizeKB: (bytes / 1024).toFixed(2),
+                count: iftalkKeys.filter(k => k.includes(`_${type}_`)).length
+            })),
             keys: iftalkKeys
         };
     } catch (error) {
-        return { totalKeys: 0, iftalkKeys: 0, estimatedSizeKB: 0, keys: [] };
+        return { totalKeys: 0, iftalkKeys: 0, estimatedSizeKB: 0, estimatedSizeMB: 0, sizeByType: [], keys: [] };
     }
+}
+
+/**
+ * Print detailed storage report to console (for debugging)
+ */
+export function printStorageReport() {
+    const info = getStorageInfo();
+    console.log('=== IFTalk Storage Report ===');
+    console.log(`Total keys: ${info.totalKeys} (${info.iftalkKeys} from IFTalk)`);
+    console.log(`Total size: ${info.estimatedSizeKB} KB (${info.estimatedSizeMB} MB)`);
+    console.log('\nSize by type:');
+    info.sizeByType.forEach(({ type, sizeKB, count }) => {
+        console.log(`  ${type}: ${sizeKB} KB (${count} items)`);
+    });
+    console.log('\nTop 10 largest items:');
+    const itemSizes = info.keys.map(key => {
+        const value = localStorage.getItem(key);
+        const size = value ? value.length : 0;
+        return { key, sizeKB: (size / 1024).toFixed(2) };
+    }).sort((a, b) => parseFloat(b.sizeKB) - parseFloat(a.sizeKB)).slice(0, 10);
+    itemSizes.forEach(({ key, sizeKB }) => {
+        console.log(`  ${key}: ${sizeKB} KB`);
+    });
+
+    // Estimate quota (typically 5-10MB, varies by browser)
+    const estimatedQuotaMB = 5; // Conservative estimate
+    const usagePercent = ((parseFloat(info.estimatedSizeMB) / estimatedQuotaMB) * 100).toFixed(1);
+    console.log(`\nEstimated quota usage: ~${usagePercent}% (assuming ${estimatedQuotaMB}MB limit)`);
+
+    if (parseFloat(info.estimatedSizeMB) > 3) {
+        console.warn('WARNING: Storage usage is high! Consider exporting and deleting old saves.');
+    }
+
+    return info;
+}
+
+// Expose to window for console debugging
+if (typeof window !== 'undefined') {
+    window.IFTalkStorage = { getStorageInfo, printStorageReport };
 }
