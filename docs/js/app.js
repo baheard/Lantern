@@ -487,11 +487,45 @@ function handleGameOutput(text) {
 // Initialize app
 async function initApp() {
   // Fix mobile viewport height for browser chrome and keyboard
+  let viewportUpdateTimeout;
+  let previousViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
   function setMobileViewportHeight() {
-    // Use visualViewport when available (better for mobile keyboard handling)
-    const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    const vh = height * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    // Throttle updates to reduce flashing during keyboard animation
+    clearTimeout(viewportUpdateTimeout);
+    viewportUpdateTimeout = setTimeout(() => {
+      // Detect if keyboard is opening (viewport shrinking) or closing (viewport growing)
+      const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const isKeyboardOpening = currentHeight < previousViewportHeight;
+      previousViewportHeight = currentHeight;
+
+      // Save game output scroll position before viewport change
+      const gameOutput = document.getElementById('gameOutput');
+      // Calculate the position of the bottom edge of the viewport in the content
+      const oldClientHeight = gameOutput ? gameOutput.clientHeight : 0;
+      const bottomPosition = gameOutput ? gameOutput.scrollTop + oldClientHeight : 0;
+
+      // Use visualViewport when available (better for mobile keyboard handling)
+      const vh = currentHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+      // Lock document scroll to prevent black space
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+
+      // Restore game output scroll - instant for both opening and closing
+      const scrollDelay = 0;
+      setTimeout(() => {
+        if (gameOutput) {
+          // Pin the bottom line: keep the same content at the bottom edge of the viewport
+          const newClientHeight = gameOutput.clientHeight;
+          gameOutput.scrollTop = bottomPosition - newClientHeight;
+        }
+      }, scrollDelay);
+    }, 150); // 150ms delay before viewport resize
   }
 
   setMobileViewportHeight();
@@ -853,12 +887,20 @@ async function initApp() {
             state.currentGameTextElement = lastGameText;
             state.chunksValid = false;
             state.narrationChunks = [];
+          } else {
+            // No game text in lower window - but there might be upper window content
+            // (e.g., Photopia intro dialog in grid window)
+            // Invalidate chunks to force ensureChunksReady to process upper window
+            state.chunksValid = false;
+            state.narrationChunks = [];
+            state.currentGameTextElement = null;
+          }
 
-            if (ensureChunksReady() && state.narrationChunks.length > 0) {
-              // Play the last game response from the beginning
-              state.currentChunkIndex = 0;
-              speakTextChunked(null, 0);
-            }
+          // Try to create chunks (will process upper window if present)
+          if (ensureChunksReady() && state.narrationChunks.length > 0) {
+            // Play the content from the beginning
+            state.currentChunkIndex = 0;
+            speakTextChunked(null, 0);
           }
         }
 

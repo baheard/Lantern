@@ -2,6 +2,63 @@
 
 ## January 2025
 
+### January 5, 2025 - Upper Window Narration Fixes (v1.4.61)
+
+**Fixed multiple issues with upper window narration in Photopia and similar games**
+
+**Issue 1: Narration not starting when content is only in upper window**
+- Clicking "Start" when there was no lower window content (main scrolling text) would not trigger narration
+- Fixed by ensuring `ensureChunksReady()` runs regardless of lower window content presence
+- **File changed:** `docs/js/app.js` (lines 877-905)
+
+**Issue 2: Old transcript being re-narrated after upper window updates**
+- When moving from a page with lower window content to a page with only upper window content, old game-text elements remained in the DOM
+- This caused narration to play upper window content, then old lower window content from previous page
+- Fixed by clearing stale lower window game-text elements when upper window updates without main content
+- **File changed:** `docs/js/game/voxglk.js` (lines 578-589)
+
+**Issue 3: Sentences not chunking when ending with quoted punctuation**
+- Regex for inserting chunk markers only matched punctuation followed by whitespace, `<`, or end of string
+- Missed punctuation followed by quotation marks (e.g., 'together."')
+- This caused sentences in quoted dialog to not be properly chunked and highlighted
+- Fixed by including trailing quotes in the punctuation capture group: `([.!?…]["']*)`
+- This ensures quotes are included in the chunk, not split off as separate chunks (which TTS would read as "quote")
+- **File changed:** `docs/js/narration/chunking.js` (line 57)
+
+**Issue 4: hasMainContent incorrectly true for blank-line-spacer divs**
+- VM sends blank-line-spacer divs in mainWindowHTML when transitioning to upper-window-only scenes
+- Old code checked `hasMainContent = mainWindowHTML.trim()` which was truthy (has HTML)
+- But blank-line-spacer divs have no actual text content - they're just whitespace
+- This prevented clearing code from running: `hasUpperWindowContent && !hasMainContent` was always false
+- Fixed by checking textContent instead of raw HTML - blank spacers now correctly evaluate as empty
+- **File changed:** `docs/js/game/voxglk.js` (lines 558-566, 592-605)
+
+### January 5, 2025 - Mobile Keyboard Viewport Fix (v1.4.59)
+
+**Fixed mobile keyboard viewport handling for smooth UX**
+
+1. **VisualViewport API Integration**
+   - Uses `visualViewport.height` to accurately track available space when keyboard appears
+   - Dynamically updates CSS variable `--vh` based on visual viewport changes
+   - Prevents black space and content jumping during keyboard animations
+
+2. **Bottom-Line Pinning**
+   - Game content at the bottom of viewport stays pinned when keyboard opens
+   - Calculates bottom position before resize, maintains it after
+   - Creates smooth "tracking" effect as viewport shrinks
+
+3. **Optimized Timing**
+   - 150ms debounce on viewport resize prevents excessive updates during animation
+   - Instant scroll adjustment (0ms) for responsive bottom-line tracking
+   - Different behavior for keyboard opening vs closing (delayed vs immediate)
+
+4. **Fixed Positioning**
+   - HTML element uses `position: fixed` to prevent document-level scrolling
+   - Document scroll locked at (0,0) to eliminate black space below keyboard
+   - Game content maintains independent scroll container
+
+**Result:** Buttery smooth keyboard appearance with no flashing, jumping, or black space. Content stays visible and properly positioned throughout the animation.
+
 ### January 5, 2025 - Journey-Based Auto-Mapper (v1.4.57)
 
 1. **Simplified Auto-Mapper Architecture**

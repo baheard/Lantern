@@ -53,7 +53,8 @@ export function insertTemporaryMarkers(html, skipLineBreaks = false) {
   }
 
   // Mark regular punctuation (skip initials like H.P.)
-  markedHTML = markedHTML.replace(/(?<![A-Z.])([.!?…])(?=\s|<|$)/g, (match, punct) => {
+  // Include trailing quotes in punctuation (e.g., 'story."' -> marker after quote)
+  markedHTML = markedHTML.replace(/(?<![A-Z.])([.!?…]["']*)(?=\s|<|$)/g, (match, punct) => {
     return `${punct}⚐${markerCount++}⚐`;
   });
 

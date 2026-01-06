@@ -554,7 +554,16 @@ export function createVoxGlk(textOutputCallback) {
 
           // Render upper window (multi-line quotes, maps, etc.)
           const upperWindowEl = document.getElementById('upperWindow');
-          const hasMainContent = mainWindowHTML && mainWindowHTML.trim();
+
+          // Check for meaningful main content (not just blank-line-spacer divs)
+          let hasMainContent = false;
+          if (mainWindowHTML && mainWindowHTML.trim()) {
+            // Extract text content to see if there's actual text (not just blank spacers)
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = mainWindowHTML;
+            const textContent = tempDiv.textContent.trim();
+            hasMainContent = textContent.length > 0;
+          }
 
           if (hasUpperWindowContent) {
             // Upper window was mentioned in this update - update it (even if empty)
@@ -577,6 +586,23 @@ export function createVoxGlk(textOutputCallback) {
             upperWindowEl.style.display = 'none';
           }
           // NOTE: If no main content and upper window wasn't mentioned, preserve existing content (resize responses)
+
+          // Clear stale lower window content when upper window updates without main content
+          // This prevents old transcript from being re-narrated when switching to upper-window-only scenes
+          if (hasUpperWindowContent && !hasMainContent) {
+            const lowerWindowEl = document.getElementById('lowerWindow');
+            if (lowerWindowEl) {
+              // Remove all game-text elements (but preserve command line)
+              const gameTexts = lowerWindowEl.querySelectorAll('.game-text');
+              gameTexts.forEach(el => el.remove());
+              // Clear currentGameTextElement so ensureChunksReady won't use stale content
+              state.currentGameTextElement = null;
+              // CRITICAL: Invalidate old chunks so they don't get re-narrated
+              state.chunksValid = false;
+              state.narrationChunks = [];
+              state.currentChunkIndex = 0;
+            }
+          }
 
           // Render lower window (main scrolling text)
           if (mainWindowHTML && mainWindowHTML.trim()) {
