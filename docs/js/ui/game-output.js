@@ -329,17 +329,24 @@ export function addGameText(text, isCommand = false, isVoiceCommand = false, isA
   }
 
   // Scroll behavior (see reference/design-decisions.md):
-  // - First content on screen (fresh screen): scroll to top
-  // - Subsequent content (after command): scroll to show top of new text
-  const existingContent = dom.lowerWindow?.querySelectorAll('.game-text, .user-command');
-  const isFirstOnScreen = existingContent && existingContent.length <= 1;
-
-  if (isFirstOnScreen) {
-    // Fresh screen: scroll to top so user reads from beginning
+  // - User commands: always scroll to top to show the command
+  // - First game text on screen (fresh screen): scroll to top
+  // - Subsequent game text (after command): scroll to show top of new text
+  if (isCommand) {
+    // User command: scroll to top to show the command at the top
     scrollToTop(dom.gameOutput);
-  } else if (dom.gameOutput) {
-    // After command: scroll toward bottom, but keep top of new text visible
-    scrollToNewContent(div, dom.gameOutput);
+  } else {
+    // Game text: check if this is first content
+    const existingContent = dom.lowerWindow?.querySelectorAll('.game-text, .user-command');
+    const isFirstOnScreen = existingContent && existingContent.length <= 1;
+
+    if (isFirstOnScreen) {
+      // Fresh screen: scroll to top so user reads from beginning
+      scrollToTop(dom.gameOutput);
+    } else if (dom.gameOutput) {
+      // After command: scroll toward bottom, but keep top of new text visible
+      scrollToNewContent(div, dom.gameOutput);
+    }
   }
 
   // Track for highlighting (only for game text, not commands)
