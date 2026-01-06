@@ -1,5 +1,50 @@
 # Bug Fixes & Key Learnings History
 
+## Mobile Keyboard Viewport Handling (Bug Fix - 2025-01-05)
+
+**Bug**: Mobile keyboard appearance caused black space, content jumping, and poor UX
+
+**Symptoms**:
+- Black/white space appearing above or below keyboard during animation
+- Content jumping to wrong position when keyboard opens
+- Status bar scrolling off screen
+- Bottom content becoming invisible
+- Jarring transitions and flashing during keyboard animation
+
+**Root cause**: Mobile browsers resize viewport when keyboard appears, but timing and scroll behavior were not properly synchronized
+
+**Solution**: Multi-part fix using VisualViewport API
+
+1. **Accurate viewport tracking**:
+   - Use `visualViewport.height` instead of `window.innerHeight` or viewport units
+   - Update CSS variable `--vh` based on visual viewport changes
+   - Listen to `visualViewport` resize events for real-time updates
+
+2. **Bottom-line pinning** (app.js:495-527):
+   - Calculate position of bottom edge before resize: `bottomPosition = scrollTop + clientHeight`
+   - After viewport shrinks, restore: `scrollTop = bottomPosition - newClientHeight`
+   - Creates smooth "tracking" where bottom content stays pinned as viewport shrinks
+
+3. **Optimized timing**:
+   - 150ms debounce on viewport resize (prevents excessive updates during animation)
+   - Instant scroll adjustment (0ms delay for responsive tracking)
+   - Detect keyboard direction (opening vs closing) for different behavior
+
+4. **Fixed positioning** (mobile.css:325-345):
+   - HTML element: `position: fixed; top: 0; left: 0;`
+   - Prevents document-level scroll and black space
+   - Lock document scroll at (0,0) on every viewport change
+   - Game content maintains independent scroll container
+
+**Key insight**: The "tracking" effect comes from continuous viewport updates (every 150ms during keyboard animation) with instant scroll adjustments. This creates smooth bottom-pinning without transitions or delays.
+
+**Result**: Buttery smooth keyboard appearance with no flashing, jumping, or black space
+
+**Implementation files**:
+- `docs/js/app.js` (lines 489-534): VisualViewport tracking and bottom-line pinning
+- `docs/styles/mobile.css` (lines 324-345): Fixed positioning and overflow control
+- `docs/js/input/keyboard/keyboard-core.js` (lines 623-630): Keyboard state detection
+
 ## Chunk Creation Separation (Bug Fix - 2025-12-12)
 
 **Bug**: After "skip to end", new text (e.g., from "more" command) had disabled navigation buttons

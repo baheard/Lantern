@@ -41,8 +41,7 @@ body {
   line-height: 1.4;
   background: linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   color: var(--text-primary);
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  height: 100vh; /* Works with interactive-widget=resizes-content */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -207,9 +206,15 @@ body {
 /* Container */
 .container {
   flex: 1;
-  overflow: auto;
+  overflow: auto; /* Default: scrollbar on right (for welcome screen) */
   display: flex;
   justify-content: center;
+}
+
+/* When game is showing, container should not scroll - let game-output handle it */
+.container:has(.game-output:not(.hidden)) {
+  overflow: hidden;
+  min-height: 0; /* Fix for flex + overflow interaction */
 }
 
 /* Button Base Styles */

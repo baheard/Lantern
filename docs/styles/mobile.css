@@ -321,9 +321,33 @@
     font-size: var(--font-m);
   }
 
-  /* Fix body height for mobile browsers with address bar */
+  /* Use visualViewport-based height (--vh updated via JavaScript) */
+  html {
+    height: calc(var(--vh, 1vh) * 100) !important;
+    max-height: calc(var(--vh, 1vh) * 100) !important;
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: var(--bg-primary); /* Match app background */
+    /* No transition - instant resize */
+  }
+
   body {
-    height: calc(var(--vh, 1vh) * 100);
+    height: calc(var(--vh, 1vh) * 100) !important;
+    max-height: calc(var(--vh, 1vh) * 100) !important;
+    overflow: hidden;
+    overscroll-behavior: none;
+    overflow-anchor: none;
+    /* No transition - instant resize */
+  }
+
+  /* When keyboard is open, lock scroll position */
+  body.keyboard-open {
+    overflow: hidden !important;
+    touch-action: none;
   }
 
   /* Game output container - allow scrolling */

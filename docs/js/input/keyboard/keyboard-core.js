@@ -617,13 +617,16 @@ export function initKeyboardInput() {
       const wasOpen = keyboardIsOpen;
       keyboardIsOpen = heightDiff > 100;
 
-      // #7: Adjust container height to fit visual viewport when keyboard opens
-      // This prevents content from going off-screen at the top
-      const gameOutput = document.getElementById('gameOutput');
-      if (gameOutput) {
-        // Use visual viewport height as the container height
-        // This ensures content stays within visible area even with keyboard up
-        gameOutput.style.maxHeight = `${currentHeight}px`;
+      // Note: Viewport height is now handled via --vh CSS variable in app.js
+      // which responds to visualViewport.resize events
+
+      // Add class to body when keyboard is open for additional mobile fixes
+      if (keyboardIsOpen) {
+        document.body.classList.add('keyboard-open');
+        // Document scroll is locked in app.js (runs on every viewport resize)
+        // Game output maintains its own scroll position via overflow-y: auto
+      } else {
+        document.body.classList.remove('keyboard-open');
       }
 
       if (wasOpen !== keyboardIsOpen) {
