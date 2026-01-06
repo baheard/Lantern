@@ -30,7 +30,8 @@ export const APP_COMMANDS = {
   RESTORE_LATEST: ['load game', 'restore game'],
 
   // Meta-commands (typed commands that interact with save system)
-  HELP: [], // Disabled to allow game's help command
+  HELP: [], // Disabled to allow game's help command (use "app help" for app commands)
+  APP_HELP: ['app help'],
   SAVE: ['save'],
   RESTORE_META: ['restore', 'load'],
   DELETE: ['delete save', 'delete'],
