@@ -14,13 +14,13 @@ import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand,
 import { scrollToBottom } from '../utils/scroll.js';
 
 /**
- * Common single-word commands that can be sent immediately from interim results
+ * Single-word commands that can be sent immediately from interim results
  * These are simple, unambiguous commands that players use frequently
  */
 const INSTANT_COMMANDS = [
   // App navigation commands (most important!)
   'play', 'pause', 'resume', 'stop',
-  'skip', 'back', 'restart',
+  'skip', 'back', 'repeat', 'end',
   'mute',
   'status',
   // Directions
@@ -29,12 +29,43 @@ const INSTANT_COMMANDS = [
   'northeast', 'northwest', 'southeast', 'southwest',
   'ne', 'nw', 'se', 'sw',
   'in', 'out',
-  // Common verbs
-  'look', 'l', 'inventory', 'i', 'wait', 'z',
+  // Common IF commands
+  'look', 'l',
+  'inventory', 'i',
+  'wait', 'z',
+  'undo',
+  'score',
   'yes', 'no',
-  // Navigation shortcuts
-  'again', 'g'
+  'again', 'g',
+  'verbose', 'brief', 'superbrief'
 ];
+
+/**
+ * Multi-word command patterns that can be sent immediately from interim results
+ * These include app commands and common game command phrases
+ */
+const INSTANT_PATTERNS = [
+  // Skip patterns (app commands)
+  /^skip\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i,  // skip 3
+  /^skip\s+(?:all|to\s+(?:the\s+)?end)$/i,  // skip all, skip to end, skip to the end
+
+  // Back patterns (app commands)
+  /^back\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i,  // back 3
+
+  // Go + direction (common game commands)
+  /^go\s+(north|south|east|west|up|down|in|out|n|s|e|w|u|d|ne|nw|se|sw|northeast|northwest|southeast|southwest)$/i
+];
+
+/**
+ * Trigger words that might have continuations - wait briefly before processing
+ * These words can be valid alone OR part of multi-word commands
+ */
+const TRIGGER_WORDS = ['skip', 'back', 'go'];
+
+/**
+ * How long to wait (ms) for continuation after hearing a trigger word
+ */
+const TRIGGER_WAIT_MS = 200;
 
 /**
  * Update the last heard text in voice panel
@@ -107,17 +138,28 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
 }
 
 /**
- * Send any pending interim transcript as 0% confidence command
+ * Display any pending interim transcript with low confidence feedback (warble)
+ * This shows the user what was heard but does NOT execute it
  * Call this before clearing interim text to ensure it's not lost
  */
-async function sendInterimAsLowConfidence() {
+async function displayInterimAsLowConfidence() {
   if (state.currentInterimTranscript && state.currentInterimTranscript.trim()) {
+    const interimText = state.currentInterimTranscript.trim();
+
+    // Play low confidence sound (warble)
+    playLowConfidence();
+
+    // Show in transcript area WITH 0% confidence
+    showConfirmedTranscript(interimText, false, 0);
+
+    // Display in game window with muted styling (but don't send to game)
     try {
-      const { sendCommandDirect } = await import('../game/commands/command-router.js');
-      sendCommandDirect(state.currentInterimTranscript.trim(), true, 0);
+      const { addGameText } = await import('../ui/game-output.js');
+      addGameText(interimText, true, true, false, 0);
     } catch (err) {
-      // Failed to send interim text
+      // Failed to display interim text
     }
+
     state.currentInterimTranscript = '';
   }
 }
@@ -200,9 +242,30 @@ export function initVoiceRecognition(processVoiceKeywords) {
         // Echo detection error (interim) - silently ignored
       }
 
-      // Check if interim transcript is a common instant command
+      // Check if interim transcript matches an instant command (exact or pattern)
       const interimLower = interimTranscript.toLowerCase().trim();
-      if (INSTANT_COMMANDS.includes(interimLower) && !state.hasProcessedResult) {
+
+      // Check for exact match in INSTANT_COMMANDS
+      let isInstantCommand = INSTANT_COMMANDS.includes(interimLower);
+
+      // Check for pattern match in INSTANT_PATTERNS
+      if (!isInstantCommand) {
+        for (const pattern of INSTANT_PATTERNS) {
+          if (pattern.test(interimLower)) {
+            isInstantCommand = true;
+            break;
+          }
+        }
+      }
+
+      // If we have a complete instant command, process it immediately
+      if (isInstantCommand && !state.hasProcessedResult) {
+        // Cancel any pending trigger word timeout
+        if (state.triggerWordTimeout) {
+          clearTimeout(state.triggerWordTimeout);
+          state.triggerWordTimeout = null;
+        }
+
         // Found an instant command! Send it immediately without waiting for final result
         state.hasProcessedResult = true; // Prevent duplicate processing
         state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
@@ -234,6 +297,60 @@ export function initVoiceRecognition(processVoiceKeywords) {
         return;
       }
 
+      // Check if this is a trigger word (might have continuation)
+      if (TRIGGER_WORDS.includes(interimLower) && !state.hasProcessedResult) {
+        // Cancel any existing trigger timeout
+        if (state.triggerWordTimeout) {
+          clearTimeout(state.triggerWordTimeout);
+        }
+
+        // Start new timeout to wait for potential continuation
+        state.triggerWordTimeout = setTimeout(() => {
+          state.triggerWordTimeout = null;
+
+          // Timeout expired - process trigger word if it's valid alone
+          // "skip" and "back" are valid, "go" requires a direction
+          if ((interimLower === 'skip' || interimLower === 'back') && !state.hasProcessedResult) {
+            state.hasProcessedResult = true;
+            state.currentInterimTranscript = '';
+
+            const processed = processVoiceKeywords(interimTranscript, 0.95);
+            const isNavCommand = (processed === false);
+            showConfirmedTranscript(interimTranscript, isNavCommand);
+
+            if (processed !== false) {
+              playCommandSent();
+              import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
+                sendCommandDirect(processed, true, 0.95);
+              });
+            } else {
+              if (state.pendingCommandProcessed) {
+                playAppCommand();
+              }
+            }
+
+            if (state.recognition) {
+              state.recognition.stop();
+            }
+          }
+          // If it was "go", we ignore it since it's incomplete
+        }, TRIGGER_WAIT_MS);
+
+        // Update display but don't process yet - waiting for potential continuation
+        updateVoiceTranscript(interimTranscript, 'interim');
+        if (state.isScreenLocked) {
+          import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
+            updateLockTranscript(interimTranscript);
+          });
+        }
+        if (dom.voiceTranscript) {
+          dom.voiceTranscript.textContent = interimTranscript;
+          dom.voiceTranscript.classList.remove('confirmed');
+          dom.voiceTranscript.classList.add('interim');
+        }
+        return;
+      }
+
       // Update voice indicator with interim text
       updateVoiceTranscript(interimTranscript, 'interim');
 
@@ -254,8 +371,14 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
     // Process final result
     if (finalTranscript && !state.hasProcessedResult) {
+      // Clear any pending trigger word timeout
+      if (state.triggerWordTimeout) {
+        clearTimeout(state.triggerWordTimeout);
+        state.triggerWordTimeout = null;
+      }
+
       // Send any pending interim text before clearing it
-      await sendInterimAsLowConfidence();
+      await displayInterimAsLowConfidence();
 
       // Reset command processed flag
       state.pendingCommandProcessed = false;
@@ -352,8 +475,14 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onerror = async (event) => {
+    // Clear any pending trigger word timeout
+    if (state.triggerWordTimeout) {
+      clearTimeout(state.triggerWordTimeout);
+      state.triggerWordTimeout = null;
+    }
+
     // Send interim text before handling error
-    await sendInterimAsLowConfidence();
+    await displayInterimAsLowConfidence();
 
     // Silently ignore common expected errors
     if (event.error === 'network' || event.error === 'aborted') {
@@ -369,8 +498,14 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onend = async () => {
+    // Clear any pending trigger word timeout
+    if (state.triggerWordTimeout) {
+      clearTimeout(state.triggerWordTimeout);
+      state.triggerWordTimeout = null;
+    }
+
     // Send any interim text before recognition ends
-    await sendInterimAsLowConfidence();
+    await displayInterimAsLowConfidence();
 
     state.isListening = false;
     state.isRecognitionActive = false;

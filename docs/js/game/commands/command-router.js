@@ -109,8 +109,8 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
     return true;
   }
 
-  // Match "back N" or "go back N"
-  const backNMatch = cmd.match(/^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i);
+  // Match "back N"
+  const backNMatch = cmd.match(/^back\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i);
   if (backNMatch) {
     const countStr = backNMatch[1].toLowerCase();
     const count = parseNumberWord(countStr);
@@ -123,15 +123,14 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
   // Check for meta-commands
   // Note: Commands are already displayed by sendCommandDirect(), so we don't display them again here
   switch (cmd) {
-    case 'help':
-    case 'commands':
+    case 'app help':
       respondAsGame(`
 <div class="system-message">
 <b>IFTalk App Commands</b><br>
 <br>
 These commands work whether typed or spoken:<br>
 <br>
-<b>Navigation:</b> PAUSE, PLAY, SKIP, BACK, RESTART<br>
+<b>Navigation:</b> PLAY, PAUSE, REPEAT, BACK, SKIP, SKIP ALL<br>
 <b>Save/Load:</b> SAVE [name], RESTORE [name], DELETE [name], QUICK SAVE, QUICK LOAD<br>
 <b>Audio:</b> MUTE, UNMUTE, STATUS<br>
 <b>Game:</b> QUIT - Auto-save and return to game selection<br>
@@ -143,6 +142,13 @@ See Settings panel for more help.
 </div>
       `);
       return true;
+
+    case 'help':
+    case 'commands':
+      // Show brief message about app help, then pass through to game
+      respondAsGame('<div class="system-message">For app help, type <b>App Help</b></div>');
+      // Don't return true - let it pass through to game below
+      return false;
 
     case 'save':
       playAppCommand();

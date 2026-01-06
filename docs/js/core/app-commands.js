@@ -68,8 +68,8 @@ export function isAppCommand(cmd) {
     return true;
   }
 
-  // Check for "back N" or "go back N"
-  if (/^(?:back|go\s+back)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/.test(lower)) {
+  // Check for "back N"
+  if (/^back\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/.test(lower)) {
     return true;
   }
 
