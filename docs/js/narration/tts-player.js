@@ -88,9 +88,11 @@ export function stopKeepAlive() {
  * Play using browser's built-in TTS
  * @param {string} text - Text to speak
  * @param {string} voiceType - Voice type: 'narrator' or 'app'
+ * @param {number} speedModifier - Speed modifier to apply (default: 0)
+ * @param {number} pitchModifier - Pitch modifier to apply (default: 0)
  * @returns {Promise<void>} Resolves when speech finishes
  */
-export async function playWithBrowserTTS(text, voiceType = 'narrator') {
+export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModifier = 0, pitchModifier = 0) {
   if (!('speechSynthesis' in window)) {
     state.isNarrating = false;
     return;
@@ -118,8 +120,14 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator') {
       utterance.voice = selectedVoice;
     }
 
-    utterance.rate = state.browserVoiceConfig?.rate || 1.0;
-    utterance.pitch = state.browserVoiceConfig?.pitch || 1.0;
+    // Apply base rate + speed modifier
+    const baseRate = state.browserVoiceConfig?.rate || 1.0;
+    utterance.rate = baseRate + speedModifier;
+
+    // Apply base pitch + pitch modifier
+    const basePitch = state.browserVoiceConfig?.pitch || 1.0;
+    utterance.pitch = basePitch + pitchModifier;
+
     utterance.volume = state.browserVoiceConfig?.volume ?? 1.0;
 
     // Track if TTS actually started
@@ -318,10 +326,26 @@ export async function speakTextChunked(text, startFromIndex = 0) {
     const chunkText = typeof chunk === 'string' ? chunk : chunk.text;
     const voiceType = typeof chunk === 'object' ? chunk.voice : 'narrator';
 
+    // Look up speed and pitch modifiers based on marker's Glk class
+    // Check the END marker of this chunk (not start), because glkClass is detected
+    // when we process the marker that ENDS the chunk
+    let speedModifier = 0;
+    let pitchModifier = 0;
+    const endMarker = document.querySelector(`.chunk-marker-end[data-chunk="${i}"]`);
+    if (endMarker && endMarker.dataset.glkClass) {
+      const glkClass = endMarker.dataset.glkClass;
+      if (glkClass === 'header' || glkClass === 'subheader') {
+        speedModifier = -0.2;  // Slower for headers and subheaders
+        pitchModifier = -0.1;  // Lower pitch for headers and subheaders
+      } else if (glkClass === 'note') {
+        speedModifier = 0.1;   // Faster for notes
+      }
+    }
+
     // Use browser TTS directly (no server round-trip needed)
     // Mark when this chunk started playing
     state.currentChunkStartTime = Date.now();
-    await playWithBrowserTTS(chunkText, voiceType);
+    await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
 
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {

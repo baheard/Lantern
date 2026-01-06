@@ -179,10 +179,54 @@ export function insertRealMarkersAtIDs(container, markerIDs, chunkOffset = 0, sk
         const beforeNode = document.createTextNode(beforeText);
         const afterNode = document.createTextNode(afterText);
 
+        // Detect parent Glk style class for variable speech rate
+        let glkClass = null;
+
+        // First check previous sibling (marker might be right after a styled span)
+        let prevSibling = textNode.previousSibling;
+        while (prevSibling) {
+          if (prevSibling.nodeType === Node.ELEMENT_NODE && prevSibling.classList) {
+            if (prevSibling.classList.contains('glk-header')) {
+              glkClass = 'header';
+              break;
+            } else if (prevSibling.classList.contains('glk-subheader')) {
+              glkClass = 'subheader';
+              break;
+            } else if (prevSibling.classList.contains('glk-note')) {
+              glkClass = 'note';
+              break;
+            }
+          }
+          // Only check immediate previous sibling
+          break;
+        }
+
+        // If not found in sibling, check ancestors
+        if (!glkClass) {
+          let ancestor = textNode.parentNode;
+          while (ancestor) {
+            if (ancestor.classList) {
+              if (ancestor.classList.contains('glk-header')) {
+                glkClass = 'header';
+                break;
+              } else if (ancestor.classList.contains('glk-subheader')) {
+                glkClass = 'subheader';
+                break;
+              } else if (ancestor.classList.contains('glk-note')) {
+                glkClass = 'note';
+                break;
+              }
+            }
+            if (ancestor === container) break;
+            ancestor = ancestor.parentNode;
+          }
+        }
+
         // Create real marker spans
         const endMarker = document.createElement('span');
         endMarker.className = 'chunk-marker-end';
         endMarker.dataset.chunk = finalChunkIndex;
+        if (glkClass) endMarker.dataset.glkClass = glkClass;
         endMarker.style.cssText = 'display: none; position: absolute;';
 
         // Replace text node with: before + endMarker + [startMarker] + after
@@ -198,6 +242,7 @@ export function insertRealMarkersAtIDs(container, markerIDs, chunkOffset = 0, sk
           const startMarker = document.createElement('span');
           startMarker.className = 'chunk-marker-start';
           startMarker.dataset.chunk = finalChunkIndex + 1;
+          if (glkClass) startMarker.dataset.glkClass = glkClass;
           startMarker.style.cssText = 'display: none; position: absolute;';
           parent.insertBefore(startMarker, textNode);
         }
