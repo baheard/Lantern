@@ -782,6 +782,10 @@ function updateInputVisibility() {
   const hasKeyboard = hasPhysicalKeyboard();
   const isMuted = state.isMuted;
 
+  // Track if keyboard was open before mode switch (to preserve state)
+  const keyboardWasOpen = (messageInputEl && document.activeElement === messageInputEl) ||
+                          (hiddenKeyInputEl && document.activeElement === hiddenKeyInputEl);
+
   // Show/hide message input row (line mode only)
   if (messageInputRowEl) {
     const wasHidden = messageInputRowEl.classList.contains('hidden');
@@ -799,8 +803,13 @@ function updateInputVisibility() {
         if (clearInputBtnEl) clearInputBtnEl.classList.remove('hidden');
         hideVoiceIndicator();
 
-        // Don't auto-focus - let user click or type to focus
-        // This prevents unexpected scroll-to-bottom
+        // If switching from char mode with keyboard open, transfer focus to message input (mobile only)
+        if (wasHidden && keyboardWasOpen && !hasKeyboard && messageInputEl) {
+          // Small delay to ensure DOM updates complete before focusing
+          setTimeout(() => {
+            messageInputEl.focus();
+          }, 50);
+        }
       } else {
         // Unmuted (voice mode) - hide text input, send button, and clear button, show voice indicator
         if (messageInputEl) messageInputEl.classList.add('hidden');
@@ -811,6 +820,15 @@ function updateInputVisibility() {
     } else {
       // Char mode or no input - hide message input row
       messageInputRowEl.classList.add('hidden');
+
+      // If keyboard was open, keep it open by focusing hidden input (mobile only)
+      if (keyboardWasOpen && !hasKeyboard && hiddenKeyInputEl) {
+        // Small delay to ensure DOM updates complete before focusing
+        setTimeout(() => {
+          hiddenKeyInputEl.value = '';
+          hiddenKeyInputEl.focus();
+        }, 50);
+      }
     }
   }
 
