@@ -436,7 +436,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.4.80</span>
+        <span class="status-version">v1.4.81</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -632,11 +632,11 @@
   <div class="controls-wrapper hidden" id="controlsWrapper">
     <!-- Navigation Controls -->
     <div class="controls hidden" id="controls">
-      <button id="skipToStartBtn" class="btn-nav" title="&quot;Restart&quot;"><span class="material-icons">skip_previous</span></button>
-      <button id="prevChunkBtn" class="btn-nav" title="&quot;Back&quot;"><span class="material-icons">fast_rewind</span></button>
-      <button id="pausePlayBtn" class="btn-nav" title="&quot;Play&quot;"><span class="material-icons">play_arrow</span></button>
-      <button id="nextChunkBtn" class="btn-nav" title="&quot;Skip&quot;"><span class="material-icons">fast_forward</span></button>
-      <button id="skipToEndBtn" class="btn-nav" title="&quot;Skip All&quot;"><span class="material-icons">skip_next</span></button>
+      <button id="skipToStartBtn" class="btn btn-nav" title="&quot;Restart&quot;"><span class="material-icons">skip_previous</span></button>
+      <button id="prevChunkBtn" class="btn btn-nav" title="&quot;Back&quot;"><span class="material-icons">fast_rewind</span></button>
+      <button id="pausePlayBtn" class="btn btn-nav" title="&quot;Play&quot;"><span class="material-icons">play_arrow</span></button>
+      <button id="nextChunkBtn" class="btn btn-nav" title="&quot;Skip&quot;"><span class="material-icons">fast_forward</span></button>
+      <button id="skipToEndBtn" class="btn btn-nav" title="&quot;Skip All&quot;"><span class="material-icons">skip_next</span></button>
       <div class="controls-spacer"></div>
       <button id="muteBtn" class="btn-mic" title="Mute Mic (toggle microphone)"><span class="material-icons">mic</span></button>
     </div>
@@ -658,11 +658,11 @@
         </button>
       </div>
       <!-- Send button (outside input, where X used to be) -->
-      <button class="btn-nav" id="sendBtn" title="Send (Enter)" aria-label="Send command">
+      <button class="btn btn-nav" id="sendBtn" title="Send (Enter)" aria-label="Send command">
         <span class="material-icons">send</span>
       </button>
       <!-- Menu button (all screen sizes) -->
-      <button id="mobileMenuBtn" class="btn-nav btn-menu" title="Menu" aria-label="Open quick actions menu" aria-expanded="false" aria-haspopup="menu"><span class="material-icons">menu</span></button>
+      <button id="mobileMenuBtn" class="btn btn-nav btn-menu" title="Menu" aria-label="Open quick actions menu" aria-expanded="false" aria-haspopup="menu"><span class="material-icons">menu</span></button>
     </div>
 
     <!-- Quick Actions Menu (vertical dropdown, appears above menu button) -->
@@ -696,36 +696,38 @@
 
     <!-- Char Input Panel (replaces message input in char mode) -->
     <div class="char-input-panel hidden" id="charInputPanel">
-      <!-- Arrow navigation -->
-      <button class="btn-char-nav" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
-        <span class="material-icons">arrow_back</span>
-      </button>
-      <button class="btn-char-nav" id="charUpBtn" title="Up Arrow" aria-label="Up Arrow">
-        <span class="material-icons">arrow_upward</span>
-      </button>
-      <button class="btn-char-nav" id="charDownBtn" title="Down Arrow" aria-label="Down Arrow">
-        <span class="material-icons">arrow_downward</span>
-      </button>
-      <button class="btn-char-nav" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
-        <span class="material-icons">arrow_forward</span>
-      </button>
+      <!-- Arrow navigation group (tighter spacing) -->
+      <div class="arrow-button-group">
+        <button class="btn btn-char btn-char-nav" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <button class="btn btn-char btn-char-nav" id="charUpBtn" title="Up Arrow" aria-label="Up Arrow">
+          <span class="material-icons">arrow_upward</span>
+        </button>
+        <button class="btn btn-char btn-char-nav" id="charDownBtn" title="Down Arrow" aria-label="Down Arrow">
+          <span class="material-icons">arrow_downward</span>
+        </button>
+        <button class="btn btn-char btn-char-nav" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
+          <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
 
-      <!-- Spacer to push Enter to the right -->
+      <!-- Spacer to push action buttons to the right -->
       <div class="char-input-spacer"></div>
 
       <!-- Keyboard button (opens virtual keyboard) -->
-      <button class="btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
+      <button class="btn btn-char btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
         <span class="material-icons">keyboard</span>
       </button>
 
-      <!-- Menu button (opens mobile menu) -->
-      <button class="btn-char-action" id="charMenuBtn" title="Menu" aria-label="Open menu" aria-expanded="false" aria-haspopup="menu">
-        <span class="material-icons">menu</span>
+      <!-- Enter button (like Send button) -->
+      <button class="btn btn-char btn-char-action btn-char-enter" id="charEnterBtn" title="Enter" aria-label="Enter Key">
+        <span class="material-icons">send</span>
       </button>
 
-      <!-- Enter button (rightmost, like Send button) -->
-      <button class="btn-char-action btn-char-enter" id="charEnterBtn" title="Enter" aria-label="Enter Key">
-        <span class="material-icons">send</span>
+      <!-- Menu button (rightmost, opens mobile menu) -->
+      <button class="btn btn-char btn-char-action" id="charMenuBtn" title="Menu" aria-label="Open menu" aria-expanded="false" aria-haspopup="menu">
+        <span class="material-icons">menu</span>
       </button>
     </div>
   </div>
@@ -733,7 +735,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.79</span>
+    <span class="status-version">v1.4.81</span>
   </div>
 
   <!-- Lock Screen Overlay -->

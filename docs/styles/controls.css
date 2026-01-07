@@ -27,21 +27,38 @@
   flex-shrink: 0;
 }
 
+/* Base button class - shared by all buttons */
+.btn {
+  width: 45px;
+  height: 45px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn:hover {
+  background: var(--highlight-active);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Navigation buttons (message input row) */
 .btn-nav {
-  padding: 8px 12px;
-  border: none;
   border-radius: 6px;
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
 }
 
 .btn-nav:hover {
-  background: var(--highlight-active);
-  border-color: var(--accent-muted);
   transform: scale(1.05);
 }
 
@@ -61,7 +78,6 @@
 /* Animated rotating gradient border when playing */
 #pausePlayBtn.playing {
   border: none;
-  padding: 10px 14px; /* Compensate for removed 2px border */
   color: var(--accent-primary);
 }
 
@@ -118,7 +134,8 @@
 
 /* Mic button */
 .btn-mic {
-  padding: 8px 12px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   border: 2px solid var(--accent-primary);
   background: transparent;
@@ -143,7 +160,6 @@
 /* Animated gradient border when listening */
 .btn-mic.listening {
   border: none;
-  padding: 10px 14px; /* Compensate for removed 2px border */
   overflow: hidden;
   color: white;
 }
@@ -234,7 +250,7 @@
   height: 45px;
   flex: 1;
   padding: 10px 16px;
-  padding-right: 45px; /* Space for inline clear button */
+  padding-right: 50px; /* Space for inline clear button (45px + margin) */
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: var(--bg-elevated);
@@ -251,8 +267,8 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -443,7 +459,7 @@
 .char-input-panel {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 8px;
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
@@ -452,8 +468,16 @@
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
   transform: translateY(0);
   opacity: 1;
-  max-height: 100px;
+  max-height: 45px;
   min-height: 45px; /* Match message input height */
+}
+
+/* Arrow button group - tighter spacing to prevent overflow */
+.arrow-button-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
 }
 
 .char-input-panel.hidden {
@@ -470,28 +494,18 @@
   min-width: 0px;
 }
 
+/* Char panel buttons - extend base .btn */
+.btn-char {
+  border-radius: 8px;
+  gap: 6px;
+}
+
 /* Arrow navigation buttons */
 .btn-char-nav {
-  width: 45px;
-  height: 45px;
-  padding: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
   font-size: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
 .btn-char-nav:hover {
-  background: var(--highlight-active);
-  border-color: var(--accent-muted);
-  color: var(--text-primary);
   transform: scale(1.05);
 }
 
@@ -499,54 +513,9 @@
   transform: scale(0.95);
 }
 
-/* Keyboard button */
+/* Action buttons (keyboard, menu, enter) */
 .btn-char-action {
-  height: 45px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.btn-char-action:hover {
-  background: var(--highlight-active);
-  border-color: var(--accent-muted);
-  color: var(--text-primary);
-}
-
-.btn-char-action:active {
-  transform: scale(0.98);
-}
-
-/* Escape button - matches arrow button dimensions */
-#charEscBtn {
-  width: 45px;
-  height: 45px;
-  padding: 0;
-  justify-content: center;
-}
-
-/* Enter button - styled like send button */
-.btn-char-enter {
-  height: 45px;
-  padding: 10px 16px;
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.btn-char-enter:hover {
-  background: var(--highlight-active);
-  border-color: var(--accent-muted);
-  color: var(--text-primary);
 }
 
 /* Status Bar */
@@ -561,8 +530,8 @@
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  /* Safe area inset for iOS home indicator - reduced size (1/4 of default) */
-  padding-bottom: max(6px, calc(6px + env(safe-area-inset-bottom) * 0.25));
+  /* Safe area inset for iOS home indicator - minimal padding */
+  padding-bottom: 6px;
 }
 
 /* Extend dark background below status bar into safe area */
@@ -627,14 +596,7 @@
  * Note: Map canvas internal elements use relative z-index 1-100 within the canvas.
  */
 
-/* Menu button - centered icon */
-.btn-menu {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-}
-
+/* Menu button - no additional styling needed (inherits from .btn-nav) */
 .btn-menu .material-icons {
   margin: 0;
 }
