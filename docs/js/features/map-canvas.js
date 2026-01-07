@@ -106,69 +106,72 @@ function createMapUI() {
   cont.id = 'mapCanvasOverlay';
   cont.className = 'map-canvas-overlay hidden';
   cont.innerHTML = `
-    <div class="map-toolbar">
-      <button class="map-btn map-close-btn" id="mapCloseBtn" aria-label="Close map">
-        <span class="material-icons">close</span>
-      </button>
-      <div class="map-title">
-        <span class="map-title-text">Game Map</span>
-        <span class="map-node-count" id="mapNodeCount"></span>
-      </div>
-      <div class="map-toolbar-actions">
-        <button class="map-btn" id="mapCenterBtn" title="Center on current location" aria-label="Center view">
-          <span class="material-icons">my_location</span>
-        </button>
-        <div class="map-zoom-controls">
-          <button class="map-btn map-btn-small" id="mapZoomOutBtn" title="Zoom out" aria-label="Zoom out">
-            <span class="material-icons">remove</span>
+    <div class="map-panel">
+      <div class="map-resize-handle" id="mapResizeHandle"></div>
+      <div class="map-toolbar">
+        <div class="map-title">
+          <span class="map-title-text">Game Map</span>
+          <span class="map-node-count" id="mapNodeCount"></span>
+        </div>
+        <div class="map-toolbar-actions">
+          <button class="map-btn" id="mapCenterBtn" title="Center on current location" aria-label="Center view">
+            <span class="material-icons">my_location</span>
           </button>
-          <button class="map-btn map-btn-small" id="mapZoomInBtn" title="Zoom in" aria-label="Zoom in">
-            <span class="material-icons">add</span>
+          <div class="map-zoom-controls">
+            <button class="map-btn map-btn-small" id="mapZoomOutBtn" title="Zoom out" aria-label="Zoom out">
+              <span class="material-icons">remove</span>
+            </button>
+            <button class="map-btn map-btn-small" id="mapZoomInBtn" title="Zoom in" aria-label="Zoom in">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+          <button class="map-toggle-btn ${mapState.autoMapEnabled ? 'active' : ''}" id="mapAutoToggle"
+                  title="Toggle auto-mapping" aria-label="Toggle auto-mapping">
+            <span class="material-icons">auto_fix_high</span>
+            <span class="toggle-label">Auto</span>
+          </button>
+          <button class="map-btn" id="mapClearBtn" title="Clear map" aria-label="Clear map">
+            <span class="material-icons">delete_sweep</span>
           </button>
         </div>
-        <button class="map-toggle-btn ${mapState.autoMapEnabled ? 'active' : ''}" id="mapAutoToggle"
-                title="Toggle auto-mapping" aria-label="Toggle auto-mapping">
-          <span class="material-icons">auto_fix_high</span>
-          <span class="toggle-label">Auto</span>
-        </button>
-        <button class="map-btn" id="mapClearBtn" title="Clear map" aria-label="Clear map">
-          <span class="material-icons">delete_sweep</span>
+        <button class="map-btn map-close-btn" id="mapCloseBtn" aria-label="Close map">
+          <span class="material-icons">close</span>
         </button>
       </div>
-    </div>
-    <div class="map-canvas-container">
-      <canvas id="mapCanvas"></canvas>
-      <div class="map-fab-container">
-        <button class="map-fab map-fab-undo" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
-          <span class="material-icons">undo</span>
+      <div class="map-canvas-container">
+        <canvas id="mapCanvas"></canvas>
+        <div class="map-fab-container">
+          <button class="map-fab map-fab-undo" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
+            <span class="material-icons">undo</span>
+          </button>
+          <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
+            <span class="material-icons">timeline</span>
+          </button>
+          <button class="map-fab map-fab-primary" id="mapAddNodeBtn" title="Add location" aria-label="Add location">
+            <span class="material-icons">add_location</span>
+          </button>
+        </div>
+        <button class="map-legend-toggle" id="mapLegendToggle" aria-label="Show legend" title="Legend">
+          <span class="material-icons">help_outline</span>
         </button>
-        <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
-          <span class="material-icons">timeline</span>
-        </button>
-        <button class="map-fab map-fab-primary" id="mapAddNodeBtn" title="Add location" aria-label="Add location">
-          <span class="material-icons">add_location</span>
-        </button>
+        <div class="map-legend" id="mapLegend" title="Click to close">
+          <div class="legend-section">Nodes</div>
+          <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
+          <div class="legend-item"><span class="legend-dot legend-user"></span><span>Player-created</span></div>
+          <div class="legend-item"><span class="legend-dot legend-current"></span><span>Current location</span></div>
+          <div class="legend-section">Connections</div>
+          <div class="legend-item"><span class="legend-line legend-cardinal"></span><span>Cardinal</span></div>
+          <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Up/Down</span></div>
+          <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal</span></div>
+          <div class="legend-item"><span class="legend-line legend-player"></span><span>Player-created</span></div>
+        </div>
       </div>
-      <button class="map-legend-toggle" id="mapLegendToggle" aria-label="Show legend" title="Legend">
-        <span class="material-icons">help_outline</span>
-      </button>
-      <div class="map-legend" id="mapLegend" title="Click to close">
-        <div class="legend-section">Nodes</div>
-        <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
-        <div class="legend-item"><span class="legend-dot legend-user"></span><span>Player-created</span></div>
-        <div class="legend-item"><span class="legend-dot legend-current"></span><span>Current location</span></div>
-        <div class="legend-section">Connections</div>
-        <div class="legend-item"><span class="legend-line legend-cardinal"></span><span>Cardinal</span></div>
-        <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Up/Down</span></div>
-        <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal</span></div>
-        <div class="legend-item"><span class="legend-line legend-player"></span><span>Player-created</span></div>
+      <div class="map-hint hidden" id="mapHint"></div>
+      <div class="map-mode-indicator hidden" id="mapModeIndicator">
+        <span class="material-icons">touch_app</span>
+        <span>Tap to add location</span>
+        <button class="mode-cancel-btn" id="modeCancelBtn">Cancel</button>
       </div>
-    </div>
-    <div class="map-hint hidden" id="mapHint"></div>
-    <div class="map-mode-indicator hidden" id="mapModeIndicator">
-      <span class="material-icons">touch_app</span>
-      <span>Tap to add location</span>
-      <button class="mode-cancel-btn" id="modeCancelBtn">Cancel</button>
     </div>
   `;
   document.body.appendChild(cont);
@@ -270,6 +273,118 @@ function setupEventListeners() {
 
   // Sheet drag-to-dismiss
   setupSheetDragHandlers();
+
+  // Resize handle
+  const resizeState = setupResizeHandle();
+
+  // Backdrop click handler - close map when clicking outside panel
+  container.addEventListener('click', (e) => {
+    // Don't close if we just finished resizing
+    if (resizeState.isResizing() || resizeState.wasResizing()) {
+      return;
+    }
+    // Close if clicking outside the panel (on backdrop area)
+    const panel = container.querySelector('.map-panel');
+    if (!panel.contains(e.target)) {
+      hideMap();
+    }
+  });
+}
+
+// ============================================================================
+// RESIZE HANDLE
+// ============================================================================
+
+function setupResizeHandle() {
+  const handle = document.getElementById('mapResizeHandle');
+  const panel = document.querySelector('.map-panel');
+  let isResizing = false;
+  let wasResizing = false; // Track if we just finished resizing
+  let startX = 0;
+  let startLeft = 0;
+
+  const MIN_LEFT_PERCENT = 5; // Minimum 5% from left edge
+  const MAX_LEFT_PERCENT = 80; // Maximum 80% from left edge (20% min panel width)
+
+  function startResize(e) {
+    isResizing = true;
+    wasResizing = false;
+    startX = e.clientX || e.touches?.[0]?.clientX;
+    // Get current left position as percentage
+    const rect = panel.getBoundingClientRect();
+    startLeft = (rect.left / window.innerWidth) * 100;
+
+    handle.classList.add('dragging');
+    panel.classList.add('resizing');
+    document.body.classList.add('map-resizing');
+
+    e.preventDefault();
+    e.stopPropagation(); // Prevent backdrop click
+  }
+
+  function doResize(e) {
+    if (!isResizing) return;
+
+    const currentX = e.clientX || e.touches?.[0]?.clientX;
+    const deltaX = currentX - startX;
+    const deltaPercent = (deltaX / window.innerWidth) * 100;
+    const newLeftPercent = Math.min(MAX_LEFT_PERCENT, Math.max(MIN_LEFT_PERCENT, startLeft + deltaPercent));
+
+    panel.style.left = `${newLeftPercent}%`;
+
+    // Trigger canvas resize to fit new panel width
+    requestAnimationFrame(() => {
+      resizeCanvas();
+    });
+
+    e.preventDefault();
+  }
+
+  function stopResize(e) {
+    if (!isResizing) return;
+
+    isResizing = false;
+    wasResizing = true; // Mark that we just finished resizing
+    handle.classList.remove('dragging');
+    panel.classList.remove('resizing');
+    document.body.classList.remove('map-resizing');
+
+    // Save the custom left percentage preference
+    const rect = panel.getBoundingClientRect();
+    const leftPercent = (rect.left / window.innerWidth) * 100;
+    localStorage.setItem('iftalk_map_left_percent', leftPercent.toString());
+
+    // Reset wasResizing flag after a short delay to prevent backdrop click
+    setTimeout(() => {
+      wasResizing = false;
+    }, 100);
+
+    e?.preventDefault();
+    e?.stopPropagation();
+  }
+
+  // Mouse events
+  handle.addEventListener('mousedown', startResize);
+  document.addEventListener('mousemove', doResize);
+  document.addEventListener('mouseup', stopResize);
+
+  // Touch events
+  handle.addEventListener('touchstart', startResize, { passive: false });
+  document.addEventListener('touchmove', doResize, { passive: false });
+  document.addEventListener('touchend', stopResize);
+  document.addEventListener('touchcancel', stopResize);
+
+  // Restore saved left position on map show
+  const savedLeftPercent = localStorage.getItem('iftalk_map_left_percent');
+  if (savedLeftPercent) {
+    const leftPercent = parseFloat(savedLeftPercent);
+    if (leftPercent >= MIN_LEFT_PERCENT && leftPercent <= MAX_LEFT_PERCENT) {
+      panel.style.left = `${leftPercent}%`;
+    }
+  }
+
+  // Expose wasResizing flag for backdrop click handler
+  return { isResizing: () => isResizing, wasResizing: () => wasResizing };
 }
 
 // ============================================================================
@@ -706,6 +821,9 @@ function showOnboardingOrHint() {
 
 export function showMap() {
   container.classList.remove('hidden');
+  // Trigger reflow to ensure transition happens
+  container.offsetHeight;
+  container.classList.add('visible');
   setIsVisible(true);
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
   timers.fabVisible = true; timers.isInteracting = false;
@@ -715,12 +833,16 @@ export function showMap() {
 }
 
 export function hideMap() {
-  container?.classList.add('hidden');
+  container?.classList.remove('visible');
   setIsVisible(false);
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
   exitAddMode();
   saveMapForGame(true);  // Immediate save when hiding map
+  // Wait for slide-out animation before hiding
+  setTimeout(() => {
+    if (!isVisible) container?.classList.add('hidden');
+  }, 350);
 }
 
 export function toggleMap() { isVisible ? hideMap() : showMap(); }

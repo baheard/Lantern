@@ -213,8 +213,11 @@ export function setupSheetDragHandlers() {
   const handleArea = document.getElementById('sheetHandleArea');
   const backdrop = document.getElementById('nodeEditBackdrop');
 
-  // Tap backdrop to close
-  backdrop.addEventListener('click', closeNodeSheet);
+  // Tap backdrop to close (stop propagation to prevent map overlay from also closing)
+  backdrop.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent map overlay backdrop from receiving this click
+    closeNodeSheet();
+  });
 
   // Drag to dismiss
   handleArea.addEventListener('touchstart', onSheetDragStart, { passive: true });

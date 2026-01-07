@@ -1,12 +1,11 @@
 /**
- * Mobile Menu - Horizontal icon menu for mobile devices (<800px)
+ * Quick Actions Menu - Vertical dropdown menu for all screen sizes
  *
- * Replaces the settings button with a menu button that shows a horizontal row of icons:
+ * Menu button shows a vertical dropdown with quick actions:
  * - Settings
  * - Map
  * - Quick Save
  * - Quick Restore
- * - Lock Screen
  */
 
 /**
@@ -14,15 +13,26 @@
  */
 export function initMobileMenu() {
   const menuBtn = document.getElementById('mobileMenuBtn');
+  const charMenuBtn = document.getElementById('charMenuBtn');
   const menu = document.getElementById('mobileMenu');
 
-  if (!menuBtn || !menu) return;
+  if (!menu) return;
 
-  // Toggle menu on button click
-  menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleMenu();
-  });
+  // Toggle menu on button click (main menu button)
+  if (menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+  }
+
+  // Toggle menu on char panel menu button click
+  if (charMenuBtn) {
+    charMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+  }
 
   // Handle menu item clicks
   const menuItems = document.querySelectorAll('.mobile-menu-item');
@@ -39,7 +49,8 @@ export function initMobileMenu() {
   document.addEventListener('click', (e) => {
     if (!menu.classList.contains('hidden') &&
         !menu.contains(e.target) &&
-        e.target !== menuBtn) {
+        e.target !== menuBtn &&
+        e.target !== charMenuBtn) {
       closeMenu();
     }
   });
@@ -52,7 +63,12 @@ export function initMobileMenu() {
     if (e.key === 'Escape') {
       e.preventDefault();
       closeMenu();
-      menuBtn.focus();
+      // Focus the appropriate menu button (whichever one is visible/available)
+      if (charMenuBtn && !charMenuBtn.classList.contains('hidden')) {
+        charMenuBtn.focus();
+      } else if (menuBtn) {
+        menuBtn.focus();
+      }
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
 
@@ -106,9 +122,11 @@ export function initMobileMenu() {
 function toggleMenu() {
   const menu = document.getElementById('mobileMenu');
   const menuBtn = document.getElementById('mobileMenuBtn');
-  if (menu && menuBtn) {
+  const charMenuBtn = document.getElementById('charMenuBtn');
+  if (menu) {
     const isOpen = menu.classList.toggle('hidden');
-    menuBtn.setAttribute('aria-expanded', !isOpen);
+    if (menuBtn) menuBtn.setAttribute('aria-expanded', !isOpen);
+    if (charMenuBtn) charMenuBtn.setAttribute('aria-expanded', !isOpen);
   }
 }
 
@@ -118,9 +136,11 @@ function toggleMenu() {
 function closeMenu() {
   const menu = document.getElementById('mobileMenu');
   const menuBtn = document.getElementById('mobileMenuBtn');
-  if (menu && menuBtn) {
+  const charMenuBtn = document.getElementById('charMenuBtn');
+  if (menu) {
     menu.classList.add('hidden');
-    menuBtn.setAttribute('aria-expanded', 'false');
+    if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+    if (charMenuBtn) charMenuBtn.setAttribute('aria-expanded', 'false');
   }
 }
 
@@ -131,10 +151,13 @@ function closeMenu() {
 async function handleMenuAction(action) {
   switch(action) {
     case 'settings':
-      // Open settings panel
-      const settingsBtn = document.getElementById('settingsBtn');
-      if (settingsBtn) {
-        settingsBtn.click();
+      // Open settings panel directly
+      const settingsPanel = document.getElementById('settingsPanel');
+      if (settingsPanel) {
+        // Import and call updateSettingsContext
+        const { updateSettingsContext } = await import('./settings/index.js');
+        updateSettingsContext();
+        settingsPanel.classList.toggle('open');
       }
       break;
 
@@ -159,14 +182,6 @@ async function handleMenuAction(action) {
       const loadBtn = document.getElementById('quickRestoreBtn');
       if (loadBtn) {
         loadBtn.click();
-      }
-      break;
-
-    case 'lock':
-      // Trigger lock screen
-      const lockBtn = document.getElementById('lockScreenBtn');
-      if (lockBtn) {
-        lockBtn.click();
       }
       break;
 

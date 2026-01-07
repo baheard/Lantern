@@ -627,71 +627,7 @@
  * Note: Map canvas internal elements use relative z-index 1-100 within the canvas.
  */
 
-/* Quick Action Bar - Always visible */
-.quick-action-bar {
-  display: flex;
-  position: fixed;
-  right: 16px;
-  bottom: 80px; /* Just above controls */
-  z-index: 900; /* Overlay layer - below modals, above content */
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Desktop (≥800px): More padding, collapsible */
-@media (min-width: 800px) {
-  .quick-action-bar {
-    right: 24px; /* More padding from edge */
-    bottom: 100px; /* Just above desktop controls */
-  }
-
-  .quick-action-items {
-    opacity: 1 !important;
-    transform: none !important;
-    pointer-events: auto !important;
-  }
-
-  /* Desktop can collapse too */
-  .quick-action-bar.collapsed .quick-action-items {
-    transform: translateX(calc(100% + 12px));
-    opacity: 0;
-    pointer-events: none;
-  }
-}
-
-/* Mobile (<800px): Hide quick action bar, use horizontal menu instead */
-@media (max-width: 799px) {
-  .quick-action-bar {
-    display: none !important;
-  }
-
-  .desktop-only {
-    display: none !important;
-  }
-
-  .mobile-only {
-    display: flex !important;
-  }
-}
-
-@media (min-width: 800px) {
-  .mobile-only {
-    display: none !important;
-  }
-
-  .desktop-only {
-    display: flex !important;
-  }
-
-  /* Hide mobile menu on desktop (edge case: menu open during window resize) */
-  .mobile-menu {
-    display: none !important;
-  }
-}
-
-/* Mobile menu button - centered icon */
+/* Menu button - centered icon */
 .btn-menu {
   display: flex;
   align-items: center;
@@ -703,7 +639,7 @@
   margin: 0;
 }
 
-/* Mobile Menu - Vertical dropdown above menu button */
+/* Quick Actions Menu - Vertical dropdown above menu button */
 .mobile-menu {
   position: fixed;
   bottom: 80px; /* Slightly higher above menu button */
@@ -718,7 +654,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
-  z-index: 950; /* Overlay layer - above quick action bar, below modals (see Z-INDEX HIERARCHY) */
+  z-index: 950; /* Overlay layer - below modals (see Z-INDEX HIERARCHY) */
   min-width: 200px;
   transform-origin: bottom right;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -760,97 +696,3 @@
   flex: 1;
   font-weight: 500;
 }
-
-.quick-action-toggle {
-  background: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 0;
-  border-radius: 8px;
-  padding: 10px 8px;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  opacity: 0.5;
-}
-
-.quick-action-toggle:hover {
-  background: rgba(0, 0, 0, 0.4);
-  color: rgba(255, 255, 255, 1);
-  opacity: 1;
-}
-
-.quick-action-toggle:active {
-  transform: scale(0.95);
-}
-
-.quick-action-toggle .material-icons {
-  font-size: 64px;
-}
-
-.quick-action-items {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.quick-action-icon {
-  width: 52px;
-  height: 52px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.quick-action-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: var(--accent-muted);
-  transform: translateX(-4px) scale(1.05);
-}
-
-.quick-action-icon:active {
-  transform: translateX(-4px) scale(0.95);
-}
-
-.quick-action-icon .material-icons {
-  font-size: 24px;
-}
-
-.quick-action-icon.hidden {
-  display: none;
-}
-
-/* Pulse animation for save/load feedback */
-.quick-action-icon.pulse {
-  animation: quick-action-pulse 0.4s ease;
-}
-
-@keyframes quick-action-pulse {
-  0%, 100% {
-    transform: translateX(-4px) scale(1);
-  }
-  50% {
-    transform: translateX(-4px) scale(1.15);
-    background: var(--accent-primary);
-  }
-}
-

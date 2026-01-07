@@ -3,21 +3,129 @@
  * Mobile-first, touch-optimized styling for the interactive game map
  */
 
-/* Map Overlay */
+/* Map Overlay - Slide from right with backdrop */
 .map-canvas-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: #0f172a;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  visibility: hidden;
 }
 
 .map-canvas-overlay.hidden {
   display: none;
+}
+
+.map-canvas-overlay.visible {
+  visibility: visible;
+}
+
+/* Backdrop - left side, clickable to close */
+.map-canvas-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 1;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.map-canvas-overlay.visible::before {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Map panel - slides from right */
+.map-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 5%; /* 5% gap from left edge */
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+  cursor: default; /* Reset cursor inside panel */
+}
+
+.map-canvas-overlay.visible .map-panel {
+  transform: translateX(0);
+}
+
+/* Resize handle on left edge - draggable */
+.map-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  cursor: ew-resize;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-resize-handle::before {
+  content: '';
+  width: 6px;
+  height: 48px;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  border-radius: 3px;
+  box-shadow:
+    inset 0 8px 0 rgba(255, 255, 255, 0.1),
+    inset 0 16px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -16px 0 rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+.map-resize-handle:hover::before {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
+  width: 8px;
+}
+
+.map-resize-handle.dragging::before {
+  background: linear-gradient(90deg,
+    rgba(59, 130, 246, 0.4) 0%,
+    rgba(59, 130, 246, 0.6) 50%,
+    rgba(59, 130, 246, 0.4) 100%
+  );
+  width: 8px;
+}
+
+/* Visual feedback during resize */
+.map-panel.resizing {
+  transition: none;
+  user-select: none;
+}
+
+body.map-resizing {
+  cursor: ew-resize !important;
+  user-select: none;
+}
+
+body.map-resizing * {
+  cursor: ew-resize !important;
 }
 
 /* Toolbar - Mobile optimized */
@@ -30,6 +138,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 56px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .map-title {
@@ -56,6 +165,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-right: 56px; /* Space for close button */
 }
 
 /* Toolbar Buttons - 44px minimum touch target */
@@ -99,6 +209,10 @@
 .map-close-btn {
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .map-close-btn:hover {
@@ -173,6 +287,8 @@
   display: block;
   cursor: grab;
   touch-action: none;
+  position: relative;
+  z-index: 1;
 }
 
 #mapCanvas:active {
@@ -1024,6 +1140,10 @@
 
 /* Mobile Adjustments */
 @media (max-width: 380px) {
+  .map-panel {
+    left: 5%; /* Keep 5% left gap even on small screens */
+  }
+
   .map-toolbar {
     padding: 6px 10px;
   }
@@ -1073,6 +1193,11 @@
     width: 44px;
     height: 44px;
   }
+}
+
+/* Tablet and larger - map panel uses full-screen layout with 5% left gap */
+@media (min-width: 768px) {
+  /* No additional constraints needed - panel spans from left:5% to right:0 */
 }
 
 /* Landscape mobile */
