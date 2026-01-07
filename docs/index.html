@@ -129,6 +129,16 @@
                 <span class="material-icons">restore</span> Quick Restore
               </button>
             </div>
+
+            <!-- Quick Action: Lock Screen (mobile only) -->
+            <div class="quick-action-row mobile-only-section">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaLockToggle" class="toggle-switch">
+              </label>
+              <button id="lockScreenBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">screen_lock_portrait</span> Lock Screen
+              </button>
+            </div>
           </div>
 
           <!-- Divider -->
@@ -677,6 +687,11 @@
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
       </button>
+      <!-- Lock Screen (mobile only - bottom, closest to menu button) -->
+      <button class="mobile-menu-item mobile-only-item" id="mobileLockIcon" data-action="lock" role="menuitem">
+        <span class="material-icons">screen_lock_portrait</span>
+        <span class="menu-item-text">Lock Screen</span>
+      </button>
     </div>
 
     <!-- Char Input Panel (replaces message input in char mode) -->
@@ -735,6 +750,13 @@
         <span class="material-icons">mic_off</span>
         <span class="muted-text">Microphone Muted</span>
       </div>
+      <button class="lock-mic-button hidden" id="lockMicButton">
+        <div class="lock-mic-button-inner">
+          <span class="material-icons">mic</span>
+          <span class="mic-text" id="lockMicButtonText">Hold to Unmute</span>
+        </div>
+        <div class="lock-mic-progress" id="lockMicProgress"></div>
+      </button>
       <div class="lock-screen-instructions">
         Say "unlock" or press and hold
       </div>

@@ -696,3 +696,11 @@
   flex: 1;
   font-weight: 500;
 }
+
+/* Hide mobile-only items on desktop */
+@media (min-width: 800px) {
+  .mobile-only-item,
+  .mobile-only-section {
+    display: none !important;
+  }
+}

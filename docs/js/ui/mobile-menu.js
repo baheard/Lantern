@@ -6,6 +6,7 @@
  * - Map
  * - Quick Save
  * - Quick Restore
+ * - Lock Screen (mobile only)
  */
 
 /**
@@ -182,6 +183,14 @@ async function handleMenuAction(action) {
       const loadBtn = document.getElementById('quickRestoreBtn');
       if (loadBtn) {
         loadBtn.click();
+      }
+      break;
+
+    case 'lock':
+      // Trigger lock screen (mobile only)
+      const lockBtn = document.getElementById('lockScreenBtn');
+      if (lockBtn) {
+        lockBtn.click();
       }
       break;
 
