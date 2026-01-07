@@ -3,6 +3,22 @@
  * Mobile-first, touch-optimized styling for the interactive game map
  */
 
+/* Z-index system - centralized layer management */
+:root {
+  --z-map-overlay: 1000;          /* Map overlay base layer */
+  --z-map-backdrop: 1;            /* Backdrop within overlay */
+  --z-map-panel: 2;               /* Map panel above backdrop */
+  --z-map-resize-handle: 3;       /* Resize handle above panel */
+  --z-map-legend: 5;              /* Legend floating element */
+  --z-map-legend-toggle: 6;       /* Legend toggle above legend */
+  --z-map-fab: 10;                /* Floating action buttons */
+  --z-map-mode-indicator: 15;     /* Mode indicator banner */
+  --z-map-hint: 20;               /* Hint toasts */
+  --z-map-edit-backdrop: 49;      /* Node edit backdrop */
+  --z-map-edit-sheet: 50;         /* Node edit sheet */
+  --z-map-context-menu: 100;      /* Context menu */
+}
+
 /* Map Overlay - Slide from right with backdrop */
 .map-canvas-overlay {
   position: fixed;
@@ -10,7 +26,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: var(--z-map-overlay);
   visibility: hidden;
 }
 
@@ -31,7 +47,7 @@
   bottom: 0;
   right: 0;
   background: rgba(0, 0, 0, 0);
-  z-index: 1;
+  z-index: var(--z-map-backdrop);
   transition: background 0.3s ease;
   cursor: pointer;
 }
@@ -50,7 +66,7 @@
   background: #0f172a;
   display: flex;
   flex-direction: column;
-  z-index: 2;
+  z-index: var(--z-map-panel);
   transform: translateX(100%);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
@@ -69,7 +85,7 @@
   bottom: 0;
   width: 24px;
   cursor: ew-resize;
-  z-index: 3;
+  z-index: var(--z-map-resize-handle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,13 +135,14 @@
   user-select: none;
 }
 
+/* Scoped resize cursor - only affects map overlay during resize */
 body.map-resizing {
-  cursor: ew-resize !important;
   user-select: none;
 }
 
-body.map-resizing * {
-  cursor: ew-resize !important;
+body.map-resizing .map-canvas-overlay,
+body.map-resizing .map-canvas-overlay * {
+  cursor: ew-resize;
 }
 
 /* Toolbar - Mobile optimized */
@@ -288,7 +305,7 @@ body.map-resizing * {
   cursor: grab;
   touch-action: none;
   position: relative;
-  z-index: 1;
+  z-index: var(--z-map-backdrop);
 }
 
 #mapCanvas:active {
@@ -303,7 +320,7 @@ body.map-resizing * {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  z-index: 10;
+  z-index: var(--z-map-fab);
 }
 
 .map-fab {
@@ -387,7 +404,7 @@ body.map-resizing * {
   background: rgba(15, 23, 42, 0.9);
   color: #94a3b8;
   cursor: pointer;
-  z-index: 6;
+  z-index: var(--z-map-legend-toggle);
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
@@ -422,7 +439,7 @@ body.map-resizing * {
   background: rgba(15, 23, 42, 0.9);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 5;
+  z-index: var(--z-map-legend);
   cursor: pointer;
 }
 
@@ -538,7 +555,7 @@ body.map-resizing * {
   text-align: center;
   pointer-events: none;
   animation: hintFadeIn 0.2s ease-out;
-  z-index: 20;
+  z-index: var(--z-map-hint);
 }
 
 .map-hint.hidden {
@@ -571,7 +588,7 @@ body.map-resizing * {
   border-radius: 24px;
   font-size: 14px;
   font-weight: 500;
-  z-index: 15;
+  z-index: var(--z-map-mode-indicator);
   animation: hintFadeIn 0.2s ease-out;
 }
 
@@ -604,7 +621,7 @@ body.map-resizing * {
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   overflow: hidden;
-  z-index: 100;
+  z-index: var(--z-map-context-menu);
 }
 
 .map-context-menu.hidden {
@@ -643,7 +660,7 @@ body.map-resizing * {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 49;
+  z-index: var(--z-map-edit-backdrop);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -668,7 +685,7 @@ body.map-resizing * {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
   max-height: 80vh;
   overflow: hidden;
-  z-index: 50;
+  z-index: var(--z-map-edit-sheet);
   animation: sheetSlideUp 0.3s ease-out;
 }
 

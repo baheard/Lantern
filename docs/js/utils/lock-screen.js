@@ -18,6 +18,9 @@ import { enableKeepAwake, disableKeepAwake } from './wake-lock.js';
 let lockScreenOverlay = null;
 let unlockButton = null;
 let unlockProgress = null;
+let lockMicButton = null;
+let lockMicProgress = null;
+let lockMicButtonText = null;
 let lockListeningIndicator = null;
 let lockMutedIndicator = null;
 let lockTranscript = null;
@@ -25,6 +28,9 @@ let lockTranscript = null;
 // Hold-to-unlock state
 let holdTimer = null;
 let holdStartTime = 0;
+
+// Hold-to-speak state
+let micHoldActive = false;
 
 // Track keep awake state before locking (so we can restore it on unlock)
 let wasKeepAwakeEnabledBeforeLock = false;
@@ -37,6 +43,9 @@ export function initLockScreen() {
   lockScreenOverlay = document.getElementById('lockScreenOverlay');
   unlockButton = document.getElementById('unlockButton');
   unlockProgress = document.getElementById('unlockProgress');
+  lockMicButton = document.getElementById('lockMicButton');
+  lockMicProgress = document.getElementById('lockMicProgress');
+  lockMicButtonText = document.getElementById('lockMicButtonText');
   lockListeningIndicator = document.getElementById('lockListeningIndicator');
   lockMutedIndicator = document.getElementById('lockMutedIndicator');
   lockTranscript = document.getElementById('lockTranscript');
@@ -115,6 +124,18 @@ export function lockScreen() {
     unlockButton.addEventListener('mouseleave', handleUnlockHoldEnd);
   }
 
+  // Add touch event listeners to mic button (hold to speak)
+  if (lockMicButton) {
+    lockMicButton.addEventListener('touchstart', handleMicHoldStart, { passive: false });
+    lockMicButton.addEventListener('touchend', handleMicHoldEnd, { passive: false });
+    lockMicButton.addEventListener('touchcancel', handleMicHoldEnd, { passive: false });
+
+    // Mouse events for desktop testing
+    lockMicButton.addEventListener('mousedown', handleMicHoldStart);
+    lockMicButton.addEventListener('mouseup', handleMicHoldEnd);
+    lockMicButton.addEventListener('mouseleave', handleMicHoldEnd);
+  }
+
   updateStatus('Screen locked (touch disabled) - voice active');
 }
 
@@ -146,6 +167,7 @@ export function unlockScreen() {
   // Clear lock screen display elements
   hideLockListeningIndicator();
   hideLockMutedIndicator();
+  hideLockMicButton();
   clearLockTranscript();
 
   // Resume animations
@@ -164,8 +186,23 @@ export function unlockScreen() {
     unlockButton.removeEventListener('mouseleave', handleUnlockHoldEnd);
   }
 
+  // Remove mic button event listeners
+  if (lockMicButton) {
+    lockMicButton.removeEventListener('touchstart', handleMicHoldStart);
+    lockMicButton.removeEventListener('touchend', handleMicHoldEnd);
+    lockMicButton.removeEventListener('touchcancel', handleMicHoldEnd);
+    lockMicButton.removeEventListener('mousedown', handleMicHoldStart);
+    lockMicButton.removeEventListener('mouseup', handleMicHoldEnd);
+    lockMicButton.removeEventListener('mouseleave', handleMicHoldEnd);
+  }
+
   // Clear any active hold timer
   clearHoldTimer();
+
+  // Stop any active mic hold
+  if (micHoldActive) {
+    stopMicHold();
+  }
 
   updateStatus('Screen unlocked');
 }
@@ -459,9 +496,156 @@ export function updateLockScreenMicStatus() {
 
   if (state.isMuted) {
     showLockMutedIndicator();
+    // Show mic button when muted (hold to speak)
+    showLockMicButton();
   } else {
     hideLockMutedIndicator();
+    // Hide mic button when not muted
+    hideLockMicButton();
     // Show listening indicator immediately when not muted
     showLockListeningIndicator();
+  }
+}
+
+/**
+ * Show lock mic button (hold to unmute/speak)
+ */
+function showLockMicButton() {
+  if (lockMicButton && state.isScreenLocked) {
+    // Update button text based on push-to-talk mode
+    if (lockMicButtonText) {
+      lockMicButtonText.textContent = state.pushToTalkMode ? 'Hold to Speak' : 'Hold to Unmute';
+    }
+    lockMicButton.classList.remove('hidden');
+  }
+}
+
+/**
+ * Hide lock mic button
+ */
+function hideLockMicButton() {
+  if (lockMicButton) {
+    lockMicButton.classList.add('hidden');
+  }
+}
+
+/**
+ * Handle mic button hold start
+ * @param {TouchEvent|MouseEvent} e - Event
+ */
+async function handleMicHoldStart(e) {
+  if (!state.isScreenLocked || !state.isMuted) return;
+
+  e.preventDefault(); // Prevent default touch/mouse behavior
+
+  micHoldActive = true;
+
+  // Add visual feedback class
+  if (lockMicButton) {
+    lockMicButton.classList.add('speaking');
+  }
+
+  // Show progress indicator
+  if (lockMicProgress) {
+    lockMicProgress.style.height = '100%';
+  }
+
+  // If push-to-talk mode: temporarily unmute for this hold only
+  // If continuous mode: unmute permanently
+  const isPushToTalk = state.pushToTalkMode;
+
+  // Unmute mic and start recognition
+  state.isMuted = false;
+  state.listeningEnabled = true;
+
+  // Hide muted indicator and show listening indicator
+  hideLockMutedIndicator();
+  showLockListeningIndicator();
+
+  // Hide mic button if not in push-to-talk mode (mic is now unmuted permanently)
+  if (!isPushToTalk) {
+    hideLockMicButton();
+  }
+
+  // Update UI indicators
+  const { playUnmuteTone } = await import('./audio-feedback.js');
+  playUnmuteTone();
+
+  // Start voice recognition
+  if (state.recognition && !state.isRecognitionActive) {
+    try {
+      await state.recognition.start();
+    } catch (err) {
+      // Recognition already running or failed to start
+    }
+  }
+
+  if (isPushToTalk) {
+    updateStatus('🎤 Listening... Speak now!');
+  } else {
+    updateStatus('Microphone unmuted');
+  }
+}
+
+/**
+ * Handle mic button hold end (release)
+ * @param {TouchEvent|MouseEvent} e - Event
+ */
+function handleMicHoldEnd(e) {
+  if (!state.isScreenLocked || !micHoldActive) return;
+
+  e.preventDefault();
+
+  stopMicHold();
+}
+
+/**
+ * Stop mic hold - only re-mute if in push-to-talk mode
+ */
+async function stopMicHold() {
+  if (!micHoldActive) return;
+
+  micHoldActive = false;
+
+  // Remove visual feedback
+  if (lockMicButton) {
+    lockMicButton.classList.remove('speaking');
+  }
+
+  // Reset progress indicator
+  if (lockMicProgress) {
+    lockMicProgress.style.height = '0%';
+  }
+
+  const isPushToTalk = state.pushToTalkMode;
+
+  // Only re-mute if in push-to-talk mode
+  if (isPushToTalk) {
+    // Restore muted state
+    state.isMuted = true;
+    state.listeningEnabled = false;
+
+    // Stop voice recognition
+    if (state.recognition && state.isRecognitionActive) {
+      try {
+        state.recognition.stop();
+      } catch (err) {
+        // Recognition already stopped
+      }
+    }
+
+    // Restore indicators
+    hideLockListeningIndicator();
+    showLockMutedIndicator();
+    showLockMicButton();
+
+    const { playMuteTone } = await import('./audio-feedback.js');
+    playMuteTone();
+
+    updateStatus('Hold mic button to speak');
+  } else {
+    // Continuous mode - mic stays unmuted
+    // Indicators already updated in handleMicHoldStart
+    updateStatus('Microphone active');
   }
 }

@@ -40,6 +40,9 @@ import {
 // INITIALIZATION
 // ============================================================================
 
+// Store resize state for cleanup
+let resizeState = null;
+
 export function initMapCanvas() {
   createMapUI();
   setupEventListeners();
@@ -274,13 +277,13 @@ function setupEventListeners() {
   // Sheet drag-to-dismiss
   setupSheetDragHandlers();
 
-  // Resize handle
-  const resizeState = setupResizeHandle();
+  // Resize handle - store for cleanup
+  resizeState = setupResizeHandle();
 
   // Backdrop click handler - close map when clicking outside panel
   container.addEventListener('click', (e) => {
     // Don't close if we just finished resizing
-    if (resizeState.isResizing() || resizeState.wasResizing()) {
+    if (resizeState && (resizeState.isResizing() || resizeState.wasResizing())) {
       return;
     }
     // Close if clicking outside the panel (on backdrop area)
@@ -295,6 +298,20 @@ function setupEventListeners() {
 // RESIZE HANDLE
 // ============================================================================
 
+// Resize configuration constants
+const RESIZE_CONFIG = {
+  MIN_LEFT_PERCENT: 5,        // Minimum 5% from left edge (desktop)
+  MIN_LEFT_PERCENT_MOBILE: 15, // Minimum 15% from left edge (mobile, easier to close)
+  MAX_LEFT_PERCENT: 80,       // Maximum 80% from left edge (20% min panel width)
+  MOBILE_BREAKPOINT: 768,     // Screens below this use mobile constraints
+  RESIZE_DEBOUNCE_MS: 100     // Debounce for wasResizing flag
+};
+
+// Helper: Get clientX from mouse or touch event
+function getClientX(e) {
+  return e.clientX || e.touches?.[0]?.clientX;
+}
+
 function setupResizeHandle() {
   const handle = document.getElementById('mapResizeHandle');
   const panel = document.querySelector('.map-panel');
@@ -303,13 +320,17 @@ function setupResizeHandle() {
   let startX = 0;
   let startLeft = 0;
 
-  const MIN_LEFT_PERCENT = 5; // Minimum 5% from left edge
-  const MAX_LEFT_PERCENT = 80; // Maximum 80% from left edge (20% min panel width)
+  // Get responsive constraints based on screen size
+  const getMinLeftPercent = () => {
+    return window.innerWidth < RESIZE_CONFIG.MOBILE_BREAKPOINT
+      ? RESIZE_CONFIG.MIN_LEFT_PERCENT_MOBILE
+      : RESIZE_CONFIG.MIN_LEFT_PERCENT;
+  };
 
   function startResize(e) {
     isResizing = true;
     wasResizing = false;
-    startX = e.clientX || e.touches?.[0]?.clientX;
+    startX = getClientX(e);
     // Get current left position as percentage
     const rect = panel.getBoundingClientRect();
     startLeft = (rect.left / window.innerWidth) * 100;
@@ -325,10 +346,11 @@ function setupResizeHandle() {
   function doResize(e) {
     if (!isResizing) return;
 
-    const currentX = e.clientX || e.touches?.[0]?.clientX;
+    const currentX = getClientX(e);
     const deltaX = currentX - startX;
     const deltaPercent = (deltaX / window.innerWidth) * 100;
-    const newLeftPercent = Math.min(MAX_LEFT_PERCENT, Math.max(MIN_LEFT_PERCENT, startLeft + deltaPercent));
+    const minLeft = getMinLeftPercent();
+    const newLeftPercent = Math.min(RESIZE_CONFIG.MAX_LEFT_PERCENT, Math.max(minLeft, startLeft + deltaPercent));
 
     panel.style.left = `${newLeftPercent}%`;
 
@@ -349,42 +371,59 @@ function setupResizeHandle() {
     panel.classList.remove('resizing');
     document.body.classList.remove('map-resizing');
 
-    // Save the custom left percentage preference
-    const rect = panel.getBoundingClientRect();
-    const leftPercent = (rect.left / window.innerWidth) * 100;
-    localStorage.setItem('iftalk_map_left_percent', leftPercent.toString());
+    // Save the custom left percentage preference (with error handling)
+    try {
+      const rect = panel.getBoundingClientRect();
+      const leftPercent = (rect.left / window.innerWidth) * 100;
+      localStorage.setItem('iftalk_map_left_percent', leftPercent.toString());
+    } catch (e) {
+      console.warn('Failed to save map panel position:', e);
+    }
 
     // Reset wasResizing flag after a short delay to prevent backdrop click
     setTimeout(() => {
       wasResizing = false;
-    }, 100);
+    }, RESIZE_CONFIG.RESIZE_DEBOUNCE_MS);
 
     e?.preventDefault();
     e?.stopPropagation();
   }
 
+  // Use AbortController for clean event listener cleanup
+  const abortController = new AbortController();
+  const signal = abortController.signal;
+
   // Mouse events
-  handle.addEventListener('mousedown', startResize);
-  document.addEventListener('mousemove', doResize);
-  document.addEventListener('mouseup', stopResize);
+  handle.addEventListener('mousedown', startResize, { signal });
+  document.addEventListener('mousemove', doResize, { signal });
+  document.addEventListener('mouseup', stopResize, { signal });
 
   // Touch events
-  handle.addEventListener('touchstart', startResize, { passive: false });
-  document.addEventListener('touchmove', doResize, { passive: false });
-  document.addEventListener('touchend', stopResize);
-  document.addEventListener('touchcancel', stopResize);
+  handle.addEventListener('touchstart', startResize, { passive: false, signal });
+  document.addEventListener('touchmove', doResize, { passive: false, signal });
+  document.addEventListener('touchend', stopResize, { signal });
+  document.addEventListener('touchcancel', stopResize, { signal });
 
-  // Restore saved left position on map show
-  const savedLeftPercent = localStorage.getItem('iftalk_map_left_percent');
-  if (savedLeftPercent) {
-    const leftPercent = parseFloat(savedLeftPercent);
-    if (leftPercent >= MIN_LEFT_PERCENT && leftPercent <= MAX_LEFT_PERCENT) {
-      panel.style.left = `${leftPercent}%`;
+  // Restore saved left position on map show (with error handling)
+  try {
+    const savedLeftPercent = localStorage.getItem('iftalk_map_left_percent');
+    if (savedLeftPercent) {
+      const leftPercent = parseFloat(savedLeftPercent);
+      const minLeft = getMinLeftPercent();
+      if (leftPercent >= minLeft && leftPercent <= RESIZE_CONFIG.MAX_LEFT_PERCENT) {
+        panel.style.left = `${leftPercent}%`;
+      }
     }
+  } catch (e) {
+    console.warn('Failed to restore map panel position:', e);
   }
 
-  // Expose wasResizing flag for backdrop click handler
-  return { isResizing: () => isResizing, wasResizing: () => wasResizing };
+  // Expose state and cleanup function for backdrop click handler
+  return {
+    isResizing: () => isResizing,
+    wasResizing: () => wasResizing,
+    cleanup: () => abortController.abort()
+  };
 }
 
 // ============================================================================
@@ -839,10 +878,33 @@ export function hideMap() {
   clearTimeout(timers.fabHideTimer);
   exitAddMode();
   saveMapForGame(true);  // Immediate save when hiding map
-  // Wait for slide-out animation before hiding
-  setTimeout(() => {
-    if (!isVisible) container?.classList.add('hidden');
-  }, 350);
+
+  // Clean up resize event listeners
+  if (resizeState && resizeState.cleanup) {
+    resizeState.cleanup();
+    resizeState = null;
+  }
+
+  // Wait for slide-out animation using transitionend event
+  const panel = container?.querySelector('.map-panel');
+  if (panel) {
+    const handleTransitionEnd = (e) => {
+      // Only handle the transform transition on the panel itself
+      if (e.target === panel && e.propertyName === 'transform' && !isVisible) {
+        container?.classList.add('hidden');
+        panel.removeEventListener('transitionend', handleTransitionEnd);
+      }
+    };
+    panel.addEventListener('transitionend', handleTransitionEnd);
+
+    // Fallback timeout in case transitionend doesn't fire
+    setTimeout(() => {
+      if (!isVisible) {
+        container?.classList.add('hidden');
+        panel.removeEventListener('transitionend', handleTransitionEnd);
+      }
+    }, 500);
+  }
 }
 
 export function toggleMap() { isVisible ? hideMap() : showMap(); }
