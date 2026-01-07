@@ -65,13 +65,13 @@
 
     <div class="settings-content">
 
-      <!-- Quick Actions Section (default open) -->
-      <div class="settings-section collapsible" id="quickActionsSection">
+      <!-- Quick Actions Section (default closed) -->
+      <div class="settings-section collapsible collapsed" id="quickActionsSection">
         <h3 class="section-header">
           <span class="material-icons">bolt</span> Quick Actions
         </h3>
         <div class="section-content">
-          <!-- Home / Currently Playing (in-game only) -->
+          <!-- Home / Currently Playing (in-game only, standalone) -->
           <div class="current-game-display game-section-item" id="currentGameDisplay">
             <span class="current-game-info">
               <span class="current-game-label">Currently playing:</span>
@@ -82,10 +82,13 @@
             </button>
           </div>
 
+          <!-- Divider -->
+          <div class="settings-divider"></div>
+
           <!-- Quick Actions Header -->
           <div class="quick-actions-header">
             <p class="setting-description">
-              These buttons also appear in the <strong>quick action bar</strong> on the right side of your screen.
+              These buttons also appear in the <strong>quick action bar</strong> (desktop) or <strong>menu</strong> (mobile) for easy access during gameplay.
             </p>
           </div>
 
@@ -93,7 +96,7 @@
           <div class="quick-actions-grid">
             <!-- Column Headers -->
             <div class="quick-actions-grid-header">
-              <span class="quick-bar-header">Show in quick bar</span>
+              <span class="quick-bar-header">Quick access</span>
               <span class="action-header">Action</span>
             </div>
 
@@ -133,7 +136,7 @@
                 <input type="checkbox" id="qaLockToggle" class="toggle-switch">
               </label>
               <button id="lockScreenBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">screen_lock_portrait</span> Lock Screen Now
+                <span class="material-icons">screen_lock_portrait</span> Lock Screen
               </button>
             </div>
           </div>
@@ -433,7 +436,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.4.65</span>
+        <span class="status-version">v1.4.79</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -658,8 +661,38 @@
       <button class="btn-nav" id="sendBtn" title="Send (Enter)" aria-label="Send command">
         <span class="material-icons">send</span>
       </button>
-      <!-- Settings button (always on the right) -->
-      <button id="settingsBtn" class="btn-nav btn-settings" title="Settings"><span class="material-icons">settings</span></button>
+      <!-- Settings button (desktop) / Menu button (mobile) -->
+      <button id="settingsBtn" class="btn-nav btn-settings desktop-only" title="Settings"><span class="material-icons">settings</span></button>
+      <button id="mobileMenuBtn" class="btn-nav btn-menu mobile-only" title="Menu" aria-label="Open quick actions menu" aria-expanded="false" aria-haspopup="menu"><span class="material-icons">menu</span></button>
+    </div>
+
+    <!-- Mobile Menu (vertical dropdown, appears above menu button) -->
+    <div class="mobile-menu hidden" id="mobileMenu" role="menu" aria-labelledby="mobileMenuBtn">
+      <!-- Settings (top) -->
+      <button class="mobile-menu-item" id="mobileSettingsIcon" data-action="settings" role="menuitem">
+        <span class="material-icons">settings</span>
+        <span class="menu-item-text">Settings</span>
+      </button>
+      <!-- Map -->
+      <button class="mobile-menu-item" id="mobileMapIcon" data-action="map" role="menuitem">
+        <span class="material-icons">map</span>
+        <span class="menu-item-text">Map</span>
+      </button>
+      <!-- Quick Save -->
+      <button class="mobile-menu-item" id="mobileSaveIcon" data-action="quicksave" role="menuitem">
+        <span class="material-icons">save</span>
+        <span class="menu-item-text">Quick Save</span>
+      </button>
+      <!-- Quick Restore -->
+      <button class="mobile-menu-item" id="mobileLoadIcon" data-action="quickload" role="menuitem">
+        <span class="material-icons">restore</span>
+        <span class="menu-item-text">Quick Restore</span>
+      </button>
+      <!-- Lock Screen (bottom, closest to menu button - most important) -->
+      <button class="mobile-menu-item" id="mobileLockIcon" data-action="lock" role="menuitem">
+        <span class="material-icons">screen_lock_portrait</span>
+        <span class="menu-item-text">Lock Screen</span>
+      </button>
     </div>
 
     <!-- Char Input Panel (replaces message input in char mode) -->
@@ -722,7 +755,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.65</span>
+    <span class="status-version">v1.4.79</span>
   </div>
 
   <!-- Lock Screen Overlay -->

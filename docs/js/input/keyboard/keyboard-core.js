@@ -162,10 +162,18 @@ export function initKeyboardInput() {
     sendBtnEl.addEventListener('touchstart', captureSendBtnKeyboardState, { passive: true });
 
     sendBtnEl.addEventListener('click', () => {
-      sendCommand();
-      // Restore focus if it was focused before clicking send button
-      if (sendBtnKeyboardCapture && messageInputEl) {
-        messageInputEl.focus();
+      const inputType = getInputType();
+
+      // In char mode, send Enter key to game
+      if (inputType === 'char' && !isSystemEntryMode()) {
+        sendInput('return', 'char');
+      } else {
+        // In line mode, send the command normally
+        sendCommand();
+        // Restore focus if it was focused before clicking send button
+        if (sendBtnKeyboardCapture && messageInputEl) {
+          messageInputEl.focus();
+        }
       }
     });
   }
@@ -400,6 +408,15 @@ export function initKeyboardInput() {
       return; // Feature disabled by user
     }
 
+    // Check if mobile menu is open - if so, allow the click-outside handler to close it
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+      // Menu is open - don't trigger tap-to-examine, let menu close naturally
+      touchStartX = null;
+      touchStartY = null;
+      return;
+    }
+
     // Detect scrolling/dragging - if finger moved more than 10px, user was scrolling
     // Using industry standard threshold (10px) to distinguish tap from scroll
     if (touchStartX !== null && touchStartY !== null) {
@@ -526,6 +543,15 @@ export function initKeyboardInput() {
     // Check if tap-to-examine is enabled
     const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') === 'true';
     if (!isTapExamineEnabled) {
+      if (highlightOverlay) {
+        highlightOverlay.style.display = 'none';
+      }
+      return;
+    }
+
+    // Check if mobile menu is open - don't highlight words while menu is open
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
       if (highlightOverlay) {
         highlightOverlay.style.display = 'none';
       }
@@ -807,6 +833,7 @@ function updateInputVisibility() {
         if (sendBtnEl) {
           sendBtnEl.classList.remove('hidden');
           sendBtnEl.disabled = false; // Re-enable send button
+          sendBtnEl.title = 'Send (Enter)'; // Restore default title
         }
         if (clearInputBtnEl) {
           clearInputBtnEl.classList.remove('hidden');
@@ -836,11 +863,13 @@ function updateInputVisibility() {
           }
           if (sendBtnEl) {
             sendBtnEl.classList.remove('hidden');
-            sendBtnEl.disabled = true; // Disable send button too
+            sendBtnEl.disabled = false; // Keep enabled - sends Enter key in char mode
+            // Update title to show it sends Enter
+            sendBtnEl.title = 'Press Enter to continue';
           }
           if (clearInputBtnEl) {
             clearInputBtnEl.classList.remove('hidden');
-            clearInputBtnEl.disabled = true; // Disable clear button too
+            clearInputBtnEl.disabled = true; // Disable clear button (nothing to clear)
           }
           hideVoiceIndicator();
         } else {

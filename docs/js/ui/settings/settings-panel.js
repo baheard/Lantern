@@ -75,18 +75,19 @@ export function updateSettingsContext() {
     if (isWelcome) {
       item.style.display = 'none';
     } else {
-      // Preserve original display type (flex for buttons and danger-zone containers)
-      const isFlexElement = item.classList.contains('compact-btn') ||
-                            item.tagName === 'BUTTON' ||
-                            item.classList.contains('danger-zone');
-      item.style.display = isFlexElement ? 'flex' : 'block';
+      // Remove inline display style to let CSS classes control display
+      item.style.display = '';
     }
   });
 
   // Show/hide welcome-specific items
   const welcomeItems = document.querySelectorAll('.welcome-section-item');
   welcomeItems.forEach(item => {
-    item.style.display = isWelcome ? 'block' : 'none';
+    if (isWelcome) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
   });
 
   // No need to reload settings - they're global now!

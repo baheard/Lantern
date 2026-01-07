@@ -1086,7 +1086,7 @@
 
 .quick-action-btn {
   width: auto;
-  min-width: 180px;
+  min-width: 20ch;
   align-self: flex-start;
 }
 
@@ -1247,4 +1247,90 @@ body.voice-controls-hidden #settings-btn {
 
 .link-button:active {
   opacity: 0.6;
+}
+
+/* Quick Actions Header */
+.quick-actions-header {
+  padding: 12px 16px;
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-actions-header .setting-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.quick-actions-header strong {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Grid Header */
+.quick-actions-grid-header {
+  display: grid;
+  grid-template-columns: 12ch 1fr;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  align-items: center;
+}
+
+.quick-bar-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-warm);
+  text-align: center;
+}
+
+.action-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-warm);
+  text-align: left;
+  text-transform: capitalize;
+}
+
+/* Quick Action Row - Checkbox on left, Button on right */
+.quick-action-row {
+  display: grid;
+  grid-template-columns: 12ch auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.quick-action-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.quick-action-checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.quick-action-checkbox .toggle-switch {
+  margin: 0;
+}
+
+.quick-action-row .compact-btn {
+  margin: 0;
+  justify-self: start;
+  width: auto;
 }

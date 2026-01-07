@@ -36,6 +36,8 @@ import { addGameText } from './ui/game-output.js';
 import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from './ui/settings/index.js';
 import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
+import { initQuickActionBar, updateQuickBarForGameState } from './ui/quick-action-bar.js';
+import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
 
 // Game modules
 import { sendCommand, sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
@@ -649,6 +651,8 @@ async function initApp() {
   initAllSettings();
   initHistoryButtons();
   initConfirmDialog();
+  initQuickActionBar();
+  initMobileMenu();
   initSaveHandlers();
   initDialogInterceptor();
   initScrollDetection();

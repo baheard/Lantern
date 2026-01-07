@@ -11,6 +11,8 @@ import { updateNavButtons } from '../ui/nav-buttons.js';
 import { stopNarration } from '../narration/tts-player.js';
 import { createVoxGlk, sendInput, getInputType } from './voxglk.js';
 import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
+import { updateQuickBarForGameState } from '../ui/quick-action-bar.js';
+import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
 
@@ -70,6 +72,8 @@ export async function startGame(gamePath, onOutput) {
 
     // Update settings context to show game-specific items (map button, etc.)
     updateSettingsContext();
+    updateQuickBarForGameState(true); // Show game-specific quick actions
+    updateMobileMenuForGameState(true); // Show game-specific mobile menu icons
 
     // Initialize keyboard input
     const { initKeyboardInput } = await import('../input/keyboard/index.js');
@@ -240,6 +244,8 @@ export async function startGame(gamePath, onOutput) {
 
     // Update settings context to hide game-specific items (map button, etc.)
     updateSettingsContext();
+    updateQuickBarForGameState(false); // Hide game-specific quick actions
+    updateMobileMenuForGameState(false); // Hide game-specific mobile menu icons
 
     // Show error to user
     alert('Failed to load game: ' + error.message);
@@ -285,6 +291,8 @@ export function unloadGame() {
 
   // Update settings context to hide game-specific items (map button, etc.)
   updateSettingsContext();
+  updateQuickBarForGameState(false); // Hide game-specific quick actions
+  updateMobileMenuForGameState(false); // Hide game-specific mobile menu icons
 
   // Update status
   updateStatus('Select a game to start');
