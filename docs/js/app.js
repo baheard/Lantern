@@ -781,23 +781,37 @@ async function initApp() {
   // Navigation button handlers
   const skipToStartBtn = document.getElementById('skipToStartBtn');
   if (skipToStartBtn) {
-    skipToStartBtn.addEventListener('click', () => {
+    const handleSkipToStart = () => {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
+    };
+    skipToStartBtn.addEventListener('click', handleSkipToStart);
+    skipToStartBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSkipToStart();
+      }
     });
   }
 
   const prevChunkBtn = document.getElementById('prevChunkBtn');
   if (prevChunkBtn) {
-    prevChunkBtn.addEventListener('click', () => {
+    const handlePrev = () => {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToChunk(-1, () => speakTextChunked(null, state.currentChunkIndex));
+    };
+    prevChunkBtn.addEventListener('click', handlePrev);
+    prevChunkBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handlePrev();
+      }
     });
   }
 
   const pausePlayBtn = document.getElementById('pausePlayBtn');
   if (pausePlayBtn) {
-    pausePlayBtn.addEventListener('click', async () => {
+    const handlePausePlay = async () => {
       if (state.autoplayEnabled) {
         // Currently in AUTOPLAY mode - switch to MANUAL mode
         state.autoplayEnabled = false;
@@ -907,22 +921,43 @@ async function initApp() {
         updateStatus('Autoplay on');
         updateNavButtons();
       }
+    };
+    pausePlayBtn.addEventListener('click', handlePausePlay);
+    pausePlayBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handlePausePlay();
+      }
     });
   }
 
   const nextChunkBtn = document.getElementById('nextChunkBtn');
   if (nextChunkBtn) {
-    nextChunkBtn.addEventListener('click', () => {
+    const handleNext = () => {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToChunk(1, () => speakTextChunked(null, state.currentChunkIndex));
+    };
+    nextChunkBtn.addEventListener('click', handleNext);
+    nextChunkBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleNext();
+      }
     });
   }
 
   const skipToEndBtn = document.getElementById('skipToEndBtn');
   if (skipToEndBtn) {
-    skipToEndBtn.addEventListener('click', () => {
+    const handleSkipToEnd = () => {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToEnd();
+    };
+    skipToEndBtn.addEventListener('click', handleSkipToEnd);
+    skipToEndBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSkipToEnd();
+      }
     });
   }
 
@@ -998,6 +1033,36 @@ async function initApp() {
     dom.muteBtn.addEventListener('touchstart', startPushToTalk, { passive: false });
     dom.muteBtn.addEventListener('touchend', stopPushToTalk, { passive: false });
     dom.muteBtn.addEventListener('touchcancel', stopPushToTalk, { passive: false });
+
+    // Keyboard events (Enter key)
+    dom.muteBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // In continuous mode, toggle on keydown
+        if (!state.pushToTalkMode) {
+          // Trigger click handler to toggle
+          if (state.isMuted) {
+            voiceCommandHandlers.unmute();
+          } else {
+            voiceCommandHandlers.mute();
+          }
+        } else {
+          // In push-to-talk mode, start listening on keydown
+          startPushToTalk(e);
+        }
+      }
+    });
+
+    dom.muteBtn.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // In push-to-talk mode, stop listening on keyup
+        if (state.pushToTalkMode) {
+          stopPushToTalk(e);
+        }
+        // In continuous mode, keyup does nothing (toggle happened on keydown)
+      }
+    });
   }
 
 

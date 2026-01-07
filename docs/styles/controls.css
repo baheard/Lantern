@@ -414,12 +414,13 @@
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  padding: 8px 0;
+  padding: 0;
   overflow: hidden;
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
   transform: translateY(0);
   opacity: 1;
   max-height: 100px;
+  min-height: 45px; /* Match message input height */
 }
 
 .char-input-panel.hidden {
@@ -438,8 +439,8 @@
 
 /* Arrow navigation buttons */
 .btn-char-nav {
-  width: 44px;
-  height: 44px;
+  width: 45px;
+  height: 45px;
   padding: 0;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -467,6 +468,7 @@
 
 /* Keyboard button */
 .btn-char-action {
+  height: 45px;
   padding: 8px 12px;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -493,14 +495,15 @@
 
 /* Escape button - matches arrow button dimensions */
 #charEscBtn {
-  width: 44px;
-  height: 44px;
+  width: 45px;
+  height: 45px;
   padding: 0;
   justify-content: center;
 }
 
 /* Enter button - styled like send button */
 .btn-char-enter {
+  height: 45px;
   padding: 10px 16px;
   background: var(--bg-elevated);
   color: var(--text-secondary);

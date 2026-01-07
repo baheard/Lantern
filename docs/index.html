@@ -82,42 +82,69 @@
             </button>
           </div>
 
-          <!-- Keep Screen Awake toggle (mobile-only) -->
-          <div class="setting-item mobile-only">
-            <label>
-              Keep Screen Awake
-              <input type="checkbox" id="keepAwakeToggle" class="toggle-switch">
-            </label>
-            <p class="setting-description">Prevent device from going to sleep</p>
+          <!-- Quick Actions Header -->
+          <div class="quick-actions-header">
+            <p class="setting-description">
+              These buttons also appear in the <strong>quick action bar</strong> on the right side of your screen.
+            </p>
           </div>
 
-          <!-- Lock Screen Now button (mobile-only) -->
-          <button id="lockScreenBtn" class="compact-btn quick-action-btn">
-            <span class="material-icons">screen_lock_portrait</span>
-            Lock Screen Now
-          </button>
+          <!-- Quick Actions Grid: Checkboxes on left, buttons on right -->
+          <div class="quick-actions-grid">
+            <!-- Column Headers -->
+            <div class="quick-actions-grid-header">
+              <span class="quick-bar-header">Show in quick bar</span>
+              <span class="action-header">Action</span>
+            </div>
 
-          <!-- Quick Save/Load buttons (in-game only) -->
-          <div class="game-section-item">
-            <div class="button-group">
+            <!-- Quick Action: Game Map (in-game only) -->
+            <div class="quick-action-row game-section-item">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaMapToggle" class="toggle-switch">
+              </label>
+              <button id="mapBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">map</span> Game Map
+              </button>
+            </div>
+
+            <!-- Quick Action: Quick Save (in-game only) -->
+            <div class="quick-action-row game-section-item">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaSaveToggle" class="toggle-switch">
+              </label>
               <button id="quickSaveBtn" class="compact-btn quick-action-btn" title="F5">
                 <span class="material-icons">save</span> Quick Save
               </button>
+            </div>
+
+            <!-- Quick Action: Quick Restore (in-game only) -->
+            <div class="quick-action-row game-section-item">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaLoadToggle" class="toggle-switch">
+              </label>
               <button id="quickRestoreBtn" class="compact-btn quick-action-btn" title="F9">
                 <span class="material-icons">restore</span> Quick Restore
               </button>
             </div>
 
-            <!-- Get ChatGPT Hint button (in-game only) -->
-            <button id="getHintBtn" class="compact-btn quick-action-btn game-section-item" style="margin-top: 10px;">
-              <span class="material-icons">lightbulb</span> Get ChatGPT Hint
-            </button>
-
-            <!-- Game Map button (in-game only) -->
-            <button id="mapBtn" class="compact-btn quick-action-btn game-section-item" style="margin-top: 10px;">
-              <span class="material-icons">map</span> Game Map
-            </button>
+            <!-- Quick Action: Lock Screen -->
+            <div class="quick-action-row">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaLockToggle" class="toggle-switch">
+              </label>
+              <button id="lockScreenBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">screen_lock_portrait</span> Lock Screen Now
+              </button>
+            </div>
           </div>
+
+          <!-- Divider -->
+          <div class="settings-divider"></div>
+
+          <!-- Get ChatGPT Hint button (in-game only, separate) -->
+          <button id="getHintBtn" class="compact-btn quick-action-btn game-section-item">
+            <span class="material-icons">lightbulb</span> Get ChatGPT Hint
+          </button>
         </div>
       </div>
 
@@ -127,6 +154,15 @@
           <span class="material-icons">mic</span> Voice & Input
         </h3>
         <div class="section-content">
+          <!-- Keep Screen Awake toggle -->
+          <div class="setting-item">
+            <label>
+              Keep Screen Awake
+              <input type="checkbox" id="keepAwakeToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Prevent device from going to sleep</p>
+          </div>
+
           <!-- Tap to Examine toggle (moved to top) -->
           <div class="setting-item">
             <label>
@@ -397,7 +433,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.4.62</span>
+        <span class="status-version">v1.4.65</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -603,7 +639,7 @@
     </div>
 
     <!-- Message Input Row -->
-    <div class="message-input-row hidden" id="messageInputRow">
+    <div class="message-input-row" id="messageInputRow">
       <!-- Input container with embedded clear button -->
       <div class="input-container">
         <!-- Text input (shown when muted) -->
@@ -662,12 +698,31 @@
     </div>
   </div>
 </div>
-  
 
+  <!-- Quick Action Bar (always visible, collapsible on mobile <800px) -->
+  <div class="quick-action-bar" id="quickActionBar">
+    <button class="quick-action-toggle" id="quickActionToggle" title="Quick Actions">
+      <span class="material-icons">keyboard_arrow_left</span>
+    </button>
+    <div class="quick-action-items">
+      <button class="quick-action-icon" id="qaMapIcon" data-action="map" title="Game Map">
+        <span class="material-icons">map</span>
+      </button>
+      <button class="quick-action-icon" id="qaSaveIcon" data-action="quicksave" title="Quick Save (F5)">
+        <span class="material-icons">save</span>
+      </button>
+      <button class="quick-action-icon" id="qaLoadIcon" data-action="quickload" title="Quick Restore (F9)">
+        <span class="material-icons">restore</span>
+      </button>
+      <button class="quick-action-icon" id="qaLockIcon" data-action="lock" title="Lock Screen">
+        <span class="material-icons">screen_lock_portrait</span>
+      </button>
+    </div>
+  </div>
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.61</span>
+    <span class="status-version">v1.4.65</span>
   </div>
 
   <!-- Lock Screen Overlay -->

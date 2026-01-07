@@ -630,7 +630,7 @@ export function initKeyboardInput() {
       }
 
       if (wasOpen !== keyboardIsOpen) {
-        // When keyboard closes, clear text selection and blur input
+        // When keyboard closes, clear selection and blur input
         if (!keyboardIsOpen && messageInputEl) {
           // Clear selection
           messageInputEl.setSelectionRange(0, 0);
@@ -723,22 +723,25 @@ function handleKeyPress(e) {
     return;
   }
 
-  // Don't capture if user is in other input elements
-  if (e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+  // Don't capture if user is in other input elements (but allow from buttons)
+  if (e.target.isContentEditable ||
+      (e.target.tagName === 'INPUT' && e.target !== messageInputEl) ||
+      e.target.tagName === 'TEXTAREA') {
     return;
   }
 
-  // If typing and not focused on message input, focus it and capture the keystroke
+  // If typing a letter key from anywhere (including buttons), redirect to command input
   if (e.target !== messageInputEl && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
     // For line input mode OR system entry mode (save/restore prompts)
     if ((getInputType() === 'line' || isSystemEntryMode()) && messageInputEl && !messageInputEl.classList.contains('hidden')) {
-      //messageInputEl.focus({ preventScroll: true });
+      // Special handling for buttons: explicitly move focus and insert key
+      // This allows users to start typing from any button (nav, mic, etc.)
       messageInputEl.focus();
       messageInputEl.value += e.key;
       state.hasManualTyping = true;
       // DISABLED: Testing if we need this scroll
       // scrollToBottom(); // Scroll now that they're typing
-      e.preventDefault(); // Prevent double-typing
+      e.preventDefault(); // Prevent double-typing and button default behavior
     }
     return;
   }
@@ -782,34 +785,34 @@ function updateInputVisibility() {
   const hasKeyboard = hasPhysicalKeyboard();
   const isMuted = state.isMuted;
 
-  // Track if keyboard was open before mode switch (to preserve state)
-  const keyboardWasOpen = (messageInputEl && document.activeElement === messageInputEl) ||
-                          (hiddenKeyInputEl && document.activeElement === hiddenKeyInputEl);
-
   // Show/hide message input row (line mode only)
   if (messageInputRowEl) {
-    const wasHidden = messageInputRowEl.classList.contains('hidden');
-
-    // ALWAYS show input during system entry mode (save/restore prompts)
-    if (isSystemEntryMode() || inputType === 'line') {
-      // Line mode or system entry - show message input row
+    // ALWAYS show input during system entry mode, line mode, OR when input type not yet set (game loading)
+    // inputType is null when game first loads, treat as line mode to avoid pop-in
+    if (isSystemEntryMode() || inputType === 'line' || inputType === null) {
+      // Show message input row
       messageInputRowEl.classList.remove('hidden');
 
       // Toggle between text input and voice indicator based on mute state
       if (isMuted || isSystemEntryMode()) {
         // Muted or system entry - show text input, send button, and clear button
-        if (messageInputEl) messageInputEl.classList.remove('hidden');
-        if (sendBtnEl) sendBtnEl.classList.remove('hidden');
-        if (clearInputBtnEl) clearInputBtnEl.classList.remove('hidden');
-        hideVoiceIndicator();
-
-        // If switching from char mode with keyboard open, transfer focus to message input (mobile only)
-        if (wasHidden && keyboardWasOpen && !hasKeyboard && messageInputEl) {
-          // Small delay to ensure DOM updates complete before focusing
-          setTimeout(() => {
-            messageInputEl.focus();
-          }, 50);
+        if (messageInputEl) {
+          messageInputEl.classList.remove('hidden');
+          // Re-enable input and restore normal placeholder (in case coming from char mode)
+          messageInputEl.disabled = false;
+          if (!isSystemEntryMode()) {
+            messageInputEl.placeholder = 'Type a command...';
+          }
         }
+        if (sendBtnEl) {
+          sendBtnEl.classList.remove('hidden');
+          sendBtnEl.disabled = false; // Re-enable send button
+        }
+        if (clearInputBtnEl) {
+          clearInputBtnEl.classList.remove('hidden');
+          clearInputBtnEl.disabled = false; // Re-enable clear button
+        }
+        hideVoiceIndicator();
       } else {
         // Unmuted (voice mode) - hide text input, send button, and clear button, show voice indicator
         if (messageInputEl) messageInputEl.classList.add('hidden');
@@ -818,16 +821,38 @@ function updateInputVisibility() {
         showVoiceIndicator();
       }
     } else {
-      // Char mode or no input - hide message input row
-      messageInputRowEl.classList.add('hidden');
+      // Char mode (press any key) or no input
+      if (hasKeyboard) {
+        // Desktop: Keep input visible but disabled with helpful placeholder
+        messageInputRowEl.classList.remove('hidden');
 
-      // If keyboard was open, keep it open by focusing hidden input (mobile only)
-      if (keyboardWasOpen && !hasKeyboard && hiddenKeyInputEl) {
-        // Small delay to ensure DOM updates complete before focusing
-        setTimeout(() => {
-          hiddenKeyInputEl.value = '';
-          hiddenKeyInputEl.focus();
-        }, 50);
+        // Show text input in muted/text mode
+        if (isMuted) {
+          if (messageInputEl) {
+            messageInputEl.classList.remove('hidden');
+            // Disable input and show "Press key to continue..." placeholder
+            messageInputEl.disabled = true;
+            messageInputEl.placeholder = 'Press key to continue...';
+          }
+          if (sendBtnEl) {
+            sendBtnEl.classList.remove('hidden');
+            sendBtnEl.disabled = true; // Disable send button too
+          }
+          if (clearInputBtnEl) {
+            clearInputBtnEl.classList.remove('hidden');
+            clearInputBtnEl.disabled = true; // Disable clear button too
+          }
+          hideVoiceIndicator();
+        } else {
+          // Voice mode - show voice indicator
+          if (messageInputEl) messageInputEl.classList.add('hidden');
+          if (sendBtnEl) sendBtnEl.classList.add('hidden');
+          if (clearInputBtnEl) clearInputBtnEl.classList.add('hidden');
+          showVoiceIndicator();
+        }
+      } else {
+        // Mobile: Hide message input row in char mode
+        messageInputRowEl.classList.add('hidden');
       }
     }
   }
@@ -835,7 +860,8 @@ function updateInputVisibility() {
   // Show/hide char input panel (char mode only, and only if no physical keyboard)
   if (charInputPanelEl) {
     if (inputType === 'char' && !hasKeyboard) {
-      // Char mode on touch-only device - show char input panel
+      // Char mode on touch-only device - show char input panel immediately
+      // This happens before messageInputRow hide (which is delayed 50ms) to prevent flash
       charInputPanelEl.classList.remove('hidden');
     } else {
       // Line mode, or has physical keyboard - hide char input panel
