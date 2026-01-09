@@ -27,8 +27,8 @@
   flex-shrink: 0;
 }
 
-/* Base button class - shared by all buttons */
-.btn {
+/* Base control button class - for navigation and control panel buttons */
+.btn-control {
   width: 45px;
   height: 45px;
   border: 1px solid var(--border-subtle);
@@ -42,13 +42,13 @@
   flex-shrink: 0;
 }
 
-.btn:hover {
+.btn-control:hover {
   background: var(--highlight-active);
   border-color: var(--accent-muted);
   color: var(--text-primary);
 }
 
-.btn:active {
+.btn-control:active {
   transform: scale(0.98);
 }
 
@@ -247,6 +247,7 @@
 }
 
 .message-input {
+  min-width: 0;
   height: 45px;
   flex: 1;
   padding: 10px 16px;
@@ -494,8 +495,9 @@
   min-width: 0px;
 }
 
-/* Char panel buttons - extend base .btn */
+/* Char panel buttons - extend base .btn-control */
 .btn-char {
+  height: 44px;
   border-radius: 8px;
   gap: 6px;
 }
@@ -521,36 +523,25 @@
 /* Status Bar */
 .status:not(.hidden) {
   position: relative; /* For ::after pseudo-element */
-  padding: 6px 16px;
+  padding: 4px 16px;
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: 12px;
+  line-height: 1;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  /* Safe area inset for iOS home indicator - minimal padding */
-  padding-bottom: 6px;
 }
 
-/* Extend dark background below status bar into safe area */
-.status::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: env(safe-area-inset-bottom);
-  background: var(--bg-primary);
-  transform: translateY(100%);
-  z-index: -1;
-}
+/* Removed ::after pseudo-element to eliminate extra bottom spacing */
 
 .status-text {
   flex: 1;
   text-align: left;
   padding-left: 8px;
+  line-height: 1;
   position: relative;
   z-index: 1;
 }
@@ -559,9 +550,11 @@
   padding-right: 20px;
   color: var(--text-muted);
   font-size: 11px;
+  line-height: 1;
   font-family: var(--font-mono);
   position: relative;
   z-index: 1;
+  opacity: .7;
 }
 
 /*

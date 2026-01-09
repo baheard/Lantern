@@ -11,9 +11,162 @@ import { getGameSetting, setGameSetting } from '../utils/game-settings.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
 
 /**
+ * Map game files to walkthrough files
+ * Key: game filename (lowercase), Value: walkthrough path
+ */
+const WALKTHROUGH_MAP = {
+  'dreamhold.z8': './games/walkthroughs/The Dreamhold - Solution.html',
+  'lostpig.z8': './games/walkthroughs/lostpig.md',
+  // Add more mappings as walkthroughs become available
+};
+
+/**
  * Store reference to ChatGPT window for reuse
  */
 let chatGPTWindow = null;
+
+/**
+ * Load walkthrough for a game
+ * @param {string} gameFile - Game filename (e.g., "dreamhold.z8")
+ * @returns {Promise<string|null>} Walkthrough text or null if not available
+ */
+async function loadWalkthrough(gameFile) {
+  if (!gameFile) return null;
+
+  const walkthroughPath = WALKTHROUGH_MAP[gameFile.toLowerCase()];
+  if (!walkthroughPath) {
+    console.log(`[ChatGPT] No walkthrough found for ${gameFile}`);
+    return null;
+  }
+
+  try {
+    const response = await fetch(walkthroughPath);
+    if (!response.ok) {
+      console.warn(`[ChatGPT] Failed to load walkthrough: ${response.status}`);
+      return null;
+    }
+
+    const content = await response.text();
+
+    // Parse HTML to extract text content
+    if (walkthroughPath.endsWith('.html')) {
+      return parseHtmlWalkthrough(content);
+    }
+
+    // Plain text or markdown walkthrough
+    return content;
+  } catch (err) {
+    console.warn(`[ChatGPT] Error loading walkthrough:`, err);
+    return null;
+  }
+}
+
+/**
+ * Parse HTML walkthrough to extract text content
+ * @param {string} html - HTML content
+ * @returns {string} Plain text content
+ */
+function parseHtmlWalkthrough(html) {
+  // Create a temporary div to parse HTML
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+
+  // Remove script and style tags
+  temp.querySelectorAll('script, style').forEach(el => el.remove());
+
+  // Extract text content
+  let text = temp.textContent || temp.innerText || '';
+
+  // Clean up whitespace
+  text = text.replace(/\n\s*\n\s*\n/g, '\n\n'); // Collapse multiple blank lines
+  text = text.trim();
+
+  return text;
+}
+
+/**
+ * Room name mappings for Lost Pig (game name → walkthrough section name)
+ */
+const LOST_PIG_ROOM_MAPPINGS = {
+  'Table Room': 'VENDING MACHINE AREA',
+  // Add more mappings as discovered
+};
+
+/**
+ * Extract relevant section from walkthrough based on current location
+ * @param {string} walkthrough - Full walkthrough text
+ * @param {string} location - Current location description
+ * @returns {string} Relevant section or limited full walkthrough
+ */
+function extractRelevantSection(walkthrough, location) {
+  if (!walkthrough || !location) return walkthrough;
+
+  // Try to extract room name from location
+  let roomName = '';
+
+  // First try: split by newline and take first line
+  const lines = location.trim().split('\n');
+  if (lines.length > 0 && lines[0].trim().length < 50) {
+    roomName = lines[0].trim();
+  } else {
+    // Second try: Look for pattern "RoomNameYou" or "RoomNameThe" etc
+    const match = location.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*?)(?:You|The|A |An |It |This )/);
+    if (match) {
+      roomName = match[1].trim();
+    } else {
+      // Third try: Just take first 1-3 words before lowercase
+      const words = location.trim().split(/\s+/);
+      const titleWords = [];
+      for (const word of words) {
+        if (word.match(/^[A-Z]/)) {
+          titleWords.push(word);
+        } else {
+          break;
+        }
+        if (titleWords.length >= 3) break;
+      }
+      roomName = titleWords.join(' ');
+    }
+  }
+
+  console.log(`[ChatGPT] Extracted room name: "${roomName}"`);
+
+  if (!roomName) {
+    // No room name found - return no walkthrough context
+    console.log(`[ChatGPT] No room name found, returning no walkthrough context`);
+    return null;
+  }
+
+  // Check if there's a mapping for this room (e.g., Lost Pig uses different names)
+  let searchName = roomName;
+  if (LOST_PIG_ROOM_MAPPINGS[roomName]) {
+    searchName = LOST_PIG_ROOM_MAPPINGS[roomName];
+    console.log(`[ChatGPT] Mapped "${roomName}" → "${searchName}"`);
+  }
+
+  // Try to find this room in the walkthrough
+  const roomPattern = new RegExp(`^.*${searchName}.*$`, 'im');
+  const match = walkthrough.match(roomPattern);
+
+  if (!match) {
+    console.log(`[ChatGPT] Room "${roomName}" not found in walkthrough, returning no walkthrough context`);
+    return null; // Don't include irrelevant rooms
+  }
+
+  // Find the index where this room appears
+  const startIndex = walkthrough.indexOf(match[0]);
+
+  // Extract ~300 characters before and ~1200 characters after
+  const beforeContext = 300;
+  const afterContext = 1200;
+  const start = Math.max(0, startIndex - beforeContext);
+  const end = Math.min(walkthrough.length, startIndex + afterContext);
+
+  const section = walkthrough.substring(start, end);
+  console.log(`[ChatGPT] Found relevant section for "${roomName}" (${section.length} chars)`);
+
+  return section;
+}
 
 /**
  * Check if game is ready for hint gathering
@@ -165,36 +318,86 @@ async function gatherGameContext(onProgress) {
  * Build ChatGPT prompt from game context
  * @param {Object} context - Game context object
  * @param {string} hintType - Type of hint (general, puzzle, location)
- * @returns {string} Formatted prompt for ChatGPT
+ * @returns {Promise<string>} Formatted prompt for ChatGPT
  */
-function buildChatGPTPrompt(context, hintType = 'general') {
+async function buildChatGPTPrompt(context, hintType = 'general') {
   const { gameName, status, location, inventory } = context;
 
-  // Build base prompt
-  let prompt = `I'm playing the interactive fiction game "${gameName}" and need help.\n\n`;
+  // Try to load walkthrough for current game
+  let walkthroughContext = null;
+  if (state.currentGamePath) {
+    const gameFile = state.currentGamePath.split('/').pop(); // Extract filename
+    console.log(`[ChatGPT] Loading walkthrough for ${gameFile}...`);
+    const walkthrough = await loadWalkthrough(gameFile);
+
+    if (walkthrough) {
+      // Try to extract relevant section based on current location
+      walkthroughContext = extractRelevantSection(walkthrough, location);
+      if (walkthroughContext) {
+        console.log(`[ChatGPT] Walkthrough context: ${walkthroughContext.length} chars`);
+      } else {
+        console.log(`[ChatGPT] Room not found in walkthrough, no context added`);
+      }
+    }
+  }
+
+  // Build improved system instruction
+  let prompt = `You are a hint system for the interactive fiction game "${gameName}". Provide hints that guide the player's thinking rather than giving direct commands.\n\n`;
+
+  prompt += `RULES FOR HINTS:\n`;
+  prompt += `- Guide thinking, NOT commands (no "examine", "type", "go", etc.)\n`;
+  prompt += `- Don't fixate on objects unless clearly required for puzzles\n`;
+  prompt += `- Do NOT invent obstacles, goals, or problems that are not clearly present\n`;
+  prompt += `- Provide 3 progressive hints: Orientation → Strategy → Direction\n`;
+  prompt += `- If the current room doesn't require action, say so indirectly\n`;
+  prompt += `- Avoid encouraging close inspection unless the game clearly demands it\n\n`;
+
+  // Add walkthrough context if available
+  if (walkthroughContext) {
+    prompt += `WALKTHROUGH REFERENCE (use to understand puzzle solutions, but provide thinking-based hints, not direct commands):\n\n`;
+    prompt += `${walkthroughContext}\n\n`;
+    prompt += `---\n\n`;
+  }
+
+  // Add game context
+  prompt += `PLAYER'S CURRENT SITUATION:\n\n`;
 
   // Add status if available
   if (status && status.trim()) {
-    prompt += `**Current Status:**\n${status.trim()}\n\n`;
+    prompt += `**Status:** ${status.trim()}\n\n`;
   }
 
   // Add location
-  prompt += `**Current Location:**\n${location.trim()}\n\n`;
+  prompt += `**Location:**\n${location.trim()}\n\n`;
 
   // Add inventory
   prompt += `**Inventory:**\n${inventory.trim()}\n\n`;
 
+  prompt += `---\n\n`;
+
   // Add hint type-specific request
   switch (hintType) {
     case 'puzzle':
-      prompt += `I'm stuck on a puzzle. Can you give me a hint about how to solve it? Please don't spoil the solution - just point me in the right direction.`;
+      prompt += `The player is stuck on a puzzle. Provide 3 progressive hints:\n`;
+      prompt += `1. Orientation: Reassure about the situation or clarify if no action is needed\n`;
+      prompt += `2. Strategy: Suggest a general approach\n`;
+      prompt += `3. Direction: Describe the kind of progress to make next\n\n`;
+      prompt += `Guide their thinking, don't spoil the solution.`;
       break;
     case 'location':
-      prompt += `I'm not sure where to go or what area to explore next. Can you give me a hint about navigation? Please don't spoil anything - just suggest a direction.`;
+      prompt += `The player isn't sure where to go next. Provide 3 progressive hints:\n`;
+      prompt += `1. Orientation: Reassure about current location\n`;
+      prompt += `2. Strategy: Suggest exploration approach\n`;
+      prompt += `3. Direction: Guide toward productive areas\n\n`;
+      prompt += `Guide their thinking about navigation.`;
       break;
     case 'general':
     default:
-      prompt += `Can you give me a hint about what I should do next? Please don't spoil the solution - just point me in the right direction.`;
+      prompt += `The player needs guidance on what to do next. Provide 3 progressive hints:\n`;
+      prompt += `1. Orientation: Reassure player or clarify if no action is needed here\n`;
+      prompt += `2. Strategy: Suggest a general approach (exploring, moving on, etc.)\n`;
+      prompt += `3. Direction: Describe the kind of progress to make next\n\n`;
+      prompt += `Guide their thinking, don't give commands.`;
       break;
   }
 
@@ -495,9 +698,9 @@ export async function getHint(hintType = 'general') {
       updateStatus(`Gathering context (${step}/${total}): ${description}`);
     });
 
-    // Build prompt
+    // Build prompt (now async - loads walkthrough)
     updateStatus('Building ChatGPT prompt...');
-    const prompt = buildChatGPTPrompt(context, hintType);
+    const prompt = await buildChatGPTPrompt(context, hintType);
 
     // Open ChatGPT with prompt
     await openChatGPT(prompt);

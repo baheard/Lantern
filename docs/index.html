@@ -65,30 +65,27 @@
 
     <div class="settings-content">
 
+      <!-- Currently Playing + Home Button (in-game only, top level) -->
+      <div class="current-game-display game-section-item" id="currentGameDisplay">
+        <div class="current-game-info">
+          <span class="current-game-label">Currently playing:</span>
+          <span class="current-game-name" id="currentGameName">No game loaded</span>
+        </div>
+        <button class="btn btn-sm btn-secondary" id="selectGameBtn">
+          <span class="material-icons">arrow_back</span> Home
+        </button>
+      </div>
+
       <!-- Quick Actions Section (default closed) -->
       <div class="settings-section collapsible collapsed" id="quickActionsSection">
         <h3 class="section-header">
           <span class="material-icons">bolt</span> Quick Actions
         </h3>
         <div class="section-content">
-          <!-- Home / Currently Playing (in-game only, standalone) -->
-          <div class="current-game-display game-section-item" id="currentGameDisplay">
-            <span class="current-game-info">
-              <span class="current-game-label">Currently playing:</span>
-              <span class="current-game-name" id="currentGameName">No game loaded</span>
-            </span>
-            <button class="btn btn-sm btn-secondary" id="selectGameBtn">
-              <span class="material-icons">arrow_back</span> Home
-            </button>
-          </div>
-
-          <!-- Divider -->
-          <div class="settings-divider"></div>
-
           <!-- Quick Actions Header -->
           <div class="quick-actions-header">
             <p class="setting-description">
-              These buttons also appear in the <strong>quick actions menu</strong> for easy access during gameplay.
+              Choose which actions to show in the <strong>quick menu</strong> (accessed via the menu button during gameplay).
             </p>
           </div>
 
@@ -96,34 +93,34 @@
           <div class="quick-actions-grid">
             <!-- Column Headers -->
             <div class="quick-actions-grid-header">
-              <span class="quick-bar-header">Quick access</span>
+              <span class="quick-access-header">Quick access</span>
               <span class="action-header">Action</span>
             </div>
 
-            <!-- Quick Action: Game Map (in-game only) -->
-            <div class="quick-action-row game-section-item">
+            <!-- Quick Action: Game Map -->
+            <div class="quick-action-row">
               <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaMapToggle" class="toggle-switch">
+                <input type="checkbox" id="qaMapToggle" class="toggle-switch" checked>
               </label>
               <button id="mapBtn" class="compact-btn quick-action-btn">
                 <span class="material-icons">map</span> Game Map
               </button>
             </div>
 
-            <!-- Quick Action: Quick Save (in-game only) -->
-            <div class="quick-action-row game-section-item">
+            <!-- Quick Action: Quick Save -->
+            <div class="quick-action-row">
               <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaSaveToggle" class="toggle-switch">
+                <input type="checkbox" id="qaSaveToggle" class="toggle-switch" checked>
               </label>
               <button id="quickSaveBtn" class="compact-btn quick-action-btn" title="F5">
                 <span class="material-icons">save</span> Quick Save
               </button>
             </div>
 
-            <!-- Quick Action: Quick Restore (in-game only) -->
-            <div class="quick-action-row game-section-item">
+            <!-- Quick Action: Quick Restore -->
+            <div class="quick-action-row">
               <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaLoadToggle" class="toggle-switch">
+                <input type="checkbox" id="qaLoadToggle" class="toggle-switch" checked>
               </label>
               <button id="quickRestoreBtn" class="compact-btn quick-action-btn" title="F9">
                 <span class="material-icons">restore</span> Quick Restore
@@ -133,21 +130,73 @@
             <!-- Quick Action: Lock Screen (mobile only) -->
             <div class="quick-action-row mobile-only-section">
               <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaLockToggle" class="toggle-switch">
+                <input type="checkbox" id="qaLockToggle" class="toggle-switch" checked>
               </label>
               <button id="lockScreenBtn" class="compact-btn quick-action-btn">
                 <span class="material-icons">screen_lock_portrait</span> Lock Screen
               </button>
             </div>
+
+            <!-- Quick Action: Get ChatGPT Hint -->
+            <div class="quick-action-row">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaHintToggle" class="toggle-switch" checked>
+              </label>
+              <button id="getHintBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">lightbulb</span> Get ChatGPT Hint
+              </button>
+            </div>
+
+            <!-- Quick Action: Get Gemini Hint -->
+            <div class="quick-action-row">
+              <label class="quick-action-checkbox">
+                <input type="checkbox" id="qaGeminiHintToggle" class="toggle-switch" checked>
+              </label>
+              <button id="getGeminiHintBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">auto_awesome</span> Get Gemini Hint
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Hints Section -->
+      <div class="settings-section collapsible collapsed" id="aiHintsSection">
+        <h3 class="section-header">
+          <span class="material-icons">auto_awesome</span> AI Hints
+        </h3>
+        <div class="section-content">
+          <!-- Gemini API Configuration -->
+          <div class="setting-item">
+            <label>
+              Gemini API Key
+              <input type="password" id="geminiApiKeyInput" class="text-input" placeholder="Paste your API key here">
+            </label>
+            <p class="setting-description">
+              Get a free API key from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent-primary,#4CAF50);">Google AI Studio</a>. Your key is stored locally and only sent to Google's Gemini API.
+            </p>
+            <div class="button-group" style="margin-top:8px;">
+              <button id="saveGeminiApiKeyBtn" class="compact-btn quick-action-btn">
+                <span class="material-icons">save</span> Save API Key
+              </button>
+              <button id="clearGeminiApiKeyBtn" class="compact-btn">
+                <span class="material-icons">delete</span> Clear
+              </button>
+            </div>
           </div>
 
-          <!-- Divider -->
-          <div class="settings-divider"></div>
-
-          <!-- Get ChatGPT Hint button (in-game only, separate) -->
-          <button id="getHintBtn" class="compact-btn quick-action-btn game-section-item">
-            <span class="material-icons">lightbulb</span> Get ChatGPT Hint
-          </button>
+          <!-- Help text -->
+          <div class="settings-section collapsible collapsed" id="aiHintsHelpSection">
+            <h4 class="section-header">About AI Hints</h4>
+            <div class="section-content">
+              <div class="save-restore-info">
+                <h4>ChatGPT vs Gemini</h4>
+                <p><strong>ChatGPT:</strong> Opens ChatGPT with your game context pre-filled. No API key needed.</p>
+                <p><strong>Gemini:</strong> Shows progressive UHS-style hints directly in the app. Requires a free Google API key.</p>
+                <p>Both systems gather game context by sending "look" and "i" commands to understand your current situation.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -224,6 +273,7 @@
                   <li><span class="material-icons">info</span> <code>"Status"</code> — Dictate in-game status bar</li>
                   <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text</li>
                   <li><span class="material-icons">lightbulb</span> <code>"Get hint"</code> — Get AI hint from ChatGPT</li>
+                  <li><span class="material-icons">auto_awesome</span> <code>"Get Gemini hint"</code> — Get UHS-style hints from Gemini</li>
                 </ul>
               </div>
             </div>
@@ -426,7 +476,7 @@
     </div>
   </div>
 
-  <div class="container">
+  <div class="container container--welcome">
     <!-- Welcome Screen -->
     <div class="welcome" id="welcome">
       <button class="welcome-settings-btn" id="welcomeSettingsBtn" title="Settings">
@@ -436,7 +486,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.4.81</span>
+        <span class="status-version">v1.4.91</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -632,11 +682,11 @@
   <div class="controls-wrapper hidden" id="controlsWrapper">
     <!-- Navigation Controls -->
     <div class="controls hidden" id="controls">
-      <button id="skipToStartBtn" class="btn btn-nav" title="&quot;Restart&quot;"><span class="material-icons">skip_previous</span></button>
-      <button id="prevChunkBtn" class="btn btn-nav" title="&quot;Back&quot;"><span class="material-icons">fast_rewind</span></button>
-      <button id="pausePlayBtn" class="btn btn-nav" title="&quot;Play&quot;"><span class="material-icons">play_arrow</span></button>
-      <button id="nextChunkBtn" class="btn btn-nav" title="&quot;Skip&quot;"><span class="material-icons">fast_forward</span></button>
-      <button id="skipToEndBtn" class="btn btn-nav" title="&quot;Skip All&quot;"><span class="material-icons">skip_next</span></button>
+      <button id="skipToStartBtn" class="btn-control btn-nav" title="&quot;Restart&quot;"><span class="material-icons">skip_previous</span></button>
+      <button id="prevChunkBtn" class="btn-control btn-nav" title="&quot;Back&quot;"><span class="material-icons">fast_rewind</span></button>
+      <button id="pausePlayBtn" class="btn-control btn-nav" title="&quot;Play&quot;"><span class="material-icons">play_arrow</span></button>
+      <button id="nextChunkBtn" class="btn-control btn-nav" title="&quot;Skip&quot;"><span class="material-icons">fast_forward</span></button>
+      <button id="skipToEndBtn" class="btn-control btn-nav" title="&quot;Skip All&quot;"><span class="material-icons">skip_next</span></button>
       <div class="controls-spacer"></div>
       <button id="muteBtn" class="btn-mic" title="Mute Mic (toggle microphone)"><span class="material-icons">mic</span></button>
     </div>
@@ -658,11 +708,11 @@
         </button>
       </div>
       <!-- Send button (outside input, where X used to be) -->
-      <button class="btn btn-nav" id="sendBtn" title="Send (Enter)" aria-label="Send command">
+      <button class="btn-control btn-nav" id="sendBtn" title="Send (Enter)" aria-label="Send command">
         <span class="material-icons">send</span>
       </button>
       <!-- Menu button (all screen sizes) -->
-      <button id="mobileMenuBtn" class="btn btn-nav btn-menu" title="Menu" aria-label="Open quick actions menu" aria-expanded="false" aria-haspopup="menu"><span class="material-icons">menu</span></button>
+      <button id="mobileMenuBtn" class="btn-control btn-nav btn-menu" title="Menu" aria-label="Open quick actions menu" aria-expanded="false" aria-haspopup="menu"><span class="material-icons">menu</span></button>
     </div>
 
     <!-- Quick Actions Menu (vertical dropdown, appears above menu button) -->
@@ -687,6 +737,11 @@
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
       </button>
+      <!-- Get ChatGPT Hint -->
+      <button class="mobile-menu-item" id="mobileHintIcon" data-action="hint" role="menuitem">
+        <span class="material-icons">lightbulb</span>
+        <span class="menu-item-text">Get ChatGPT Hint</span>
+      </button>
       <!-- Lock Screen (mobile only - bottom, closest to menu button) -->
       <button class="mobile-menu-item mobile-only-item" id="mobileLockIcon" data-action="lock" role="menuitem">
         <span class="material-icons">screen_lock_portrait</span>
@@ -698,16 +753,16 @@
     <div class="char-input-panel hidden" id="charInputPanel">
       <!-- Arrow navigation group (tighter spacing) -->
       <div class="arrow-button-group">
-        <button class="btn btn-char btn-char-nav" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
+        <button class="btn-control btn-char btn-char-nav" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
           <span class="material-icons">arrow_back</span>
         </button>
-        <button class="btn btn-char btn-char-nav" id="charUpBtn" title="Up Arrow" aria-label="Up Arrow">
+        <button class="btn-control btn-char btn-char-nav" id="charUpBtn" title="Up Arrow" aria-label="Up Arrow">
           <span class="material-icons">arrow_upward</span>
         </button>
-        <button class="btn btn-char btn-char-nav" id="charDownBtn" title="Down Arrow" aria-label="Down Arrow">
+        <button class="btn-control btn-char btn-char-nav" id="charDownBtn" title="Down Arrow" aria-label="Down Arrow">
           <span class="material-icons">arrow_downward</span>
         </button>
-        <button class="btn btn-char btn-char-nav" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
+        <button class="btn-control btn-char btn-char-nav" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
           <span class="material-icons">arrow_forward</span>
         </button>
       </div>
@@ -716,17 +771,17 @@
       <div class="char-input-spacer"></div>
 
       <!-- Keyboard button (opens virtual keyboard) -->
-      <button class="btn btn-char btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
+      <button class="btn-control btn-char btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
         <span class="material-icons">keyboard</span>
       </button>
 
       <!-- Enter button (like Send button) -->
-      <button class="btn btn-char btn-char-action btn-char-enter" id="charEnterBtn" title="Enter" aria-label="Enter Key">
+      <button class="btn-control btn-char btn-char-action btn-char-enter" id="charEnterBtn" title="Enter" aria-label="Enter Key">
         <span class="material-icons">send</span>
       </button>
 
       <!-- Menu button (rightmost, opens mobile menu) -->
-      <button class="btn btn-char btn-char-action" id="charMenuBtn" title="Menu" aria-label="Open menu" aria-expanded="false" aria-haspopup="menu">
+      <button class="btn-control btn-char btn-char-action" id="charMenuBtn" title="Menu" aria-label="Open menu" aria-expanded="false" aria-haspopup="menu">
         <span class="material-icons">menu</span>
       </button>
     </div>
@@ -735,7 +790,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.81</span>
+    <span class="status-version">v1.4.85</span>
   </div>
 
   <!-- Lock Screen Overlay -->
