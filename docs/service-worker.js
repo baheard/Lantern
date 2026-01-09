@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.4.81';
+const CACHE_VERSION = 'v1.4.86';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -84,7 +84,6 @@ const CORE_ASSETS = [
   './js/utils/scroll.js',
   './js/utils/status.js',
   './js/utils/storage/storage-api.js',
-  './js/utils/storage-sync.js',
   './js/utils/text-processing.js',
   './js/utils/wake-lock.js',
   './js/voice/echo-detection.js',
@@ -133,6 +132,12 @@ const BUNDLED_GAMES = [
   './games/zork.z5'
 ];
 
+// Game walkthroughs for Gemini hints
+const WALKTHROUGHS = [
+  './games/walkthroughs/The Dreamhold - Solution.html',
+  './games/walkthroughs/lostpig.md'
+];
+
 // Font files
 const FONTS = [
   './fonts/MaterialIcons-Regular.woff2',
@@ -166,7 +171,7 @@ self.addEventListener('install', (event) => {
         return cache.addAll(ICONS);
       }),
       caches.open(CACHE_NAMES.games).then(cache => {
-        return cache.addAll(BUNDLED_GAMES);
+        return cache.addAll([...BUNDLED_GAMES, ...WALKTHROUGHS]);
       })
     ]).then(() => {
       // Force immediate activation of new service worker

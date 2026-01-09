@@ -452,12 +452,6 @@ export const voiceCommandHandlers = {
     }
   },
   sendCommandDirect: (cmd) => sendCommandDirect(cmd),
-  getHint: async function() {
-    const { getHint } = await import('./features/hints.js');
-    // Respect user's hint type selection from dropdown
-    const hintType = localStorage.getItem('iftalk_hintType') || 'general';
-    getHint(hintType);
-  }
 };
 
 // Handle game output from GlkOte
@@ -714,13 +708,19 @@ async function initApp() {
     state.pushToTalkMode = saved === 'true'; // default disabled
     pushToTalkToggle.checked = state.pushToTalkMode;
 
+    // If push-to-talk mode is enabled on startup, ensure mic is muted
+    if (state.pushToTalkMode) {
+      state.isMuted = true;
+      state.listeningEnabled = false;
+    }
+
     pushToTalkToggle.addEventListener('change', (e) => {
       state.pushToTalkMode = e.target.checked;
       localStorage.setItem('iftalk_push_to_talk', e.target.checked.toString());
 
       if (e.target.checked) {
         updateStatus('Push-to-talk mode enabled - Hold mic button to speak');
-        // Stop continuous listening if currently active
+        // Stop continuous listening and mute
         if (state.recognition && state.isRecognitionActive) {
           try {
             state.recognition.stop();
@@ -728,7 +728,17 @@ async function initApp() {
             // Recognition already stopped
           }
         }
+        state.isMuted = true;
         state.listeningEnabled = false;
+
+        // Update UI to show muted state
+        const icon = dom.muteBtn?.querySelector('.material-icons');
+        if (icon) icon.textContent = 'mic_off';
+        if (dom.muteBtn) {
+          dom.muteBtn.classList.add('muted');
+          dom.muteBtn.classList.remove('listening');
+        }
+        updateLockScreenMicStatus();
       } else {
         updateStatus('Push-to-talk mode disabled - Continuous listening');
         // Resume continuous listening if mic is unmuted
@@ -995,8 +1005,22 @@ async function initApp() {
       dom.muteBtn.classList.add('push-to-talk-active');
       updateStatus('🎤 Listening... Speak now!');
 
-      // Start recognition
+      // Unmute and start recognition
+      state.isMuted = false;
       state.listeningEnabled = true;
+
+      // Play unmute tone
+      playUnmuteTone();
+
+      // Update UI
+      const icon = dom.muteBtn?.querySelector('.material-icons');
+      if (icon) icon.textContent = 'mic';
+      if (dom.muteBtn) {
+        dom.muteBtn.classList.remove('muted');
+        dom.muteBtn.classList.add('listening');
+      }
+      updateLockScreenMicStatus();
+
       if (state.recognition && !state.isRecognitionActive) {
         try {
           state.recognition.start();
@@ -1015,8 +1039,22 @@ async function initApp() {
       dom.muteBtn.classList.remove('push-to-talk-active');
       updateStatus('Hold mic button to speak');
 
-      // Stop recognition
+      // Re-mute and stop recognition
+      state.isMuted = true;
       state.listeningEnabled = false;
+
+      // Play mute tone
+      playMuteTone();
+
+      // Update UI
+      const icon = dom.muteBtn?.querySelector('.material-icons');
+      if (icon) icon.textContent = 'mic_off';
+      if (dom.muteBtn) {
+        dom.muteBtn.classList.add('muted');
+        dom.muteBtn.classList.remove('listening');
+      }
+      updateLockScreenMicStatus();
+
       if (state.recognition && state.isRecognitionActive) {
         try {
           state.recognition.stop();
@@ -1084,12 +1122,6 @@ async function initApp() {
       return;
     }
 
-    // Ctrl+Shift+H - Get hint from ChatGPT
-    if (e.key === 'H' && e.ctrlKey && e.shiftKey) {
-      e.preventDefault();
-      voiceCommandHandlers.getHint();
-      return;
-    }
 
     // Escape key is reserved for closing dialogs and clearing input only
     // (No longer stops autoplay/narration)

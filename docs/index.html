@@ -137,68 +137,10 @@
               </button>
             </div>
 
-            <!-- Quick Action: Get ChatGPT Hint -->
-            <div class="quick-action-row">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaHintToggle" class="toggle-switch" checked>
-              </label>
-              <button id="getHintBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">lightbulb</span> Get ChatGPT Hint
-              </button>
-            </div>
-
-            <!-- Quick Action: Get Gemini Hint -->
-            <div class="quick-action-row">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaGeminiHintToggle" class="toggle-switch" checked>
-              </label>
-              <button id="getGeminiHintBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">auto_awesome</span> Get Gemini Hint
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- AI Hints Section -->
-      <div class="settings-section collapsible collapsed" id="aiHintsSection">
-        <h3 class="section-header">
-          <span class="material-icons">auto_awesome</span> AI Hints
-        </h3>
-        <div class="section-content">
-          <!-- Gemini API Configuration -->
-          <div class="setting-item">
-            <label>
-              Gemini API Key
-              <input type="password" id="geminiApiKeyInput" class="text-input" placeholder="Paste your API key here">
-            </label>
-            <p class="setting-description">
-              Get a free API key from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent-primary,#4CAF50);">Google AI Studio</a>. Your key is stored locally and only sent to Google's Gemini API.
-            </p>
-            <div class="button-group" style="margin-top:8px;">
-              <button id="saveGeminiApiKeyBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">save</span> Save API Key
-              </button>
-              <button id="clearGeminiApiKeyBtn" class="compact-btn">
-                <span class="material-icons">delete</span> Clear
-              </button>
-            </div>
-          </div>
-
-          <!-- Help text -->
-          <div class="settings-section collapsible collapsed" id="aiHintsHelpSection">
-            <h4 class="section-header">About AI Hints</h4>
-            <div class="section-content">
-              <div class="save-restore-info">
-                <h4>ChatGPT vs Gemini</h4>
-                <p><strong>ChatGPT:</strong> Opens ChatGPT with your game context pre-filled. No API key needed.</p>
-                <p><strong>Gemini:</strong> Shows progressive UHS-style hints directly in the app. Requires a free Google API key.</p>
-                <p>Both systems gather game context by sending "look" and "i" commands to understand your current situation.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Voice & Input Section -->
       <div class="settings-section collapsible collapsed" id="voiceInputSection">
@@ -272,8 +214,6 @@
                   <li><span class="material-icons">keyboard_return</span> <code>"Enter"</code> — Press Enter</li>
                   <li><span class="material-icons">info</span> <code>"Status"</code> — Dictate in-game status bar</li>
                   <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text</li>
-                  <li><span class="material-icons">lightbulb</span> <code>"Get hint"</code> — Get AI hint from ChatGPT</li>
-                  <li><span class="material-icons">auto_awesome</span> <code>"Get Gemini hint"</code> — Get UHS-style hints from Gemini</li>
                 </ul>
               </div>
             </div>
@@ -737,11 +677,6 @@
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
       </button>
-      <!-- Get ChatGPT Hint -->
-      <button class="mobile-menu-item" id="mobileHintIcon" data-action="hint" role="menuitem">
-        <span class="material-icons">lightbulb</span>
-        <span class="menu-item-text">Get ChatGPT Hint</span>
-      </button>
       <!-- Lock Screen (mobile only - bottom, closest to menu button) -->
       <button class="mobile-menu-item mobile-only-item" id="mobileLockIcon" data-action="lock" role="menuitem">
         <span class="material-icons">screen_lock_portrait</span>
@@ -790,7 +725,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.85</span>
+    <span class="status-version">v1.4.86</span>
   </div>
 
   <!-- Lock Screen Overlay -->

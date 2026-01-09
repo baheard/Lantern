@@ -9,6 +9,17 @@
  * - Lock Screen (mobile only)
  */
 
+// Local storage keys for quick access preferences
+const QA_PREFS_KEY = 'iftalk_quick_access_prefs';
+
+// Default preferences (all enabled except Settings which is always shown)
+const DEFAULT_QA_PREFS = {
+  map: true,
+  save: true,
+  load: true,
+  lock: true
+};
+
 /**
  * Initialize the mobile menu
  */
@@ -18,6 +29,9 @@ export function initMobileMenu() {
   const menu = document.getElementById('mobileMenu');
 
   if (!menu) return;
+
+  // Initialize quick access toggles
+  initQuickAccessToggles();
 
   // Toggle menu on button click (main menu button)
   if (menuBtn) {
@@ -186,6 +200,7 @@ async function handleMenuAction(action) {
       }
       break;
 
+
     case 'lock':
       // Trigger lock screen (mobile only)
       const lockBtn = document.getElementById('lockScreenBtn');
@@ -200,22 +215,94 @@ async function handleMenuAction(action) {
 }
 
 /**
- * Update mobile menu icon visibility based on game state
+ * Update mobile menu icon visibility based on game state and user preferences
  * @param {boolean} inGame - Whether a game is currently loaded
  */
 export function updateMobileMenuForGameState(inGame) {
-  const gameSpecificIcons = ['mobileMapIcon', 'mobileSaveIcon', 'mobileLoadIcon'];
+  const prefs = getQuickAccessPrefs();
 
-  gameSpecificIcons.forEach(id => {
+  // Settings is always shown (no toggle)
+  const settingsIcon = document.getElementById('mobileSettingsIcon');
+  if (settingsIcon) {
+    settingsIcon.style.display = 'flex';
+  }
+
+  // Toggle-controlled menu items
+  const menuItems = [
+    { id: 'mobileMapIcon', pref: 'map', gameOnly: true },
+    { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
+    { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
+    { id: 'mobileLockIcon', pref: 'lock', gameOnly: false }
+  ];
+
+  menuItems.forEach(({ id, pref, gameOnly }) => {
     const icon = document.getElementById(id);
     if (icon) {
-      if (inGame) {
-        icon.style.display = 'flex';
-      } else {
-        icon.style.display = 'none';
-      }
+      // Show if: (1) not game-only OR game is loaded, AND (2) user preference is enabled
+      const shouldShow = (!gameOnly || inGame) && prefs[pref];
+      icon.style.display = shouldShow ? 'flex' : 'none';
+    }
+  });
+}
+
+/**
+ * Initialize quick access toggles in settings
+ */
+function initQuickAccessToggles() {
+  const prefs = getQuickAccessPrefs();
+
+  // Set initial toggle states (Settings has no toggle - always shown)
+  const toggles = {
+    qaMapToggle: 'map',
+    qaSaveToggle: 'save',
+    qaLoadToggle: 'load',
+    qaLockToggle: 'lock'
+  };
+
+  Object.entries(toggles).forEach(([toggleId, prefKey]) => {
+    const toggle = document.getElementById(toggleId);
+    if (toggle) {
+      toggle.checked = prefs[prefKey];
+
+      // Listen for changes
+      toggle.addEventListener('change', () => {
+        prefs[prefKey] = toggle.checked;
+        saveQuickAccessPrefs(prefs);
+        updateMobileMenuForGameState(!!window._inGame);
+      });
     }
   });
 
-  // Lock and settings are always available
+  // Update menu visibility based on initial prefs
+  updateMobileMenuForGameState(!!window._inGame);
 }
+
+/**
+ * Get quick access preferences from localStorage
+ * @returns {Object} Quick access preferences
+ */
+function getQuickAccessPrefs() {
+  const stored = localStorage.getItem(QA_PREFS_KEY);
+  if (stored) {
+    try {
+      return { ...DEFAULT_QA_PREFS, ...JSON.parse(stored) };
+    } catch (e) {
+      console.warn('Failed to parse quick access preferences:', e);
+      return { ...DEFAULT_QA_PREFS };
+    }
+  }
+  return { ...DEFAULT_QA_PREFS };
+}
+
+/**
+ * Save quick access preferences to localStorage
+ * @param {Object} prefs - Quick access preferences
+ */
+function saveQuickAccessPrefs(prefs) {
+  try {
+    localStorage.setItem(QA_PREFS_KEY, JSON.stringify(prefs));
+  } catch (e) {
+    console.warn('Failed to save quick access preferences:', e);
+  }
+}
+

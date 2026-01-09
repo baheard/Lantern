@@ -7,7 +7,6 @@
 import { state } from '../../core/state.js';
 import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
-import { isLocalhost, syncFromRemote } from '../../utils/storage-sync.js';
 
 /**
  * Check if we're on the welcome screen (no game loaded)
@@ -57,7 +56,7 @@ export function getGameDisplayName(gameName) {
 export function updateSettingsContext() {
   const isWelcome = isOnWelcomeScreen();
 
-  // Quick Actions - show current game name when in-game
+  // Update current game display
   const currentGameDisplay = document.getElementById('currentGameDisplay');
   if (currentGameDisplay) {
     currentGameDisplay.style.display = isWelcome ? 'none' : 'flex';
@@ -120,49 +119,6 @@ function updateVoiceControlsVisibility(enabled) {
   }
 }
 
-/**
- * Inject sync from GitHub button (localhost only, when game is loaded)
- */
-function injectSyncButton() {
-  const container = document.getElementById('devToolsContainer');
-  if (!container) return;
-
-  // Remove existing sync button if any (avoid duplicates)
-  const existing = container.querySelector('.sync-btn-wrapper');
-  if (existing) existing.remove();
-
-  // Only show on localhost when a game is loaded
-  if (!isLocalhost() || !state.currentGameName) return;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'game-actions sync-btn-wrapper';
-  wrapper.style.marginBottom = '10px';
-
-  const syncBtn = document.createElement('button');
-  syncBtn.className = 'btn btn-secondary btn-full-width';
-  syncBtn.innerHTML = '<span class="material-icons">sync</span> Sync from GitHub';
-
-  syncBtn.addEventListener('click', async () => {
-    syncBtn.disabled = true;
-    syncBtn.textContent = 'Syncing...';
-    updateStatus('Syncing from GitHub Pages...');
-
-    try {
-      const result = await syncFromRemote();
-      updateStatus(`Synced ${result.synced} items from GitHub`);
-      alert(`Sync complete!\n\n${result.synced} items updated from GitHub Pages.\n${result.total} total items found.`);
-    } catch (error) {
-      updateStatus('Sync failed: ' + error.message);
-      alert('Sync failed: ' + error.message);
-    } finally {
-      syncBtn.disabled = false;
-      syncBtn.innerHTML = '<span class="material-icons">sync</span> Sync from GitHub';
-    }
-  });
-
-  wrapper.appendChild(syncBtn);
-  container.appendChild(wrapper);
-}
 
 /**
  * Show backup saves dialog
@@ -331,9 +287,6 @@ export async function reloadSettingsForGame() {
   // Refresh voice dropdowns to show current selection
   const { populateVoiceDropdown } = await import('./voice-selection.js');
   populateVoiceDropdown();
-
-  // Inject sync button if on localhost and game is loaded
-  injectSyncButton();
 }
 
 /**
@@ -371,15 +324,6 @@ export function initSettings() {
     });
   }
 
-  // Get Hint button (now in Quick Actions)
-  const getHintBtn = document.getElementById('getHintBtn');
-  if (getHintBtn) {
-    getHintBtn.addEventListener('click', async () => {
-      const { getHint } = await import('../../features/hints.js');
-      // Hint type will be selectable in the modal dialog
-      getHint('general');
-    });
-  }
 
   // View Backup Saves button
   const viewBackupSavesBtn = document.getElementById('viewBackupSavesBtn');
