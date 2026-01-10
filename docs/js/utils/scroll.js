@@ -66,9 +66,9 @@ export function scrollToNewContent(newElement, container) {
   // Don't auto-blur keyboard based on content size
 
   // Position text near the top of the visible area to maximize content shown
-  // 22px buffer: tested sweet spot that prevents text cutoff while maximizing visible content
+  // 60px buffer: ensures command line above new content stays visible (command ~30-40px + breathing room)
   // Add viewport offset to account for when visual viewport has shifted
-  const bufferFromTop = 22 + viewportOffset;
+  const bufferFromTop = 60 + viewportOffset;
 
   const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
 
