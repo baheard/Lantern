@@ -74,8 +74,8 @@ export function updateSettingsContext() {
     if (isWelcome) {
       item.style.display = 'none';
     } else {
-      // Remove inline display style to let CSS classes control display
-      item.style.display = '';
+      // Show the item by setting explicit display value (override CSS display: none)
+      item.style.display = 'block';
     }
   });
 

@@ -355,12 +355,15 @@
           </div>
 
           <!-- View Backup Saves button -->
-          <button id="viewBackupSavesBtn" class="compact-btn quick-action-btn game-section-item">
-            <span class="material-icons">history</span> View Backup Saves
-          </button>
+          <div class="setting-item game-section-item">
+            <button id="viewBackupSavesBtn" class="compact-btn quick-action-btn">
+              <span class="material-icons">history</span> View Backup Saves
+            </button>
+            <p class="setting-description">View and restore from automatic backup saves</p>
+          </div>
 
           <!-- Export/Import buttons -->
-          <div class="game-section-item">
+          <div class="setting-item game-section-item">
             <div class="button-group">
               <button id="exportSaveBtn" class="compact-btn quick-action-btn">
                 <span class="material-icons">upload</span> Export File
@@ -369,6 +372,7 @@
                 <span class="material-icons">download</span> Import File
               </button>
             </div>
+            <p class="setting-description">Export quicksave to file or import from file</p>
           </div>
 
           <!-- Developer Tools (localhost only, injected by JS) -->
@@ -426,7 +430,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.4.94</span>
+        <span class="status-version">v1.4.95</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -730,7 +734,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.4.94</span>
+    <span class="status-version">v1.4.95</span>
   </div>
 
   <!-- Lock Screen Overlay -->
