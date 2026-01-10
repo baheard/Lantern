@@ -221,23 +221,48 @@ export async function handleMetaResponse(input) {
 /**
  * Handle save name input
  */
-async function handleSaveResponse(saveName, saves) {
+async function handleSaveResponse(input, saves) {
+  // Check if input is a number referring to an existing save
+  const num = parseInt(input);
+  let targetSaveName = input;
+
+  // Get the unified list to match restore/delete behavior
+  const allSaves = getUnifiedSavesList();
+
+  if (!isNaN(num) && num >= 1 && num <= allSaves.length) {
+    // User specified a number - overwrite that numbered save
+    const save = allSaves[num - 1];
+
+    // Can't overwrite quicksave or autosave with numbered save command
+    if (save.type === 'quicksave') {
+      respondAsGame('<div class="system-message">Cannot overwrite quicksave. Use Quick Save button or choose a different name.</div>');
+      return true;
+    }
+    if (save.type === 'autosave') {
+      respondAsGame('<div class="system-message">Cannot overwrite autosave. Choose a different name.</div>');
+      return true;
+    }
+
+    // Use the existing save's name to overwrite it
+    targetSaveName = save.name;
+  }
+
   // Check if name is valid (no special characters that could break localStorage)
-  if (!/^[a-zA-Z0-9_ -]+$/.test(saveName)) {
+  if (!/^[a-zA-Z0-9_ -]+$/.test(targetSaveName)) {
     respondAsGame('<div class="system-message">Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.</div>');
     return true;
   }
 
   // Check for reserved names
   const reservedNames = ['quicksave', 'autosave'];
-  if (reservedNames.includes(saveName.toLowerCase())) {
+  if (reservedNames.includes(targetSaveName.toLowerCase())) {
     respondAsGame('<div class="system-message">That name is reserved. Please choose a different name.</div>');
     return true;
   }
 
   // Perform the save using our comprehensive save system
   const { customSave } = await import('../save-manager.js');
-  const success = await customSave(saveName);
+  const success = await customSave(targetSaveName);
 
   if (!success) {
     respondAsGame('<div class="system-message">Save failed. Please try again.</div>');
@@ -353,8 +378,45 @@ async function handleRepairResponse(input) {
  * Handle game-initiated save dialog (when game asks to save)
  */
 async function handleGameSaveResponse(input, saves) {
+  // Check if input is a number referring to an existing save
+  const num = parseInt(input);
+  let targetSaveName = input;
+
+  // Get the unified list to match restore/delete behavior
+  const allSaves = getUnifiedSavesList();
+
+  if (!isNaN(num) && num >= 1 && num <= allSaves.length) {
+    // User specified a number - overwrite that numbered save
+    const save = allSaves[num - 1];
+
+    // Can't overwrite quicksave or autosave with numbered save command
+    if (save.type === 'quicksave') {
+      respondAsGame('<div class="system-message">Cannot overwrite quicksave. Use Quick Save button or choose a different name.</div>');
+
+      // Re-prompt
+      awaitingMetaInput = 'game-save';
+      setTimeout(() => {
+        enterSystemEntryMode('Enter save name');
+      }, 100);
+      return true;
+    }
+    if (save.type === 'autosave') {
+      respondAsGame('<div class="system-message">Cannot overwrite autosave. Choose a different name.</div>');
+
+      // Re-prompt
+      awaitingMetaInput = 'game-save';
+      setTimeout(() => {
+        enterSystemEntryMode('Enter save name');
+      }, 100);
+      return true;
+    }
+
+    // Use the existing save's name to overwrite it
+    targetSaveName = save.name;
+  }
+
   // Check if name is valid (no special characters that could break localStorage)
-  if (!/^[a-zA-Z0-9_ -]+$/.test(input)) {
+  if (!/^[a-zA-Z0-9_ -]+$/.test(targetSaveName)) {
     respondAsGame('<div class="system-message">Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.</div>');
 
     // Re-prompt by re-entering system entry mode
@@ -368,7 +430,7 @@ async function handleGameSaveResponse(input, saves) {
 
   // Check for reserved names
   const reservedNames = ['quicksave', 'autosave'];
-  if (reservedNames.includes(input.toLowerCase())) {
+  if (reservedNames.includes(targetSaveName.toLowerCase())) {
     respondAsGame('<div class="system-message">That name is reserved. Please choose a different name.</div>');
 
     // Re-prompt
@@ -381,7 +443,7 @@ async function handleGameSaveResponse(input, saves) {
   }
 
   // Set flag so Dialog.file_write() knows to use custom save format
-  window._customSaveFilename = input;
+  window._customSaveFilename = targetSaveName;
 
   // Return file reference to callback - VM will save through Dialog.file_write()
   // Dialog.file_write() will show "Game saved - {name}" message
