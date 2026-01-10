@@ -108,8 +108,12 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
     displayText = `${text} (${confidencePercent}%)`;
   }
 
-  // Update both DOM transcript and keyboard indicator
+  // Determine mode for visual feedback
   const mode = isNavCommand ? 'nav' : 'confirmed';
+  const isLowConfidence = confidence !== null && confidence === 0;
+  const lockMode = isLowConfidence ? 'low-confidence' : (isNavCommand ? 'nav-command' : 'confirmed');
+
+  // Update both DOM transcript and keyboard indicator
   updateVoiceTranscript(displayText, mode);
 
   // Also update old DOM element if it exists
@@ -124,6 +128,13 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
     }
   }
 
+  // Update lock screen transcript with visual feedback
+  if (state.isScreenLocked) {
+    import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
+      updateLockTranscript(displayText, lockMode);
+    });
+  }
+
   // Also update lastHeard for history (use original text without confidence)
   updateLastHeard(text, isNavCommand);
 
@@ -133,6 +144,12 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
     if (dom.voiceTranscript) {
       dom.voiceTranscript.textContent = state.isMuted ? 'Muted' : 'Listening...';
       dom.voiceTranscript.classList.remove('confirmed', 'nav-command');
+    }
+    // Clear lock screen transcript after delay
+    if (state.isScreenLocked) {
+      import('../utils/lock-screen.js').then(({ clearLockTranscript }) => {
+        clearLockTranscript();
+      });
     }
   }, 3000);
 }
@@ -161,6 +178,55 @@ async function displayInterimAsLowConfidence() {
     }
 
     state.currentInterimTranscript = '';
+  }
+}
+
+/**
+ * Safely start voice recognition with proper error handling
+ * @returns {Promise<boolean>} True if started successfully, false if failed
+ */
+export async function startRecognitionSafely() {
+  if (!state.recognition || state.isRecognitionActive) {
+    return false;
+  }
+
+  try {
+    await state.recognition.start();
+    return true;
+  } catch (err) {
+    // Recognition failed to start
+    // Get error message from various possible properties
+    const errorMessage = err?.message || err?.error || String(err);
+    const errorName = err?.name || '';
+    const errorType = err?.type || '';
+
+    // Import audio feedback
+    const { playBlockedCommand } = await import('../utils/audio-feedback.js');
+
+    // Check for common errors
+    if (errorMessage.toLowerCase().includes('secure') ||
+        errorMessage.toLowerCase().includes('https') ||
+        errorMessage.toLowerCase().includes('ssl')) {
+      updateStatus('⚠️ Microphone requires HTTPS connection');
+      playBlockedCommand(); // Buzz sound for error
+    } else if (errorMessage.toLowerCase().includes('not-allowed') ||
+               errorMessage.toLowerCase().includes('permission') ||
+               errorName === 'NotAllowedError') {
+      updateStatus('⚠️ Microphone permission denied');
+      playBlockedCommand(); // Buzz sound for error
+    } else if (errorMessage.toLowerCase().includes('not-found')) {
+      updateStatus('⚠️ No microphone found');
+      playBlockedCommand(); // Buzz sound for error
+    } else {
+      updateStatus('⚠️ Microphone failed: ' + errorMessage);
+      playBlockedCommand(); // Buzz sound for error
+    }
+
+    // Update state to reflect failure
+    state.isRecognitionActive = false;
+    state.isListening = false;
+
+    return false;
   }
 }
 
@@ -340,7 +406,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
         updateVoiceTranscript(interimTranscript, 'interim');
         if (state.isScreenLocked) {
           import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
-            updateLockTranscript(interimTranscript);
+            updateLockTranscript(interimTranscript, 'interim');
           });
         }
         if (dom.voiceTranscript) {
@@ -357,7 +423,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
       // Update lock screen transcript if locked
       if (state.isScreenLocked) {
         import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
-          updateLockTranscript(interimTranscript);
+          updateLockTranscript(interimTranscript, 'interim');
         });
       }
 

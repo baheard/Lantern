@@ -788,7 +788,20 @@ export function importSaveFromFile() {
             const key = `iftalk_quicksave_${state.currentGameName}`;
             setJSON(key, saveData);
 
-            updateStatus('Save imported! Use Quick Load button to load', 'success');
+            // Import successful - prompt user to reload
+            const { confirmDialog } = await import('../ui/confirm-dialog.js');
+            const shouldReload = await confirmDialog(
+                'Import complete! Click "Reload" to load the imported save.',
+                'Reload',
+                'Cancel'
+            );
+
+            if (shouldReload) {
+                // Reload the page to load the imported save
+                window.location.reload();
+            } else {
+                updateStatus('Save imported! Use Quick Load button to load', 'success');
+            }
 
         } catch (error) {
             updateStatus('Import failed: ' + error.message, 'error');
@@ -896,10 +909,7 @@ export function startAutosaveBackupTimer() {
     // Stop existing timer if any
     stopAutosaveBackupTimer();
 
-    // Create first backup immediately
-    createAutosaveBackup();
-
-    // Set up interval for future backups
+    // Set up interval for future backups (start timer without immediate backup)
     backupIntervalId = setInterval(() => {
         createAutosaveBackup();
     }, BACKUP_INTERVAL_MS);

@@ -29,6 +29,10 @@ export const APP_COMMANDS = {
   // Restore (voice command - specific phrases)
   RESTORE_LATEST: ['load game', 'restore game'],
 
+  // AI Hints (voice commands)
+  GET_HINT: ['get hint'],
+  GET_GEMINI_HINT: ['get gemini hint'],
+
   // Meta-commands (typed commands that interact with save system)
   HELP: [], // Disabled to allow game's help command (use "app help" for app commands)
   APP_HELP: ['app help'],

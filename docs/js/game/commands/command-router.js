@@ -133,6 +133,7 @@ These commands work whether typed or spoken:<br>
 <b>Navigation:</b> PLAY, PAUSE, REPEAT, BACK, SKIP, SKIP ALL<br>
 <b>Save/Load:</b> SAVE [name], RESTORE [name], DELETE [name], QUICK SAVE, QUICK LOAD<br>
 <b>Audio:</b> MUTE, UNMUTE, STATUS<br>
+<b>AI Hints:</b> GET HINT (ChatGPT), GET GEMINI HINT (UHS-style)<br>
 <b>Game:</b> QUIT - Auto-save and return to game selection<br>
 <b>Repair:</b> REPAIR - Fix broken game state (if not responding)<br>
 <b>Special:</b> PRINT [text] - Send literal text to game<br>
@@ -241,6 +242,16 @@ See Settings panel for more help.
       playAppCommand();
       const h = await getVoiceCommandHandlers();
       if (h.restoreLatest) h.restoreLatest();
+      return true;
+
+    case 'get hint':
+      playAppCommand();
+      (await getVoiceCommandHandlers()).getHint();
+      return true;
+
+    case 'get gemini hint':
+      playAppCommand();
+      (await getVoiceCommandHandlers()).getGeminiHint();
       return true;
 
     case 'quit':

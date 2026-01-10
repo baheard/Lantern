@@ -13,6 +13,7 @@ import { playCommandSent } from '../../utils/audio-feedback.js';
 import { extractWordAtPoint } from '../word-extractor.js';
 import { setVoiceSpeaking, updateVoiceTranscript, showVoiceIndicator, hideVoiceIndicator } from './voice-ui.js';
 import { isSystemEntryMode } from './system-entry.js';
+import { createTouchTracker } from '../../utils/touch-detection.js';
 
 let messageInputEl = null;
 let messageInputRowEl = null;
@@ -365,10 +366,7 @@ export function initKeyboardInput() {
 
   const handleTouchStart = (e) => {
     // Track touch/mouse start position for scroll detection
-    const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-    touchStartX = clientX;
-    touchStartY = clientY;
+    tapExamineTouchTracker.track(e);
   };
 
   const handleGameClick = (e) => {
@@ -385,8 +383,7 @@ export function initKeyboardInput() {
     // Only process in line input mode
     const inputType = getInputType();
     if (inputType !== 'line' || !messageInputEl) {
-      touchStartX = null;
-      touchStartY = null;
+      tapExamineTouchTracker.reset();
       return; // Not in line mode - allow normal behavior
     }
 
@@ -397,9 +394,7 @@ export function initKeyboardInput() {
       if (hasPhysicalKeyboard()) {
         messageInputEl.focus();
       }
-      // Reset tracking vars to prevent stale data affecting next interaction
-      touchStartX = null;
-      touchStartY = null;
+      tapExamineTouchTracker.reset();
       return; // Feature disabled by user
     }
 
@@ -407,25 +402,17 @@ export function initKeyboardInput() {
     const mobileMenu = document.getElementById('mobileMenu');
     if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
       // Menu is open - don't trigger tap-to-examine, let menu close naturally
-      touchStartX = null;
-      touchStartY = null;
+      tapExamineTouchTracker.reset();
       return;
     }
 
     // Detect scrolling/dragging - if finger moved more than 10px, user was scrolling
-    // Using industry standard threshold (10px) to distinguish tap from scroll
-    if (touchStartX !== null && touchStartY !== null) {
-      const deltaX = Math.abs(clientX - touchStartX);
-      const deltaY = Math.abs(clientY - touchStartY);
-
-      if (deltaX > 10 || deltaY > 10) {
-        // User was scrolling, not tapping
-        e.preventDefault();
-        e.stopPropagation(); // Prevent bubbling to parent gameOutput listener
-        touchStartX = null;
-        touchStartY = null;
-        return;
-      }
+    if (!tapExamineTouchTracker.isTap(e)) {
+      // User was scrolling, not tapping
+      e.preventDefault();
+      e.stopPropagation(); // Prevent bubbling to parent gameOutput listener
+      tapExamineTouchTracker.reset();
+      return;
     }
 
     // If user has selected text, don't process word click (allows text selection/copying)
@@ -452,8 +439,7 @@ export function initKeyboardInput() {
     const wordData = extractWordAtPoint(clientX, clientY);
 
     // Reset tracking
-    touchStartX = null;
-    touchStartY = null;
+    tapExamineTouchTracker.reset();
 
     if (wordData && wordData.word) {
       // Word found - populate input
@@ -474,8 +460,7 @@ export function initKeyboardInput() {
   let highlightOverlay = null;
 
   // Track touch/mouse position to detect scrolling vs tapping
-  let touchStartX = null;
-  let touchStartY = null;
+  const tapExamineTouchTracker = createTouchTracker(10); // 10px threshold
 
   // Direction words that should use "go" prefix
   const directions = [

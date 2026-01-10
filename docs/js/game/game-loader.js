@@ -27,6 +27,12 @@ export async function startGame(gamePath, onOutput) {
     // Set game name for save/restore
     state.currentGameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
 
+    // Update document title to show game name
+    const gameDisplayName = gamePath.split('/').pop().replace(/\.[^.]+$/, '')
+      .replace(/([A-Z])/g, ' $1').trim()
+      .replace(/^\w/, c => c.toUpperCase());
+    document.title = `${gameDisplayName} - IF Talk`;
+
     // Update game name display in settings
     updateCurrentGameDisplay(gamePath.split('/').pop());
 
@@ -50,6 +56,10 @@ export async function startGame(gamePath, onOutput) {
 
     // Set flag to indicate we're in a game (for popstate handler)
     window._inGame = true;
+
+    // Update scroll-down button visibility
+    const { updateButtonVisibility } = await import('../ui/scroll-down-button.js');
+    updateButtonVisibility();
 
     // Push history state so back button returns to game selection
     // Only push if we're not already in a game state (avoid duplicates on refresh)
@@ -244,6 +254,10 @@ export async function startGame(gamePath, onOutput) {
     updateSettingsContext();
     updateMobileMenuForGameState(false); // Hide game-specific mobile menu icons
 
+    // Update scroll-down button visibility
+    const { updateButtonVisibility } = await import('../ui/scroll-down-button.js');
+    updateButtonVisibility();
+
     // Show error to user
     alert('Failed to load game: ' + error.message);
   }
@@ -270,6 +284,9 @@ export function sendCommandToGame(cmd) {
  * Unload current game and return to welcome screen
  */
 export function unloadGame() {
+  // Restore original title
+  document.title = 'IF Talk - Voice-Powered Interactive Fiction';
+
   // Hide game output, show welcome screen
   const gameOutput = document.getElementById('gameOutput');
   const welcome = document.getElementById('welcome');
@@ -281,6 +298,11 @@ export function unloadGame() {
   const status = document.getElementById('status');
   if (controlsWrapper) controlsWrapper.classList.add('hidden');
   if (status) status.classList.add('hidden');
+
+  // Update scroll-down button visibility
+  import('../ui/scroll-down-button.js').then(({ updateButtonVisibility }) => {
+    updateButtonVisibility();
+  });
 
   // Clear game state
   window._inGame = false;

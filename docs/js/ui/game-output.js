@@ -329,30 +329,33 @@ export function addGameText(text, isCommand = false, isVoiceCommand = false, isA
   }
 
   // Scroll behavior (see reference/design-decisions.md):
-  // - User commands: always scroll to top to show the command
+  // - User commands: scroll to show the command (not all the way to top)
   // - First game text on screen (fresh screen): scroll to top
   // - Subsequent game text (after command): scroll to show top of new text
-  if (isCommand) {
-    // User command: scroll to top to show the command at the top
-    scrollToTop(dom.gameOutput);
-  } else {
-    // Game text: check if this is first content
-    const existingContent = dom.lowerWindow?.querySelectorAll('.game-text, .user-command');
-    const isFirstOnScreen = existingContent && existingContent.length <= 1;
 
-    if (isFirstOnScreen) {
-      // Fresh screen: scroll to top so user reads from beginning
-      scrollToTop(dom.gameOutput);
-    } else if (dom.gameOutput) {
-      // After command: scroll toward bottom, but keep top of new text visible
-      scrollToNewContent(div, dom.gameOutput);
-    }
+  // Game text: check if this is first content
+  const existingContent = dom.lowerWindow?.querySelectorAll('.game-text, .user-command');
+  const isFirstOnScreen = existingContent && existingContent.length <= 1;
+
+  if (isFirstOnScreen) {
+    // Fresh screen: scroll to top so user reads from beginning
+    scrollToTop(dom.gameOutput);
+  } else if (dom.gameOutput) {
+    // After command or new content: scroll toward bottom, but keep top of new content visible
+    scrollToNewContent(div, dom.gameOutput);
   }
 
   // Track for highlighting (only for game text, not commands)
   if (!isCommand) {
     state.currentGameTextElement = div;
   }
+
+  // Refresh scroll-down button fade state after adding content
+  import('./scroll-down-button.js').then(({ refreshScrollButton }) => {
+    refreshScrollButton();
+  }).catch(() => {
+    // Scroll button module not loaded yet or not available
+  });
 
   return div;
 }

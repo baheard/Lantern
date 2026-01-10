@@ -1243,32 +1243,6 @@ body.map-resizing .map-canvas-overlay * {
   }
 }
 
-/* Safe Area Insets for PWA */
-@supports (padding: env(safe-area-inset-top)) {
-  .map-toolbar {
-    padding-top: max(8px, env(safe-area-inset-top));
-  }
-
-  /* Mode indicator accounts for toolbar + safe area */
-  .map-mode-indicator {
-    top: calc(70px + env(safe-area-inset-top));
-  }
-
-  .node-edit-sheet {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .map-fab-container {
-    bottom: max(20px, calc(env(safe-area-inset-bottom) + 10px));
-    right: max(16px, env(safe-area-inset-right));
-  }
-
-  .map-legend,
-  .map-legend-toggle {
-    left: max(12px, env(safe-area-inset-left));
-  }
-}
-
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   .map-hint,

@@ -46,6 +46,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   /* Safe area insets handled per-section to avoid double padding */
+  padding-bottom: 0 !important; /* Override browser safe area on body */
 }
 
 /* Utility Classes */
@@ -206,9 +207,10 @@ body {
 /* Container */
 .container {
   flex: 1;
-  overflow: auto; /* Default: scrollbar on right (for welcome screen) */
+  overflow: hidden;
   display: flex;
   justify-content: center;
+  padding-top: env(safe-area-inset-top);
 }
 
 /* When game is showing, container should not scroll - let game-output handle it */
@@ -359,4 +361,78 @@ body {
   animation: blink 1s step-end infinite;
   color: var(--accent-primary);
   margin-left: 0.25ch;
+}
+
+/* Scroll Down Button */
+.scroll-down-btn {
+  position: absolute;
+  bottom: 100%;
+  right: 16px;
+  margin-bottom: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgba(203, 213, 225, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  z-index: 10;
+  opacity: 0.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-down-btn:hover {
+  opacity: 0.8;
+  background: rgba(100, 116, 139, 0.2);
+  border-color: rgba(148, 163, 184, 0.4);
+  color: rgba(226, 232, 240, 0.95);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.scroll-down-btn:active {
+  opacity: 1;
+  background: rgba(100, 116, 139, 0.3);
+  border-color: rgba(148, 163, 184, 0.6);
+  color: rgba(241, 245, 249, 1);
+  transform: scale(0.95);
+}
+
+.scroll-down-btn:focus {
+  outline: none;
+}
+
+.scroll-down-btn .material-icons {
+  font-size: 24px;
+}
+
+/* Flash animation when button first appears */
+@keyframes flash-announce {
+  0% {
+    opacity: 0.5;
+    background: rgba(100, 116, 139, 0.12);
+  }
+  50% {
+    opacity: 1;
+    background: rgba(100, 116, 139, 0.4);
+    border-color: rgba(148, 163, 184, 0.7);
+    box-shadow: 0 4px 16px rgba(100, 116, 139, 0.5);
+  }
+  100% {
+    opacity: 0.5;
+    background: rgba(100, 116, 139, 0.12);
+  }
+}
+
+.scroll-down-btn.flash-announce {
+  animation: flash-announce 0.8s ease-in-out;
+}
+
+/* Fade effect when at bottom */
+.scroll-down-btn.faded {
+  opacity: 0;
+  pointer-events: none;
 }

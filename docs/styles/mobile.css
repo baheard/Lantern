@@ -108,12 +108,6 @@
   }
 
   /* Welcome screen */
-  .welcome {
-    padding: 16px;
-    /* More top padding so text doesn't start too high */
-    padding-top: max(40px, calc(25px + env(safe-area-inset-top)));
-  }
-
   .welcome h2 {
     font-size: 28px;
   }
@@ -167,13 +161,8 @@
 
 
   /* Char Input Panel - Mobile touch targets (messaging-interface) */
-  .btn-char-nav {
-    width: 48px;
-    height: 48px;
-  }
-
-  .btn-char-action {
-    padding: 10px 14px;
+  .btn-char {
+    height: 44px;
   }
 
   #charEscBtn {
@@ -225,6 +214,7 @@
   .input-container {
     display: flex;
     gap: 8px;
+    min-width: 0;
   }
 
   #userInput {
@@ -272,7 +262,7 @@
   }
 
   .voice-transcript {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .voice-history-item {
@@ -302,8 +292,9 @@
 
   /* Status bar - slim */
   .status:not(.hidden) {
-    padding: 2px 12px;
+    padding: 4px 12px;
     font-size: 11px;
+    line-height: 1;
     display: flex !important;
     justify-content: space-between !important;
   }
@@ -350,18 +341,16 @@
     touch-action: none;
   }
 
-  /* Game output container - allow scrolling */
+  /* Game output container - allow scrolling, with safe area for phone notch */
   .game-output {
     align-items: start;
     overflow-y: auto !important;
     overflow-x: hidden;
   }
 
-  /* Status bar: fixed to top on mobile, accounting for phone status bar */
+  /* Status bar: fixed to top on mobile */
   #statusBar {
     position: sticky;
-    top: 0;
-    padding-top: env(safe-area-inset-top);
   }
 
   /* Upper window: scrolls with content */
@@ -432,5 +421,23 @@
   /* Lower window: collapse consecutive blank lines to just one */
   #lowerWindow .blank-line-spacer + .blank-line-spacer {
     display: none !important;
+  }
+
+  /* Scroll down button - mobile optimized */
+  .scroll-down-btn {
+    right: 12px;
+    width: 44px; /* Larger touch target */
+    height: 44px;
+    margin-bottom: 12px;
+  }
+
+  .scroll-down-btn .material-icons {
+    font-size: 26px;
+  }
+
+  /* Debug: force visibility (remove display/visibility overrides) */
+  .scroll-down-btn:not(.hidden) {
+    display: flex !important;
+    visibility: visible !important;
   }
 }

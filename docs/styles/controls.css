@@ -10,6 +10,7 @@
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
+  position: relative; /* For absolute positioning of scroll-down button */
 }
 
 .controls {
@@ -652,10 +653,21 @@
   font-weight: 500;
 }
 
-/* Hide mobile-only items on desktop */
+/* Desktop positioning - center menu above button */
 @media (min-width: 800px) {
+  /* Hide mobile-only items on desktop */
   .mobile-only-item,
   .mobile-only-section {
     display: none !important;
+  }
+
+  /* Position menu above the menu button on desktop
+   * Menu button is at the right edge of the centered 800px container
+   * Calculate: (100vw - 800px) / 2 = left margin
+   * Menu should align right edge with button
+   */
+  .mobile-menu {
+    right: calc((100vw - 800px) / 2 + 8px);
+    left: auto;
   }
 }

@@ -31,6 +31,8 @@ let holdStartTime = 0;
 
 // Hold-to-speak state
 let micHoldActive = false;
+let micHoldTimer = null;
+let micHoldStartTime = 0;
 
 // Track keep awake state before locking (so we can restore it on unlock)
 let wasKeepAwakeEnabledBeforeLock = false;
@@ -199,6 +201,9 @@ export function unlockScreen() {
   // Clear any active hold timer
   clearHoldTimer();
 
+  // Clear any active mic hold timer
+  clearMicHoldTimer();
+
   // Stop any active mic hold
   if (micHoldActive) {
     stopMicHold();
@@ -305,6 +310,31 @@ function clearHoldTimer() {
   }
 
   holdStartTime = 0;
+}
+
+/**
+ * Clear mic hold timer and reset visual state
+ */
+function clearMicHoldTimer() {
+  // Clear timeout
+  if (micHoldTimer) {
+    clearTimeout(micHoldTimer);
+    micHoldTimer = null;
+  }
+
+  // Remove visual feedback
+  if (lockMicButton) {
+    lockMicButton.classList.remove('speaking');
+  }
+
+  // Reset progress bar with smooth transition
+  if (lockMicProgress) {
+    lockMicProgress.style.transition = 'height 0.2s ease';
+    lockMicProgress.style.height = '0%';
+  }
+
+  micHoldActive = false;
+  micHoldStartTime = 0;
 }
 
 /**
@@ -447,16 +477,23 @@ export function hideLockListeningIndicator() {
 /**
  * Update transcript text on lock screen
  * @param {string} text - Transcript text to display
+ * @param {string} mode - Display mode: 'interim', 'confirmed', 'nav-command', 'low-confidence'
  */
-export function updateLockTranscript(text) {
+export function updateLockTranscript(text, mode = 'interim') {
   if (!lockTranscript || !state.isScreenLocked) return;
 
   if (text && text.trim()) {
     lockTranscript.textContent = text;
-    lockTranscript.classList.remove('hidden');
+    lockTranscript.classList.remove('hidden', 'interim', 'confirmed', 'nav-command', 'low-confidence');
+
+    // Add appropriate class based on mode
+    if (mode === 'confirmed' || mode === 'nav-command' || mode === 'low-confidence' || mode === 'interim') {
+      lockTranscript.classList.add(mode);
+    }
   } else {
     lockTranscript.textContent = '';
     lockTranscript.classList.add('hidden');
+    lockTranscript.classList.remove('interim', 'confirmed', 'nav-command', 'low-confidence');
   }
 }
 
@@ -539,21 +576,53 @@ async function handleMicHoldStart(e) {
   e.preventDefault(); // Prevent default touch/mouse behavior
 
   micHoldActive = true;
+  micHoldStartTime = Date.now();
 
   // Add visual feedback class
   if (lockMicButton) {
     lockMicButton.classList.add('speaking');
   }
 
-  // Show progress indicator
-  if (lockMicProgress) {
-    lockMicProgress.style.height = '100%';
-  }
-
-  // If push-to-talk mode: temporarily unmute for this hold only
-  // If continuous mode: unmute permanently
   const isPushToTalk = state.pushToTalkMode;
 
+  // Push-to-talk mode: immediate unmute (temporary for hold duration)
+  // Continuous mode: 1-second hold required to permanently unmute
+  if (isPushToTalk) {
+    // Show progress indicator immediately (full height)
+    if (lockMicProgress) {
+      lockMicProgress.style.transition = 'none';
+      lockMicProgress.style.height = '100%';
+    }
+
+    // Unmute immediately for push-to-talk
+    await unmuteMicInLockScreen(isPushToTalk);
+  } else {
+    // Continuous mode: require 1-second hold
+    // Start progress animation (1-second fill)
+    if (lockMicProgress) {
+      // Reset height first
+      lockMicProgress.style.transition = 'none';
+      lockMicProgress.style.height = '0%';
+
+      // Trigger animation after a frame
+      requestAnimationFrame(() => {
+        lockMicProgress.style.transition = 'height 1s linear';
+        lockMicProgress.style.height = '100%';
+      });
+    }
+
+    // Set timer for 1 second - unmute when complete
+    micHoldTimer = setTimeout(async () => {
+      await unmuteMicInLockScreen(isPushToTalk);
+    }, 1000);
+  }
+}
+
+/**
+ * Perform the actual unmute operation in lock screen
+ * @param {boolean} isPushToTalk - Whether in push-to-talk mode
+ */
+async function unmuteMicInLockScreen(isPushToTalk) {
   // Unmute mic and start recognition
   state.isMuted = false;
   state.listeningEnabled = true;
@@ -567,17 +636,55 @@ async function handleMicHoldStart(e) {
     hideLockMicButton();
   }
 
-  // Update UI indicators
+  // Try to start voice recognition
+  if (state.recognition && !state.isRecognitionActive) {
+    const { startRecognitionSafely } = await import('../voice/recognition.js');
+    const success = await startRecognitionSafely();
+
+    // If recognition failed to start, revert to muted state
+    // (error buzz already played by startRecognitionSafely)
+    if (!success) {
+      state.isMuted = true;
+      state.listeningEnabled = false;
+
+      // Restore muted indicators
+      showLockMutedIndicator();
+      hideLockListeningIndicator();
+
+      // Show mic button again
+      showLockMicButton();
+
+      // Clean up hold state (button classes, progress bar, flags)
+      clearMicHoldTimer();
+
+      // Update main UI to sync with lock screen
+      const icon = document.querySelector('#muteBtn .material-icons');
+      if (icon) icon.textContent = 'mic_off';
+      const muteBtn = document.getElementById('muteBtn');
+      if (muteBtn) {
+        muteBtn.classList.add('muted');
+        muteBtn.classList.remove('listening');
+        muteBtn.style.setProperty('--mic-intensity', '0');
+      }
+
+      const { stopVoiceMeter } = await import('../voice/voice-meter.js');
+      stopVoiceMeter();
+
+      const { updateNavButtons } = await import('../ui/nav-buttons.js');
+      updateNavButtons();
+
+      return; // Exit early - unmute failed
+    }
+  }
+
+  // If we got here, recognition started successfully
+  // Play unmute tone
   const { playUnmuteTone } = await import('./audio-feedback.js');
   playUnmuteTone();
 
-  // Start voice recognition
-  if (state.recognition && !state.isRecognitionActive) {
-    try {
-      await state.recognition.start();
-    } catch (err) {
-      // Recognition already running or failed to start
-    }
+  // In continuous mode, clean up hold state since button is now hidden
+  if (!isPushToTalk) {
+    clearMicHoldTimer();
   }
 
   if (isPushToTalk) {
@@ -596,6 +703,18 @@ function handleMicHoldEnd(e) {
 
   e.preventDefault();
 
+  const holdDuration = Date.now() - micHoldStartTime;
+  const isPushToTalk = state.pushToTalkMode;
+
+  // In continuous mode, if released before 1 second, show feedback and reset
+  if (!isPushToTalk && holdDuration < 1000 && holdDuration > 0 && state.isMuted) {
+    // Released too early - clear timer and reset
+    clearMicHoldTimer();
+    updateStatus('Hold for 1 second to unmute');
+    return;
+  }
+
+  // Normal release handling (push-to-talk mode or after successful unmute)
   stopMicHold();
 }
 

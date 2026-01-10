@@ -1,0 +1,29 @@
+    messageEl.textContent = message;
+
+    // Set button text
+    if (options.okText && okBtn) {
+      okBtn.textContent = options.okText;
+    } else if (okBtn) {
+      okBtn.textContent = 'OK';
+    }
+
+    if (options.cancelText && cancelBtn) {
+      cancelBtn.textContent = options.cancelText;
+    } else if (cancelBtn) {
+      cancelBtn.textContent = 'Cancel';
+    }
+
+    // Handle okOnly option - hide cancel button
+    if (options.okOnly && cancelBtn) {
+      cancelBtn.classList.add('hidden');
+    } else if (cancelBtn) {
+      cancelBtn.classList.remove('hidden');
+    }
+
+    // Show overlay
+    overlay.classList.remove('hidden');
+
+    // Focus OK button for keyboard accessibility
+    setTimeout(() => okBtn?.focus(), 100);
+  });
+}

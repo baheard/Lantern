@@ -12,8 +12,6 @@
   font-family: var(--font-mono);
   background: var(--bg-surface);
   overflow-y: auto; /* Scroll when content exceeds viewport height */
-  /* Use margin for safe area - doesn't scroll away like padding */
-  margin: max(0, env(safe-area-inset-top)) 0 0 0;
   padding: 0;
 }
 

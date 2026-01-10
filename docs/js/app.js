@@ -37,6 +37,7 @@ import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from '
 import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
 import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
+import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-button.js';
 
 // Game modules
 import { sendCommand, sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
@@ -390,8 +391,8 @@ export const voiceCommandHandlers = {
       speakAppMessage('Save command failed');
     }
   },
-  unmute: () => {
-    playUnmuteTone();
+  unmute: async () => {
+    // Temporarily set state to attempt unmute
     state.isMuted = false;
     state.manuallyMuted = false;  // User manually unmuted - allow auto-management again
     state.listeningEnabled = true;
@@ -399,7 +400,7 @@ export const voiceCommandHandlers = {
     if (icon) icon.textContent = 'mic';
     if (dom.muteBtn) dom.muteBtn.classList.remove('muted');
     startVoiceMeter();
-    updateStatus('Microphone unmuted - Listening...');
+    updateStatus('Starting microphone...');
     updateNavButtons();
     updateLockScreenMicStatus();
 
@@ -409,14 +410,40 @@ export const voiceCommandHandlers = {
       messageInput.placeholder = 'Say command...';
     }
 
-    // Voice recognition should already be running (listening for "unmute")
-    // Just verify it's active, start it if needed
+    // Try to start voice recognition
     if (state.recognition && !state.isRecognitionActive) {
-      try {
-        state.recognition.start();
-      } catch (err) {
-        // Recognition already running or start failed
+      const { startRecognitionSafely } = await import('./voice/recognition.js');
+      const success = await startRecognitionSafely();
+
+      // If recognition started successfully, play unmute tone
+      if (success) {
+        playUnmuteTone();
+        updateStatus('Microphone unmuted - Listening...');
+      } else {
+        // If recognition failed to start, revert UI to muted state
+        // (error buzz already played by startRecognitionSafely)
+        state.isMuted = true;
+        state.listeningEnabled = false;
+        const icon = dom.muteBtn?.querySelector('.material-icons');
+        if (icon) icon.textContent = 'mic_off';
+        if (dom.muteBtn) {
+          dom.muteBtn.classList.add('muted');
+          dom.muteBtn.classList.remove('listening');
+          dom.muteBtn.style.setProperty('--mic-intensity', '0');
+        }
+        stopVoiceMeter();
+        updateNavButtons();
+        updateLockScreenMicStatus();
+
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+          messageInput.placeholder = 'Type a command...';
+        }
       }
+    } else {
+      // Recognition not available or already active
+      playUnmuteTone();
+      updateStatus('Microphone unmuted - Listening...');
     }
   },
   mute: () => {
@@ -645,6 +672,7 @@ async function initApp() {
   initHistoryButtons();
   initConfirmDialog();
   initMobileMenu();
+  initScrollDownButton();
   initSaveHandlers();
   initDialogInterceptor();
   initScrollDetection();
@@ -996,21 +1024,18 @@ async function initApp() {
     // Push-to-talk: Hold to activate mic
     let pushToTalkActive = false;
 
-    const startPushToTalk = (e) => {
+    const startPushToTalk = async (e) => {
       if (!state.pushToTalkMode || pushToTalkActive) return;
 
       e.preventDefault();
       pushToTalkActive = true;
 
       dom.muteBtn.classList.add('push-to-talk-active');
-      updateStatus('🎤 Listening... Speak now!');
+      updateStatus('Starting microphone...');
 
       // Unmute and start recognition
       state.isMuted = false;
       state.listeningEnabled = true;
-
-      // Play unmute tone
-      playUnmuteTone();
 
       // Update UI
       const icon = dom.muteBtn?.querySelector('.material-icons');
@@ -1021,12 +1046,34 @@ async function initApp() {
       }
       updateLockScreenMicStatus();
 
+      // Try to start recognition
       if (state.recognition && !state.isRecognitionActive) {
-        try {
-          state.recognition.start();
-        } catch (err) {
-          // Recognition already running
+        const { startRecognitionSafely } = await import('./voice/recognition.js');
+        const success = await startRecognitionSafely();
+
+        // If recognition started successfully, play unmute tone
+        if (success) {
+          playUnmuteTone();
+          updateStatus('🎤 Listening... Speak now!');
+        } else {
+          // If recognition failed, revert state
+          // (error buzz already played by startRecognitionSafely)
+          pushToTalkActive = false;
+          state.isMuted = true;
+          state.listeningEnabled = false;
+
+          dom.muteBtn.classList.remove('push-to-talk-active', 'listening');
+          dom.muteBtn.classList.add('muted');
+
+          const icon = dom.muteBtn?.querySelector('.material-icons');
+          if (icon) icon.textContent = 'mic_off';
+
+          updateLockScreenMicStatus();
         }
+      } else {
+        // Recognition already active or not available
+        playUnmuteTone();
+        updateStatus('🎤 Listening... Speak now!');
       }
     };
 
