@@ -12,7 +12,8 @@ import { getScrollContainer } from '../utils/scroll.js';
 import { createTouchTracker } from '../utils/touch-detection.js';
 
 let holdTimer = null;
-const SCROLL_TO_BOTTOM_DELAY = 375; // ms - if still held after 3/4 of one-page scroll animation, scroll to bottom
+const SCROLL_TO_BOTTOM_DELAY = 400; // ms - if still held after this, interrupt with fast scroll to bottom
+const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
 
 /**
@@ -47,8 +48,11 @@ export function initScrollDownButton() {
   button.addEventListener('touchend', (e) => {
     e.preventDefault();
 
-    // Remove pressed state
+    // Remove pressed state instantly (no transition)
+    button.style.transition = 'none';
     button.classList.remove('pressed');
+    void button.offsetHeight; // Force reflow
+    button.style.transition = '';
 
     // Cancel scroll-to-bottom if still pending
     clearTimeout(holdTimer);
@@ -58,8 +62,11 @@ export function initScrollDownButton() {
   });
 
   button.addEventListener('touchcancel', () => {
-    // Remove pressed state
+    // Remove pressed state instantly (no transition)
+    button.style.transition = 'none';
     button.classList.remove('pressed');
+    void button.offsetHeight; // Force reflow
+    button.style.transition = '';
 
     clearTimeout(holdTimer);
     holdTimer = null;
@@ -92,8 +99,11 @@ export function initScrollDownButton() {
 
     e.preventDefault();
 
-    // Remove pressed state
+    // Remove pressed state instantly (no transition)
+    button.style.transition = 'none';
     button.classList.remove('pressed');
+    void button.offsetHeight; // Force reflow
+    button.style.transition = '';
 
     // Cancel scroll-to-bottom if still pending
     clearTimeout(holdTimer);
@@ -103,8 +113,11 @@ export function initScrollDownButton() {
   });
 
   button.addEventListener('mouseleave', () => {
-    // Remove pressed state if mouse leaves while pressed
+    // Remove pressed state instantly if mouse leaves while pressed
+    button.style.transition = 'none';
     button.classList.remove('pressed');
+    void button.offsetHeight; // Force reflow
+    button.style.transition = '';
 
     clearTimeout(holdTimer);
     holdTimer = null;
@@ -149,10 +162,26 @@ function scrollDownOnePage(container) {
 function scrollToBottomSmooth(container) {
   if (!container) return;
 
-  container.scrollTo({
-    top: container.scrollHeight,
-    behavior: 'smooth'
-  });
+  const startPos = container.scrollTop;
+  const targetPos = container.scrollHeight - container.clientHeight;
+  const distance = targetPos - startPos;
+  const startTime = performance.now();
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / SCROLL_TO_BOTTOM_DURATION, 1);
+
+    // Easing function (ease-out cubic)
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+    container.scrollTop = startPos + (distance * easeProgress);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  requestAnimationFrame(animate);
 }
 
 /**
