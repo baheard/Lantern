@@ -12,7 +12,7 @@ import { getScrollContainer } from '../utils/scroll.js';
 import { createTouchTracker } from '../utils/touch-detection.js';
 
 let holdTimer = null;
-const SCROLL_TO_BOTTOM_DELAY = 400; // ms - if still held after this, interrupt with fast scroll to bottom
+const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
 
