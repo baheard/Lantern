@@ -221,15 +221,6 @@ export function updateButtonVisibility() {
   if (isGameLoaded) {
     button.classList.remove('hidden');
 
-    // Flash animation to announce presence (skip on desktop to be less intrusive)
-    const isMobile = window.matchMedia('(max-width: 600px)').matches;
-    if (isMobile) {
-      button.classList.add('flash-announce');
-      setTimeout(() => {
-        button.classList.remove('flash-announce');
-      }, 800);
-    }
-
     // Update fade state immediately and after a delay (for initial content render)
     const container = getScrollContainer();
     if (container) {
