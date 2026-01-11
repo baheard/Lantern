@@ -53,6 +53,24 @@ nul
 # Backup files
 *.backup
 *.tar
+*.bak
+
+# Crash dumps and debug files
+CrashReport.txt
+Minidump.dmp
+*.dmp
+
+# SSL certificates and keys
+*.pem
+*.key
+*.cert
+*.crt
+mkcert.exe
+
+# Temporary files
+*-temp.js
+*-fix.txt
+*-temp.md
 
 # Game files in root (not tracked - users download these)
 /*.z3
