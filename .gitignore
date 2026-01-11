@@ -71,6 +71,7 @@ mkcert.exe
 *-temp.js
 *-fix.txt
 *-temp.md
+ISSUES.md
 
 # Game files in root (not tracked - users download these)
 /*.z3

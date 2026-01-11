@@ -423,12 +423,13 @@
     display: none !important;
   }
 
-  /* Scroll down button - mobile optimized */
+  /* Scroll down button - mobile optimized - restore original positioning */
   .scroll-down-btn {
+    bottom: 100%;
     right: 12px;
+    margin-bottom: 12px;
     width: 44px; /* Larger touch target */
     height: 44px;
-    margin-bottom: 12px;
   }
 
   .scroll-down-btn .material-icons {

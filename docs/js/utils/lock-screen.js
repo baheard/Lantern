@@ -477,23 +477,23 @@ export function hideLockListeningIndicator() {
 /**
  * Update transcript text on lock screen
  * @param {string} text - Transcript text to display
- * @param {string} mode - Display mode: 'interim', 'confirmed', 'nav-command', 'low-confidence'
+ * @param {string} mode - Display mode: 'interim', 'confirmed', 'nav-command', 'low-confidence', 'processed'
  */
 export function updateLockTranscript(text, mode = 'interim') {
   if (!lockTranscript || !state.isScreenLocked) return;
 
   if (text && text.trim()) {
     lockTranscript.textContent = text;
-    lockTranscript.classList.remove('hidden', 'interim', 'confirmed', 'nav-command', 'low-confidence');
+    lockTranscript.classList.remove('hidden', 'interim', 'confirmed', 'nav-command', 'low-confidence', 'processed');
 
     // Add appropriate class based on mode
-    if (mode === 'confirmed' || mode === 'nav-command' || mode === 'low-confidence' || mode === 'interim') {
+    if (mode === 'confirmed' || mode === 'nav-command' || mode === 'low-confidence' || mode === 'interim' || mode === 'processed') {
       lockTranscript.classList.add(mode);
     }
   } else {
     lockTranscript.textContent = '';
     lockTranscript.classList.add('hidden');
-    lockTranscript.classList.remove('interim', 'confirmed', 'nav-command', 'low-confidence');
+    lockTranscript.classList.remove('interim', 'confirmed', 'nav-command', 'low-confidence', 'processed');
   }
 }
 

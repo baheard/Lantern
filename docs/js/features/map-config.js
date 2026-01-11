@@ -95,8 +95,9 @@ export const mapState = {
   viewport: { x: 0, y: 0, scale: 1 },
   selectedNode: null,
   currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
-  autoMapEnabled: true,
+  autoMapEnabled: false,  // Disabled by default - user can enable via onboarding
   undoStack: [],  // Stack of undo actions
+  hasUnsavedChanges: false,  // Track if map has user changes since last game save
   // Interaction state
   isDragging: false,
   hasDragged: false,  // True if actual movement occurred during drag
@@ -115,7 +116,7 @@ export let canvas = null;
 export let ctx = null;
 export let container = null;
 export let isVisible = false;
-export let domRefs = { modeIndicator: null, contextMenu: null, fabContainer: null, hint: null, legend: null };
+export let domRefs = { modeIndicator: null, fabContainer: null, hint: null, legend: null };
 
 // Setters for module references
 export function setCanvas(c) { canvas = c; }

@@ -182,7 +182,7 @@ body.map-resizing .map-canvas-overlay * {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-right: 56px; /* Space for close button */
+  margin-right: 48px; /* Space for close button - matches 4px gap */
 }
 
 /* Toolbar Buttons - 44px minimum touch target */
@@ -215,8 +215,8 @@ body.map-resizing .map-canvas-overlay * {
 }
 
 .map-btn-small {
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .map-btn-small .material-icons {
@@ -224,16 +224,38 @@ body.map-resizing .map-canvas-overlay * {
 }
 
 .map-close-btn {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: transparent;
+  color: #94a3b8;
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
+  transition: all 0.15s ease;
 }
 
 .map-close-btn:hover {
+  background: transparent;
+  color: #ffffff;
+  transform: translateY(-50%);
+}
+
+.map-close-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Destructive button style (for delete/clear actions) */
+.map-btn-destructive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.map-btn-destructive:hover {
   background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+.map-btn-destructive:active {
+  background: rgba(239, 68, 68, 0.35);
 }
 
 /* Zoom Controls */
@@ -262,9 +284,9 @@ body.map-resizing .map-canvas-overlay * {
   align-items: center;
   gap: 4px;
   padding: 0 12px;
-  min-height: 36px;
+  min-height: 44px;
   border: none;
-  border-radius: 18px;
+  border-radius: 22px;
   background: rgba(255, 255, 255, 0.1);
   color: #94a3b8;
   font-size: 12px;
@@ -1256,5 +1278,181 @@ body.map-resizing .map-canvas-overlay * {
   .type-btn,
   .sheet-btn {
     transition: none;
+  }
+}
+
+/* Toast Notification System */
+.map-toast-container {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(90%, 500px);
+  z-index: 10000; /* Above everything */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none; /* Allow clicks through container */
+}
+
+.map-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: auto; /* Toast itself is clickable */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+}
+
+.map-toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-index {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+  padding-top: 14px; /* Space for index */
+}
+
+.toast-content strong {
+  color: #ffffff;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.toast-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toast-dismiss,
+.toast-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toast-dismiss:hover,
+.toast-cancel:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.toast-dismiss .material-icons,
+.toast-cancel .material-icons {
+  font-size: 18px;
+}
+
+/* Action Toast (for "don't show again" prompt) */
+.map-toast-action {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 20px;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.toast-action-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toast-btn-primary {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.toast-btn-primary:hover {
+  background: #2563eb;
+}
+
+.toast-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.toast-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.toast-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toast-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Mobile toast adjustments */
+@media (max-width: 480px) {
+  .map-toast-container {
+    top: 64px;
+    max-width: 95%;
+  }
+
+  .map-toast {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .toast-content strong {
+    font-size: 14px;
+  }
+
+  .toast-actions {
+    flex-direction: column;
+  }
+
+  .toast-action-btn {
+    width: 100%;
   }
 }

@@ -26,11 +26,11 @@ import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
 import {
   handlePointerDown, handlePointerMove, handlePointerUp,
   handleTouchStart, handleTouchMove, handleTouchEnd,
-  handleWheel, handleContextMenu, handleCtxAddNode, handleCtxCenterView,
+  handleWheel, handleContextMenu,
   handleKeyDown, showFab, setHandlerCallbacks
 } from './map-handlers.js';
 import {
-  createNodeEditSheet, createContextMenu, openNodeSheet, closeNodeSheet,
+  createNodeEditSheet, openNodeSheet, closeNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
   handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
   setupSheetDragHandlers
@@ -47,6 +47,7 @@ export function initMapCanvas() {
   createMapUI();
   setupEventListeners();
   setupCallbacks();
+  setupToastSystem();
   window.addEventListener('locationChanged', handleLocationChange);
   window.addEventListener('gameLoaded', handleGameLoaded);
 
@@ -117,9 +118,6 @@ function createMapUI() {
           <span class="map-node-count" id="mapNodeCount"></span>
         </div>
         <div class="map-toolbar-actions">
-          <button class="map-btn" id="mapCenterBtn" title="Center on current location" aria-label="Center view">
-            <span class="material-icons">my_location</span>
-          </button>
           <div class="map-zoom-controls">
             <button class="map-btn map-btn-small" id="mapZoomOutBtn" title="Zoom out" aria-label="Zoom out">
               <span class="material-icons">remove</span>
@@ -185,7 +183,6 @@ function createMapUI() {
   setCtx(canvasEl.getContext('2d'));
   resizeCanvas();
   createNodeEditSheet();
-  createContextMenu();
 }
 
 // ============================================================================
@@ -196,7 +193,6 @@ function setupEventListeners() {
   // Cache DOM refs
   setDomRefs({
     modeIndicator: document.getElementById('mapModeIndicator'),
-    contextMenu: document.getElementById('mapContextMenu'),
     fabContainer: document.querySelector('.map-fab-container'),
     hint: document.getElementById('mapHint'),
     legend: document.getElementById('mapLegend')
@@ -205,7 +201,6 @@ function setupEventListeners() {
   // Toolbar
   document.getElementById('mapCloseBtn').addEventListener('click', hideMap);
   document.getElementById('mapUndoBtn').addEventListener('click', performUndo);
-  document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
   document.getElementById('mapZoomInBtn').addEventListener('click', () => {
     const dpr = window.devicePixelRatio;
     const centerX = canvas.width / (2 * dpr);
@@ -263,13 +258,6 @@ function setupEventListeners() {
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
 
-  // Context menu
-  document.getElementById('ctxAddNode').addEventListener('click', handleCtxAddNode);
-  document.getElementById('ctxCenterView').addEventListener('click', handleCtxCenterView);
-  document.addEventListener('click', (e) => {
-    if (!domRefs.contextMenu.contains(e.target)) domRefs.contextMenu.classList.add('hidden');
-  });
-
   // Global
   window.addEventListener('resize', resizeCanvas);
   document.addEventListener('keydown', handleKeyDown);
@@ -288,7 +276,13 @@ function setupEventListeners() {
     }
     // Close if clicking outside the panel (on backdrop area)
     const panel = container.querySelector('.map-panel');
-    if (!panel.contains(e.target)) {
+    const nodeSheet = document.getElementById('nodeEditSheet');
+    const nodeBackdrop = document.getElementById('nodeEditBackdrop');
+
+    // Don't close if clicking inside the panel, node sheet, or node sheet backdrop
+    if (!panel.contains(e.target) &&
+        !nodeSheet?.contains(e.target) &&
+        !nodeBackdrop?.contains(e.target)) {
       hideMap();
     }
   });
@@ -434,6 +428,30 @@ function toggleAutoMap() {
   mapState.autoMapEnabled = !mapState.autoMapEnabled;
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
   showHint(mapState.autoMapEnabled ? 'Auto-mapping ON' : 'Auto-mapping OFF');
+
+  // When turning automap ON, immediately map the current location if not already mapped
+  if (mapState.autoMapEnabled) {
+    const currentLocationName = getLastLocationName();
+    if (currentLocationName && !mapState.nodes.has(currentLocationName) && !mapState.deletedNodes.has(currentLocationName)) {
+      // Add the current location at origin (0, 0) since we have no context
+      mapState.nodes.set(currentLocationName, {
+        id: currentLocationName,
+        name: currentLocationName,
+        x: 0,
+        y: 0,
+        type: 'room',
+        notes: '',
+        isManual: false,
+        isEdited: false
+      });
+      mapState.protectedNodes.add(currentLocationName);
+      mapState.currentNodeId = currentLocationName;
+      mapState.selectedNode = currentLocationName;
+      render();
+      centerOnCurrentLocation();
+    }
+  }
+
   saveMapForGame();
 }
 
@@ -443,6 +461,8 @@ function clearMapWithConfirm() {
     return;
   }
   if (confirm('Clear entire map? This cannot be undone.')) {
+    // Clear any visible toasts (without marking as dismissed)
+    clearAllToasts();
     resetMap();
     saveMapForGame(true);  // Immediate save for critical operation
     render();
@@ -843,14 +863,284 @@ function updateNodeCount() {
   if (el) el.textContent = mapState.nodes.size > 0 ? `${mapState.nodes.size} location${mapState.nodes.size !== 1 ? 's' : ''}` : '';
 }
 
+// ============================================================================
+// TOAST NOTIFICATION SYSTEM
+// ============================================================================
+
+const TOAST_STORAGE_KEY = 'iftalk_map_toasts_dismissed';
+let toastQueue = [];
+let currentToast = null;
+let toastContainer = null;
+
+function setupToastSystem() {
+  // Create toast container
+  toastContainer = document.createElement('div');
+  toastContainer.id = 'mapToastContainer';
+  toastContainer.className = 'map-toast-container';
+  document.body.appendChild(toastContainer);
+}
+
+/**
+ * Show a dismissable toast notification
+ * @param {string} message - Toast message text
+ * @param {string} id - Unique ID for this toast (for tracking dismissals)
+ * @param {boolean} persistent - If true, toast stays until dismissed
+ * @param {string} index - Optional index to display (e.g., "1/5")
+ */
+function showToast(message, id, persistent = false, index = null) {
+  // Check if user has dismissed this toast before
+  const dismissed = getDismissedToasts();
+  if (dismissed.includes(id)) {
+    // Skip and show next in queue
+    showNextToast();
+    return;
+  }
+
+  // Determine if this is the last toast (5/5)
+  const isLastToast = index && index.includes('5/5');
+  // Determine if this is an onboarding toast (has index like "1/5")
+  const isOnboardingToast = index && index.match(/\d+\/\d+/);
+
+  const toast = document.createElement('div');
+  toast.className = 'map-toast';
+  toast.innerHTML = `
+    ${index ? `<div class="toast-index">${index}</div>` : ''}
+    <div class="toast-content">${message}</div>
+    <div class="toast-buttons">
+      ${isOnboardingToast ? `<button class="toast-cancel" aria-label="Cancel tutorial">
+        <span class="material-icons">close</span>
+      </button>` : ''}
+      <button class="toast-dismiss" aria-label="${isLastToast ? 'Dismiss' : 'Next'}">
+        <span class="material-icons">${isLastToast ? 'close' : 'chevron_right'}</span>
+      </button>
+    </div>
+  `;
+
+  const dismissBtn = toast.querySelector('.toast-dismiss');
+  dismissBtn.addEventListener('click', () => {
+    markToastDismissed(id);
+    hideToast(toast);
+  });
+
+  // Add cancel button handler for onboarding toasts
+  if (isOnboardingToast) {
+    const cancelBtn = toast.querySelector('.toast-cancel');
+    cancelBtn.addEventListener('click', () => {
+      cancelOnboarding(toast);
+    });
+  }
+
+  toastContainer.appendChild(toast);
+  currentToast = toast;
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toast.classList.add('toast-visible');
+  });
+
+  // Auto-hide after 8 seconds if not persistent
+  if (!persistent) {
+    setTimeout(() => {
+      if (toast.parentElement) {
+        hideToast(toast);
+      }
+    }, 8000);
+  }
+
+  return toast;
+}
+
+function hideToast(toast) {
+  toast.classList.remove('toast-visible');
+  setTimeout(() => {
+    toast.remove();
+    if (currentToast === toast) {
+      currentToast = null;
+    }
+    // Show next toast in queue after a short delay
+    showNextToast();
+  }, 150);
+}
+
+function showNextToast() {
+  if (toastQueue.length > 0 && !currentToast) {
+    const next = toastQueue.shift();
+    // Immediate transition - no delay between toasts
+    showToast(next.message, next.id, next.persistent, next.index);
+  }
+}
+
+/**
+ * Cancel the onboarding tutorial sequence
+ * Clears remaining toasts and shows the "don't show again" dialog
+ */
+function cancelOnboarding(currentToast) {
+  // Clear the queue
+  toastQueue = [];
+
+  // Mark all onboarding toasts as dismissed
+  const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5'];
+  const dismissed = getDismissedToasts();
+  onboardingIds.forEach(id => {
+    if (!dismissed.includes(id)) {
+      dismissed.push(id);
+    }
+  });
+  localStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify(dismissed));
+
+  // Hide current toast
+  hideToast(currentToast);
+
+  // Show "don't show again" dialog after a short delay
+  setTimeout(() => showDontShowAgainToast(), 500);
+}
+
+function getDismissedToasts() {
+  try {
+    const stored = localStorage.getItem(TOAST_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Clear all visible toasts without marking them as dismissed
+ * Used when map is cleared or closed to remove clutter
+ */
+function clearAllToasts() {
+  // Clear the queue
+  toastQueue = [];
+
+  // Remove current toast if any
+  if (currentToast && currentToast.parentElement) {
+    currentToast.remove();
+    currentToast = null;
+  }
+
+  // Remove any other toasts in the container
+  if (toastContainer) {
+    while (toastContainer.firstChild) {
+      toastContainer.removeChild(toastContainer.firstChild);
+    }
+  }
+}
+
+function markToastDismissed(id) {
+  try {
+    const dismissed = getDismissedToasts();
+    if (!dismissed.includes(id)) {
+      dismissed.push(id);
+      localStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify(dismissed));
+    }
+
+    // Check if all onboarding toasts have been dismissed
+    const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5'];
+    const allDismissed = onboardingIds.every(id => dismissed.includes(id));
+
+    if (allDismissed && !dismissed.includes('dont-show-onboarding')) {
+      // Show "don't show again" option after all toasts dismissed
+      setTimeout(() => showDontShowAgainToast(), 1000);
+    }
+  } catch (e) {
+    console.warn('Failed to save toast dismissal:', e);
+  }
+}
+
+function showDontShowAgainToast() {
+  const toast = document.createElement('div');
+  toast.className = 'map-toast map-toast-action';
+  toast.innerHTML = `
+    <div class="toast-content">
+      <strong>Map tips complete!</strong><br>
+      Want to see these tips again next time?
+    </div>
+    <div class="toast-actions">
+      <button class="toast-action-btn toast-btn-secondary" id="toastKeepShowing">
+        Yes, show again
+      </button>
+      <button class="toast-action-btn toast-btn-primary" id="toastDontShow">
+        Don't show again
+      </button>
+    </div>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('toast-visible');
+  });
+
+  toast.querySelector('#toastKeepShowing').addEventListener('click', () => {
+    // Clear all dismissed toasts so they show again next time
+    localStorage.removeItem(TOAST_STORAGE_KEY);
+    hideToast(toast);
+    showHint('Map tips will show again next time');
+  });
+
+  toast.querySelector('#toastDontShow').addEventListener('click', () => {
+    markToastDismissed('dont-show-onboarding');
+    hideToast(toast);
+    showHint('Map tips disabled');
+  });
+}
+
+function showOnboardingToasts() {
+  // Check if user has opted out of onboarding
+  const dismissed = getDismissedToasts();
+  if (dismissed.includes('dont-show-onboarding')) {
+    return;
+  }
+
+  // Queue onboarding toasts (sequential - one at a time)
+  const toasts = [
+    {
+      id: 'map-intro-1',
+      message: '<strong>Welcome to the Game Map!</strong><br>Use this as a mapping tool or note-taking tool as you explore.',
+      persistent: true,
+      index: '1/5'
+    },
+    {
+      id: 'map-intro-2',
+      message: '<strong>Auto-mapping is disabled by default.</strong><br>Tap the <span class="material-icons" style="font-size:16px;vertical-align:middle">auto_fix_high</span> Auto button to enable automatic location tracking.',
+      persistent: true,
+      index: '2/5'
+    },
+    {
+      id: 'map-intro-3',
+      message: '<strong>Note:</strong> The auto-mapper tries to parse locations from the game, but may not work as expected in all games.',
+      persistent: true,
+      index: '3/5'
+    },
+    {
+      id: 'map-intro-4',
+      message: '<strong>Manual mapping:</strong> Automapped locations that are edited or deleted by the user will not be recreated by the automapper. You can always add locations manually using the <span class="material-icons" style="font-size:16px;vertical-align:middle">add_location</span> button.',
+      persistent: true,
+      index: '4/5'
+    },
+    {
+      id: 'map-intro-5',
+      message: '<strong>Clear Map:</strong> Use the <span class="material-icons" style="font-size:16px;vertical-align:middle">delete_sweep</span> Clear Map button to reset the map data for this game.',
+      persistent: true,
+      index: '5/5'
+    }
+  ];
+
+  // Show first toast immediately
+  const first = toasts.shift();
+  showToast(first.message, first.id, first.persistent, first.index);
+
+  // Queue the rest (will show sequentially after each dismissal)
+  toastQueue = toasts;
+}
+
 function showOnboardingOrHint() {
+  // Show onboarding toasts for first-time users
   if (!localStorage.getItem(FIRST_USE_KEY)) {
     localStorage.setItem(FIRST_USE_KEY, 'true');
-    const tips = ['Welcome to Game Map! Locations are added automatically as you explore.', 'Tip: Hold a location to connect it to another.', 'Tap the + button to add your own locations.'];
-    let i = 0;
-    (function next() { if (i < tips.length && isVisible) { showHint(tips[i++]); timers.onboardingTimeout = setTimeout(next, 3500); } })();
-  } else if (mapState.autoMapEnabled && mapState.nodes.size === 0) {
-    showHint('Explore the game to start auto-mapping locations');
+    showOnboardingToasts();
+  } else if (!mapState.autoMapEnabled && mapState.nodes.size === 0) {
+    showHint('Tap the Auto button to enable auto-mapping, or add locations manually');
   }
 }
 
@@ -871,13 +1161,22 @@ export function showMap() {
   showOnboardingOrHint();
 }
 
-export function hideMap() {
+export async function hideMap() {
   container?.classList.remove('visible');
   setIsVisible(false);
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
+  // Clear any visible toasts (without marking as dismissed)
+  clearAllToasts();
   exitAddMode();
   saveMapForGame(true);  // Immediate save when hiding map
+
+  // If user made changes to the map, trigger a full autosave
+  if (mapState.hasUnsavedChanges) {
+    const { autoSave } = await import('../game/save-manager.js');
+    await autoSave();
+    mapState.hasUnsavedChanges = false;  // Reset flag after save
+  }
 
   // Clean up resize event listeners
   if (resizeState && resizeState.cleanup) {
@@ -929,9 +1228,10 @@ export function centerOnCurrentLocation() {
 
 function loadMapForGame(gameName) {
   mapState.gameName = gameName;
-  // Always reset undo stack and selection when loading a game
+  // Always reset undo stack, selection, and unsaved changes when loading a game
   mapState.undoStack = [];
   mapState.selectedNode = null;
+  mapState.hasUnsavedChanges = false;
   updateUndoButton();
 
   const saved = localStorage.getItem(`iftalk_map_${gameName}`);
@@ -1170,8 +1470,10 @@ function resetMap() {
   mapState.deletedEdges = new Set(); mapState.deletedNodes = new Set();
   mapState.viewport = { x: 0, y: 0, scale: 1 };
   mapState.selectedNode = null; mapState.currentNodeId = null;
-  mapState.autoMapEnabled = true;
+  // Check for user's default preference (only used for new games without saved map data)
+  mapState.autoMapEnabled = localStorage.getItem('iftalk_automap_default') === 'true';
   mapState.undoStack = [];
+  mapState.hasUnsavedChanges = false;
   updateUndoButton();
 }
 
@@ -1187,6 +1489,7 @@ function updateUndoButton() {
 export function pushUndo(action) {
   mapState.undoStack.push(action);
   if (mapState.undoStack.length > 50) mapState.undoStack.shift();  // Limit stack size
+  mapState.hasUnsavedChanges = true;  // Mark that user has made changes
   updateUndoButton();
 }
 

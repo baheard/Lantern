@@ -759,57 +759,66 @@ export function exportSaveToFile() {
 /**
  * Import a save file from disk
  */
-export function importSaveFromFile() {
+export async function importSaveFromFile() {
     // Create file input
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.sav,.json';
 
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // Use promise to handle file selection
+    const file = await new Promise((resolve) => {
+        input.onchange = (e) => {
+            resolve(e.target.files[0]);
+        };
+        input.oncancel = () => {
+            resolve(null);
+        };
+        // Trigger file picker
+        input.click();
+    });
 
-        try {
-            // Read file
-            const text = await file.text();
-            const saveData = JSON.parse(text);
+    if (!file) return;
 
-            // Validate save data
-            if (!saveData.quetzalData || !saveData.gameName) {
-                updateStatus('Invalid save file format', 'error');
-                return;
-            }
+    try {
+        // Read file
+        const text = await file.text();
+        const saveData = JSON.parse(text);
 
-            // Store in localStorage as quick save using current game name
-            if (!state.currentGameName) {
-                updateStatus('Error: No game loaded', 'error');
-                return;
-            }
-            const key = `iftalk_quicksave_${state.currentGameName}`;
-            setJSON(key, saveData);
-
-            // Import successful - prompt user to reload
-            const { confirmDialog } = await import('../ui/confirm-dialog.js');
-            const shouldReload = await confirmDialog(
-                'Import complete! Click "Reload" to load the imported save.',
-                'Reload',
-                'Cancel'
-            );
-
-            if (shouldReload) {
-                // Reload the page to load the imported save
-                window.location.reload();
-            } else {
-                updateStatus('Save imported! Use Quick Load button to load', 'success');
-            }
-
-        } catch (error) {
-            updateStatus('Import failed: ' + error.message, 'error');
+        // Validate save data
+        if (!saveData.quetzalData || !saveData.gameName) {
+            updateStatus('Invalid save file format', 'error');
+            return;
         }
-    };
 
-    // Trigger file picker
-    input.click();
+        // Store in localStorage as quick save using current game name
+        if (!state.currentGameName) {
+            updateStatus('Error: No game loaded', 'error');
+            return;
+        }
+        const key = `iftalk_quicksave_${state.currentGameName}`;
+        setJSON(key, saveData);
+
+        updateStatus('Importing save...', 'processing');
+
+        // Import successful - prompt user to reload
+        const { confirmDialog } = await import('../ui/confirm-dialog.js');
+        const shouldReload = await confirmDialog(
+            'Import complete! Reload now to load the imported save?',
+            'Reload Now',
+            'Later'
+        );
+
+        if (shouldReload) {
+            // Reload the page to load the imported save
+            window.location.reload();
+        } else {
+            updateStatus('Save imported! Use Quick Load to restore it', 'success');
+        }
+
+    } catch (error) {
+        console.error('Import error:', error);
+        updateStatus('Import failed: ' + error.message, 'error');
+    }
 }
 
 // Autosave backup interval (5 minutes)

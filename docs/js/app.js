@@ -54,63 +54,148 @@ import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, a
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
-// PWA Service Worker Registration with Update Notification
+// PWA Service Worker Registration with Beautiful Update Notification
 if ('serviceWorker' in navigator) {
+  console.log('[PWA] Service worker is supported');
+  let updateAvailable = false;
+  let waitingWorker = null;
+
+  // Function to show beautiful update notification
+  function showUpdateNotification() {
+    console.log('[PWA] 🎉 SHOWING UPDATE NOTIFICATION!');
+
+    // Remove existing notification if any
+    const existing = document.getElementById('updateNotification');
+    if (existing) {
+      console.log('[PWA] Removing existing notification');
+      existing.remove();
+    }
+
+    // Create beautiful update notification
+    const notification = document.createElement('div');
+    notification.id = 'updateNotification';
+    notification.className = 'update-notification';
+    notification.innerHTML = `
+      <div class="update-content">
+        <div class="update-icon">✨</div>
+        <div class="update-text">
+          <div class="update-title">Update Available</div>
+          <div class="update-description">A new version of IFTalk is ready</div>
+        </div>
+        <button class="update-button" id="updateButton">
+          Update Now
+        </button>
+        <button class="update-dismiss" id="updateDismiss">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    console.log('[PWA] Notification element added to DOM');
+
+    // Trigger entrance animation
+    setTimeout(() => {
+      notification.classList.add('visible');
+      console.log('[PWA] Notification visible class added');
+    }, 100);
+
+    // Handle update button click
+    document.getElementById('updateButton').addEventListener('click', () => {
+      console.log('[PWA] Update button clicked');
+      if (waitingWorker) {
+        console.log('[PWA] Sending SKIP_WAITING message to worker');
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      }
+      // Reload will happen when NEW_VERSION_ACTIVATED message is received
+      console.log('[PWA] Reloading page...');
+      window.location.reload();
+    });
+
+    // Handle dismiss button click
+    document.getElementById('updateDismiss').addEventListener('click', () => {
+      console.log('[PWA] Dismiss button clicked');
+      notification.classList.remove('visible');
+      setTimeout(() => notification.remove(), 300);
+    });
+  }
+
+  // Listen for messages from service worker
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log('[PWA] Message from service worker:', event.data);
+    if (event.data && event.data.type === 'NEW_VERSION_ACTIVATED') {
+      console.log('[PWA] New version activated:', event.data.version);
+      // Optionally reload the page to use the new version
+      // window.location.reload();
+    }
+  });
+
   window.addEventListener('load', () => {
+    console.log('[PWA] Page loaded, registering service worker...');
+
     navigator.serviceWorker.register('./service-worker.js')
       .then(registration => {
+        console.log('[PWA] ✅ Service worker registered successfully');
+        console.log('[PWA] Registration state:', {
+          installing: registration.installing,
+          waiting: registration.waiting,
+          active: registration.active
+        });
+
         // Check for updates on page load
+        console.log('[PWA] Checking for updates on page load...');
         registration.update();
 
         // Check for updates every 60 seconds
         setInterval(() => {
+          console.log('[PWA] Periodic update check (60s interval)...');
           registration.update();
         }, 60000);
 
-        // Listen for new service worker waiting to activate
+        // Listen for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
+          console.log('[PWA] 🔄 UPDATE FOUND! New worker installing...');
 
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New service worker is ready - ask user if they want to update
-              console.log('[PWA] New version available');
+            console.log('[PWA] 🔄 New worker state changed:', newWorker.state);
+            console.log('[PWA] Current controller:', navigator.serviceWorker.controller ? 'exists' : 'none');
 
-              // Show update notification
-              const updateBanner = document.createElement('div');
-              updateBanner.id = 'updateBanner';
-              updateBanner.innerHTML = `
-                <div style="position: fixed; top: 0; right: 0;
-                            background: rgba(80, 80, 80, 0.25); border: none;
-                            padding: 6px 8px; border-radius: 0 0 0 4px; z-index: 10001;
-                            display: flex; align-items: center; gap: 6px;
-                            font-size: 10px;">
-                  <span style="color: rgba(180, 180, 180, 0.35); font-family: var(--font-sans);">
-                    Update?
-                  </span>
-                  <button onclick="window.location.reload()"
-                          style="background: rgba(120, 120, 120, 0.2); color: rgba(200, 200, 200, 0.4);
-                                 border: none; padding: 3px 6px; border-radius: 2px; cursor: pointer;
-                                 font-size: 9px; font-weight: 400;">
-                    Yes
-                  </button>
-                  <button onclick="this.closest('#updateBanner').remove()"
-                          style="background: transparent; color: rgba(150, 150, 150, 0.25);
-                                 border: none; padding: 3px 6px; border-radius: 2px; cursor: pointer;
-                                 font-size: 9px;">
-                    ✕
-                  </button>
-                </div>
-              `;
-              document.body.appendChild(updateBanner);
+            if (newWorker.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                // New service worker is waiting to activate
+                console.log('[PWA] ⚡ NEW VERSION READY! (waiting to activate)');
+                updateAvailable = true;
+                waitingWorker = newWorker;
+                showUpdateNotification();
+              } else {
+                console.log('[PWA] First time install (no controller yet)');
+              }
             }
           });
         });
+
+        // Check if there's already a waiting service worker
+        if (registration.waiting) {
+          console.log('[PWA] ⚡ UPDATE ALREADY WAITING ON LOAD!');
+          updateAvailable = true;
+          waitingWorker = registration.waiting;
+          showUpdateNotification();
+        } else {
+          console.log('[PWA] No waiting worker on load');
+        }
+
+        // Listen for controlling service worker change
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[PWA] 🔄 Controller changed, reloading...');
+          window.location.reload();
+        });
       })
       .catch(error => {
-        console.error('[PWA] Service worker registration failed:', error);
+        console.error('[PWA] ❌ Service worker registration failed:', error);
       });
   });
+} else {
+  console.warn('[PWA] ⚠️ Service workers not supported in this browser');
 }
 
 // Load Google Identity Services (OAuth) - only when online
@@ -255,15 +340,15 @@ export const voiceCommandHandlers = {
     }
   },
   play: async () => {
+    // If at end, restart from beginning (like "repeat")
+    if (state.narrationChunks.length > 0 && state.currentChunkIndex >= state.narrationChunks.length) {
+      state.autoplayEnabled = true;
+      skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
+      return;
+    }
+
     // Only act if not already in autoplay mode
     if (!state.autoplayEnabled) {
-      // If at end (not paused), restart from beginning
-      if (state.narrationChunks.length > 0 && state.currentChunkIndex >= state.narrationChunks.length) {
-        state.autoplayEnabled = true;
-        skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
-        return;
-      }
-
       // Switch to AUTOPLAY mode (same as clicking play button)
       state.autoplayEnabled = true;
       state.narrationEnabled = true;

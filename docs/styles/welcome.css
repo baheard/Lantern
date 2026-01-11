@@ -6,7 +6,6 @@
   text-align: center;
   padding: 20px 20px;
   width: 100%;
-  max-width: 800px;
   overflow-y: auto;
   height: 100%; /* Fill container height to enable scrolling */
   display: flex;
@@ -30,7 +29,7 @@
 .welcome-settings-btn:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.1);
-}
+} 
 
 .welcome-settings-btn .material-icons {
   font-size: 24px;
@@ -55,6 +54,7 @@
 }
 
 .game-list {
+  max-width: 800px;
   display: flex;
   flex-direction: column;
   gap: 40px;

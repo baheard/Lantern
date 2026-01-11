@@ -215,6 +215,13 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Processed command - dimmed/grayed out to show it's been handled */
+.lock-screen-transcript.processed {
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
 /* Unlock Button */
 .unlock-button {
   position: relative;

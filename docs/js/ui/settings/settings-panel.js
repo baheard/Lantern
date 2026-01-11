@@ -467,6 +467,19 @@ export function initSettings() {
     });
   }
 
+  // Automap by Default toggle (welcome screen only)
+  const automapByDefaultToggle = document.getElementById('automapByDefaultToggle');
+  if (automapByDefaultToggle) {
+    const automapByDefault = localStorage.getItem('iftalk_automap_default') === 'true';
+    automapByDefaultToggle.checked = automapByDefault;
+
+    automapByDefaultToggle.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      localStorage.setItem('iftalk_automap_default', enabled);
+      updateStatus(enabled ? '✓ New games will auto-map by default' : '✗ Auto-mapping off by default');
+    });
+  }
+
   // Keep Screen Awake toggle (already uses global state)
   const keepAwakeToggle = document.getElementById('keepAwakeToggle');
   if (keepAwakeToggle) {

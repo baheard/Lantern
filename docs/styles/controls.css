@@ -10,7 +10,6 @@
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
-  position: relative; /* For absolute positioning of scroll-down button */
 }
 
 .controls {

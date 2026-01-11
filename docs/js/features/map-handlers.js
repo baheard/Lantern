@@ -197,27 +197,8 @@ export function handleWheel(e) {
 }
 
 export function handleContextMenu(e) {
+  // Disabled - right-click context menu removed
   e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  mapState.currentPointer = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  domRefs.contextMenu.style.left = e.clientX + 'px';
-  domRefs.contextMenu.style.top = e.clientY + 'px';
-  domRefs.contextMenu.classList.remove('hidden');
-}
-
-export function handleCtxAddNode() {
-  domRefs.contextMenu.classList.add('hidden');
-  if (mapState.currentPointer) callbacks.addNodeAtPosition(...Object.values(screenToCanvas(mapState.currentPointer.x, mapState.currentPointer.y)));
-}
-
-export function handleCtxCenterView() {
-  domRefs.contextMenu.classList.add('hidden');
-  if (mapState.currentPointer) {
-    const p = screenToCanvas(mapState.currentPointer.x, mapState.currentPointer.y);
-    mapState.viewport.x = -p.x * mapState.viewport.scale;
-    mapState.viewport.y = -p.y * mapState.viewport.scale;
-    render();
-  }
 }
 
 export function handleKeyDown(e) {

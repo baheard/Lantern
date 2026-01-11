@@ -14,6 +14,29 @@ import { createTouchTracker } from '../utils/touch-detection.js';
 let holdTimer = null;
 const HOLD_DELAY = 500; // ms before starting smooth scroll to bottom
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
+const TAP_PULSE_DURATION = 300; // ms - matches CSS animation duration
+
+/**
+ * Trigger tap pulse animation
+ * @param {HTMLElement} button - The button element
+ */
+function triggerTapPulse(button) {
+  if (!button) return;
+
+  // Remove class if already present (prevents animation restart issues)
+  button.classList.remove('tap-pulse');
+
+  // Force reflow to restart animation
+  void button.offsetWidth;
+
+  // Add animation class
+  button.classList.add('tap-pulse');
+
+  // Remove class after animation completes
+  setTimeout(() => {
+    button.classList.remove('tap-pulse');
+  }, TAP_PULSE_DURATION);
+}
 
 /**
  * Initialize the scroll down button
@@ -31,6 +54,9 @@ export function initScrollDownButton() {
   button.addEventListener('touchstart', (e) => {
     e.preventDefault();
     touchTracker.track(e);
+
+    // Trigger pulse animation immediately on touch
+    triggerTapPulse(button);
 
     // Don't scroll immediately - wait for touchend to check if it was a swipe
     // After a delay, if still holding, smoothly scroll to bottom
@@ -50,9 +76,7 @@ export function initScrollDownButton() {
     }
 
     touchTracker.reset();
-
-    // Remove focus to prevent staying lit
-    button.blur();
+    // Note: blur() removed - pulse animation handles visual feedback
   });
 
   button.addEventListener('touchcancel', () => {
@@ -83,8 +107,7 @@ export function initScrollDownButton() {
     }
 
     touchTracker.reset();
-    // Remove focus to prevent staying lit
-    button.blur();
+    // Note: blur() removed - CSS :active handles desktop feedback
   });
 
   button.addEventListener('mouseleave', () => {
@@ -167,19 +190,21 @@ export function updateButtonVisibility() {
   const button = document.getElementById('scrollDownBtn');
   if (!button) return;
 
-  // Show button only when game is loaded and on mobile
+  // Show button when game is loaded (both mobile and desktop)
   const gameOutput = document.getElementById('gameOutput');
-  const isMobile = window.matchMedia('(max-width: 600px)').matches;
   const isGameLoaded = gameOutput && !gameOutput.classList.contains('hidden');
 
-  if (isMobile && isGameLoaded) {
+  if (isGameLoaded) {
     button.classList.remove('hidden');
 
-    // Flash animation to announce presence
-    button.classList.add('flash-announce');
-    setTimeout(() => {
-      button.classList.remove('flash-announce');
-    }, 800);
+    // Flash animation to announce presence (skip on desktop to be less intrusive)
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    if (isMobile) {
+      button.classList.add('flash-announce');
+      setTimeout(() => {
+        button.classList.remove('flash-announce');
+      }, 800);
+    }
 
     // Update fade state immediately and after a delay (for initial content render)
     const container = getScrollContainer();

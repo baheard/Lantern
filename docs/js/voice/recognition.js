@@ -57,15 +57,13 @@ const INSTANT_PATTERNS = [
 ];
 
 /**
- * Trigger words that might have continuations - wait briefly before processing
- * These words can be valid alone OR part of multi-word commands
+ * How long to wait (ms) before processing ANY interim command
+ * This prevents short-circuiting compound words like:
+ * - "southwest" being heard as "south"
+ * - "inventory" being heard as "in"
+ * - "southeast" being heard as "south"
  */
-const TRIGGER_WORDS = ['skip', 'back', 'go'];
-
-/**
- * How long to wait (ms) for continuation after hearing a trigger word
- */
-const TRIGGER_WAIT_MS = 200;
+const INTERIM_WAIT_MS = 150;
 
 /**
  * Update the last heard text in voice panel
@@ -145,10 +143,10 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
       dom.voiceTranscript.textContent = state.isMuted ? 'Muted' : 'Listening...';
       dom.voiceTranscript.classList.remove('confirmed', 'nav-command');
     }
-    // Clear lock screen transcript after delay
+    // Change lock screen transcript to processed state (dim it) instead of clearing
     if (state.isScreenLocked) {
-      import('../utils/lock-screen.js').then(({ clearLockTranscript }) => {
-        clearLockTranscript();
+      import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
+        updateLockTranscript(displayText, 'processed');
       });
     }
   }, 3000);
@@ -324,83 +322,49 @@ export function initVoiceRecognition(processVoiceKeywords) {
         }
       }
 
-      // If we have a complete instant command, process it immediately
+      // If we have a potential instant command, wait briefly before processing
+      // This prevents "south" from being sent when user is saying "southwest"
       if (isInstantCommand && !state.hasProcessedResult) {
-        // Cancel any pending trigger word timeout
-        if (state.triggerWordTimeout) {
-          clearTimeout(state.triggerWordTimeout);
-          state.triggerWordTimeout = null;
-        }
-
-        // Found an instant command! Send it immediately without waiting for final result
-        state.hasProcessedResult = true; // Prevent duplicate processing
-        state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
-
-        // Process and send immediately with high confidence (0.95 = instant interim command)
-        const processed = processVoiceKeywords(interimTranscript, 0.95);
-        const isNavCommand = (processed === false);
-
-        // Show as confirmed with mic indicator
-        showConfirmedTranscript(interimTranscript, isNavCommand);
-
-        if (processed !== false) {
-          // Game command - send immediately
-          playCommandSent();
-          import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
-            sendCommandDirect(processed, true, 0.95);
-          });
-        } else {
-          // Navigation command
-          if (state.pendingCommandProcessed) {
-            playAppCommand();
-          }
-        }
-
-        // Stop recognition after instant command (will restart automatically)
-        if (state.recognition) {
-          state.recognition.stop();
-        }
-        return;
-      }
-
-      // Check if this is a trigger word (might have continuation)
-      if (TRIGGER_WORDS.includes(interimLower) && !state.hasProcessedResult) {
-        // Cancel any existing trigger timeout
-        if (state.triggerWordTimeout) {
-          clearTimeout(state.triggerWordTimeout);
+        // Cancel any existing interim timeout
+        if (state.interimCommandTimeout) {
+          clearTimeout(state.interimCommandTimeout);
         }
 
         // Start new timeout to wait for potential continuation
-        state.triggerWordTimeout = setTimeout(() => {
-          state.triggerWordTimeout = null;
+        state.interimCommandTimeout = setTimeout(() => {
+          state.interimCommandTimeout = null;
 
-          // Timeout expired - process trigger word if it's valid alone
-          // "skip" and "back" are valid, "go" requires a direction
-          if ((interimLower === 'skip' || interimLower === 'back') && !state.hasProcessedResult) {
-            state.hasProcessedResult = true;
-            state.currentInterimTranscript = '';
+          // Timeout expired - process the command now
+          if (!state.hasProcessedResult) {
+            state.hasProcessedResult = true; // Prevent duplicate processing
+            state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
+            // Process and send with high confidence (0.95 = instant interim command)
             const processed = processVoiceKeywords(interimTranscript, 0.95);
             const isNavCommand = (processed === false);
+
+            // Show as confirmed with mic indicator
             showConfirmedTranscript(interimTranscript, isNavCommand);
 
             if (processed !== false) {
+              // Game command - send immediately
               playCommandSent();
               import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
                 sendCommandDirect(processed, true, 0.95);
               });
             } else {
+              // Navigation command
               if (state.pendingCommandProcessed) {
                 playAppCommand();
               }
             }
 
+            // Stop recognition after instant command (will restart automatically)
             if (state.recognition) {
               state.recognition.stop();
             }
           }
-          // If it was "go", we ignore it since it's incomplete
-        }, TRIGGER_WAIT_MS);
+        }, INTERIM_WAIT_MS);
 
         // Update display but don't process yet - waiting for potential continuation
         updateVoiceTranscript(interimTranscript, 'interim');
@@ -437,10 +401,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
     // Process final result
     if (finalTranscript && !state.hasProcessedResult) {
-      // Clear any pending trigger word timeout
-      if (state.triggerWordTimeout) {
-        clearTimeout(state.triggerWordTimeout);
-        state.triggerWordTimeout = null;
+      // Clear any pending interim command timeout
+      if (state.interimCommandTimeout) {
+        clearTimeout(state.interimCommandTimeout);
+        state.interimCommandTimeout = null;
       }
 
       // Send any pending interim text before clearing it
@@ -541,10 +505,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onerror = async (event) => {
-    // Clear any pending trigger word timeout
-    if (state.triggerWordTimeout) {
-      clearTimeout(state.triggerWordTimeout);
-      state.triggerWordTimeout = null;
+    // Clear any pending interim command timeout
+    if (state.interimCommandTimeout) {
+      clearTimeout(state.interimCommandTimeout);
+      state.interimCommandTimeout = null;
     }
 
     // Send interim text before handling error
@@ -564,10 +528,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onend = async () => {
-    // Clear any pending trigger word timeout
-    if (state.triggerWordTimeout) {
-      clearTimeout(state.triggerWordTimeout);
-      state.triggerWordTimeout = null;
+    // Clear any pending interim command timeout
+    if (state.interimCommandTimeout) {
+      clearTimeout(state.interimCommandTimeout);
+      state.interimCommandTimeout = null;
     }
 
     // Send any interim text before recognition ends

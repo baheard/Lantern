@@ -116,21 +116,6 @@ export function createNodeEditSheet() {
   container.appendChild(sheet);
 }
 
-export function createContextMenu() {
-  const menu = document.createElement('div');
-  menu.id = 'mapContextMenu';
-  menu.className = 'map-context-menu hidden';
-  menu.innerHTML = `
-    <button class="context-menu-item" id="ctxAddNode">
-      <span class="material-icons">add_location</span><span>Add location here</span>
-    </button>
-    <button class="context-menu-item" id="ctxCenterView">
-      <span class="material-icons">center_focus_strong</span><span>Center view here</span>
-    </button>
-  `;
-  container.appendChild(menu);
-}
-
 // ============================================================================
 // SHEET OPERATIONS
 // ============================================================================

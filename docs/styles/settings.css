@@ -31,6 +31,7 @@
   width: 550px;
   height: 100vh;        /* Fallback for older browsers */
   height: 100dvh;       /* Dynamic viewport height for mobile browsers */
+  padding-top: env(safe-area-inset-top);
   background: var(--bg-secondary);
   border-left: 1px solid var(--border-subtle);
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.5);
@@ -76,19 +77,23 @@
   height: 32px;
   border: none;
   border-radius: 50%;
-  background: rgba(180, 100, 100, 0.15);
-  color: #c47070;
+  background: transparent;
+  color: #94a3b8;
   font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
 }
 
 .close-settings-btn:hover {
-  background: rgba(180, 100, 100, 0.3);
-  transform: rotate(90deg);
+  background: transparent;
+  color: #ffffff;
+}
+
+.close-settings-btn:active {
+  transform: scale(0.95);
 }
 
 .settings-content {

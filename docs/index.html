@@ -76,8 +76,8 @@
         </button>
       </div>
 
-      <!-- Quick Actions Section (default closed) -->
-      <div class="settings-section collapsible collapsed" id="quickActionsSection">
+      <!-- Quick Actions Section (default closed, in-game only) -->
+      <div class="settings-section collapsible collapsed game-section-item" id="quickActionsSection">
         <h3 class="section-header">
           <span class="material-icons">bolt</span> Quick Actions
         </h3>
@@ -148,6 +148,15 @@
           <span class="material-icons">mic</span> Voice & Input
         </h3>
         <div class="section-content">
+          <!-- Enable Automapping by Default (welcome screen only) -->
+          <div class="setting-item welcome-section-item">
+            <label>
+              Enable Automapping by Default
+              <input type="checkbox" id="automapByDefaultToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Auto-enable map tracking when starting new games</p>
+          </div>
+
           <!-- Keep Screen Awake toggle -->
           <div class="setting-item">
             <label>
@@ -190,19 +199,19 @@
             <h4 class="section-header">Voice Commands</h4>
             <div class="section-content help-content">
               <div class="help-section">
-                <strong>Narration Navigation Commands</strong>
+                <strong>Narration Navigation</strong>
                 <ul class="help-commands">
-                  <li><span class="material-icons">skip_previous</span> <code>"Restart"</code> <code>"Reset"</code> <code>"Repeat"</code></li>
-                  <li><span class="material-icons">fast_rewind</span> <code>"Back"</code> <code>"Back 3"</code> <code>"Go Back 5"</code></li>
-                  <li><span class="material-icons">pause</span> <code>"Pause"</code></li>
-                  <li><span class="material-icons">play_arrow</span> <code>"Play"</code> <code>"Resume"</code></li>
-                  <li><span class="material-icons">fast_forward</span> <code>"Skip"</code> <code>"Skip 3"</code> <code>"Forward 5"</code></li>
-                  <li><span class="material-icons">skip_next</span> <code>"Stop"</code> <code>"Skip All"</code> <code>"End"</code></li>
-                  <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code></li>
+                  <li><span class="material-icons">skip_previous</span> <code>"Repeat"</code> — Restart from beginning</li>
+                  <li><span class="material-icons">fast_rewind</span> <code>"Back"</code> <code>"Back 3"</code> — Rewind chunks</li>
+                  <li><span class="material-icons">pause</span> <code>"Pause"</code> — Pause narration</li>
+                  <li><span class="material-icons">play_arrow</span> <code>"Play"</code> <code>"Resume"</code> — Resume narration</li>
+                  <li><span class="material-icons">fast_forward</span> <code>"Skip"</code> <code>"Skip 3"</code> — Skip ahead</li>
+                  <li><span class="material-icons">skip_next</span> <code>"Stop"</code> <code>"Skip All"</code> <code>"End"</code> — Skip to end</li>
+                  <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code> — Toggle microphone</li>
                 </ul>
               </div>
               <div class="help-section">
-                <strong>Save/Load Commands</strong>
+                <strong>Save & Restore</strong>
                 <ul class="help-commands">
                   <li><span class="material-icons">save</span> <code>"Quick Save"</code></li>
                   <li><span class="material-icons">restore</span> <code>"Quick Load"</code> <code>"Quick Restore"</code></li>
@@ -211,8 +220,8 @@
               <div class="help-section">
                 <strong>Game Commands</strong>
                 <ul class="help-commands">
-                  <li><span class="material-icons">keyboard_return</span> <code>"Enter"</code> — Press Enter</li>
-                  <li><span class="material-icons">info</span> <code>"Status"</code> — Dictate in-game status bar</li>
+                  <li><span class="material-icons">keyboard_return</span> <code>"Enter"</code> — Press Enter key</li>
+                  <li><span class="material-icons">info</span> <code>"Status"</code> — Read status bar aloud</li>
                   <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text</li>
                 </ul>
               </div>
@@ -312,7 +321,7 @@
               Auto-save
               <input type="checkbox" id="autosaveToggle" class="toggle-switch" checked>
             </label>
-            <p class="setting-description">Automatically save after each turn</p>
+            <p class="setting-description">Automatically save after each turn, and restore on next visit</p>
           </div>
 
           <!-- Install App button (PWA) -->
@@ -333,20 +342,13 @@
               <p class="setting-description">Optional: Backup and sync saves across devices</p>
             </div>
 
-            <!-- Signed in: Show import/export + connection status -->
+            <!-- Signed in: Show connection status and message -->
             <div id="gdriveAccountArea" class="hidden">
               <div class="gdrive-header">
                 <span class="material-icons">cloud</span>
                 <span class="gdrive-label">Google Drive</span>
               </div>
-              <div class="button-group">
-                <button class="compact-btn quick-action-btn" id="gdriveImportBtn">
-                  <span class="material-icons">cloud_download</span> Import Saves
-                </button>
-                <button class="compact-btn quick-action-btn" id="gdriveExportBtn">
-                  <span class="material-icons">cloud_upload</span> Export Saves
-                </button>
-              </div>
+              <p class="setting-description">Import/Export saves available from in-game settings</p>
               <div class="gdrive-connection-status">
                 <span id="gdriveConnectionInfo"></span>
                 <button id="gdriveDisconnectBtn" class="link-button">Disconnect</button>
@@ -430,7 +432,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.5.2</span>
+        <span class="status-version">v1.5.7</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -452,7 +454,7 @@
             </button>
             <button class="game-card" data-game="lostpig.z8">
               <div class="game-title">Lost Pig <span class="save-badge" data-save-indicator></span><span class="game-meta" data-year="2007" data-author="Admiral Jota" data-difficulty="Relaxed" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
-              <div class="game-desc">Comedy adventure - play an orc looking for a pig</div>
+              <div class="game-desc">Comedy adventure - an orc looking for a pig</div>
             </button>
             <button class="game-card" data-game="photopia.z5">
               <div class="game-title">Photopia <span class="save-badge" data-save-indicator></span><span class="game-meta" data-year="1998" data-author="Adam Cadre" data-difficulty="Relaxed" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
@@ -476,7 +478,7 @@
             </button>
             <button class="game-card" data-game="bronze.zblorb">
               <div class="game-title">Bronze <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2006" data-author="Emily Short" data-difficulty="Engaging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
-              <div class="game-desc">Fairy tale retelling - Beauty and the Beast</div>
+              <div class="game-desc">Fairy-tale retelling of Beauty and the Beast</div>
             </button>
             <button class="game-card" data-game="galatea.zblorb">
               <div class="game-title">Galatea <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2000" data-author="Emily Short" data-difficulty="Relaxed" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
@@ -522,7 +524,7 @@
             </button>
             <button class="game-card" data-game="allroads.z5">
               <div class="game-title">All Roads <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2001" data-author="Jon Ingold" data-difficulty="Engaging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
-              <div class="game-desc">Venice time-loop mystery</div>
+              <div class="game-desc">Time-loop mystery in Venice</div>
             </button>
             <button class="game-card" data-game="amfv.z4">
               <div class="game-title">A Mind Forever Voyaging <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1985" data-author="Steve Meretzky" data-difficulty="Engaging" data-length="Long (~4-8 hrs)">ⓘ</span></div>
@@ -534,7 +536,7 @@
             </button>
             <button class="game-card" data-game="edifice.z5">
               <div class="game-title">The Edifice <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1997" data-author="Lucian Smith" data-difficulty="Engaging" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
-              <div class="game-desc">Evolution of language puzzles</div>
+              <div class="game-desc">Explore evolving language puzzles</div>
             </button>
             <button class="game-card" data-game="hitchhik.z5">
               <div class="game-title">Hitchhiker's Guide <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1984" data-author="Douglas Adams & Steve Meretzky" data-difficulty="Notorious" data-length="Very long (~10+ hrs)">ⓘ</span></div>
@@ -562,7 +564,7 @@
             </button>
             <button class="game-card" data-game="shade.z5">
               <div class="game-title">Shade <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2000" data-author="Andrew Plotkin" data-difficulty="Engaging" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
-              <div class="game-desc">Surreal one-room mystery by Plotkin</div>
+              <div class="game-desc">Surreal one-room mystery</div>
             </button>
             <button class="game-card" data-game="slouching.z5">
               <div class="game-title">Slouching Towards Bedlam <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2003" data-author="Star Foster & Daniel Ravipinto" data-difficulty="Engaging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
@@ -620,14 +622,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Scroll Down Button - positioned relative to container -->
+    <button id="scrollDownBtn" class="scroll-down-btn hidden" title="Page down (hold to scroll to end)" aria-label="Page down">
+      <span class="material-icons">arrow_downward</span>
+    </button>
   </div>
 
   <!-- Controls Panel -->
   <div class="controls-wrapper hidden" id="controlsWrapper">
-    <!-- Scroll Down Button (Mobile) - floats above controls -->
-    <button id="scrollDownBtn" class="scroll-down-btn hidden" title="Scroll down" aria-label="Scroll down">
-      <span class="material-icons">arrow_downward</span>
-    </button>
     <!-- Navigation Controls -->
     <div class="controls hidden" id="controls">
       <button id="skipToStartBtn" class="btn-control btn-nav" title="&quot;Restart&quot;"><span class="material-icons">skip_previous</span></button>
@@ -733,7 +736,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.5.2</span>
+    <span class="status-version">v1.5.7</span>
   </div>
 
   <!-- Lock Screen Overlay -->

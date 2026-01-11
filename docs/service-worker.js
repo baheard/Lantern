@@ -3,14 +3,14 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.2';
+const CACHE_VERSION = 'v1.5.7';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
   fonts: `iftalk-fonts-${CACHE_VERSION}`,
   icons: `iftalk-icons-${CACHE_VERSION}`
 };
-
+  
 // Core app assets (HTML, CSS, JS, libs)
 const CORE_ASSETS = [
   './',
@@ -154,22 +154,29 @@ const ICONS = [
 
 // Install event - precache all assets
 self.addEventListener('install', (event) => {
+  console.log('[SW] 📦 Installing service worker', CACHE_VERSION);
+
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAMES.core).then(cache => {
+        console.log('[SW] Caching core assets...');
         return cache.addAll(CORE_ASSETS);
       }),
       caches.open(CACHE_NAMES.fonts).then(cache => {
+        console.log('[SW] Caching fonts...');
         return cache.addAll(FONTS);
       }),
       caches.open(CACHE_NAMES.icons).then(cache => {
+        console.log('[SW] Caching icons...');
         return cache.addAll(ICONS);
       }),
       caches.open(CACHE_NAMES.games).then(cache => {
+        console.log('[SW] Caching games...');
         return cache.addAll(BUNDLED_GAMES);
       })
     ]).then(() => {
-      // Force immediate activation of new service worker
+      console.log('[SW] ✅ All assets cached, activating immediately...');
+      // Auto-activate new service worker immediately
       return self.skipWaiting();
     })
   );
@@ -177,23 +184,50 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW] 🚀 Activating service worker', CACHE_VERSION);
+
   event.waitUntil(
     caches.keys().then(cacheNames => {
+      console.log('[SW] Current caches:', cacheNames);
+      const cachesToDelete = cacheNames.filter(name => {
+        return name.startsWith('iftalk-') && !Object.values(CACHE_NAMES).includes(name);
+      });
+      console.log('[SW] Deleting old caches:', cachesToDelete);
+
       return Promise.all(
-        cacheNames
-          .filter(name => {
-            // Delete any cache that starts with 'iftalk-' but isn't in our current cache names
-            return name.startsWith('iftalk-') && !Object.values(CACHE_NAMES).includes(name);
-          })
-          .map(name => {
-            return caches.delete(name);
-          })
+        cachesToDelete.map(name => {
+          return caches.delete(name);
+        })
       );
     }).then(() => {
+      console.log('[SW] Claiming all clients...');
       // Take control of all pages immediately
       return self.clients.claim();
+    }).then(() => {
+      console.log('[SW] Getting all clients to notify...');
+      // Notify all clients that a new version is active
+      return self.clients.matchAll().then(clients => {
+        console.log('[SW] Notifying', clients.length, 'clients of new version');
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'NEW_VERSION_ACTIVATED',
+            version: CACHE_VERSION
+          });
+        });
+      });
+    }).then(() => {
+      console.log('[SW] ✅ Activation complete!');
     })
   );
+});
+
+// Listen for skip waiting message from clients
+self.addEventListener('message', (event) => {
+  console.log('[SW] 📨 Message received:', event.data);
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] ⏭️ SKIP_WAITING requested, activating now...');
+    self.skipWaiting();
+  }
 });
 
 // Fetch event - network-first for HTML, cache-first for assets
@@ -238,7 +272,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for everything else (CSS, JS, images, fonts, etc.)
+  // Stale-while-revalidate for CSS and JS (fast + auto-updates)
+  if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    event.respondWith(
+      caches.match(request).then(cachedResponse => {
+        const fetchPromise = fetch(request).then(networkResponse => {
+          // Update cache in background
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAMES.core).then(cache => {
+              cache.put(request, responseToCache);
+              console.log('[SW] 🔄 Updated cache for:', url.pathname);
+            });
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Network failed - return cached version if we have it
+          return cachedResponse;
+        });
+
+        // Return cached version immediately, or wait for network if no cache
+        return cachedResponse || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Cache-first for everything else (images, fonts, games, etc.)
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) {
@@ -262,7 +322,7 @@ self.addEventListener('fetch', (event) => {
 
         return response;
       }).catch(error => {
-        console.error('[PWA] Fetch failed:', error);
+        console.error('[SW] Fetch failed:', error);
         throw error;
       });
     })
