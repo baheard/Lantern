@@ -12,31 +12,8 @@ import { getScrollContainer } from '../utils/scroll.js';
 import { createTouchTracker } from '../utils/touch-detection.js';
 
 let holdTimer = null;
-const HOLD_DELAY = 500; // ms before starting smooth scroll to bottom
+const SCROLL_TO_BOTTOM_DELAY = 375; // ms - if still held after 3/4 of one-page scroll animation, scroll to bottom
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
-const TAP_PULSE_DURATION = 300; // ms - matches CSS animation duration
-
-/**
- * Trigger tap pulse animation
- * @param {HTMLElement} button - The button element
- */
-function triggerTapPulse(button) {
-  if (!button) return;
-
-  // Remove class if already present (prevents animation restart issues)
-  button.classList.remove('tap-pulse');
-
-  // Force reflow to restart animation
-  void button.offsetWidth;
-
-  // Add animation class
-  button.classList.add('tap-pulse');
-
-  // Remove class after animation completes
-  setTimeout(() => {
-    button.classList.remove('tap-pulse');
-  }, TAP_PULSE_DURATION);
-}
 
 /**
  * Initialize the scroll down button
@@ -55,31 +32,35 @@ export function initScrollDownButton() {
     e.preventDefault();
     touchTracker.track(e);
 
-    // Trigger pulse animation immediately on touch
-    triggerTapPulse(button);
+    // Add pressed state (steady glow)
+    button.classList.add('pressed');
 
-    // Don't scroll immediately - wait for touchend to check if it was a swipe
-    // After a delay, if still holding, smoothly scroll to bottom
+    // Start scrolling one page immediately
+    scrollDownOnePage(container);
+
+    // If still held after 3/4 of scroll animation, scroll to bottom
     holdTimer = setTimeout(() => {
       scrollToBottomSmooth(container);
-    }, HOLD_DELAY);
+    }, SCROLL_TO_BOTTOM_DELAY);
   });
 
   button.addEventListener('touchend', (e) => {
     e.preventDefault();
+
+    // Remove pressed state
+    button.classList.remove('pressed');
+
+    // Cancel scroll-to-bottom if still pending
     clearTimeout(holdTimer);
     holdTimer = null;
 
-    // Only scroll if it was a tap (not a swipe)
-    if (touchTracker.isTap(e)) {
-      scrollDownOnePage(container);
-    }
-
     touchTracker.reset();
-    // Note: blur() removed - pulse animation handles visual feedback
   });
 
   button.addEventListener('touchcancel', () => {
+    // Remove pressed state
+    button.classList.remove('pressed');
+
     clearTimeout(holdTimer);
     holdTimer = null;
     touchTracker.reset();

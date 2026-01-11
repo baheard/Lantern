@@ -435,30 +435,13 @@ body {
   animation: flash-announce 0.8s ease-in-out;
 }
 
-/* Tap pulse animation for touch feedback */
-@keyframes tap-pulse {
-  0% {
-    opacity: 0.5;
-    background: rgba(100, 116, 139, 0.12);
-    border-color: rgba(148, 163, 184, 0.25);
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    background: rgba(100, 116, 139, 0.3);
-    border-color: rgba(148, 163, 184, 0.6);
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 0.5;
-    background: rgba(100, 116, 139, 0.12);
-    border-color: rgba(148, 163, 184, 0.25);
-    transform: scale(1);
-  }
-}
-
-.scroll-down-btn.tap-pulse {
-  animation: tap-pulse 0.3s ease-out;
+/* Pressed state - steady glow while held */
+.scroll-down-btn.pressed {
+  opacity: 1;
+  background: rgba(100, 116, 139, 0.3);
+  border-color: rgba(148, 163, 184, 0.6);
+  color: rgba(241, 245, 249, 1);
+  transform: scale(0.95);
 }
 
 /* Fade effect when at bottom */
