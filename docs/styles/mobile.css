@@ -423,11 +423,10 @@
     display: none !important;
   }
 
-  /* Scroll down button - mobile optimized - restore original positioning */
+  /* Scroll down button - mobile optimized */
   .scroll-down-btn {
-    bottom: 100%;
-    right: 12px;
-    margin-bottom: 12px;
+    bottom: 16px; /* Position above the controls on mobile */
+    right: 16px;
     width: 44px; /* Larger touch target */
     height: 44px;
   }

@@ -87,6 +87,9 @@ export function initScrollDownButton() {
 
   // Mouse events for desktop testing
   button.addEventListener('mousedown', (e) => {
+    // Only handle left clicks (button 0), ignore right clicks
+    if (e.button !== 0) return;
+
     e.preventDefault();
     touchTracker.track(e);
 
@@ -97,6 +100,9 @@ export function initScrollDownButton() {
   });
 
   button.addEventListener('mouseup', (e) => {
+    // Only handle left clicks (button 0), ignore right clicks
+    if (e.button !== 0) return;
+
     e.preventDefault();
     clearTimeout(holdTimer);
     holdTimer = null;
