@@ -74,10 +74,16 @@ export function initScrollDownButton() {
     e.preventDefault();
     touchTracker.track(e);
 
-    // After a delay, if still holding, smoothly scroll to bottom
+    // Add pressed state (steady glow)
+    button.classList.add('pressed');
+
+    // Start scrolling one page immediately
+    scrollDownOnePage(container);
+
+    // If still held after 3/4 of scroll animation, scroll to bottom
     holdTimer = setTimeout(() => {
       scrollToBottomSmooth(container);
-    }, HOLD_DELAY);
+    }, SCROLL_TO_BOTTOM_DELAY);
   });
 
   button.addEventListener('mouseup', (e) => {
@@ -85,19 +91,21 @@ export function initScrollDownButton() {
     if (e.button !== 0) return;
 
     e.preventDefault();
+
+    // Remove pressed state
+    button.classList.remove('pressed');
+
+    // Cancel scroll-to-bottom if still pending
     clearTimeout(holdTimer);
     holdTimer = null;
 
-    // Only scroll if it was a tap (not a drag)
-    if (touchTracker.isTap(e)) {
-      scrollDownOnePage(container);
-    }
-
     touchTracker.reset();
-    // Note: blur() removed - CSS :active handles desktop feedback
   });
 
   button.addEventListener('mouseleave', () => {
+    // Remove pressed state if mouse leaves while pressed
+    button.classList.remove('pressed');
+
     clearTimeout(holdTimer);
     holdTimer = null;
     touchTracker.reset();
