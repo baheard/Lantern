@@ -431,6 +431,11 @@ export function initVoiceRecognition(processVoiceKeywords) {
         state.interimCommandTimeout = setTimeout(() => {
           state.interimCommandTimeout = null;
 
+          // In push-to-talk mode, only process if button is still held
+          if (state.pushToTalkMode && !state.pushToTalkActive) {
+            return; // Button was released, discard command
+          }
+
           // Timeout expired - process the command now
           if (!state.hasProcessedResult) {
             state.hasProcessedResult = true; // Prevent duplicate processing
