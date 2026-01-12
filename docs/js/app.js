@@ -671,13 +671,16 @@ async function initApp() {
       });
 
       // Restore game output scroll - instant for both opening and closing
+      // BUT skip this if we're intentionally closing keyboard to show new content
       const scrollDelay = 0;
       setTimeout(() => {
-        if (gameOutput) {
+        if (gameOutput && !window.skipBottomLinePinning) {
           // Pin the bottom line: keep the same content at the bottom edge of the viewport
           const newClientHeight = gameOutput.clientHeight;
           gameOutput.scrollTop = bottomPosition - newClientHeight;
         }
+        // Clear flag after use
+        window.skipBottomLinePinning = false;
       }, scrollDelay);
     }, 150); // 150ms delay before viewport resize
   }
@@ -1320,14 +1323,12 @@ async function initApp() {
   });
 
   // Handle page show (returning from bfcache on iOS/mobile)
-  window.addEventListener('pageshow', (event) => {
+  window.addEventListener('pageshow', async (event) => {
     // If page was restored from bfcache, restart voice recognition
     if (event.persisted && state.listeningEnabled && state.recognition && !state.isRecognitionActive) {
-      try {
-        state.recognition.start();
-      } catch (err) {
-        // Voice recognition already active or failed to restart
-      }
+      // Use startRecognitionSafely for better error handling (detects permission loss)
+      const { startRecognitionSafely } = await import('./voice/recognition.js');
+      await startRecognitionSafely();
     }
   });
 
@@ -1362,11 +1363,9 @@ async function initApp() {
     } else {
       // Page visible again: restart voice recognition if it should be running
       if (state.listeningEnabled && state.recognition && !state.isRecognitionActive) {
-        try {
-          state.recognition.start();
-        } catch (err) {
-          // Voice recognition already active or failed to restart
-        }
+        // Use startRecognitionSafely for better error handling (detects permission loss)
+        const { startRecognitionSafely } = await import('./voice/recognition.js');
+        await startRecognitionSafely();
       }
 
       // Auto-resume narration if it was paused by tab switch
@@ -1380,15 +1379,13 @@ async function initApp() {
   });
 
   // Handle window focus/blur (app switching, returning from lock screen, etc.)
-  window.addEventListener('focus', () => {
+  window.addEventListener('focus', async () => {
     // Window regained focus: restart voice recognition if it should be running
-    setTimeout(() => {
+    setTimeout(async () => {
       if (state.listeningEnabled && state.recognition && !state.isRecognitionActive) {
-        try {
-          state.recognition.start();
-        } catch (err) {
-          // Voice recognition already active or failed to restart
-        }
+        // Use startRecognitionSafely for better error handling (detects permission loss)
+        const { startRecognitionSafely } = await import('./voice/recognition.js');
+        await startRecognitionSafely();
       }
     }, 300); // Small delay to ensure focus is fully restored
   });

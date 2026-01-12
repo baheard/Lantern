@@ -694,6 +694,21 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onend = async () => {
+    // In push-to-talk mode, if button was released, discard interim transcripts
+    // (user expects cancellation, not processing of partial speech)
+    if (state.pushToTalkMode && !state.pushToTalkActive) {
+      // Clear any pending instant command timeout
+      if (state.interimCommandTimeout) {
+        clearTimeout(state.interimCommandTimeout);
+        state.interimCommandTimeout = null;
+      }
+      // Clear interim transcript without processing
+      state.currentInterimTranscript = '';
+      state.isListening = false;
+      state.isRecognitionActive = false;
+      return; // Don't process or restart recognition
+    }
+
     // If we have a pending instant command timeout, process it immediately instead of displaying as low confidence
     if (state.interimCommandTimeout) {
       clearTimeout(state.interimCommandTimeout);
@@ -733,11 +748,6 @@ export function initVoiceRecognition(processVoiceKeywords) {
     // Voice commands are now sent immediately in onresult handler
     // No need to check for input field or auto-send here
 
-    // In push-to-talk mode, only auto-restart if button is still being held
-    if (state.pushToTalkMode && !state.pushToTalkActive) {
-      return;
-    }
-
     // Don't restart if muted - mic should be fully off
     if (state.isMuted) {
       return;
@@ -745,8 +755,17 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
     // Restart listening if enabled
     if (state.listeningEnabled) {
+      // In push-to-talk mode with button held, restart immediately with no delay
+      // This prevents the "stuck" state after sending a command
+      const restartDelay = (state.pushToTalkMode && state.pushToTalkActive) ? 0 : 200;
+
       setTimeout(() => {
         if (state.listeningEnabled && !state.isRecognitionActive && !state.isMuted) {
+          // In push-to-talk mode, only restart if button is still held
+          if (state.pushToTalkMode && !state.pushToTalkActive) {
+            return;
+          }
+
           try {
             // Clear transcript display if not showing confirmed text
             if (dom.voiceTranscript && !dom.voiceTranscript.classList.contains('confirmed')) {
@@ -760,7 +779,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
             // Ignore if already running - silently ignore restart errors
           }
         }
-      }, 200);
+      }, restartDelay);
     }
   };
 
