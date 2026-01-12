@@ -23,10 +23,14 @@ const _state = {
   isRecognitionActive: false,
   isMuted: true,  // Start with microphone muted by default
   manuallyMuted: false,  // Tracks if user explicitly muted (vs auto-muted by system)
+  isHoldMic: false,  // When true, mic only responds to "open mic" command
   hasProcessedResult: false,
   hasManualTyping: false,
   pushToTalkMode: false,  // When true, mic only activates while button is held (for car Bluetooth)
+  pushToTalkActive: false,  // Tracks whether push-to-talk button is currently being held
   currentInterimTranscript: '',  // Current interim (non-final) recognition text
+  isSpellingLetters: false,  // True when interim shows 3+ consecutive single letters being spelled
+  spellingInterimTranscript: null,  // Saved interim when spelling detected (to override final's word interpretation)
 
   // Narration state
   pausedByTabSwitch: false,  // Track if narration was auto-paused by tab switch (for auto-resume)
@@ -118,7 +122,7 @@ if (typeof window !== 'undefined') {
 export const constants = {
   SOUND_THRESHOLD: 60,
   SILENCE_DELAY: 800,
-  ECHO_CHUNK_RETENTION_MS: 5000,
+  ECHO_CHUNK_RETENTION_MS: 1500,  // 1.5 seconds - only catch immediate echoes, not intentional commands
   ECHO_SIMILARITY_THRESHOLD: 0.5,
   VOICE_CONFIDENCE_THRESHOLD: 0.5
 };

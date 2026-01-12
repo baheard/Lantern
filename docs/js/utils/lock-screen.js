@@ -23,6 +23,7 @@ let lockMicProgress = null;
 let lockMicButtonText = null;
 let lockListeningIndicator = null;
 let lockMutedIndicator = null;
+let lockMicLockedIndicator = null;
 let lockTranscript = null;
 
 // Hold-to-unlock state
@@ -50,6 +51,7 @@ export function initLockScreen() {
   lockMicButtonText = document.getElementById('lockMicButtonText');
   lockListeningIndicator = document.getElementById('lockListeningIndicator');
   lockMutedIndicator = document.getElementById('lockMutedIndicator');
+  lockMicLockedIndicator = document.getElementById('lockMicLockedIndicator');
   lockTranscript = document.getElementById('lockTranscript');
 
   if (!lockScreenOverlay || !unlockButton || !unlockProgress) {
@@ -138,6 +140,9 @@ export function lockScreen() {
     lockMicButton.addEventListener('mouseleave', handleMicHoldEnd);
   }
 
+  // Add Escape key listener to unlock
+  document.addEventListener('keydown', handleEscapeKey);
+
   updateStatus('Screen locked (touch disabled) - voice active');
 }
 
@@ -169,6 +174,7 @@ export function unlockScreen() {
   // Clear lock screen display elements
   hideLockListeningIndicator();
   hideLockMutedIndicator();
+  hideLockMicLockedIndicator();
   hideLockMicButton();
   clearLockTranscript();
 
@@ -197,6 +203,9 @@ export function unlockScreen() {
     lockMicButton.removeEventListener('mouseup', handleMicHoldEnd);
     lockMicButton.removeEventListener('mouseleave', handleMicHoldEnd);
   }
+
+  // Remove Escape key listener
+  document.removeEventListener('keydown', handleEscapeKey);
 
   // Clear any active hold timer
   clearHoldTimer();
@@ -310,6 +319,17 @@ function clearHoldTimer() {
   }
 
   holdStartTime = 0;
+}
+
+/**
+ * Handle Escape key press to unlock screen
+ * @param {KeyboardEvent} e - Keyboard event
+ */
+function handleEscapeKey(e) {
+  if (e.key === 'Escape' && state.isScreenLocked) {
+    e.preventDefault();
+    unlockScreen();
+  }
 }
 
 /**
@@ -525,18 +545,47 @@ export function hideLockMutedIndicator() {
 }
 
 /**
+ * Show mic locked indicator on lock screen
+ */
+export function showLockMicLockedIndicator() {
+  if (lockMicLockedIndicator && state.isScreenLocked) {
+    lockMicLockedIndicator.classList.remove('hidden');
+    // Hide other indicators when showing mic locked
+    hideLockListeningIndicator();
+    hideLockMutedIndicator();
+  }
+}
+
+/**
+ * Hide mic locked indicator on lock screen
+ */
+export function hideLockMicLockedIndicator() {
+  if (lockMicLockedIndicator) {
+    lockMicLockedIndicator.classList.add('hidden');
+  }
+}
+
+/**
  * Update lock screen status to show current mic state
  * Call this when lock screen is shown or when mic state changes
  */
 export function updateLockScreenMicStatus() {
   if (!state.isScreenLocked) return;
 
-  if (state.isMuted) {
+  if (state.isHoldMic) {
+    // Mic is locked - show locked indicator
+    showLockMicLockedIndicator();
+    hideLockMicButton();
+  } else if (state.isMuted) {
+    // Mic is muted - show muted indicator
     showLockMutedIndicator();
+    hideLockMicLockedIndicator();
     // Show mic button when muted (hold to speak)
     showLockMicButton();
   } else {
+    // Mic is active - show listening indicator
     hideLockMutedIndicator();
+    hideLockMicLockedIndicator();
     // Hide mic button when not muted
     hideLockMicButton();
     // Show listening indicator immediately when not muted

@@ -432,7 +432,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.5.7</span>
+        <span class="status-version">v1.5.35</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -736,7 +736,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.5.7</span>
+    <span class="status-version">v1.5.8</span>
   </div>
 
   <!-- Lock Screen Overlay -->
@@ -753,6 +753,10 @@
         <span class="material-icons">mic_off</span>
         <span class="muted-text">Microphone Muted</span>
       </div>
+      <div class="lock-screen-mic-locked-indicator hidden" id="lockMicLockedIndicator">
+        <span class="material-icons">lock</span>
+        <span class="mic-locked-text">Mic Locked - Say "unlock mic"</span>
+      </div>
       <button class="lock-mic-button hidden" id="lockMicButton">
         <div class="lock-mic-button-inner">
           <span class="material-icons">mic</span>
@@ -760,9 +764,6 @@
         </div>
         <div class="lock-mic-progress" id="lockMicProgress"></div>
       </button>
-      <div class="lock-screen-instructions">
-        Say "unlock" or press and hold
-      </div>
       <div class="lock-screen-transcript hidden" id="lockTranscript"></div>
       <button class="unlock-button" id="unlockButton">
         <div class="unlock-button-inner">
@@ -771,6 +772,9 @@
         </div>
         <div class="unlock-progress" id="unlockProgress"></div>
       </button>
+      <div class="lock-screen-instructions">
+        To unlock screen, say "unlock" or press and hold
+      </div>
     </div>
   </div>
 

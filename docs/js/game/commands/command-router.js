@@ -132,7 +132,7 @@ These commands work whether typed or spoken:<br>
 <br>
 <b>Navigation:</b> PLAY, PAUSE, REPEAT, BACK, SKIP, SKIP ALL<br>
 <b>Save/Load:</b> SAVE [name], RESTORE [name], DELETE [name], QUICK SAVE, QUICK LOAD<br>
-<b>Audio:</b> MUTE, UNMUTE, STATUS<br>
+<b>Audio:</b> MUTE, UNMUTE, STATUS, READ LAST COMMAND<br>
 <b>AI Hints:</b> GET HINT (ChatGPT), GET GEMINI HINT (UHS-style)<br>
 <b>Game:</b> QUIT - Auto-save and return to game selection<br>
 <b>Repair:</b> REPAIR - Fix broken game state (if not responding)<br>
@@ -218,9 +218,60 @@ See Settings panel for more help.
       (await getVoiceCommandHandlers()).unmute();
       return true;
 
+    case 'lock mic':
+    case 'lock mike':
+    case 'lockmic':
+      playAppCommand();
+      (await getVoiceCommandHandlers()).holdMic();
+      return true;
+
+    case 'unlock mic':
+    case 'unlock mike':
+    case 'unlockmic':
+      playAppCommand();
+      (await getVoiceCommandHandlers()).openMic();
+      return true;
+
+    case 'lock screen':
+    case 'lockscreen':
+      playAppCommand();
+      const { lockScreen } = await import('../../utils/lock-screen.js');
+      lockScreen();
+      return true;
+
+    case 'unlock screen':
+    case 'unlockscreen':
+      playAppCommand();
+      const { unlockScreen } = await import('../../utils/lock-screen.js');
+      unlockScreen();
+      return true;
+
     case 'status':
       playAppCommand();
       (await getVoiceCommandHandlers()).status();
+      return true;
+
+    case 'read last command':
+    case 'last command':
+    case 'what did i say':
+      playAppCommand();
+      // Find the last command that isn't "read last command" or "stop"
+      let lastCmd = null;
+      const skipCommands = ['read last command', 'last command', 'what did i say', 'stop', 'pause'];
+      for (let i = 0; i < state.commandHistoryItems.length; i++) {
+        const cmdLower = state.commandHistoryItems[i].original.toLowerCase().trim();
+        if (!skipCommands.includes(cmdLower)) {
+          lastCmd = state.commandHistoryItems[i];
+          break;
+        }
+      }
+
+      if (!lastCmd) {
+        respondAsGame('<div class="system-message">No previous command yet.</div>');
+      } else {
+        const confidence = lastCmd.confidence !== null ? ` (${Math.round(lastCmd.confidence * 100)}%)` : '';
+        respondAsGame(`<div class="system-message"><b>Last command:</b><br>${lastCmd.original}${confidence}</div>`);
+      }
       return true;
 
     case 'quick save':

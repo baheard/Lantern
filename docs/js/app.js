@@ -22,6 +22,7 @@ window.showDebugOverlay = showDebugOverlay;
 
 // Voice modules
 import { initVoiceRecognition, showConfirmedTranscript } from './voice/recognition.js';
+import { updateVoiceTranscript } from './input/keyboard/voice-ui.js';
 import { processVoiceKeywords } from './voice/voice-commands.js';
 import { startVoiceMeter, stopVoiceMeter } from './voice/voice-meter.js';
 
@@ -106,9 +107,10 @@ if ('serviceWorker' in navigator) {
         console.log('[PWA] Sending SKIP_WAITING message to worker');
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       }
-      // Reload will happen when NEW_VERSION_ACTIVATED message is received
-      console.log('[PWA] Reloading page...');
-      window.location.reload();
+      // Reload will happen automatically when controllerchange event fires
+      console.log('[PWA] Waiting for new service worker to activate...');
+      notification.classList.remove('visible');
+      setTimeout(() => notification.remove(), 300);
     });
 
     // Handle dismiss button click
@@ -145,11 +147,11 @@ if ('serviceWorker' in navigator) {
         console.log('[PWA] Checking for updates on page load...');
         registration.update();
 
-        // Check for updates every 60 seconds
+        // Check for updates every 30 seconds
         setInterval(() => {
-          console.log('[PWA] Periodic update check (60s interval)...');
+          console.log('[PWA] Periodic update check (30s interval)...');
           registration.update();
-        }, 60000);
+        }, 30000);
 
         // Listen for updates
         registration.addEventListener('updatefound', () => {
@@ -562,6 +564,51 @@ export const voiceCommandHandlers = {
         // Ignore stop errors
       }
     }
+  },
+  holdMic: async () => {
+    playMuteTone();
+    state.isHoldMic = true;
+
+    // Clear any interim transcript to prevent it from being displayed
+    state.currentInterimTranscript = '';
+
+    updateStatus('Mic locked - Say "Unlock mic" to resume');
+
+    // Update voice transcript to show "Mic locked"
+    updateVoiceTranscript('Mic locked', 'listening');
+    if (dom.voiceTranscript) {
+      dom.voiceTranscript.textContent = 'Mic locked';
+    }
+
+    // Display in game area as system message (auto-narrated only in play mode)
+    const { addGameText } = await import('./ui/game-output.js');
+    addGameText('<div class="system-message">Mic locked. Say "unlock mic" to resume.</div>', false);
+
+    // Update lock screen if it's active
+    const { updateLockScreenMicStatus } = await import('./utils/lock-screen.js');
+    updateLockScreenMicStatus();
+
+    // Keep mic active but only listening for "unlock mic"
+    // Don't stop recognition - we still want to hear "unlock mic"
+  },
+  openMic: async () => {
+    playUnmuteTone();
+    state.isHoldMic = false;
+    updateStatus('Microphone open - Listening...');
+
+    // Update voice transcript to show "Listening..."
+    updateVoiceTranscript('Listening...', 'listening');
+    if (dom.voiceTranscript) {
+      dom.voiceTranscript.textContent = 'Listening...';
+    }
+
+    // Display in game area as system message (auto-narrated only in play mode)
+    const { addGameText } = await import('./ui/game-output.js');
+    addGameText('<div class="system-message">Microphone open</div>', false);
+
+    // Update lock screen if it's active
+    const { updateLockScreenMicStatus } = await import('./utils/lock-screen.js');
+    updateLockScreenMicStatus();
   },
   sendCommandDirect: (cmd) => sendCommandDirect(cmd),
 };
@@ -1107,13 +1154,11 @@ async function initApp() {
     });
 
     // Push-to-talk: Hold to activate mic
-    let pushToTalkActive = false;
-
     const startPushToTalk = async (e) => {
-      if (!state.pushToTalkMode || pushToTalkActive) return;
+      if (!state.pushToTalkMode || state.pushToTalkActive) return;
 
       e.preventDefault();
-      pushToTalkActive = true;
+      state.pushToTalkActive = true;
 
       dom.muteBtn.classList.add('push-to-talk-active');
       updateStatus('Starting microphone...');
@@ -1143,7 +1188,7 @@ async function initApp() {
         } else {
           // If recognition failed, revert state
           // (error buzz already played by startRecognitionSafely)
-          pushToTalkActive = false;
+          state.pushToTalkActive = false;
           state.isMuted = true;
           state.listeningEnabled = false;
 
@@ -1163,10 +1208,10 @@ async function initApp() {
     };
 
     const stopPushToTalk = (e) => {
-      if (!state.pushToTalkMode || !pushToTalkActive) return;
+      if (!state.pushToTalkMode || !state.pushToTalkActive) return;
 
       e.preventDefault();
-      pushToTalkActive = false;
+      state.pushToTalkActive = false;
 
       dom.muteBtn.classList.remove('push-to-talk-active');
       updateStatus('Hold mic button to speak');

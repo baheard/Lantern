@@ -14,13 +14,22 @@ import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand,
 import { scrollToBottom } from '../utils/scroll.js';
 
 /**
- * Single-word commands that can be sent immediately from interim results
- * These are simple, unambiguous commands that players use frequently
+ * Commands that process INSTANTLY with NO delay (whitelist)
+ * These are critical commands that need immediate response
+ */
+const INSTANT_NO_WAIT = [
+  'stop',
+  'repeat'
+];
+
+/**
+ * Single-word commands that can be sent from interim results WITH a short delay
+ * The delay prevents false triggers like "south" when saying "southwest"
  */
 const INSTANT_COMMANDS = [
   // App navigation commands (most important!)
-  'play', 'pause', 'resume', 'stop',
-  'skip', 'back', 'repeat', 'end',
+  'play', 'pause', 'resume',
+  'skip', 'end',  // "back" moved to patterns, "stop" and "repeat" moved to no-wait list
   'mute',
   'status',
   // Directions
@@ -49,7 +58,8 @@ const INSTANT_PATTERNS = [
   /^skip\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i,  // skip 3
   /^skip\s+(?:all|to\s+(?:the\s+)?end)$/i,  // skip all, skip to end, skip to the end
 
-  // Back patterns (app commands)
+  // Back patterns (app commands) - standalone OR with number
+  /^back$/i,  // just "back" - for navigation
   /^back\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i,  // back 3
 
   // Go + direction (common game commands)
@@ -62,8 +72,10 @@ const INSTANT_PATTERNS = [
  * - "southwest" being heard as "south"
  * - "inventory" being heard as "in"
  * - "southeast" being heard as "south"
+ * - "back three" being heard as "back"
+ * - "back for something" being heard as "back"
  */
-const INTERIM_WAIT_MS = 150;
+const INTERIM_WAIT_MS = 300;
 
 /**
  * Update the last heard text in voice panel
@@ -94,6 +106,11 @@ export function updateLastHeard(text, isNavCommand = false) {
  * @param {number} confidence - Confidence score (0-1), optional
  */
 export function showConfirmedTranscript(text, isNavCommand = false, confidence = null) {
+  // Don't show transcript when in hold mic mode
+  if (state.isHoldMic) {
+    return;
+  }
+
   // Clear any pending reset
   if (state.transcriptResetTimeout) {
     clearTimeout(state.transcriptResetTimeout);
@@ -138,7 +155,7 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
 
   // Reset transcript after 3 seconds
   state.transcriptResetTimeout = setTimeout(() => {
-    updateVoiceTranscript(state.isMuted ? 'Muted' : 'Listening...', 'listening');
+    updateVoiceTranscript(state.isMuted ? 'Muted' : (state.isHoldMic ? 'Mic locked' : 'Listening...'), 'listening');
     if (dom.voiceTranscript) {
       dom.voiceTranscript.textContent = state.isMuted ? 'Muted' : 'Listening...';
       dom.voiceTranscript.classList.remove('confirmed', 'nav-command');
@@ -158,6 +175,12 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
  * Call this before clearing interim text to ensure it's not lost
  */
 async function displayInterimAsLowConfidence() {
+  // Don't display anything when in hold mic mode
+  if (state.isHoldMic) {
+    state.currentInterimTranscript = '';
+    return;
+  }
+
   if (state.currentInterimTranscript && state.currentInterimTranscript.trim()) {
     const interimText = state.currentInterimTranscript.trim();
 
@@ -287,10 +310,49 @@ export function initVoiceRecognition(processVoiceKeywords) {
     }
 
     // Store interim transcript for potential use when tab is switched
-    state.currentInterimTranscript = interimTranscript;
+    // But not when in hold mic mode - we don't want any transcripts stored then
+    if (!state.isHoldMic) {
+      state.currentInterimTranscript = interimTranscript;
+    }
 
-    // Show live transcript (but not when muted)
-    if (interimTranscript && !state.isMuted) {
+    // Detect if user is spelling letters (3+ consecutive single-letter words OR 2-letter directions)
+    // If so, flag it so we can use the interim result instead of final's word interpretation
+    const words = interimTranscript.split(/\s+/);
+    let consecutiveLetters = 0;
+    let maxConsecutiveLetters = 0;
+    let letterSequences = []; // Track all sequences
+    let currentSequence = [];
+
+    for (const word of words) {
+      if (word.length === 1 && /^[a-zA-Z]$/.test(word)) {
+        consecutiveLetters++;
+        currentSequence.push(word.toLowerCase());
+        maxConsecutiveLetters = Math.max(maxConsecutiveLetters, consecutiveLetters);
+      } else {
+        if (currentSequence.length > 0) {
+          letterSequences.push(currentSequence);
+          currentSequence = [];
+        }
+        consecutiveLetters = 0;
+      }
+    }
+    if (currentSequence.length > 0) {
+      letterSequences.push(currentSequence);
+    }
+
+    // Check if we have 3+ letter spelling OR 2-letter directional abbreviations
+    const validTwoLetterDirs = ['ne', 'nw', 'se', 'sw'];
+    const hasTwoLetterDir = letterSequences.some(seq =>
+      seq.length === 2 && validTwoLetterDirs.includes(seq.join(''))
+    );
+
+    state.isSpellingLetters = maxConsecutiveLetters >= 3 || hasTwoLetterDir;
+    if (state.isSpellingLetters) {
+      state.spellingInterimTranscript = interimTranscript; // Save this to use instead of final
+    }
+
+    // Show live transcript (but not when muted or in hold mic mode)
+    if (interimTranscript && !state.isMuted && !state.isHoldMic) {
       // Cancel any pending confirmed transition
       if (state.confirmedTranscriptTimeout) {
         clearTimeout(state.confirmedTranscriptTimeout);
@@ -309,7 +371,39 @@ export function initVoiceRecognition(processVoiceKeywords) {
       // Check if interim transcript matches an instant command (exact or pattern)
       const interimLower = interimTranscript.toLowerCase().trim();
 
-      // Check for exact match in INSTANT_COMMANDS
+      // FIRST: Check for truly instant commands (no delay)
+      if (INSTANT_NO_WAIT.includes(interimLower) && !state.hasProcessedResult) {
+        state.hasProcessedResult = true; // Prevent duplicate processing
+        state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
+
+        // Process and send immediately with high confidence (0.95 = instant interim command)
+        const processed = processVoiceKeywords(interimTranscript, 0.95);
+        const isNavCommand = (processed === false);
+
+        // Show as confirmed with confidence
+        showConfirmedTranscript(interimTranscript, isNavCommand, 0.95);
+
+        if (processed !== false) {
+          // Game command - send immediately
+          playCommandSent();
+          import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
+            sendCommandDirect(processed, true, 0.95);
+          });
+        } else {
+          // Navigation command
+          if (state.pendingCommandProcessed) {
+            playAppCommand();
+          }
+        }
+
+        // Stop recognition after instant command (will restart automatically)
+        if (state.recognition) {
+          state.recognition.stop();
+        }
+        return;
+      }
+
+      // SECOND: Check for delayed instant commands
       let isInstantCommand = INSTANT_COMMANDS.includes(interimLower);
 
       // Check for pattern match in INSTANT_PATTERNS
@@ -330,6 +424,9 @@ export function initVoiceRecognition(processVoiceKeywords) {
           clearTimeout(state.interimCommandTimeout);
         }
 
+        // Capture current transcript in closure
+        const capturedTranscript = interimTranscript;
+
         // Start new timeout to wait for potential continuation
         state.interimCommandTimeout = setTimeout(() => {
           state.interimCommandTimeout = null;
@@ -340,11 +437,11 @@ export function initVoiceRecognition(processVoiceKeywords) {
             state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
             // Process and send with high confidence (0.95 = instant interim command)
-            const processed = processVoiceKeywords(interimTranscript, 0.95);
+            const processed = processVoiceKeywords(capturedTranscript, 0.95);
             const isNavCommand = (processed === false);
 
-            // Show as confirmed with mic indicator
-            showConfirmedTranscript(interimTranscript, isNavCommand);
+            // Show as confirmed with mic indicator and confidence
+            showConfirmedTranscript(capturedTranscript, isNavCommand, 0.95);
 
             if (processed !== false) {
               // Game command - send immediately
@@ -379,23 +476,31 @@ export function initVoiceRecognition(processVoiceKeywords) {
           dom.voiceTranscript.classList.add('interim');
         }
         return;
+      } else if (state.interimCommandTimeout) {
+        // Interim transcript changed to something that's NOT an instant command
+        // Cancel the pending timeout (e.g., user said "s t" - not a command anymore)
+        clearTimeout(state.interimCommandTimeout);
+        state.interimCommandTimeout = null;
       }
 
-      // Update voice indicator with interim text
-      updateVoiceTranscript(interimTranscript, 'interim');
+      // Don't show interim transcripts when in hold mic mode
+      if (!state.isHoldMic) {
+        // Update voice indicator with interim text
+        updateVoiceTranscript(interimTranscript, 'interim');
 
-      // Update lock screen transcript if locked
-      if (state.isScreenLocked) {
-        import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
-          updateLockTranscript(interimTranscript, 'interim');
-        });
-      }
+        // Update lock screen transcript if locked
+        if (state.isScreenLocked) {
+          import('../utils/lock-screen.js').then(({ updateLockTranscript }) => {
+            updateLockTranscript(interimTranscript, 'interim');
+          });
+        }
 
-      // Also update old DOM element if it exists
-      if (dom.voiceTranscript) {
-        dom.voiceTranscript.textContent = interimTranscript;
-        dom.voiceTranscript.classList.remove('confirmed');
-        dom.voiceTranscript.classList.add('interim');
+        // Also update old DOM element if it exists
+        if (dom.voiceTranscript) {
+          dom.voiceTranscript.textContent = interimTranscript;
+          dom.voiceTranscript.classList.remove('confirmed');
+          dom.voiceTranscript.classList.add('interim');
+        }
       }
     }
 
@@ -405,6 +510,14 @@ export function initVoiceRecognition(processVoiceKeywords) {
       if (state.interimCommandTimeout) {
         clearTimeout(state.interimCommandTimeout);
         state.interimCommandTimeout = null;
+      }
+
+      // If we detected letter spelling in interim, use that instead of final's word interpretation
+      // (e.g., interim "go to s t r e a m" should not become final "go to strain")
+      if (state.isSpellingLetters && state.spellingInterimTranscript) {
+        finalTranscript = state.spellingInterimTranscript;
+        state.isSpellingLetters = false;
+        state.spellingInterimTranscript = null;
       }
 
       // Send any pending interim text before clearing it
@@ -419,18 +532,41 @@ export function initVoiceRecognition(processVoiceKeywords) {
         return;
       }
 
-      // Check for echo
+      // When mic is locked, silently discard all commands except "unlock mic"
+      // (processVoiceKeywords will handle "unlock mic" if it comes through)
+      if (state.isHoldMic) {
+        const lower = finalTranscript.toLowerCase().trim();
+        // Only allow "unlock mic" variants through
+        if (!(lower === 'unlock mic' || lower === 'unlock mike' || lower === 'unlockmic')) {
+          state.hasManualTyping = false;
+          return; // Silently discard
+        }
+      }
+
+      // Check for echo (but skip for navigation commands - they should always work)
       try {
-        if (isEchoOfSpokenText(finalTranscript)) {
+        // Check if this is a navigation command first
+        const finalLower = finalTranscript.toLowerCase().trim();
+        const navigationCommands = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
+                                    'end', 'skip all', 'skip to end', 'skip to the end'];
+        const skipNPattern = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+        const backNPattern = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+
+        const isNavigationCommand = navigationCommands.includes(finalLower) ||
+                                     skipNPattern.test(finalLower) ||
+                                     backNPattern.test(finalLower);
+
+        // Only check for echo if NOT a navigation command
+        if (!isNavigationCommand && isEchoOfSpokenText(finalTranscript)) {
           // Echo detected: play BUZZ (blocked) and show as blocked
           playBlockedCommand();
 
-          // Show in transcript area as blocked (echo)
-          showConfirmedTranscript(`${finalTranscript} (blocked)`, false, 0);
+          // Show in transcript area as blocked (echo) with actual confidence
+          showConfirmedTranscript(`${finalTranscript} (blocked)`, false, finalConfidence);
 
-          // Display in game window with muted styling
+          // Display in game window with muted styling with actual confidence
           import('../ui/game-output.js').then(({ addGameText }) => {
-            addGameText(`${finalTranscript} (blocked during narration)`, true, true, false, 0);
+            addGameText(`${finalTranscript} (blocked during narration)`, true, true, false, finalConfidence);
           });
 
           state.hasManualTyping = false;
@@ -444,27 +580,57 @@ export function initVoiceRecognition(processVoiceKeywords) {
       const isLowConfidence = finalConfidence < LOW_CONFIDENCE_THRESHOLD;
 
       if (isLowConfidence) {
-        // Low confidence: display but don't act
-        playLowConfidence();
+        // Check if this is an instant command - if so, process it anyway
+        const finalLower = finalTranscript.toLowerCase().trim();
+        let isInstantCmd = INSTANT_NO_WAIT.includes(finalLower) || INSTANT_COMMANDS.includes(finalLower);
 
-        // Show in transcript area WITH confidence percentage
-        showConfirmedTranscript(finalTranscript, false, finalConfidence);
+        // Check for pattern match in INSTANT_PATTERNS
+        if (!isInstantCmd) {
+          for (const pattern of INSTANT_PATTERNS) {
+            if (pattern.test(finalLower)) {
+              isInstantCmd = true;
+              break;
+            }
+          }
+        }
 
-        // Display in game window with muted styling (but don't send to game)
-        import('../ui/game-output.js').then(({ addGameText }) => {
-          addGameText(finalTranscript, true, true, false, finalConfidence);
-        });
+        // Check for 2-letter spelled directions (e.g., "n e" -> should be treated like "ne")
+        if (!isInstantCmd) {
+          const words = finalLower.split(/\s+/);
+          if (words.length === 2 && words.every(w => w.length === 1 && /^[a-z]$/.test(w))) {
+            const validTwoLetterDirs = ['ne', 'nw', 'se', 'sw'];
+            if (validTwoLetterDirs.includes(words.join(''))) {
+              isInstantCmd = true;
+            }
+          }
+        }
 
-        state.hasManualTyping = false;
-        return; // Don't process further
+        if (!isInstantCmd) {
+          // Low confidence AND not an instant command: display but don't act
+          playLowConfidence();
+
+          // Show in transcript area WITH confidence percentage
+          showConfirmedTranscript(finalTranscript, false, finalConfidence);
+
+          // Display in game window with muted styling (but don't send to game)
+          import('../ui/game-output.js').then(({ addGameText }) => {
+            addGameText(finalTranscript, true, true, false, finalConfidence);
+          });
+
+          state.hasManualTyping = false;
+          return; // Don't process further
+        }
+        // If it IS an instant command with low confidence, process it but use normal confidence for display
+        // (so it shows purple instead of red, but still shows the confidence %)
+        finalConfidence = LOW_CONFIDENCE_THRESHOLD; // Bump to exactly the threshold so it's not "low" but still shows %
       }
 
       // Normal confidence: process and execute
       const processed = processVoiceKeywords(finalTranscript, finalConfidence);
       const isNavCommand = (processed === false);
 
-      // Show as confirmed
-      showConfirmedTranscript(finalTranscript, isNavCommand);
+      // Show as confirmed (with bumped confidence if it was a low-confidence instant command)
+      showConfirmedTranscript(finalTranscript, isNavCommand, finalConfidence);
 
       if (processed !== false) {
         // Game command - populate input and show indicator
@@ -528,14 +694,38 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onend = async () => {
-    // Clear any pending interim command timeout
+    // If we have a pending instant command timeout, process it immediately instead of displaying as low confidence
     if (state.interimCommandTimeout) {
       clearTimeout(state.interimCommandTimeout);
       state.interimCommandTimeout = null;
-    }
 
-    // Send any interim text before recognition ends
-    await displayInterimAsLowConfidence();
+      // Process the instant command now (don't wait for timeout)
+      if (!state.hasProcessedResult && state.currentInterimTranscript) {
+        const interimText = state.currentInterimTranscript;
+        state.hasProcessedResult = true;
+        state.currentInterimTranscript = '';
+
+        // Process and send with instant command confidence (0.95)
+        const processed = await processVoiceKeywords(interimText, 0.95);
+        const isNavCommand = (processed === false);
+
+        // Show as confirmed with confidence
+        showConfirmedTranscript(interimText, isNavCommand, 0.95);
+
+        if (processed !== false) {
+          playCommandSent();
+          const { sendCommandDirect } = await import('../game/commands/command-router.js');
+          sendCommandDirect(processed, true, 0.95);
+        } else {
+          if (state.pendingCommandProcessed) {
+            playAppCommand();
+          }
+        }
+      }
+    } else {
+      // No pending instant command - display any remaining interim text as low confidence
+      await displayInterimAsLowConfidence();
+    }
 
     state.isListening = false;
     state.isRecognitionActive = false;
@@ -543,8 +733,8 @@ export function initVoiceRecognition(processVoiceKeywords) {
     // Voice commands are now sent immediately in onresult handler
     // No need to check for input field or auto-send here
 
-    // In push-to-talk mode, don't auto-restart (only restart when button is held)
-    if (state.pushToTalkMode) {
+    // In push-to-talk mode, only auto-restart if button is still being held
+    if (state.pushToTalkMode && !state.pushToTalkActive) {
       return;
     }
 

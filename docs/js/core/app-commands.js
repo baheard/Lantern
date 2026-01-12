@@ -21,6 +21,11 @@ export const APP_COMMANDS = {
   MUTE: ['mute'],
   UNMUTE: [], // Voice unmute disabled - mic fully off when muted (click button to unmute)
   STATUS: ['status'],
+  READ_LAST_COMMAND: ['read last command', 'last command', 'what did i say'],
+  LOCK_MIC: ['lock mic'],
+  UNLOCK_MIC: ['unlock mic'],
+  LOCK_SCREEN: ['lock screen'],
+  UNLOCK_SCREEN: ['unlock screen'],
 
   // Quick save/load (voice commands)
   QUICK_SAVE: ['quick save', 'quicksave'],

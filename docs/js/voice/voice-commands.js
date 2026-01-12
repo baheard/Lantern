@@ -26,6 +26,26 @@ import { playBlockedCommand } from '../utils/audio-feedback.js';
 export function processVoiceKeywords(transcript, handlers, confidence = null) {
   let lower = transcript.toLowerCase().trim();
 
+  // Fix homophones for number commands (e.g., "back to" -> "back two", "skip for" -> "skip four")
+  transcript = transcript.replace(/\b(back|skip)\s+(to|too)\b/gi, '$1 two');
+  transcript = transcript.replace(/\b(back|skip)\s+for\b/gi, '$1 four');
+  lower = transcript.toLowerCase().trim();
+
+  // If "back [word]" where word is NOT a number, strip the word and just use "back"
+  // This prevents "back lamp" from being sent to the game as a command
+  const backNonNumberMatch = transcript.match(/^back\s+(?!(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$)(.+)$/i);
+  if (backNonNumberMatch) {
+    transcript = 'back';
+    lower = 'back';
+  }
+
+  // Same for skip - if "skip [word]" where word is NOT a number or "all/end", just use "skip"
+  const skipNonNumberMatch = transcript.match(/^skip\s+(?!(\d+|one|two|three|four|five|six|seven|eight|nine|ten|all|to\s+(?:the\s+)?end|forward\s+\d+)$)(.+)$/i);
+  if (skipNonNumberMatch) {
+    transcript = 'skip';
+    lower = 'skip';
+  }
+
   // Detect spelled-out words within the transcript (e.g., "N O R T H" -> "NORTH")
   const words = transcript.split(/\s+/);
   let modified = false;
@@ -40,11 +60,30 @@ export function processVoiceKeywords(transcript, handlers, confidence = null) {
     }
 
     // If we found 3+ consecutive single letters, combine them
-    if (letterSequence.length >= 3) {
+    // OR if we found exactly 2 letters that form a valid direction (NE, NW, SE, SW)
+    const validTwoLetterDirs = ['ne', 'nw', 'se', 'sw'];
+    const isTwoLetterDir = letterSequence.length === 2 &&
+                           validTwoLetterDirs.includes(letterSequence.join('').toLowerCase());
+
+    if (letterSequence.length >= 3 || isTwoLetterDir) {
       const combinedWord = letterSequence.join('').toUpperCase();
       words.splice(startIndex, letterSequence.length, combinedWord);
       modified = true;
-      speakAppMessage(`Spelled: ${combinedWord}`);
+
+      // Display "Spelled: X" message on screen and narrate if in play mode
+      // (but only for 3+ letter words, not for 2-letter directions)
+      if (letterSequence.length >= 3) {
+        import('../ui/game-output.js').then(({ addGameText }) => {
+          const message = `Spelled: ${combinedWord}`;
+          addGameText(`<div class="system-message">${message}</div>`, false);
+
+          // Trigger TTS narration if autoplay is enabled
+          if (state.autoplayEnabled && window.handleGameOutput) {
+            window.handleGameOutput(message);
+          }
+        });
+      }
+
       i = startIndex - 1;
     } else if (letterSequence.length > 0) {
       i--;
@@ -65,6 +104,17 @@ export function processVoiceKeywords(transcript, handlers, confidence = null) {
       handlers.unmute();
       return false;
     }
+    return false;
+  }
+
+  // When mic is locked, only respond to "unlock mic"
+  if (state.isHoldMic) {
+    if (lower === 'unlock mic' || lower === 'unlock mike' || lower === 'unlockmic') {
+      state.pendingCommandProcessed = true;
+      handlers.openMic();
+      return false;
+    }
+    // Dismiss all other commands silently
     return false;
   }
 
