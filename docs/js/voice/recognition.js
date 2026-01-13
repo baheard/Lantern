@@ -700,38 +700,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
       state.interimCommandTimeout = null;
     }
 
-    // In push-to-talk mode, when button is released, process any interim transcript as a command
-    // (walkie-talkie behavior: hold to speak, release to send)
-    if (state.pushToTalkMode && !state.pushToTalkActive) {
-      if (!state.hasProcessedResult && state.currentInterimTranscript) {
-        const interimText = state.currentInterimTranscript;
-        state.hasProcessedResult = true;
-        state.currentInterimTranscript = '';
-
-        // Process and send with good confidence (0.9 = push-to-talk interim)
-        const processed = await processVoiceKeywords(interimText, 0.9);
-        const isNavCommand = (processed === false);
-
-        // Show as confirmed with confidence
-        showConfirmedTranscript(interimText, isNavCommand, 0.9);
-
-        if (processed !== false) {
-          playCommandSent();
-          const { sendCommandDirect } = await import('../game/commands/command-router.js');
-          sendCommandDirect(processed, true, 0.9);
-        } else {
-          if (state.pendingCommandProcessed) {
-            playAppCommand();
-          }
-        }
-      }
-
-      state.isListening = false;
-      state.isRecognitionActive = false;
-      return; // Don't restart recognition in push-to-talk mode
-    }
-
-    // If we have a pending instant command timeout, process it immediately instead of displaying as low confidence
+    // Process any pending instant command or interim transcript
     if (!state.hasProcessedResult && state.currentInterimTranscript) {
       const interimText = state.currentInterimTranscript;
       state.hasProcessedResult = true;
@@ -753,8 +722,8 @@ export function initVoiceRecognition(processVoiceKeywords) {
           playAppCommand();
         }
       }
-    } else if (!state.pushToTalkMode) {
-      // No pending instant command - display any remaining interim text as low confidence (not in push-to-talk mode)
+    } else {
+      // No pending instant command - display any remaining interim text as low confidence
       await displayInterimAsLowConfidence();
     }
 
