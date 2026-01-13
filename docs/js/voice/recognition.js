@@ -431,11 +431,6 @@ export function initVoiceRecognition(processVoiceKeywords) {
         state.interimCommandTimeout = setTimeout(() => {
           state.interimCommandTimeout = null;
 
-          // In push-to-talk mode, only process if button is still held
-          if (state.pushToTalkMode && !state.pushToTalkActive) {
-            return; // Button was released, discard command
-          }
-
           // Timeout expired - process the command now
           if (!state.hasProcessedResult) {
             state.hasProcessedResult = true; // Prevent duplicate processing
@@ -699,51 +694,67 @@ export function initVoiceRecognition(processVoiceKeywords) {
   };
 
   recognition.onend = async () => {
-    // In push-to-talk mode, if button was released, discard interim transcripts
-    // (user expects cancellation, not processing of partial speech)
-    if (state.pushToTalkMode && !state.pushToTalkActive) {
-      // Clear any pending instant command timeout
-      if (state.interimCommandTimeout) {
-        clearTimeout(state.interimCommandTimeout);
-        state.interimCommandTimeout = null;
-      }
-      // Clear interim transcript without processing
-      state.currentInterimTranscript = '';
-      state.isListening = false;
-      state.isRecognitionActive = false;
-      return; // Don't process or restart recognition
-    }
-
-    // If we have a pending instant command timeout, process it immediately instead of displaying as low confidence
+    // Clear any pending instant command timeout
     if (state.interimCommandTimeout) {
       clearTimeout(state.interimCommandTimeout);
       state.interimCommandTimeout = null;
+    }
 
-      // Process the instant command now (don't wait for timeout)
+    // In push-to-talk mode, when button is released, process any interim transcript as a command
+    // (walkie-talkie behavior: hold to speak, release to send)
+    if (state.pushToTalkMode && !state.pushToTalkActive) {
       if (!state.hasProcessedResult && state.currentInterimTranscript) {
         const interimText = state.currentInterimTranscript;
         state.hasProcessedResult = true;
         state.currentInterimTranscript = '';
 
-        // Process and send with instant command confidence (0.95)
-        const processed = await processVoiceKeywords(interimText, 0.95);
+        // Process and send with good confidence (0.9 = push-to-talk interim)
+        const processed = await processVoiceKeywords(interimText, 0.9);
         const isNavCommand = (processed === false);
 
         // Show as confirmed with confidence
-        showConfirmedTranscript(interimText, isNavCommand, 0.95);
+        showConfirmedTranscript(interimText, isNavCommand, 0.9);
 
         if (processed !== false) {
           playCommandSent();
           const { sendCommandDirect } = await import('../game/commands/command-router.js');
-          sendCommandDirect(processed, true, 0.95);
+          sendCommandDirect(processed, true, 0.9);
         } else {
           if (state.pendingCommandProcessed) {
             playAppCommand();
           }
         }
       }
-    } else {
-      // No pending instant command - display any remaining interim text as low confidence
+
+      state.isListening = false;
+      state.isRecognitionActive = false;
+      return; // Don't restart recognition in push-to-talk mode
+    }
+
+    // If we have a pending instant command timeout, process it immediately instead of displaying as low confidence
+    if (!state.hasProcessedResult && state.currentInterimTranscript) {
+      const interimText = state.currentInterimTranscript;
+      state.hasProcessedResult = true;
+      state.currentInterimTranscript = '';
+
+      // Process and send with instant command confidence (0.95)
+      const processed = await processVoiceKeywords(interimText, 0.95);
+      const isNavCommand = (processed === false);
+
+      // Show as confirmed with confidence
+      showConfirmedTranscript(interimText, isNavCommand, 0.95);
+
+      if (processed !== false) {
+        playCommandSent();
+        const { sendCommandDirect } = await import('../game/commands/command-router.js');
+        sendCommandDirect(processed, true, 0.95);
+      } else {
+        if (state.pendingCommandProcessed) {
+          playAppCommand();
+        }
+      }
+    } else if (!state.pushToTalkMode) {
+      // No pending instant command - display any remaining interim text as low confidence (not in push-to-talk mode)
       await displayInterimAsLowConfidence();
     }
 
