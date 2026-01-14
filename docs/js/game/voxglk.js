@@ -26,6 +26,7 @@ let skipFirstAutosave = false; // Skip first autosave if we're about to restore
 let skipNextUpdateAfterBootstrap = false; // Skip next update after bootstrap input (suppress "I beg your pardon")
 let autosaveCounter = 0; // Count autosaves to skip the first N
 let introInputType = null; // Track the input type from the first request (gen 1) for bootstrap
+let gridStates = new Map(); // Track full grid state for each window to handle partial updates
 
 // Watchdog timer for detecting broken VM state
 let watchdogTimer = null; // Timer for detecting when VM doesn't respond to input
@@ -344,6 +345,7 @@ export function createVoxGlk(textOutputCallback) {
     init: function(options) {
       generation = 0;
       windows.clear();
+      gridStates.clear(); // Clear grid states for new game
       lastStatusLine = '';
       inputEnabled = false;
       inputType = 'line';
@@ -512,19 +514,48 @@ export function createVoxGlk(textOutputCallback) {
 
         // Use VoxGlk renderer to convert to frotz HTML
         if (arg.content) {
+          // Process grid window updates and maintain full state for partial updates
+          arg.content.forEach(c => {
+            const win = windows.get(c.id);
+            if (win && win.type === 'grid' && c.lines) {
+              // Get or create grid state for this window
+              let gridState = gridStates.get(c.id);
+
+              if (c.clear || !gridState) {
+                // Clear flag or first time - create new state
+                gridState = new Map();
+                gridStates.set(c.id, gridState);
+              }
+
+              // Apply line updates to grid state
+              c.lines.forEach(lineObj => {
+                const lineNum = lineObj.line !== undefined ? lineObj.line : 0;
+                gridState.set(lineNum, lineObj);
+              });
+
+              // Rebuild full content object with all lines in order
+              const maxLine = Math.max(...Array.from(gridState.keys()));
+              const fullLines = [];
+              for (let i = 0; i <= maxLine; i++) {
+                if (gridState.has(i)) {
+                  fullLines.push(gridState.get(i));
+                } else {
+                  // Empty line
+                  fullLines.push({ line: i, content: ['normal', ''] });
+                }
+              }
+
+              // Replace the partial content with full reconstructed content
+              c.lines = fullLines;
+            }
+          });
+
           const { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText } = renderUpdate(arg, windows);
 
           // Check if upper window was explicitly mentioned in this update
           const hasUpperWindowContent = arg.content.some(c => {
             const win = windows.get(c.id);
             return win && win.type === 'grid' && c.lines && c.lines.length > 1;
-          });
-
-          // Log all grid windows for debugging
-          arg.content.forEach(c => {
-            const win = windows.get(c.id);
-            if (win && win.type === 'grid') {
-            }
           });
 
 
