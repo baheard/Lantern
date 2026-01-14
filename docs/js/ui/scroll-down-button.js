@@ -4,7 +4,7 @@
  * Provides a floating button on mobile to scroll down through game content.
  * - Tap: scroll down one page (with 50ms delay for drag detection)
  * - Hold: scroll one page, then smoothly scroll to bottom
- * - Drag: ignore tap and long press (cancel all scroll actions)
+ * - Drag: ignore tap and long press (cancel all scroll actions) - 40px threshold
  * - Fades when at bottom of content
  */
 
@@ -17,7 +17,8 @@ let isDragging = false;
 const INITIAL_SCROLL_DELAY = 50; // ms - small delay to detect drag before scrolling
 const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
-const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
+const DRAG_THRESHOLD = 40; // px - movement threshold to detect drag (larger = easier to scroll past button)
+const touchTracker = createTouchTracker(DRAG_THRESHOLD);
 
 /**
  * Initialize the scroll down button
@@ -289,8 +290,8 @@ function updateFadeState(button, container) {
   const scrollHeight = container.scrollHeight;
   const clientHeight = container.clientHeight;
 
-  // Check if we're at or near the bottom (within 200px threshold)
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 200;
+  // Check if we're at or near the bottom (within 50px threshold)
+  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
 
   if (isAtBottom) {
     button.classList.add('faded');
