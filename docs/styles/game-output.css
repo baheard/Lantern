@@ -415,9 +415,10 @@ body.tap-to-examine-enabled #lowerWindow {
   position: relative;
 }
 
-/* Empty lines (only whitespace) - reduce height */
+/* Empty lines (only whitespace) - maintain minimum height for menus */
 .grid-status .grid-line.empty-line {
-  font-size: 4px;
+  min-height: 0.7em; /* Reduced but not collapsed */
+  font-size: 0.5em;
 }
 
 .grid-status .grid-line span {

@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.44';
+const CACHE_VERSION = 'v1.5.45';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -154,28 +154,21 @@ const ICONS = [
 
 // Install event - precache all assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] 📦 Installing service worker', CACHE_VERSION);
-
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAMES.core).then(cache => {
-        console.log('[SW] Caching core assets...');
         return cache.addAll(CORE_ASSETS);
       }),
       caches.open(CACHE_NAMES.fonts).then(cache => {
-        console.log('[SW] Caching fonts...');
         return cache.addAll(FONTS);
       }),
       caches.open(CACHE_NAMES.icons).then(cache => {
-        console.log('[SW] Caching icons...');
         return cache.addAll(ICONS);
       }),
       caches.open(CACHE_NAMES.games).then(cache => {
-        console.log('[SW] Caching games...');
         return cache.addAll(BUNDLED_GAMES);
       })
     ]).then(() => {
-      console.log('[SW] ✅ All assets cached successfully');
       // Don't auto-activate - wait for user approval via SKIP_WAITING message
     })
   );

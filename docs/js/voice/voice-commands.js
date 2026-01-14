@@ -23,7 +23,7 @@ import { playBlockedCommand } from '../utils/audio-feedback.js';
  * @param {number|null} confidence - Voice recognition confidence (0.0-1.0)
  * @returns {string|false} Processed command text or false if handled here
  */
-export function processVoiceKeywords(transcript, handlers, confidence = null) {
+export async function processVoiceKeywords(transcript, handlers, confidence = null) {
   let lower = transcript.toLowerCase().trim();
 
   // Fix homophones for number commands (e.g., "back to" -> "back two", "skip for" -> "skip four")
@@ -150,6 +150,32 @@ export function processVoiceKeywords(transcript, handlers, confidence = null) {
   if (lower === 'escape') {
     handlers.sendCommandDirect('\x1b');  // ESC character
     return false;
+  }
+
+  // VOICE-SPECIFIC: Directional commands - Send arrow keys in char mode
+  // Check if we're in char mode first
+  const { getInputType } = await import('../game/voxglk.js');
+  const inputType = getInputType();
+
+  if (inputType === 'char') {
+    const { sendInput } = await import('../game/voxglk.js');
+
+    if (lower === 'up') {
+      sendInput('up', 'char');
+      return false;
+    }
+    if (lower === 'down') {
+      sendInput('down', 'char');
+      return false;
+    }
+    if (lower === 'left') {
+      sendInput('left', 'char');
+      return false;
+    }
+    if (lower === 'right') {
+      sendInput('right', 'char');
+      return false;
+    }
   }
 
   // "Print [text]" - Literal text bypass (skip command routing)

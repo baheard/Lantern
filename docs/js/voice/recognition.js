@@ -377,7 +377,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
         state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
         // Process and send immediately with high confidence (0.95 = instant interim command)
-        const processed = processVoiceKeywords(interimTranscript, 0.95);
+        const processed = await processVoiceKeywords(interimTranscript, 0.95);
         const isNavCommand = (processed === false);
 
         // Show as confirmed with confidence
@@ -437,7 +437,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
             state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
             // Process and send with high confidence (0.95 = instant interim command)
-            const processed = processVoiceKeywords(capturedTranscript, 0.95);
+            const processed = await processVoiceKeywords(capturedTranscript, 0.95);
             const isNavCommand = (processed === false);
 
             // Show as confirmed with mic indicator and confidence
@@ -606,7 +606,18 @@ export function initVoiceRecognition(processVoiceKeywords) {
         }
 
         if (!isInstantCmd) {
-          // Low confidence AND not an instant command: display but don't act
+          // Low confidence AND not an instant command
+          // In char mode (press any key screens), silently discard low confidence commands
+          const { getInputType } = await import('../game/voxglk.js');
+          const inputType = getInputType();
+
+          if (inputType === 'char') {
+            // Char mode: silently discard low confidence commands (don't display or process)
+            state.hasManualTyping = false;
+            return;
+          }
+
+          // Line mode: display but don't act
           playLowConfidence();
 
           // Show in transcript area WITH confidence percentage
@@ -626,7 +637,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
       }
 
       // Normal confidence: process and execute
-      const processed = processVoiceKeywords(finalTranscript, finalConfidence);
+      const processed = await processVoiceKeywords(finalTranscript, finalConfidence);
       const isNavCommand = (processed === false);
 
       // Show as confirmed (with bumped confidence if it was a low-confidence instant command)
