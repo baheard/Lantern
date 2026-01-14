@@ -4,7 +4,7 @@
  * Provides a floating button on mobile to scroll down through game content.
  * - Tap: scroll down one page (triggered on touchend if no drag detected)
  * - Hold: scroll to bottom after 300ms
- * - Drag: passes through to content (natural scroll) - 40px threshold
+ * - Drag: passes through to content (natural scroll) - 10px threshold
  * - Fades when at bottom of content
  */
 
@@ -15,7 +15,7 @@ let holdTimer = null;
 let isDragging = false;
 const SCROLL_TO_BOTTOM_DELAY = 300; // ms - hold duration before scrolling to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
-const DRAG_THRESHOLD = 40; // px - movement threshold to detect drag (larger = easier to scroll past button)
+const DRAG_THRESHOLD = 10; // px - standard drag detection threshold (iOS/Android/web standard)
 const touchTracker = createTouchTracker(DRAG_THRESHOLD);
 
 /**
