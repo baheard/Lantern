@@ -6,6 +6,7 @@
  * - Hold: scroll to bottom after 300ms (canceled on ANY movement)
  * - Drag: passes through to content (natural scroll) - 5px threshold
  * - Fades when at bottom of content
+ * - Button uses pointer-events: none in CSS, touch detection on container
  */
 
 import { getScrollContainer } from '../utils/scroll.js';
@@ -30,26 +31,55 @@ export function initScrollDownButton() {
   // Show button when game is loaded
   updateButtonVisibility();
 
-  // Touch start - track position for swipe detection
-  // Use passive listener to allow natural scrolling
-  button.addEventListener('touchstart', (e) => {
-    touchTracker.track(e);
-    isDragging = false;
+  // Helper to check if touch is within button bounds
+  function isTouchInButton(touch) {
+    const rect = button.getBoundingClientRect();
+    return (
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom
+    );
+  }
 
-    // Add pressed state (steady glow)
-    button.classList.add('pressed');
+  // Track touches on the container (button has pointer-events: none)
+  let touchStartedInButton = false;
 
-    // If held after delay, scroll to bottom
-    holdTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollToBottomSmooth(container);
-      }
-    }, SCROLL_TO_BOTTOM_DELAY);
+  container.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    // Check if touch started in button area
+    if (isTouchInButton(touch)) {
+      touchStartedInButton = true;
+      touchTracker.track(e);
+      isDragging = false;
+
+      // Add pressed state (steady glow)
+      button.classList.add('pressed');
+
+      // If held after delay, scroll to bottom (with text selection prevention)
+      holdTimer = setTimeout(() => {
+        if (!isDragging && touchStartedInButton) {
+          // Prevent text selection during scroll to bottom
+          document.body.style.userSelect = 'none';
+          document.body.style.webkitUserSelect = 'none';
+
+          scrollToBottomSmooth(container);
+
+          // Re-enable text selection after scroll completes
+          setTimeout(() => {
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+          }, SCROLL_TO_BOTTOM_DURATION + 100);
+        }
+      }, SCROLL_TO_BOTTOM_DELAY);
+    }
   }, { passive: true });
 
-  // Touch move - detect dragging
-  // Cancel hold timer on ANY movement to allow natural scrolling
-  button.addEventListener('touchmove', (e) => {
+  container.addEventListener('touchmove', (e) => {
+    if (!touchStartedInButton) return;
+
     // ANY movement cancels the hold timer immediately
     if (holdTimer) {
       clearTimeout(holdTimer);
@@ -59,6 +89,7 @@ export function initScrollDownButton() {
     // Check if user is dragging beyond threshold
     if (!touchTracker.isTap(e)) {
       isDragging = true;
+      touchStartedInButton = false; // Stop tracking this touch
 
       // Remove pressed state
       button.style.transition = 'none';
@@ -68,18 +99,33 @@ export function initScrollDownButton() {
     }
   }, { passive: true });
 
-  button.addEventListener('touchend', (e) => {
+  container.addEventListener('touchend', (e) => {
+    if (!touchStartedInButton) return;
+
     // Only trigger button action if it was a tap (not a drag)
     const wasTap = !isDragging && touchTracker.isTap(e);
 
     if (wasTap) {
-      // Prevent default only if we're handling it as a button tap
-      e.preventDefault();
       scrollDownOnePage(container);
     }
 
-    // Remove focus to prevent hover state from sticking
-    button.blur();
+    // Remove pressed state instantly (no transition)
+    button.style.transition = 'none';
+    button.classList.remove('pressed');
+    void button.offsetHeight; // Force reflow
+    button.style.transition = '';
+
+    // Cancel all timers
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    isDragging = false;
+    touchStartedInButton = false;
+
+    touchTracker.reset();
+  });
+
+  container.addEventListener('touchcancel', () => {
+    if (!touchStartedInButton) return;
 
     // Remove pressed state instantly (no transition)
     button.style.transition = 'none';
@@ -91,122 +137,7 @@ export function initScrollDownButton() {
     clearTimeout(holdTimer);
     holdTimer = null;
     isDragging = false;
-
-    touchTracker.reset();
-  });
-
-  button.addEventListener('touchcancel', () => {
-    // Remove focus to prevent hover state from sticking
-    button.blur();
-
-    // Remove pressed state instantly (no transition)
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
-  });
-
-  // Mouse events for desktop testing
-  button.addEventListener('mousedown', (e) => {
-    // Only handle left clicks (button 0), ignore right clicks
-    if (e.button !== 0) return;
-
-    e.preventDefault();
-    touchTracker.track(e);
-    isDragging = false;
-
-    // Add pressed state (steady glow)
-    button.classList.add('pressed');
-
-    // Small delay before scrolling to allow drag detection
-    scrollTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollDownOnePage(container);
-      }
-    }, INITIAL_SCROLL_DELAY);
-
-    // If still held after delay, scroll to bottom
-    holdTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollToBottomSmooth(container);
-      }
-    }, SCROLL_TO_BOTTOM_DELAY);
-  });
-
-  // Mouse move - cancel all actions if dragging
-  button.addEventListener('mousemove', (e) => {
-    // Check if user is dragging (not just a click)
-    if (!touchTracker.isTap(e)) {
-      isDragging = true;
-
-      // Cancel both scroll timers
-      if (scrollTimer) {
-        clearTimeout(scrollTimer);
-        scrollTimer = null;
-      }
-      if (holdTimer) {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-      }
-
-      // Remove pressed state
-      button.style.transition = 'none';
-      button.classList.remove('pressed');
-      void button.offsetHeight; // Force reflow
-      button.style.transition = '';
-    }
-  });
-
-  button.addEventListener('mouseup', (e) => {
-    // Only handle left clicks (button 0), ignore right clicks
-    if (e.button !== 0) return;
-
-    e.preventDefault();
-
-    // Remove focus to prevent hover state from sticking
-    button.blur();
-
-    // Remove pressed state instantly (no transition)
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
-  });
-
-  button.addEventListener('mouseleave', () => {
-    // Remove focus to prevent hover state from sticking
-    button.blur();
-
-    // Remove pressed state instantly if mouse leaves while pressed
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
+    touchStartedInButton = false;
 
     touchTracker.reset();
   });

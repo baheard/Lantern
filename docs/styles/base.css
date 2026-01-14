@@ -397,7 +397,9 @@ body {
   opacity: 0.5;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   -webkit-tap-highlight-color: transparent;
-  touch-action: pan-y; /* Allow vertical scrolling through button */
+  pointer-events: none; /* Make transparent to touches - JavaScript will handle interactions */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none;
 }
 
 .scroll-down-btn:hover {
