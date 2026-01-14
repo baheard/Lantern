@@ -565,24 +565,42 @@ export function createVoxGlk(textOutputCallback) {
             hasMainContent = textContent.length > 0;
           }
 
+          // Check if grid window specifically requested a clear
+          const upperWindowClear = arg.content.some(c => {
+            const win = windows.get(c.id);
+            return win && win.type === 'grid' && c.lines && c.lines.length > 1 && c.clear;
+          });
+
           if (hasUpperWindowContent) {
-            // Upper window was mentioned in this update - update it (even if empty)
+            // Upper window was mentioned in this update
             if (upperWindowHTML && upperWindowEl) {
-              upperWindowEl.innerHTML = upperWindowHTML;
+              // Only update if content changed OR if clear was requested
+              const existingContent = upperWindowEl.getAttribute('data-last-content') || '';
+              const contentChanged = existingContent !== upperWindowHTML;
+
+              if (upperWindowClear || contentChanged) {
+                upperWindowEl.innerHTML = upperWindowHTML;
+                upperWindowEl.setAttribute('data-last-content', upperWindowHTML);
+              }
               upperWindowEl.style.display = ''; // Show upper window
 
             } else if (upperWindowEl) {
-              // Explicitly clear upper window
-              upperWindowEl.innerHTML = '';
-              upperWindowEl.style.display = 'none';
+              // Explicitly clear upper window only if clear flag set or content is explicitly empty
+              if (upperWindowClear || !upperWindowHTML) {
+                upperWindowEl.innerHTML = '';
+                upperWindowEl.removeAttribute('data-last-content');
+                upperWindowEl.style.display = 'none';
+              }
             }
           } else if (shouldClearScreen && upperWindowEl) {
             // Game requested screen clear - clear upper window too
             upperWindowEl.innerHTML = '';
+            upperWindowEl.removeAttribute('data-last-content');
             upperWindowEl.style.display = 'none';
           } else if (hasMainContent && upperWindowEl && !hasUpperWindowContent) {
             // New main content arrived without upper window update - clear stale upper window
             upperWindowEl.innerHTML = '';
+            upperWindowEl.removeAttribute('data-last-content');
             upperWindowEl.style.display = 'none';
           }
           // NOTE: If no main content and upper window wasn't mentioned, preserve existing content (resize responses)

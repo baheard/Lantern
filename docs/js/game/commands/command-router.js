@@ -399,35 +399,42 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
   // History params: original, translated, confidence, isVoiceCommand
   addToCommandHistory(input || '[ENTER]', null, confidence, isVoiceCommand);
 
-  // Check for "print [text]" command - special display formatting
-  const printMatch = input.match(/^print\s+(.+)$/i);
-  if (printMatch) {
-    // Display as: >[print] actual command
-    // where [print] is in system color
-    const actualCommand = printMatch[1];
-    const formattedDisplay = `<span style="color: var(--color-app-system)">[print]</span> ${actualCommand}`;
+  // Check if we're in char mode (press any key) - don't display commands in char mode
+  const inputType = getInputType();
+  const isCharMode = inputType === 'char';
 
-    // Create custom command display
-    const div = document.createElement('div');
-    div.className = 'user-command';
-    if (isVoiceCommand) div.classList.add('voice-command');
-    div.innerHTML = `<span class="command-label">&gt;</span><span class="command-text">${formattedDisplay}</span>`;
+  // Only display commands in line mode, not in char mode (press any key screens)
+  if (!isCharMode) {
+    // Check for "print [text]" command - special display formatting
+    const printMatch = input.match(/^print\s+(.+)$/i);
+    if (printMatch) {
+      // Display as: >[print] actual command
+      // where [print] is in system color
+      const actualCommand = printMatch[1];
+      const formattedDisplay = `<span style="color: var(--color-app-system)">[print]</span> ${actualCommand}`;
 
-    if (dom.lowerWindow) {
-      const commandLine = document.getElementById('commandLine');
-      if (commandLine && commandLine.parentElement === dom.lowerWindow) {
-        dom.lowerWindow.insertBefore(div, commandLine);
-      } else {
-        dom.lowerWindow.appendChild(div);
+      // Create custom command display
+      const div = document.createElement('div');
+      div.className = 'user-command';
+      if (isVoiceCommand) div.classList.add('voice-command');
+      div.innerHTML = `<span class="command-label">&gt;</span><span class="command-text">${formattedDisplay}</span>`;
+
+      if (dom.lowerWindow) {
+        const commandLine = document.getElementById('commandLine');
+        if (commandLine && commandLine.parentElement === dom.lowerWindow) {
+          dom.lowerWindow.insertBefore(div, commandLine);
+        } else {
+          dom.lowerWindow.appendChild(div);
+        }
       }
+    } else {
+      // Normal command display
+      // Always display the command with proper styling (voice/typed, confidence)
+      // The game will also echo it, but we'll filter that out of narration
+      // Use app-command styling for app/meta-commands or when in system entry mode
+      const isAppCmd = isSystemEntryMode() || isAppCommand(input);
+      addGameText(input || '[ENTER]', true, isVoiceCommand, isAppCmd, confidence);
     }
-  } else {
-    // Normal command display
-    // Always display the command with proper styling (voice/typed, confidence)
-    // The game will also echo it, but we'll filter that out of narration
-    // Use app-command styling for app/meta-commands or when in system entry mode
-    const isAppCmd = isSystemEntryMode() || isAppCommand(input);
-    addGameText(input || '[ENTER]', true, isVoiceCommand, isAppCmd, confidence);
   }
 
   // Track for echo detection (so we can skip the game's glk-input echo)
