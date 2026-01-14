@@ -718,6 +718,12 @@ export function initVoiceRecognition(processVoiceKeywords) {
       state.interimCommandTimeout = null;
     }
 
+    // If we already processed a result (instant command), clear any stale interim text
+    // that came in after processing but before recognition stopped
+    if (state.hasProcessedResult) {
+      state.currentInterimTranscript = '';
+    }
+
     // Check if we're in push-to-talk mode and button was just released
     // In this case, process interim text as a normal command (not low confidence)
     const wasPushToTalkRelease = state.pushToTalkMode && !state.pushToTalkActive;
@@ -748,9 +754,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
           playAppCommand();
         }
       }
-    } else if (!wasPushToTalkRelease) {
+    } else if (!wasPushToTalkRelease && !state.hasProcessedResult) {
       // No pending instant command - display any remaining interim text as low confidence
       // BUT: Skip this in push-to-talk mode when button was released (already processed above)
+      // AND: Skip if we already processed a result (instant command) to avoid duplicate processing
       await displayInterimAsLowConfidence();
     }
 
