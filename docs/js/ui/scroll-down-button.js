@@ -2,9 +2,9 @@
  * Scroll Down Button Module
  *
  * Provides a floating button on mobile to scroll down through game content.
- * - Tap: scroll down one page (with 50ms delay for drag detection)
- * - Hold: scroll one page, then smoothly scroll to bottom
- * - Drag: ignore tap and long press (cancel all scroll actions) - 40px threshold
+ * - Tap: scroll down one page (triggered on touchend if no drag detected)
+ * - Hold: scroll to bottom after 300ms
+ * - Drag: passes through to content (natural scroll) - 40px threshold
  * - Fades when at bottom of content
  */
 
@@ -12,10 +12,8 @@ import { getScrollContainer } from '../utils/scroll.js';
 import { createTouchTracker } from '../utils/touch-detection.js';
 
 let holdTimer = null;
-let scrollTimer = null;
 let isDragging = false;
-const INITIAL_SCROLL_DELAY = 50; // ms - small delay to detect drag before scrolling
-const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
+const SCROLL_TO_BOTTOM_DELAY = 300; // ms - hold duration before scrolling to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
 const DRAG_THRESHOLD = 40; // px - movement threshold to detect drag (larger = easier to scroll past button)
 const touchTracker = createTouchTracker(DRAG_THRESHOLD);
@@ -33,40 +31,29 @@ export function initScrollDownButton() {
   updateButtonVisibility();
 
   // Touch start - track position for swipe detection
+  // Use passive listener to allow natural scrolling
   button.addEventListener('touchstart', (e) => {
-    e.preventDefault();
     touchTracker.track(e);
     isDragging = false;
 
     // Add pressed state (steady glow)
     button.classList.add('pressed');
 
-    // Small delay before scrolling to allow drag detection
-    scrollTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollDownOnePage(container);
-      }
-    }, INITIAL_SCROLL_DELAY);
-
-    // If still held after delay, scroll to bottom
+    // If held after delay, scroll to bottom
     holdTimer = setTimeout(() => {
       if (!isDragging) {
         scrollToBottomSmooth(container);
       }
     }, SCROLL_TO_BOTTOM_DELAY);
-  });
+  }, { passive: true });
 
-  // Touch move - cancel all actions if dragging
+  // Touch move - detect dragging
   button.addEventListener('touchmove', (e) => {
     // Check if user is dragging (not just a tap)
     if (!touchTracker.isTap(e)) {
       isDragging = true;
 
-      // Cancel both scroll timers
-      if (scrollTimer) {
-        clearTimeout(scrollTimer);
-        scrollTimer = null;
-      }
+      // Cancel hold timer
       if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
@@ -81,7 +68,14 @@ export function initScrollDownButton() {
   }, { passive: true });
 
   button.addEventListener('touchend', (e) => {
-    e.preventDefault();
+    // Only trigger button action if it was a tap (not a drag)
+    const wasTap = !isDragging && touchTracker.isTap(e);
+
+    if (wasTap) {
+      // Prevent default only if we're handling it as a button tap
+      e.preventDefault();
+      scrollDownOnePage(container);
+    }
 
     // Remove focus to prevent hover state from sticking
     button.blur();
@@ -93,9 +87,7 @@ export function initScrollDownButton() {
     button.style.transition = '';
 
     // Cancel all timers
-    clearTimeout(scrollTimer);
     clearTimeout(holdTimer);
-    scrollTimer = null;
     holdTimer = null;
     isDragging = false;
 
