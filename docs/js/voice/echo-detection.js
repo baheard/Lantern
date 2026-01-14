@@ -58,16 +58,23 @@ export function isEchoOfSpokenText(transcript) {
       return true;
     }
 
-    // Check word overlap for phrases (3+ words)
+    // Check word overlap for phrases (more aggressive matching)
     const transcriptWords = normalizedTranscript.split(/\s+/).filter(w => w.length > 2);
     const chunkWords = normalizedChunk.split(/\s+/).filter(w => w.length > 2);
 
-    if (transcriptWords.length >= 2 && chunkWords.length >= 3) {
+    // If transcript has 2+ words and chunk has any words, check overlap
+    if (transcriptWords.length >= 2 && chunkWords.length >= 2) {
       const commonWords = transcriptWords.filter(w => chunkWords.includes(w));
       const wordOverlap = commonWords.length / transcriptWords.length;
-      if (wordOverlap >= 0.5) {
+      // Lowered threshold from 0.5 to 0.4 to catch more echoes
+      if (wordOverlap >= 0.4) {
         return true;
       }
+    }
+
+    // Also check if transcript is a single significant word from the chunk
+    if (transcriptWords.length === 1 && chunkWords.includes(transcriptWords[0]) && transcriptWords[0].length >= 4) {
+      return true;
     }
   }
 
