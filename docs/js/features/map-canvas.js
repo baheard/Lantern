@@ -175,7 +175,9 @@ function createMapUI() {
       </div>
     </div>
   `;
-  document.body.appendChild(cont);
+  // Append to .container instead of body so it doesn't cover controls
+  const gameContainer = document.querySelector('.container');
+  gameContainer.appendChild(cont);
   setContainer(cont);
 
   const canvasEl = document.getElementById('mapCanvas');
@@ -262,24 +264,63 @@ function setupEventListeners() {
   window.addEventListener('resize', resizeCanvas);
   document.addEventListener('keydown', handleKeyDown);
 
+  // Visual viewport resize (keyboard open/close detection)
+  if (window.visualViewport) {
+    let lastHeight = window.visualViewport.height;
+    let recenterTimer = null;
+    window.visualViewport.addEventListener('resize', () => {
+      const currentHeight = window.visualViewport.height;
+      // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
+      if (isVisible && Math.abs(currentHeight - lastHeight) > 100) {
+        // Delay recentering to wait for keyboard animation and scroll settling (150-200ms)
+        clearTimeout(recenterTimer);
+        recenterTimer = setTimeout(() => {
+          centerOnCurrentLocation();
+        }, 200);
+      }
+      lastHeight = currentHeight;
+    });
+  }
+
   // Sheet drag-to-dismiss
   setupSheetDragHandlers();
 
   // Resize handle - store for cleanup
   resizeState = setupResizeHandle();
 
-  // Backdrop click handler - close map when clicking outside panel
+  // Prevent map panel from stealing focus from input (keeps keyboard open)
+  const panel = container.querySelector('.map-panel');
+  const preventFocusSteal = (e) => {
+    // Allow interactive elements to function normally
+    if (e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.tagName === 'SELECT' ||
+        e.target.tagName === 'BUTTON' ||
+        e.target.closest('button')) {
+      return;
+    }
+    // Don't interfere with canvas interactions (has its own touch handlers)
+    if (e.target.tagName === 'CANVAS') {
+      return;
+    }
+    // Prevent everything else from stealing focus
+    e.preventDefault();
+  };
+  panel.addEventListener('mousedown', preventFocusSteal);
+  panel.addEventListener('touchstart', preventFocusSteal, { passive: false });
+
+  // Backdrop click handler - close map when clicking outside the panel
   container.addEventListener('click', (e) => {
     // Don't close if we just finished resizing
     if (resizeState && (resizeState.isResizing() || resizeState.wasResizing())) {
       return;
     }
-    // Close if clicking outside the panel (on backdrop area)
-    const panel = container.querySelector('.map-panel');
+
     const nodeSheet = document.getElementById('nodeEditSheet');
     const nodeBackdrop = document.getElementById('nodeEditBackdrop');
 
-    // Don't close if clicking inside the panel, node sheet, or node sheet backdrop
+    // Close if clicking outside the panel (on the backdrop area)
+    // Don't close if clicking on node sheet or its backdrop
     if (!panel.contains(e.target) &&
         !nodeSheet?.contains(e.target) &&
         !nodeBackdrop?.contains(e.target)) {
@@ -294,11 +335,11 @@ function setupEventListeners() {
 
 // Resize configuration constants
 const RESIZE_CONFIG = {
-  MIN_LEFT_PERCENT: 5,        // Minimum 5% from left edge (desktop)
-  MIN_LEFT_PERCENT_MOBILE: 15, // Minimum 15% from left edge (mobile, easier to close)
-  MAX_LEFT_PERCENT: 80,       // Maximum 80% from left edge (20% min panel width)
-  MOBILE_BREAKPOINT: 768,     // Screens below this use mobile constraints
-  RESIZE_DEBOUNCE_MS: 100     // Debounce for wasResizing flag
+  MIN_LEFT_PERCENT: 0,         // Minimum 0% from left edge - can resize to full width
+  MIN_LEFT_PERCENT_MOBILE: 10, // Minimum 10% from left edge (mobile, easier to tap backdrop)
+  MAX_LEFT_PERCENT: 80,        // Maximum 80% from left edge (20% min panel width)
+  MOBILE_BREAKPOINT: 768,      // Screens below this use mobile constraints
+  RESIZE_DEBOUNCE_MS: 100      // Debounce for wasResizing flag
 };
 
 // Helper: Get clientX from mouse or touch event
@@ -577,6 +618,12 @@ function handleLocationChange(e) {
       mapState.selectedNode = locationName;
       mapState.currentNodeId = locationName;
     }
+
+    // If map is visible, center on the current location
+    if (isVisible) {
+      centerOnCurrentLocation();
+    }
+
     render();
     saveMapForGame();
     return;
@@ -625,6 +672,12 @@ function handleLocationChange(e) {
   mapState.currentNodeId = locationName;  // New node is the current location
   updateNodeCount();
   checkMapLimits();  // Check if approaching limits
+
+  // If map is visible, center on the new location
+  if (isVisible) {
+    centerOnCurrentLocation();
+  }
+
   render();
   saveMapForGame();
 }
@@ -903,18 +956,33 @@ function showToast(message, id, persistent = false, index = null) {
 
   const toast = document.createElement('div');
   toast.className = 'map-toast';
-  toast.innerHTML = `
-    ${index ? `<div class="toast-index">${index}</div>` : ''}
-    <div class="toast-content">${message}</div>
-    <div class="toast-buttons">
-      ${isOnboardingToast ? `<button class="toast-cancel" aria-label="Cancel tutorial">
-        <span class="material-icons">close</span>
-      </button>` : ''}
-      <button class="toast-dismiss" aria-label="${isLastToast ? 'Dismiss' : 'Next'}">
-        <span class="material-icons">${isLastToast ? 'close' : 'chevron_right'}</span>
-      </button>
-    </div>
-  `;
+
+  // Build toast structure based on whether it has an index
+  if (index) {
+    toast.innerHTML = `
+      <div class="toast-header">
+        <div class="toast-index">${index}</div>
+        <div class="toast-buttons">
+          <button class="toast-dismiss" aria-label="${isLastToast ? 'Dismiss' : 'Next'}">
+            <span class="material-icons">${isLastToast ? 'close' : 'chevron_right'}</span>
+          </button>
+          ${!isLastToast ? `<button class="toast-cancel" aria-label="Cancel tutorial">
+            <span class="material-icons">close</span>
+          </button>` : ''}
+        </div>
+      </div>
+      <div class="toast-content">${message}</div>
+    `;
+  } else {
+    toast.innerHTML = `
+      <div class="toast-buttons">
+        <button class="toast-dismiss" aria-label="Dismiss">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="toast-content">${message}</div>
+    `;
+  }
 
   const dismissBtn = toast.querySelector('.toast-dismiss');
   dismissBtn.addEventListener('click', () => {
@@ -922,8 +990,8 @@ function showToast(message, id, persistent = false, index = null) {
     hideToast(toast);
   });
 
-  // Add cancel button handler for onboarding toasts
-  if (isOnboardingToast) {
+  // Add cancel button handler for onboarding toasts (not shown on last toast)
+  if (isOnboardingToast && !isLastToast) {
     const cancelBtn = toast.querySelector('.toast-cancel');
     cancelBtn.addEventListener('click', () => {
       cancelOnboarding(toast);
@@ -1157,6 +1225,12 @@ export function showMap() {
   document.getElementById('mapAutoToggle').classList.toggle('active', mapState.autoMapEnabled);
   timers.fabVisible = true; timers.isInteracting = false;
   domRefs.fabContainer?.classList.remove('fab-hidden');
+
+  // Re-setup resize handle if it was cleaned up
+  if (!resizeState) {
+    resizeState = setupResizeHandle();
+  }
+
   resizeCanvas(); updateNodeCount(); centerOnCurrentLocation();
   showOnboardingOrHint();
 }
@@ -1215,8 +1289,39 @@ export function centerOnCurrentLocation() {
   let target = currentName ? mapState.nodes.get(currentName) : null;
   if (!target && mapState.nodes.size > 0) target = mapState.nodes.values().next().value;
   if (target) {
-    mapState.viewport.x = -target.x * mapState.viewport.scale;
-    mapState.viewport.y = -target.y * mapState.viewport.scale;
+    const canvasHeight = canvas.height / window.devicePixelRatio;
+
+    // Use visual viewport to account for keyboard
+    if (window.visualViewport) {
+      const vv = window.visualViewport;
+      const canvasRect = canvas.getBoundingClientRect();
+
+      // Calculate visible portion of canvas in viewport coordinates
+      const visibleTop = Math.max(0, canvasRect.top);
+      const visibleBottom = Math.min(canvasRect.bottom, vv.height);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+      // Target screen Y position (center of visible area, with upward bias) in viewport coordinates
+      // Use 40% from top instead of 50% to account for controls at bottom
+      const targetScreenY = visibleTop + visibleHeight * 0.4;
+
+      // Convert to canvas-relative coordinates
+      const targetCanvasY = targetScreenY - canvasRect.top;
+
+      // The render translates by (height/2 + viewport.y), so node appears at:
+      // canvasY = node.y * scale + height/2 + viewport.y
+      // We want: canvasY = targetCanvasY
+      // So: viewport.y = targetCanvasY - height/2 - node.y * scale
+      const verticalOffset = targetCanvasY - canvasHeight / 2;
+
+      mapState.viewport.x = -target.x * mapState.viewport.scale;
+      mapState.viewport.y = -target.y * mapState.viewport.scale + verticalOffset;
+    } else {
+      // No visual viewport API - just center normally
+      mapState.viewport.x = -target.x * mapState.viewport.scale;
+      mapState.viewport.y = -target.y * mapState.viewport.scale;
+    }
+
     mapState.selectedNode = target.id;
     render();
   }
