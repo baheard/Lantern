@@ -6,6 +6,19 @@
   box-sizing: border-box;
 }
 
+/* Prevent double-tap zoom on all interactive elements */
+button,
+a,
+input,
+select,
+textarea,
+label,
+[role="button"],
+[onclick],
+[tabindex] {
+  touch-action: manipulation;
+}
+
 /* Global scrollbar styling - applies to all scrollable elements */
 *::-webkit-scrollbar {
   width: 8px;
@@ -211,7 +224,7 @@ body {
   display: flex;
   justify-content: center;
   padding-top: env(safe-area-inset-top);
-  position: relative; /* For absolute positioning of scroll-down button */
+  position: relative; /* For absolute positioning of scroll-down button and map overlay */
 }
 
 /* When game is showing, container should not scroll - let game-output handle it */
@@ -455,10 +468,10 @@ body {
   position: fixed;
   top: 20px;
   left: 50%;
-  transform: translateX(-50%) translateY(-100px);
+  transform: translateX(-50%) translateY(-80px);
   z-index: 10002;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s ease, opacity 0.3s ease;
   pointer-events: none;
 }
 
@@ -469,62 +482,23 @@ body {
 }
 
 .update-content {
-  background: linear-gradient(135deg, #2d5f8d 0%, #3a7ca8 100%);
-  border: 2px solid rgba(139, 157, 195, 0.4);
-  border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-    0 20px 60px rgba(45, 95, 141, 0.3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-left: 3px solid var(--accent-warm);
+  border-radius: 8px;
+  padding: 14px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-width: 320px;
-  max-width: 480px;
-  backdrop-filter: blur(10px);
-  animation: update-glow 3s ease-in-out infinite;
-}
-
-@keyframes update-glow {
-  0%, 100% {
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-      0 20px 60px rgba(45, 95, 141, 0.3);
-  }
-  50% {
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-      0 20px 60px rgba(45, 95, 141, 0.5),
-      0 0 40px rgba(139, 157, 195, 0.3);
-  }
+  gap: 14px;
+  min-width: 360px;
+  max-width: 420px;
 }
 
 .update-icon {
-  font-size: 32px;
+  font-size: 24px;
   flex-shrink: 0;
-  animation: update-sparkle 2s ease-in-out infinite;
-}
-
-@keyframes update-sparkle {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-  25% {
-    transform: scale(1.1) rotate(-10deg);
-    filter: brightness(1.3);
-  }
-  50% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-  75% {
-    transform: scale(1.1) rotate(10deg);
-    filter: brightness(1.3);
-  }
+  color: var(--accent-warm);
 }
 
 .update-text {
@@ -533,74 +507,69 @@ body {
 }
 
 .update-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 4px;
-  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 3px;
 }
 
 .update-description {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .update-button {
-  background: rgba(255, 255, 255, 0.95);
-  color: #2d5f8d;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-size: 14px;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
 .update-button:hover {
-  background: #ffffff;
+  background: #d4b36a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .update-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .update-dismiss {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.15s ease;
+  color: var(--text-muted);
   padding: 0;
   flex-shrink: 0;
 }
 
 .update-dismiss:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
 }
 
 .update-dismiss:active {
-  background: rgba(255, 255, 255, 0.2);
   transform: scale(0.95);
 }
 
 .update-dismiss .material-icons {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 /* Mobile responsiveness */
@@ -609,7 +578,7 @@ body {
     top: 10px;
     left: 10px;
     right: 10px;
-    transform: translateX(0) translateY(-100px);
+    transform: translateX(0) translateY(-80px);
   }
 
   .update-notification.visible {
@@ -619,16 +588,16 @@ body {
   .update-content {
     min-width: 0;
     max-width: none;
-    padding: 16px 20px;
+    padding: 12px 16px;
     gap: 12px;
   }
 
   .update-icon {
-    font-size: 28px;
+    font-size: 22px;
   }
 
   .update-title {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .update-description {
@@ -636,7 +605,7 @@ body {
   }
 
   .update-button {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 7px 14px;
+    font-size: 12px;
   }
 }
