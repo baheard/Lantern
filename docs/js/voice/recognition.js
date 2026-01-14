@@ -428,7 +428,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
         const capturedTranscript = interimTranscript;
 
         // Start new timeout to wait for potential continuation
-        state.interimCommandTimeout = setTimeout(() => {
+        state.interimCommandTimeout = setTimeout(async () => {
           state.interimCommandTimeout = null;
 
           // Timeout expired - process the command now
