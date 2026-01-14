@@ -289,8 +289,8 @@ function updateFadeState(button, container) {
   const scrollHeight = container.scrollHeight;
   const clientHeight = container.clientHeight;
 
-  // Check if we're at or near the bottom (within 50px threshold)
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
+  // Check if we're at or near the bottom (within 200px threshold)
+  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 200;
 
   if (isAtBottom) {
     button.classList.add('faded');

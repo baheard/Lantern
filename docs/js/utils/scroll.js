@@ -65,10 +65,12 @@ export function scrollToNewContent(newElement, container) {
   // Smart keyboard blur: If new content won't fit in visible viewport, blur keyboard first
   // This gives more screen space and prevents text from going off-screen
   // BUT: Never close keyboard when map is open - user needs it for navigation
+  // ALSO: Respect user preference to keep keyboard open
   const mapOverlay = document.getElementById('mapCanvasOverlay');
   const isMapOpen = mapOverlay && mapOverlay.classList.contains('visible');
+  const keepKeyboardOpen = localStorage.getItem('iftalk_keep_keyboard_open') === 'true';
 
-  if (vv && vv.height < window.innerHeight && !isMapOpen) {
+  if (vv && vv.height < window.innerHeight && !isMapOpen && !keepKeyboardOpen) {
     // Keyboard is open (visual viewport is smaller than window)
     const newContentHeight = newElementRect.height;
     const availableHeight = visibleHeight - 100; // Reserve space for controls/margins

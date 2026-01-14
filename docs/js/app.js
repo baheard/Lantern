@@ -72,19 +72,18 @@ if ('serviceWorker' in navigator) {
       existing.remove();
     }
 
-    // Create beautiful update notification
+    // Create subdued update notification
     const notification = document.createElement('div');
     notification.id = 'updateNotification';
     notification.className = 'update-notification';
     notification.innerHTML = `
       <div class="update-content">
-        <div class="update-icon">✨</div>
         <div class="update-text">
-          <div class="update-title">Update Available</div>
-          <div class="update-description">A new version of IFTalk is ready</div>
+          <div class="update-title">Update available</div>
+          <div class="update-description">Refresh to get the latest version</div>
         </div>
         <button class="update-button" id="updateButton">
-          Update Now
+          Refresh
         </button>
         <button class="update-dismiss" id="updateDismiss">
           <span class="material-icons">close</span>
@@ -914,6 +913,18 @@ async function initApp() {
           }
         }
       }
+    });
+  }
+
+  // Initialize keep keyboard open toggle (mobile only)
+  const keepKeyboardOpenToggle = document.getElementById('keepKeyboardOpenToggle');
+  if (keepKeyboardOpenToggle) {
+    const saved = localStorage.getItem('iftalk_keep_keyboard_open');
+    keepKeyboardOpenToggle.checked = saved === 'true'; // default disabled
+
+    keepKeyboardOpenToggle.addEventListener('change', (e) => {
+      localStorage.setItem('iftalk_keep_keyboard_open', e.target.checked.toString());
+      updateStatus(`Keyboard ${e.target.checked ? 'will stay open' : 'will auto-close'}`);
     });
   }
 
