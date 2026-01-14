@@ -122,7 +122,7 @@ if (typeof window !== 'undefined') {
 export const constants = {
   SOUND_THRESHOLD: 60,
   SILENCE_DELAY: 800,
-  ECHO_CHUNK_RETENTION_MS: 4000,  // 4 seconds - catch TTS echoes that mic picks up
+  ECHO_CHUNK_RETENTION_MS: 3000,  // 3 seconds - catch TTS echoes that mic picks up
   ECHO_SIMILARITY_THRESHOLD: 0.4,  // More aggressive matching to catch variations
   VOICE_CONFIDENCE_THRESHOLD: 0.5
 };
