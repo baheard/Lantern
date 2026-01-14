@@ -513,8 +513,8 @@ body {
 }
 
 .update-button {
-  background: var(--accent-primary);
-  color: white;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   border: none;
   border-radius: 6px;
   padding: 7px 14px;
@@ -527,7 +527,7 @@ body {
 }
 
 .update-button:hover {
-  background: var(--accent-hover);
+  background: #d4b36a;
   transform: translateY(-1px);
 }
 
