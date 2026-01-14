@@ -2,9 +2,9 @@
  * Scroll Down Button Module
  *
  * Provides a floating button on mobile to scroll down through game content.
- * - Touch down: immediately scroll down one page
- * - Hold: smoothly scroll to bottom
- * - Release: stop scrolling
+ * - Tap: scroll down one page (with 50ms delay for drag detection)
+ * - Hold: scroll one page, then smoothly scroll to bottom
+ * - Drag: ignore tap and long press (cancel all scroll actions)
  * - Fades when at bottom of content
  */
 
@@ -12,6 +12,9 @@ import { getScrollContainer } from '../utils/scroll.js';
 import { createTouchTracker } from '../utils/touch-detection.js';
 
 let holdTimer = null;
+let scrollTimer = null;
+let isDragging = false;
+const INITIAL_SCROLL_DELAY = 50; // ms - small delay to detect drag before scrolling
 const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
@@ -32,21 +35,55 @@ export function initScrollDownButton() {
   button.addEventListener('touchstart', (e) => {
     e.preventDefault();
     touchTracker.track(e);
+    isDragging = false;
 
     // Add pressed state (steady glow)
     button.classList.add('pressed');
 
-    // Start scrolling one page immediately
-    scrollDownOnePage(container);
+    // Small delay before scrolling to allow drag detection
+    scrollTimer = setTimeout(() => {
+      if (!isDragging) {
+        scrollDownOnePage(container);
+      }
+    }, INITIAL_SCROLL_DELAY);
 
-    // If still held after 3/4 of scroll animation, scroll to bottom
+    // If still held after delay, scroll to bottom
     holdTimer = setTimeout(() => {
-      scrollToBottomSmooth(container);
+      if (!isDragging) {
+        scrollToBottomSmooth(container);
+      }
     }, SCROLL_TO_BOTTOM_DELAY);
   });
 
+  // Touch move - cancel all actions if dragging
+  button.addEventListener('touchmove', (e) => {
+    // Check if user is dragging (not just a tap)
+    if (!touchTracker.isTap(e)) {
+      isDragging = true;
+
+      // Cancel both scroll timers
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+        scrollTimer = null;
+      }
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+
+      // Remove pressed state
+      button.style.transition = 'none';
+      button.classList.remove('pressed');
+      void button.offsetHeight; // Force reflow
+      button.style.transition = '';
+    }
+  }, { passive: true });
+
   button.addEventListener('touchend', (e) => {
     e.preventDefault();
+
+    // Remove focus to prevent hover state from sticking
+    button.blur();
 
     // Remove pressed state instantly (no transition)
     button.style.transition = 'none';
@@ -54,22 +91,33 @@ export function initScrollDownButton() {
     void button.offsetHeight; // Force reflow
     button.style.transition = '';
 
-    // Cancel scroll-to-bottom if still pending
+    // Cancel all timers
+    clearTimeout(scrollTimer);
     clearTimeout(holdTimer);
+    scrollTimer = null;
     holdTimer = null;
+    isDragging = false;
 
     touchTracker.reset();
   });
 
   button.addEventListener('touchcancel', () => {
+    // Remove focus to prevent hover state from sticking
+    button.blur();
+
     // Remove pressed state instantly (no transition)
     button.style.transition = 'none';
     button.classList.remove('pressed');
     void button.offsetHeight; // Force reflow
     button.style.transition = '';
 
+    // Cancel all timers
+    clearTimeout(scrollTimer);
     clearTimeout(holdTimer);
+    scrollTimer = null;
     holdTimer = null;
+    isDragging = false;
+
     touchTracker.reset();
   });
 
@@ -80,17 +128,48 @@ export function initScrollDownButton() {
 
     e.preventDefault();
     touchTracker.track(e);
+    isDragging = false;
 
     // Add pressed state (steady glow)
     button.classList.add('pressed');
 
-    // Start scrolling one page immediately
-    scrollDownOnePage(container);
+    // Small delay before scrolling to allow drag detection
+    scrollTimer = setTimeout(() => {
+      if (!isDragging) {
+        scrollDownOnePage(container);
+      }
+    }, INITIAL_SCROLL_DELAY);
 
-    // If still held after 3/4 of scroll animation, scroll to bottom
+    // If still held after delay, scroll to bottom
     holdTimer = setTimeout(() => {
-      scrollToBottomSmooth(container);
+      if (!isDragging) {
+        scrollToBottomSmooth(container);
+      }
     }, SCROLL_TO_BOTTOM_DELAY);
+  });
+
+  // Mouse move - cancel all actions if dragging
+  button.addEventListener('mousemove', (e) => {
+    // Check if user is dragging (not just a click)
+    if (!touchTracker.isTap(e)) {
+      isDragging = true;
+
+      // Cancel both scroll timers
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+        scrollTimer = null;
+      }
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+
+      // Remove pressed state
+      button.style.transition = 'none';
+      button.classList.remove('pressed');
+      void button.offsetHeight; // Force reflow
+      button.style.transition = '';
+    }
   });
 
   button.addEventListener('mouseup', (e) => {
@@ -99,28 +178,42 @@ export function initScrollDownButton() {
 
     e.preventDefault();
 
+    // Remove focus to prevent hover state from sticking
+    button.blur();
+
     // Remove pressed state instantly (no transition)
     button.style.transition = 'none';
     button.classList.remove('pressed');
     void button.offsetHeight; // Force reflow
     button.style.transition = '';
 
-    // Cancel scroll-to-bottom if still pending
+    // Cancel all timers
+    clearTimeout(scrollTimer);
     clearTimeout(holdTimer);
+    scrollTimer = null;
     holdTimer = null;
+    isDragging = false;
 
     touchTracker.reset();
   });
 
   button.addEventListener('mouseleave', () => {
+    // Remove focus to prevent hover state from sticking
+    button.blur();
+
     // Remove pressed state instantly if mouse leaves while pressed
     button.style.transition = 'none';
     button.classList.remove('pressed');
     void button.offsetHeight; // Force reflow
     button.style.transition = '';
 
+    // Cancel all timers
+    clearTimeout(scrollTimer);
     clearTimeout(holdTimer);
+    scrollTimer = null;
     holdTimer = null;
+    isDragging = false;
+
     touchTracker.reset();
   });
 

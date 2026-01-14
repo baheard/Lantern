@@ -33,6 +33,12 @@ export function setHandlerCallbacks(cbs) {
 
 export function handlePointerDown(e) {
   if (e.button !== 0) return;
+
+  // Prevent focus steal and keyboard dismissal (only for real pointer events)
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
   mapState.currentPointer = { x, y };
@@ -120,6 +126,7 @@ export function handlePointerUp(e) {
         oldY: touchState.nodeStartPos.y,
         wasEdited: touchState.nodeStartPos.wasEdited
       });
+      mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       callbacks.saveMapForGame();
     } else if (Date.now() - touchState.touchStartTime < 250) {
       // Tapped on a node - open the sheet

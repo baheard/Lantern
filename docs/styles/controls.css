@@ -386,7 +386,7 @@
   border: 1px solid var(--accent-primary);
   border-radius: 12px;
   background: rgba(45, 212, 191, 0.08);
-  height: 41px;
+  height: 45px;
 }
 
 .voice-listening-indicator.hidden {

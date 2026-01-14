@@ -15,6 +15,12 @@ export function getPronunciationMap() {
   return getJSON('pronunciationMap', {
     'Anchorhead': 'Anchor-head',
     'ANCHORHEAD': 'ANCHOR-HEAD',
+    'resume': 'reh-zoom',
+    'Resume': 'Reh-zoom',
+    'RESUME': 'REH-ZOOM',
+    'nome': 'gnome',
+    'Nome': 'Gnome',
+    'NOME': 'GNOME',
   });
 }
 

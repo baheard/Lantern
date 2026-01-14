@@ -73,8 +73,16 @@ function limitHTMLHistory(html, maxTurns = 100) {
         return html;
     }
 
-    // Keep only the most recent maxChars
-    return html.substring(html.length - maxChars);
+    // Keep only the most recent maxChars, but don't cut in the middle of an HTML tag
+    let truncated = html.substring(html.length - maxChars);
+
+    // Find the first complete opening tag to avoid partial tags at the start
+    const firstTagStart = truncated.indexOf('<');
+    if (firstTagStart > 0) {
+        truncated = truncated.substring(firstTagStart);
+    }
+
+    return truncated;
 }
 
 // ============================================================================

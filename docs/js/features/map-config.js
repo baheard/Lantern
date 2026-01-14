@@ -95,7 +95,7 @@ export const mapState = {
   viewport: { x: 0, y: 0, scale: 1 },
   selectedNode: null,
   currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
-  autoMapEnabled: false,  // Disabled by default - user can enable via onboarding
+  autoMapEnabled: true,  // Enabled by default - user can disable if needed
   undoStack: [],  // Stack of undo actions
   hasUnsavedChanges: false,  // Track if map has user changes since last game save
   // Interaction state

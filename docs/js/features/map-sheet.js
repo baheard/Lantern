@@ -289,7 +289,11 @@ function populateConnectionsList(node) {
   }).join('');
 
   // Delete handlers
-  list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', () => { deleteEdge(btn.dataset.edge); populateConnectionsList(node); }));
+  list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent click from bubbling up to map container
+    deleteEdge(btn.dataset.edge);
+    populateConnectionsList(node);
+  }));
 
   // Type change handlers
   list.querySelectorAll('.connection-type-picker').forEach(sel => sel.addEventListener('change', (e) => {
@@ -298,6 +302,7 @@ function populateConnectionsList(node) {
       edge.connectionType = e.target.value;
       edge.isEdited = true;
       mapState.protectedEdges.add(e.target.dataset.edge);
+      mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       render();
       callbacks.saveMapForGame();
     }
@@ -327,6 +332,7 @@ export function handleNodeNameChange(e) {
   if (!node) return;
   node.name = e.target.value; node.isEdited = true;
   mapState.protectedNodes.add(node.id);
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   document.getElementById('sheetNodeName').textContent = e.target.value || 'Edit Location';
   document.getElementById('sheetNodeBadge').textContent = 'Your edit';
   document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
@@ -335,7 +341,12 @@ export function handleNodeNameChange(e) {
 
 export function handleNodeNotesChange(e) {
   const node = mapState.nodes.get(mapState.selectedNode);
-  if (node) { node.notes = e.target.value; node.isEdited = true; mapState.protectedNodes.add(node.id); }
+  if (node) {
+    node.notes = e.target.value;
+    node.isEdited = true;
+    mapState.protectedNodes.add(node.id);
+    mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
+  }
 }
 
 export function handleNodeTypeChange(type) {
@@ -343,6 +354,7 @@ export function handleNodeTypeChange(type) {
   if (!node) return;
   node.type = type; node.isEdited = true;
   mapState.protectedNodes.add(node.id);
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   document.querySelectorAll('#nodeTypePicker .type-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.type === type);
     btn.setAttribute('aria-checked', btn.dataset.type === type);
@@ -359,6 +371,7 @@ export function handleNodeSmallToggle() {
   node.isSmall = !node.isSmall;
   node.isEdited = true;
   mapState.protectedNodes.add(node.id);
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   const smallToggle = document.getElementById('nodeSmallToggle');
   smallToggle.classList.toggle('active', node.isSmall);
   smallToggle.setAttribute('aria-checked', node.isSmall);
@@ -393,9 +406,11 @@ export function handleNodeDelete() {
   mapState.nodes.delete(nodeId);
   mapState.deletedNodes.add(nodeId);
   mapState.selectedNode = null;
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   closeNodeSheet();
   render();
   callbacks.showHint(`Deleted "${node?.name}"`);
+  callbacks.saveMapForGame();
 }
 
 // ============================================================================
@@ -407,6 +422,7 @@ export function createManualEdge(fromId, toId) {
   if (mapState.edges.has(key)) { callbacks.showHint('Connection already exists'); return; }
   mapState.edges.set(key, { from: fromId, to: toId, command: '', isManual: true, isEdited: false });
   mapState.protectedEdges.add(key);
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   callbacks.showHint(`Connected "${mapState.nodes.get(fromId)?.name}" to "${mapState.nodes.get(toId)?.name}"`);
   render(); callbacks.saveMapForGame();
 }
@@ -423,6 +439,7 @@ export function deleteEdge(key) {
   }
   mapState.edges.delete(key);
   mapState.deletedEdges.add(key);
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
   callbacks.saveMapForGame(); render();
   callbacks.showHint('Connection removed');
 }
@@ -498,6 +515,7 @@ export function handleNodeMerge() {
 
   // Select the original node
   mapState.selectedNode = originalId;
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
 
   closeNodeSheet();
   render();  // Force re-render to show merged state
@@ -548,6 +566,7 @@ function promoteToPrimary(node) {
   }
 
   mapState.selectedNode = newId;
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
 
   closeNodeSheet();
   callbacks.showHint(`"${node.name}" is now the primary location`);
@@ -586,6 +605,8 @@ export function handleNodeNotDuplicate() {
       delete originalNode.duplicateGroup;
     }
   }
+
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
 
   closeNodeSheet();
   callbacks.showHint(`"${node.name}" marked as separate location`);
@@ -645,6 +666,7 @@ export function performManualMerge(sourceId, targetId) {
 
   // Select the target node
   mapState.selectedNode = targetId;
+  mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
 
   render();
   callbacks.showHint(`Merged "${sourceNode.name}" into "${targetNode.name}"`);

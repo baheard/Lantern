@@ -21,7 +21,7 @@
 
 /* Map Overlay - Slide from right with backdrop */
 .map-canvas-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -38,14 +38,14 @@
   visibility: visible;
 }
 
-/* Backdrop - left side, clickable to close */
+/* Backdrop - covers entire container, sits behind map panel */
 .map-canvas-overlay::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  bottom: 0;
   right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0);
   z-index: var(--z-map-backdrop);
   transition: background 0.3s ease;
@@ -62,7 +62,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  left: 5%; /* 5% gap from left edge */
+  left: 40%; /* Default 40% from left edge - balanced view of game + map */
   background: #0f172a;
   display: flex;
   flex-direction: column;
@@ -1180,7 +1180,7 @@ body.map-resizing .map-canvas-overlay * {
 /* Mobile Adjustments */
 @media (max-width: 380px) {
   .map-panel {
-    left: 5%; /* Keep 5% left gap even on small screens */
+    left: 10%; /* 10% left gap on small screens - easier to tap backdrop to close */
   }
 
   .map-toolbar {
@@ -1234,9 +1234,18 @@ body.map-resizing .map-canvas-overlay * {
   }
 }
 
-/* Tablet and larger - map panel uses full-screen layout with 5% left gap */
+/* Mobile - map takes up almost full screen by default */
+@media (max-width: 767px) {
+  .map-panel {
+    left: 5%; /* Nearly full-width on mobile - easier to focus on map */
+  }
+}
+
+/* Tablet and larger - map shows more of the game text */
 @media (min-width: 768px) {
-  /* No additional constraints needed - panel spans from left:5% to right:0 */
+  .map-panel {
+    left: 40%; /* Balanced view on larger screens */
+  }
 }
 
 /* Landscape mobile */
@@ -1287,7 +1296,7 @@ body.map-resizing .map-canvas-overlay * {
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  max-width: min(90%, 500px);
+  max-width: min(95%, 600px);
   z-index: 10000; /* Above everything */
   display: flex;
   flex-direction: column;
@@ -1297,9 +1306,9 @@ body.map-resizing .map-canvas-overlay * {
 
 .map-toast {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px 20px;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px 16px;
   background: rgba(15, 23, 42, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
@@ -1313,7 +1322,6 @@ body.map-resizing .map-canvas-overlay * {
   pointer-events: auto; /* Toast itself is clickable */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  position: relative;
 }
 
 .map-toast.toast-visible {
@@ -1321,21 +1329,26 @@ body.map-resizing .map-canvas-overlay * {
   transform: translateY(0);
 }
 
+.toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .toast-index {
-  position: absolute;
-  top: 8px;
-  left: 12px;
   font-size: 10px;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .toast-content {
   flex: 1;
   min-width: 0;
-  padding-top: 14px; /* Space for index */
 }
 
 .toast-content strong {
@@ -1348,8 +1361,9 @@ body.map-resizing .map-canvas-overlay * {
 .toast-buttons {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .toast-dismiss,
@@ -1436,16 +1450,20 @@ body.map-resizing .map-canvas-overlay * {
 @media (max-width: 480px) {
   .map-toast-container {
     top: 64px;
-    max-width: 95%;
+    max-width: 96%;
   }
 
   .map-toast {
-    padding: 14px 16px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 
+  .toast-header {
+    margin-bottom: 6px;
+  }
+
   .toast-content strong {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .toast-actions {

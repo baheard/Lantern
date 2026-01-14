@@ -590,15 +590,17 @@ function handleLocationChange(e) {
         Math.abs(expectedPos.y - existingNode.y) < 50;
 
       if (positionMatches) {
-        // Same room via different route - add edge
-        const edgeKey = `${previousLocationId}-${locationName}`;
-        if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
-          mapState.edges.set(edgeKey, {
-            from: previousLocationId, to: locationName,
-            command: command || '', connectionType: getConnectionTypeFromCommand(command),
-            isManual: false, isEdited: false
-          });
-          mapState.protectedEdges.add(edgeKey);
+        // Same room via different route - add edge (unless it's a "go to" command)
+        if (!isGoToCommand(command)) {
+          const edgeKey = `${previousLocationId}-${locationName}`;
+          if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
+            mapState.edges.set(edgeKey, {
+              from: previousLocationId, to: locationName,
+              command: command || '', connectionType: getConnectionTypeFromCommand(command),
+              isManual: false, isEdited: false
+            });
+            mapState.protectedEdges.add(edgeKey);
+          }
         }
         mapState.selectedNode = locationName;
         mapState.currentNodeId = locationName;
@@ -658,7 +660,8 @@ function handleLocationChange(e) {
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
-  if (previousLocationId && previousLocationId !== locationName) {
+  // Skip adding edge if it's a "go to" command (teleportation, not a physical connection)
+  if (previousLocationId && previousLocationId !== locationName && !isGoToCommand(command)) {
     const edgeKey = `${previousLocationId}-${locationName}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
@@ -793,11 +796,27 @@ function createDuplicateNode(locationName, originalNode, previousLocationId, com
   return duplicateId;
 }
 
+/**
+ * Check if command is a "go to" command (teleportation, not a physical connection)
+ * @param {string} command - Command to check
+ * @returns {boolean} True if this is a "go to" command
+ */
+function isGoToCommand(command) {
+  if (!command) return false;
+  const cmd = command.toLowerCase().trim();
+  // Match "go to <location>", "goto <location>", etc.
+  return /^go\s*to\s+/.test(cmd) || /^goto\s+/.test(cmd);
+}
+
 function getDirectionFromCommand(command) {
   if (!command) return null;
   const cmd = command.toLowerCase().trim();
   if (COMMAND_DIRECTIONS[cmd]) return COMMAND_DIRECTIONS[cmd];
-  if (cmd.startsWith('go ')) return COMMAND_DIRECTIONS[cmd.substring(3).trim()] || null;
+  if (cmd.startsWith('go ')) {
+    // Check if it's "go to" (not a direction)
+    if (isGoToCommand(cmd)) return null;
+    return COMMAND_DIRECTIONS[cmd.substring(3).trim()] || null;
+  }
   // Check if command starts with a direction word (e.g., "enter post office")
   const firstWord = cmd.split(/\s+/)[0];
   if (COMMAND_DIRECTIONS[firstWord]) return COMMAND_DIRECTIONS[firstWord];

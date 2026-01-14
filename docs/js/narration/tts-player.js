@@ -305,7 +305,6 @@ export async function speakTextChunked(text, startFromIndex = 0) {
 
     // Check narration state
     if (!state.narrationEnabled || state.isPaused || state.isNavigating) {
-      console.log('[NarrationLoop] Breaking at chunk', i, '- narrationEnabled:', state.narrationEnabled, 'isPaused:', state.isPaused, 'isNavigating:', state.isNavigating);
       // NOTE: Currently there is no "stop" command (only pause).
       // If stop is reimplemented, add: if (!state.isPaused) { removeHighlight(); }
       updateNavButtons();
@@ -335,7 +334,7 @@ export async function speakTextChunked(text, startFromIndex = 0) {
     if (endMarker && endMarker.dataset.glkClass) {
       const glkClass = endMarker.dataset.glkClass;
       if (glkClass === 'header' || glkClass === 'subheader') {
-        speedModifier = -0.2;  // Slower for headers and subheaders
+        speedModifier = -0.1;  // Slower for headers and subheaders
         pitchModifier = -0.1;  // Lower pitch for headers and subheaders
       } else if (glkClass === 'note') {
         speedModifier = 0.1;   // Faster for notes
@@ -374,7 +373,6 @@ export async function speakTextChunked(text, startFromIndex = 0) {
 
     // Check if we should still continue
     if (!state.narrationEnabled || state.isPaused || state.isNavigating) {
-      console.log('[NarrationLoop] Breaking after chunk', i, '- narrationEnabled:', state.narrationEnabled, 'isPaused:', state.isPaused, 'isNavigating:', state.isNavigating);
       // NOTE: Currently there is no "stop" command (only pause).
       // If stop is reimplemented, add: if (!state.isPaused) { removeHighlight(); }
       break;

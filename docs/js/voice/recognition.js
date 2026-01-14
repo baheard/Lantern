@@ -374,6 +374,13 @@ export function initVoiceRecognition(processVoiceKeywords) {
       // FIRST: Check for truly instant commands (no delay)
       if (INSTANT_NO_WAIT.includes(interimLower) && !state.hasProcessedResult) {
         state.hasProcessedResult = true; // Prevent duplicate processing
+
+        // Cancel any pending interim command timeout
+        if (state.interimCommandTimeout) {
+          clearTimeout(state.interimCommandTimeout);
+          state.interimCommandTimeout = null;
+        }
+
         state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
         // Process and send immediately with high confidence (0.95 = instant interim command)
@@ -711,30 +718,39 @@ export function initVoiceRecognition(processVoiceKeywords) {
       state.interimCommandTimeout = null;
     }
 
+    // Check if we're in push-to-talk mode and button was just released
+    // In this case, process interim text as a normal command (not low confidence)
+    const wasPushToTalkRelease = state.pushToTalkMode && !state.pushToTalkActive;
+
     // Process any pending instant command or interim transcript
     if (!state.hasProcessedResult && state.currentInterimTranscript) {
       const interimText = state.currentInterimTranscript;
       state.hasProcessedResult = true;
       state.currentInterimTranscript = '';
 
-      // Process and send with instant command confidence (0.95)
-      const processed = await processVoiceKeywords(interimText, 0.95);
+      // In push-to-talk mode, treat interim text as final result when button is released
+      // Otherwise, process with instant command confidence
+      const confidence = wasPushToTalkRelease ? 0.90 : 0.95;
+
+      // Process and send with appropriate confidence
+      const processed = await processVoiceKeywords(interimText, confidence);
       const isNavCommand = (processed === false);
 
       // Show as confirmed with confidence
-      showConfirmedTranscript(interimText, isNavCommand, 0.95);
+      showConfirmedTranscript(interimText, isNavCommand, confidence);
 
       if (processed !== false) {
         playCommandSent();
         const { sendCommandDirect } = await import('../game/commands/command-router.js');
-        sendCommandDirect(processed, true, 0.95);
+        sendCommandDirect(processed, true, confidence);
       } else {
         if (state.pendingCommandProcessed) {
           playAppCommand();
         }
       }
-    } else {
+    } else if (!wasPushToTalkRelease) {
       // No pending instant command - display any remaining interim text as low confidence
+      // BUT: Skip this in push-to-talk mode when button was released (already processed above)
       await displayInterimAsLowConfidence();
     }
 

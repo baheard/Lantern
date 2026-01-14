@@ -842,10 +842,10 @@ async function initApp() {
   const tapToExamineToggle = document.getElementById('tapToExamineToggle');
   if (tapToExamineToggle) {
     const saved = localStorage.getItem('iftalk_tap_to_examine');
-    tapToExamineToggle.checked = saved === 'true'; // default disabled
+    tapToExamineToggle.checked = saved !== 'false'; // default enabled
 
     // Set initial body class based on saved setting
-    if (saved === 'true') {
+    if (saved !== 'false') {
       document.body.classList.add('tap-to-examine-enabled');
     } else {
       document.body.classList.remove('tap-to-examine-enabled');
