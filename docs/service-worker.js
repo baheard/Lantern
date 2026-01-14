@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.46';
+const CACHE_VERSION = 'v1.5.47';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -176,15 +176,11 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] 🚀 Activating service worker', CACHE_VERSION);
-
   event.waitUntil(
     caches.keys().then(cacheNames => {
-      console.log('[SW] Current caches:', cacheNames);
       const cachesToDelete = cacheNames.filter(name => {
         return name.startsWith('iftalk-') && !Object.values(CACHE_NAMES).includes(name);
       });
-      console.log('[SW] Deleting old caches:', cachesToDelete);
 
       return Promise.all(
         cachesToDelete.map(name => {
@@ -192,14 +188,11 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Claiming all clients...');
       // Take control of all pages immediately
       return self.clients.claim();
     }).then(() => {
-      console.log('[SW] Getting all clients to notify...');
       // Notify all clients that a new version is active
       return self.clients.matchAll().then(clients => {
-        console.log('[SW] Notifying', clients.length, 'clients of new version');
         clients.forEach(client => {
           client.postMessage({
             type: 'NEW_VERSION_ACTIVATED',
@@ -208,16 +201,13 @@ self.addEventListener('activate', (event) => {
         });
       });
     }).then(() => {
-      console.log('[SW] ✅ Activation complete!');
     })
   );
 });
 
 // Listen for skip waiting message from clients
 self.addEventListener('message', (event) => {
-  console.log('[SW] 📨 Message received:', event.data);
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW] ⏭️ SKIP_WAITING requested, activating now...');
     self.skipWaiting();
   }
 });
@@ -274,7 +264,6 @@ self.addEventListener('fetch', (event) => {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAMES.core).then(cache => {
               cache.put(request, responseToCache);
-              console.log('[SW] 🔄 Updated cache for:', url.pathname);
             });
           }
           return networkResponse;
