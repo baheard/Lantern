@@ -168,7 +168,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // VOICE-SPECIFIC: Directional commands - Send arrow keys in char mode
+  // VOICE-SPECIFIC: Char mode key commands - Send special keys
   // Check if we're in char mode first
   const { getInputType } = await import('../game/voxglk.js');
   const inputType = getInputType();
@@ -176,6 +176,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   if (inputType === 'char') {
     const { sendInput } = await import('../game/voxglk.js');
 
+    // Arrow keys
     if (lower === 'up') {
       sendInput('up', 'char');
       return false;
@@ -190,6 +191,18 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     }
     if (lower === 'right') {
       sendInput('right', 'char');
+      return false;
+    }
+
+    // Space
+    if (lower === 'space' || lower === 'spacebar') {
+      sendInput(' ', 'char');
+      return false;
+    }
+
+    // Backspace/Delete
+    if (lower === 'backspace' || lower === 'back space') {
+      sendInput('delete', 'char');
       return false;
     }
   }

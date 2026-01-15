@@ -396,7 +396,16 @@ export function displayAppCommand(command, confidence = null) {
  * @param {string} command - The command text
  * @param {number|null} confidence - Voice recognition confidence
  */
-export function displayBlockedCommand(command, confidence = null) {
+export async function displayBlockedCommand(command, confidence = null) {
+  // In char mode (press any key screens), don't display blocked commands
+  // They're distracting and unnecessary since the screen content is static
+  const { getInputType } = await import('../game/voxglk.js');
+  const inputType = getInputType();
+
+  if (inputType === 'char') {
+    return; // Silently skip display in char mode
+  }
+
   const div = document.createElement('div');
   div.className = 'user-command blocked-command';
 

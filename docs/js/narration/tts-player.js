@@ -480,7 +480,7 @@ export function speakAppMessage(text) {
       utterance.voice = appVoice;
     }
 
-    utterance.rate = state.browserVoiceConfig?.rate || 1.1;  // App voice slightly faster
+    utterance.rate = (state.browserVoiceConfig?.rate || 1.0) + 0.1;  // App voice +0.1 faster than main
     utterance.pitch = 1.0;
     utterance.volume = (state.browserVoiceConfig?.volume ?? 1.0) * 0.8;  // Slightly quieter than narration
 
