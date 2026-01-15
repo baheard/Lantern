@@ -63,15 +63,15 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   }
 
   // Detect spelled-out words within the transcript (e.g., "N O R T H" -> "NORTH")
-  const words = transcript.split(/\s+/);
+  const transcriptWords = transcript.split(/\s+/);
   let modified = false;
 
-  for (let i = 0; i < words.length; i++) {
+  for (let i = 0; i < transcriptWords.length; i++) {
     let letterSequence = [];
     let startIndex = i;
 
-    while (i < words.length && words[i].length === 1 && /^[a-zA-Z]$/.test(words[i])) {
-      letterSequence.push(words[i]);
+    while (i < transcriptWords.length && transcriptWords[i].length === 1 && /^[a-zA-Z]$/.test(transcriptWords[i])) {
+      letterSequence.push(transcriptWords[i]);
       i++;
     }
 
@@ -83,7 +83,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
 
     if (letterSequence.length >= 3 || isTwoLetterDir) {
       const combinedWord = letterSequence.join('').toUpperCase();
-      words.splice(startIndex, letterSequence.length, combinedWord);
+      transcriptWords.splice(startIndex, letterSequence.length, combinedWord);
       modified = true;
 
       // Display "Spelled: X" message on screen and narrate if in play mode
@@ -108,7 +108,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
 
   // If we modified the transcript, rebuild it
   if (modified) {
-    transcript = words.join(' ');
+    transcript = transcriptWords.join(' ');
     lower = transcript.toLowerCase();
   }
 
