@@ -27,6 +27,7 @@ let charLeftBtnEl = null;
 let charDownBtnEl = null;
 let charRightBtnEl = null;
 let charEnterBtnEl = null;
+let charEscapeBtnEl = null;
 let charKeyboardBtnEl = null;
 let hiddenKeyInputEl = null;
 
@@ -62,6 +63,7 @@ export function initKeyboardInput() {
   charDownBtnEl = document.getElementById('charDownBtn');
   charRightBtnEl = document.getElementById('charRightBtn');
   charEnterBtnEl = document.getElementById('charEnterBtn');
+  charEscapeBtnEl = document.getElementById('charEscapeBtn');
   charKeyboardBtnEl = document.getElementById('charKeyboardBtn');
 
   // Create hidden input for arbitrary key capture (keyboard button)
@@ -245,6 +247,9 @@ export function initKeyboardInput() {
   }
   if (charEnterBtnEl) {
     charEnterBtnEl.addEventListener('click', () => sendInput('return', 'char'));
+  }
+  if (charEscapeBtnEl) {
+    charEscapeBtnEl.addEventListener('click', () => sendInput('escape', 'char'));
   }
 
   // Keyboard button: Focus hidden input to open mobile keyboard

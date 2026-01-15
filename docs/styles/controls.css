@@ -460,7 +460,7 @@
 .char-input-panel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px; /* Reduced from 8px to fit escape button */
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
