@@ -31,6 +31,22 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/\b(back|skip)\s+for\b/gi, '$1 four');
   lower = transcript.toLowerCase().trim();
 
+  // Pronunciation dictionary for common misrecognitions
+  // Only applies to single-word commands to avoid false positives
+  const PRONUNCIATION_DICT = {
+    'wet': 'west',
+    'with': 'west',
+    'so': 'south',
+    'self': 'south',
+  };
+
+  // Apply pronunciation corrections (only for single-word transcripts)
+  const words = transcript.trim().split(/\s+/);
+  if (words.length === 1 && PRONUNCIATION_DICT[lower]) {
+    transcript = PRONUNCIATION_DICT[lower];
+    lower = transcript;
+  }
+
   // If "back [word]" where word is NOT a number, strip the word and just use "back"
   // This prevents "back lamp" from being sent to the game as a command
   const backNonNumberMatch = transcript.match(/^back\s+(?!(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$)(.+)$/i);
