@@ -34,6 +34,7 @@ export function initScrollDownButton() {
   // Touch start - track position for swipe detection
   button.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     touchTracker.track(e);
     isDragging = false;
 
@@ -81,6 +82,7 @@ export function initScrollDownButton() {
 
   button.addEventListener('touchend', (e) => {
     e.preventDefault();
+    e.stopPropagation();
 
     // Remove focus to prevent hover state from sticking
     button.blur();
@@ -127,6 +129,7 @@ export function initScrollDownButton() {
     if (e.button !== 0) return;
 
     e.preventDefault();
+    e.stopPropagation();
     touchTracker.track(e);
     isDragging = false;
 
@@ -177,6 +180,7 @@ export function initScrollDownButton() {
     if (e.button !== 0) return;
 
     e.preventDefault();
+    e.stopPropagation();
 
     // Remove focus to prevent hover state from sticking
     button.blur();
