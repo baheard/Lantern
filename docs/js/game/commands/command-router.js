@@ -130,16 +130,40 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
 <br>
 These commands work whether typed or spoken:<br>
 <br>
-<b>Navigation:</b> PLAY, PAUSE, REPEAT, BACK, SKIP, SKIP ALL<br>
-<b>Save/Load:</b> SAVE [name], RESTORE [name], DELETE [name], QUICK SAVE, QUICK LOAD<br>
-<b>Audio:</b> MUTE, UNMUTE, STATUS, READ LAST COMMAND<br>
-<b>AI Hints:</b> GET HINT (ChatGPT), GET GEMINI HINT (UHS-style)<br>
-<b>Game:</b> QUIT - Auto-save and return to game selection<br>
-<b>Repair:</b> REPAIR - Fix broken game state (if not responding)<br>
-<b>Special:</b> PRINT [text] - Send literal text to game<br>
+<b>Narration Control:</b><br>
+• PLAY, PAUSE, REPEAT - Control TTS playback<br>
+• SKIP, BACK - Move forward/backward one sentence<br>
+• SKIP N, BACK N - Move N sentences (e.g., SKIP 3, BACK 2)<br>
+• SKIP ALL, END - Skip to end of current narration<br>
 <br>
-For game commands, type anything else.<br>
-See Settings panel for more help.
+<b>Save/Load:</b><br>
+• SAVE [name], RESTORE [name], DELETE [name]<br>
+• QUICK SAVE, QUICK LOAD - Use default autosave slot<br>
+<br>
+<b>Audio:</b><br>
+• MUTE, UNMUTE - Toggle voice recognition<br>
+• STATUS - Read current game status<br>
+• READ LAST COMMAND - Repeat last command output<br>
+<br>
+<b>AI Hints:</b><br>
+• GET HINT - ChatGPT assistance<br>
+• GET GEMINI HINT - UHS-style progressive hints<br>
+<br>
+<b>Char Mode Keys (menus/press any key screens):</b><br>
+• ENTER, ESCAPE, SPACE, BACKSPACE<br>
+• UP, DOWN, LEFT, RIGHT - Arrow keys<br>
+<br>
+<b>Game Management:</b><br>
+• QUIT - Auto-save and return to game selection<br>
+• REPAIR - Fix broken game state (if not responding)<br>
+<br>
+<b>Special:</b><br>
+• PRINT [text] - Send literal text (bypass parsing)<br>
+<br>
+For standard game commands (NORTH, LOOK, TAKE, etc.),<br>
+just speak or type them naturally.<br>
+<br>
+See Settings → Voice Commands for complete reference.
 </div>
       `);
       return true;

@@ -208,13 +208,15 @@
             <h4 class="section-header">Voice Commands</h4>
             <div class="section-content help-content">
               <div class="help-section">
-                <strong>Narration Navigation</strong>
+                <strong>Narration Control</strong>
                 <ul class="help-commands">
                   <li><span class="material-icons">skip_previous</span> <code>"Repeat"</code> — Restart from beginning</li>
-                  <li><span class="material-icons">fast_rewind</span> <code>"Back"</code> <code>"Back 3"</code> — Rewind chunks</li>
+                  <li><span class="material-icons">fast_rewind</span> <code>"Back"</code> — Rewind one chunk</li>
+                  <li><span class="material-icons">fast_rewind</span> <code>"Back 3"</code> — Rewind 3 chunks (1-10)</li>
                   <li><span class="material-icons">pause</span> <code>"Pause"</code> — Pause narration</li>
                   <li><span class="material-icons">play_arrow</span> <code>"Play"</code> <code>"Resume"</code> — Resume narration</li>
-                  <li><span class="material-icons">fast_forward</span> <code>"Skip"</code> <code>"Skip 3"</code> — Skip ahead</li>
+                  <li><span class="material-icons">fast_forward</span> <code>"Skip"</code> — Skip one chunk ahead</li>
+                  <li><span class="material-icons">fast_forward</span> <code>"Skip 3"</code> — Skip 3 chunks (1-10)</li>
                   <li><span class="material-icons">skip_next</span> <code>"Stop"</code> <code>"Skip All"</code> <code>"End"</code> — Skip to end</li>
                   <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code> — Toggle microphone</li>
                 </ul>
@@ -222,16 +224,44 @@
               <div class="help-section">
                 <strong>Save & Restore</strong>
                 <ul class="help-commands">
-                  <li><span class="material-icons">save</span> <code>"Quick Save"</code></li>
-                  <li><span class="material-icons">restore</span> <code>"Quick Load"</code> <code>"Quick Restore"</code></li>
+                  <li><span class="material-icons">save</span> <code>"Quick Save"</code> — Save to default slot</li>
+                  <li><span class="material-icons">restore</span> <code>"Quick Load"</code> — Restore from default</li>
+                  <li><span class="material-icons">save</span> <code>"Save [name]"</code> — Save with custom name</li>
+                  <li><span class="material-icons">restore</span> <code>"Restore [name]"</code> — Load named save</li>
+                  <li><span class="material-icons">delete</span> <code>"Delete [name]"</code> — Delete named save</li>
                 </ul>
               </div>
               <div class="help-section">
-                <strong>Game Commands</strong>
+                <strong>Char Mode Keys (menus/press any key)</strong>
                 <ul class="help-commands">
-                  <li><span class="material-icons">keyboard_return</span> <code>"Enter"</code> — Press Enter key</li>
+                  <li><span class="material-icons">keyboard_return</span> <code>"Enter"</code> — Press Enter</li>
+                  <li><span class="material-icons">close</span> <code>"Escape"</code> — Press Escape</li>
+                  <li><span class="material-icons">space_bar</span> <code>"Space"</code> — Press spacebar</li>
+                  <li><span class="material-icons">backspace</span> <code>"Backspace"</code> — Press backspace</li>
+                  <li><span class="material-icons">arrow_upward</span> <code>"Up"</code> <code>"Down"</code> <code>"Left"</code> <code>"Right"</code> — Arrow keys</li>
+                </ul>
+              </div>
+              <div class="help-section">
+                <strong>Common Game Commands</strong>
+                <ul class="help-commands">
+                  <li><span class="material-icons">explore</span> <code>"North"</code> <code>"South"</code> <code>"East"</code> <code>"West"</code> — Directions (or N/S/E/W)</li>
+                  <li><span class="material-icons">explore</span> <code>"Northeast"</code> <code>"Northwest"</code> <code>"SE"</code> <code>"SW"</code> — Diagonals</li>
+                  <li><span class="material-icons">stairs</span> <code>"Up"</code> <code>"Down"</code> <code>"In"</code> <code>"Out"</code> — Vertical/entry</li>
+                  <li><span class="material-icons">visibility</span> <code>"Look"</code> <code>"Examine [thing]"</code> — Observe</li>
+                  <li><span class="material-icons">inventory</span> <code>"Inventory"</code> (or <code>"I"</code>) — Check items</li>
+                  <li><span class="material-icons">touch_app</span> <code>"Take [thing]"</code> <code>"Drop [thing]"</code> — Manipulate items</li>
+                  <li><span class="material-icons">undo</span> <code>"Undo"</code> <code>"Wait"</code> <code>"Again"</code> — Meta commands</li>
+                  <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text (bypass parsing)</li>
+                </ul>
+              </div>
+              <div class="help-section">
+                <strong>App Commands</strong>
+                <ul class="help-commands">
                   <li><span class="material-icons">info</span> <code>"Status"</code> — Read status bar aloud</li>
-                  <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text</li>
+                  <li><span class="material-icons">help</span> <code>"App Help"</code> — Show all app commands</li>
+                  <li><span class="material-icons">lightbulb</span> <code>"Get Hint"</code> — ChatGPT assistance</li>
+                  <li><span class="material-icons">build</span> <code>"Repair"</code> — Fix broken game state</li>
+                  <li><span class="material-icons">exit_to_app</span> <code>"Quit"</code> — Auto-save and exit</li>
                 </ul>
               </div>
             </div>
@@ -441,7 +471,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.5.66</span>
+        <span class="status-version">v1.5.67</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -745,7 +775,7 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.5.66</span>
+    <span class="status-version">v1.5.67</span>
   </div>
 
   <!-- Lock Screen Overlay -->
