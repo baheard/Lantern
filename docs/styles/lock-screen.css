@@ -1,295 +1,241 @@
-/* Lock Screen - Lock Screen Overlay and Unlock Button */
+/* Lock Screen - Transparent Overlay with Touch Feedback */
 
-/* Lock Screen Overlay */
+/* Lock Screen Overlay (subtle transparent backdrop) */
 .lock-screen-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.9); /* 90% black for dimming (battery savings on OLED) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000; /* Above everything else */
-  pointer-events: all; /* Block all touch events */
+  background: rgba(196, 163, 90, 0.08); /* Subtle warm/sepia overlay */
+  backdrop-filter: blur(0.5px) brightness(0.96) sepia(0.15); /* Subtle warm frosty effect */
+  -webkit-backdrop-filter: blur(0.5px) brightness(0.96) sepia(0.15);
+  z-index: 5000; /* Above game content but below controls */
+  pointer-events: all; /* Capture all touch events */
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, backdrop-filter 0.15s ease;
 }
 
 .lock-screen-overlay.hidden {
   opacity: 0;
   pointer-events: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-.lock-screen-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 40px;
-  max-width: 400px;
+/* Increased blur when touching locked screen */
+.lock-screen-overlay.touched {
+  backdrop-filter: blur(4px) brightness(0.90) sepia(0.25);
+  -webkit-backdrop-filter: blur(4px) brightness(0.90) sepia(0.25);
+}
+
+/* Unlock Instructions (shown in upper-center of viewport) */
+.lock-screen-instructions {
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px 32px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(196, 163, 90, 0.6);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
   text-align: center;
-}
-
-.lock-screen-icon {
-  font-size: 80px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.lock-screen-icon .material-icons {
-  font-size: 80px;
-}
-
-.lock-screen-listening-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  color: var(--accent-primary);
-  margin-bottom: 8px;
-}
-
-.lock-screen-listening-indicator.hidden {
-  display: none;
-}
-
-.lock-screen-listening-indicator .mic-pulse {
-  font-size: 24px;
-  animation: pulse-mic 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-mic {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-}
-
-.lock-screen-muted-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  color: #ff6b6b;
-  margin-bottom: 8px;
-}
-
-.lock-screen-muted-indicator.hidden {
-  display: none;
-}
-
-.lock-screen-muted-indicator .material-icons {
-  font-size: 24px;
-}
-
-/* Lock Mic Button (Hold to Speak when muted) */
-.lock-mic-button {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 3px solid rgba(45, 212, 191, 0.4); /* Accent primary with transparency */
-  background: rgba(45, 212, 191, 0.1);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 5001; /* Above overlay */
+  max-width: 85%;
+  min-width: 300px;
   overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-  margin-bottom: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.lock-mic-button.hidden {
+.lock-screen-instructions.hidden {
   display: none;
 }
 
-.lock-mic-button:active {
-  transform: scale(0.95);
-  border-color: var(--accent-primary);
-  background: rgba(45, 212, 191, 0.2);
+.lock-screen-instructions:not(.hidden) {
+  opacity: 1;
+  display: block;
 }
 
-.lock-mic-button-inner {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 8px;
-}
-
-.lock-mic-button-inner .material-icons {
-  font-size: 40px;
-  color: var(--accent-primary);
-}
-
-.mic-text {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--accent-primary);
-  font-weight: 500;
-}
-
-/* Mic Progress Indicator (Bottom-to-Top Fill) */
-.lock-mic-progress {
+/* Progress fill animation for hold-to-unlock (bottom-to-top) */
+.lock-screen-instructions::before {
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 0%;
-  background: rgba(45, 212, 191, 0.3);
-  z-index: 1;
+  background: rgba(196, 163, 90, 0.3);
+  z-index: -1;
   transition: height 0.05s linear;
-  border-radius: 0 0 50% 50%;
 }
 
-.lock-mic-button.speaking .lock-mic-progress {
-  transition: none; /* Instant response while holding */
+.lock-screen-instructions.unlocking::before {
+  transition: height 0.5s linear;
   height: 100%;
 }
 
-.lock-mic-button.speaking {
-  border-color: var(--accent-primary);
-  background: rgba(45, 212, 191, 0.2);
-}
-
-.lock-screen-instructions {
+/* Screen Locked Message (appears when touching locked areas) */
+.screen-locked-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
   font-family: var(--font-sans);
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 8px;
-}
-
-.lock-screen-transcript {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.95);
-  padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 300px;
-  word-break: break-word;
-  margin: 8px 0;
-  transition: all 0.3s ease;
-}
-
-.lock-screen-transcript.hidden {
-  display: none;
-}
-
-/* Interim text (being spoken) - subtle white */
-.lock-screen-transcript.interim {
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* Confirmed/processed command - bright green with glow */
-.lock-screen-transcript.confirmed {
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.15);
-  box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
-}
-
-/* Navigation command - bright blue with glow */
-.lock-screen-transcript.nav-command {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.15);
-  box-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
-}
-
-/* Low confidence or blocked - red/muted */
-.lock-screen-transcript.low-confidence {
-  color: rgba(239, 68, 68, 0.9);
-  background: rgba(239, 68, 68, 0.1);
-}
-
-/* Processed command - dimmed/grayed out to show it's been handled */
-.lock-screen-transcript.processed {
-  color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: none;
-}
-
-/* Unlock Button */
-.unlock-button {
-  position: relative;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
-  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
-}
-
-.unlock-button:active {
-  transform: scale(0.95);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.unlock-button-inner {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 8px;
-}
-
-.unlock-button-inner .material-icons {
-  font-size: 48px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.unlock-text {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 5001; /* Above overlay */
 }
 
-/* Unlock Progress Indicator (Bottom-to-Top Fill) */
-.unlock-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 0%;
-  background: rgba(196, 163, 90, 0.4); /* Accent warm with transparency */
-  z-index: 1;
-  transition: height 0.05s linear;
-  border-radius: 0 0 50% 50%;
+.screen-locked-message.show {
+  opacity: 1;
+  animation: pulse-feedback 0.4s ease;
 }
 
-.unlock-button.unlocking .unlock-progress {
-  transition: height 2s linear; /* 2-second fill animation */
-  height: 100%;
+.screen-locked-message .material-icons {
+  font-size: 28px;
+  color: var(--accent-warm);
 }
 
-.unlock-button.unlocking {
+@keyframes pulse-feedback {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+/* Lock Button in Controls (emphasized when screen is locked) */
+#lockBtn {
+  position: relative;
+  transition: all 0.2s ease;
+  z-index: 5100; /* Above lock screen overlay when present */
+}
+
+/* Emphasized state when screen is locked */
+#lockBtn.locked {
+  background: rgba(196, 163, 90, 0.2);
   border-color: var(--accent-warm);
 }
 
-/* Prevent text selection during hold */
+#lockBtn.locked .material-icons {
+  color: var(--accent-warm);
+}
+
+/* Mic button needs to be above overlay too (for push-to-talk when locked) */
+#muteBtn {
+  position: relative;
+  z-index: 5100; /* Above lock screen overlay when present */
+}
+
+/* Lock Button Progress Meter (appears above lock button when holding) */
+.lock-progress-meter {
+  position: fixed;
+  bottom: calc(var(--safe-area-inset-bottom, 0px) + 100px); /* Above lock button */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 10001; /* Above lock screen overlay */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.lock-progress-meter.show {
+  opacity: 1;
+}
+
+.lock-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-warm), var(--accent-primary));
+  transition: width 0.05s linear;
+  border-radius: 4px;
+}
+
+.lock-progress-meter.unlocking .lock-progress-fill {
+  transition: width 0.5s linear; /* 0.5-second fill animation */
+  width: 100%;
+}
+
+/* Mic Button emphasized in push-to-talk mode when locked */
+#muteBtn.push-to-talk-locked {
+  background: rgba(45, 212, 191, 0.2);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 16px rgba(45, 212, 191, 0.4);
+  animation: pulse-mic-button 2s ease-in-out infinite;
+}
+
+@keyframes pulse-mic-button {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(45, 212, 191, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(45, 212, 191, 0.6);
+  }
+}
+
+/* Hide mic button from taps when screen is locked and NOT in push-to-talk mode */
+#muteBtn.mic-locked-hidden {
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Prevent text selection during lock screen interactions */
 .lock-screen-overlay * {
   user-select: none;
   -webkit-user-select: none;
 }
 
+/* Mobile-only control (hide on desktop) */
+.mobile-only-control {
+  display: none;
+}
+
+@media screen and (max-width: 768px),
+       screen and (hover: none) and (pointer: coarse) {
+  .mobile-only-control {
+    display: flex;
+  }
+
+  /* Lock button visibility control (keeps in layout, uses visibility) */
+  #lockBtn.lock-btn-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  #lockBtn.lock-btn-visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: all;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  /* Ensure lock button stays in flex layout even when hidden */
+  #lockBtn {
+    display: flex !important;
+  }
+}

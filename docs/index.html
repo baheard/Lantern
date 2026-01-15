@@ -127,16 +127,6 @@
               </button>
             </div>
 
-            <!-- Quick Action: Lock Screen (mobile only) -->
-            <div class="quick-action-row mobile-only-section">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaLockToggle" class="toggle-switch" checked>
-              </label>
-              <button id="lockScreenBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">screen_lock_portrait</span> Lock Screen
-              </button>
-            </div>
-
           </div>
         </div>
       </div>
@@ -471,7 +461,7 @@
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
         <span class="welcome-status-protocol" id="welcomeStatusProtocol"></span>
-        <span class="status-version">v1.5.69</span>
+        <span class="status-version">v1.5.72</span>
       </div>
 
       <h2>Welcome to Voxi</h2>
@@ -678,6 +668,7 @@
       <button id="nextChunkBtn" class="btn-control btn-nav" title="&quot;Skip&quot;"><span class="material-icons">fast_forward</span></button>
       <button id="skipToEndBtn" class="btn-control btn-nav" title="&quot;Skip All&quot;"><span class="material-icons">skip_next</span></button>
       <div class="controls-spacer"></div>
+      <button id="lockBtn" class="btn-control btn-nav mobile-only-control lock-btn-hidden" title="Lock Screen"><span class="material-icons">lock</span></button>
       <button id="muteBtn" class="btn-mic" title="Mute Mic (toggle microphone)"><span class="material-icons">mic</span></button>
     </div>
 
@@ -727,11 +718,6 @@
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
       </button>
-      <!-- Lock Screen (mobile only - bottom, closest to menu button) -->
-      <button class="mobile-menu-item mobile-only-item" id="mobileLockIcon" data-action="lock" role="menuitem">
-        <span class="material-icons">screen_lock_portrait</span>
-        <span class="menu-item-text">Lock Screen</span>
-      </button>
     </div>
 
     <!-- Char Input Panel (replaces message input in char mode) -->
@@ -780,46 +766,26 @@
 
   <div class="status hidden" id="status">
     <span class="status-text">Select a game to start</span>
-    <span class="status-version">v1.5.69</span>
+    <span class="status-version">v1.5.72</span>
   </div>
 
-  <!-- Lock Screen Overlay -->
+  <!-- Lock Screen Overlay (transparent backdrop) -->
   <div class="lock-screen-overlay hidden" id="lockScreenOverlay">
-    <div class="lock-screen-content">
-      <div class="lock-screen-icon">
-        <span class="material-icons">lock</span>
-      </div>
-      <div class="lock-screen-listening-indicator hidden" id="lockListeningIndicator">
-        <span class="material-icons mic-pulse">mic</span>
-        <span class="listening-text">Listening...</span>
-      </div>
-      <div class="lock-screen-muted-indicator hidden" id="lockMutedIndicator">
-        <span class="material-icons">mic_off</span>
-        <span class="muted-text">Microphone Muted</span>
-      </div>
-      <div class="lock-screen-mic-locked-indicator hidden" id="lockMicLockedIndicator">
-        <span class="material-icons">lock</span>
-        <span class="mic-locked-text">Mic Locked - Say "unlock mic"</span>
-      </div>
-      <button class="lock-mic-button hidden" id="lockMicButton">
-        <div class="lock-mic-button-inner">
-          <span class="material-icons">mic</span>
-          <span class="mic-text" id="lockMicButtonText">Hold to Unmute</span>
-        </div>
-        <div class="lock-mic-progress" id="lockMicProgress"></div>
-      </button>
-      <div class="lock-screen-transcript hidden" id="lockTranscript"></div>
-      <button class="unlock-button" id="unlockButton">
-        <div class="unlock-button-inner">
-          <span class="material-icons">lock_open</span>
-          <span class="unlock-text">Hold to Unlock</span>
-        </div>
-        <div class="unlock-progress" id="unlockProgress"></div>
-      </button>
-      <div class="lock-screen-instructions">
-        To unlock screen, say "unlock" or press and hold
-      </div>
+    <!-- Screen locked feedback message (shown when touching locked areas) -->
+    <div class="screen-locked-message hidden" id="screenLockedMessage">
+      <span class="material-icons">lock</span>
+      <span>Screen Locked</span>
     </div>
+  </div>
+
+  <!-- Unlock instructions (shown outside overlay for proper positioning) -->
+  <div class="lock-screen-instructions hidden" id="lockScreenInstructions">
+    Say "Unlock Screen" or hold lock button to unlock
+  </div>
+
+  <!-- Lock Button Progress Meter (appears above lock button when holding) -->
+  <div class="lock-progress-meter hidden" id="lockProgressMeter">
+    <div class="lock-progress-fill" id="lockProgressFill"></div>
   </div>
 
   <!-- Confirm Dialog -->
