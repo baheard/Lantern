@@ -232,13 +232,13 @@ export function updateLockButtonVisibility() {
     return;
   }
 
-  // When not locked: Show on mobile when voice recognition is enabled
-  // (regardless of mute state - lock screen is useful even when muted)
+  // When not locked: Show on mobile when voice recognition is enabled AND mic is active (not muted)
   const isMobile = window.innerWidth <= 768 ||
                    (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
   const isRecognitionEnabled = state.recognition !== null && state.recognition !== undefined;
+  const isMicActive = !state.isMuted;
 
-  if (isMobile && isRecognitionEnabled) {
+  if (isMobile && isRecognitionEnabled && isMicActive) {
     lockBtn.classList.remove('lock-btn-hidden');
     lockBtn.classList.add('lock-btn-visible');
   } else {

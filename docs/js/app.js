@@ -57,18 +57,14 @@ import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
 // PWA Service Worker Registration with Beautiful Update Notification
 if ('serviceWorker' in navigator) {
-  console.log('[PWA] Service worker is supported');
   let updateAvailable = false;
   let waitingWorker = null;
 
   // Function to show beautiful update notification
   function showUpdateNotification() {
-    console.log('[PWA] 🎉 SHOWING UPDATE NOTIFICATION!');
-
     // Remove existing notification if any
     const existing = document.getElementById('updateNotification');
     if (existing) {
-      console.log('[PWA] Removing existing notification');
       existing.remove();
     }
 
@@ -91,30 +87,24 @@ if ('serviceWorker' in navigator) {
       </div>
     `;
     document.body.appendChild(notification);
-    console.log('[PWA] Notification element added to DOM');
 
     // Trigger entrance animation
     setTimeout(() => {
       notification.classList.add('visible');
-      console.log('[PWA] Notification visible class added');
     }, 100);
 
     // Handle update button click
     document.getElementById('updateButton').addEventListener('click', () => {
-      console.log('[PWA] Update button clicked');
       if (waitingWorker) {
-        console.log('[PWA] Sending SKIP_WAITING message to worker');
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       }
       // Reload will happen automatically when controllerchange event fires
-      console.log('[PWA] Waiting for new service worker to activate...');
       notification.classList.remove('visible');
       setTimeout(() => notification.remove(), 300);
     });
 
     // Handle dismiss button click
     document.getElementById('updateDismiss').addEventListener('click', () => {
-      console.log('[PWA] Dismiss button clicked');
       notification.classList.remove('visible');
       setTimeout(() => notification.remove(), 300);
     });
@@ -122,54 +112,34 @@ if ('serviceWorker' in navigator) {
 
   // Listen for messages from service worker
   navigator.serviceWorker.addEventListener('message', (event) => {
-    console.log('[PWA] Message from service worker:', event.data);
     if (event.data && event.data.type === 'NEW_VERSION_ACTIVATED') {
-      console.log('[PWA] New version activated:', event.data.version);
       // Optionally reload the page to use the new version
       // window.location.reload();
     }
   });
 
   window.addEventListener('load', () => {
-    console.log('[PWA] Page loaded, registering service worker...');
-
     navigator.serviceWorker.register('./service-worker.js')
       .then(registration => {
-        console.log('[PWA] ✅ Service worker registered successfully');
-        console.log('[PWA] Registration state:', {
-          installing: registration.installing,
-          waiting: registration.waiting,
-          active: registration.active
-        });
-
         // Check for updates on page load
-        console.log('[PWA] Checking for updates on page load...');
         registration.update();
 
         // Check for updates every 30 seconds
         setInterval(() => {
-          console.log('[PWA] Periodic update check (30s interval)...');
           registration.update();
         }, 30000);
 
         // Listen for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          console.log('[PWA] 🔄 UPDATE FOUND! New worker installing...');
 
           newWorker.addEventListener('statechange', () => {
-            console.log('[PWA] 🔄 New worker state changed:', newWorker.state);
-            console.log('[PWA] Current controller:', navigator.serviceWorker.controller ? 'exists' : 'none');
-
             if (newWorker.state === 'installed') {
               if (navigator.serviceWorker.controller) {
                 // New service worker is waiting to activate
-                console.log('[PWA] ⚡ NEW VERSION READY! (waiting to activate)');
                 updateAvailable = true;
                 waitingWorker = newWorker;
                 showUpdateNotification();
-              } else {
-                console.log('[PWA] First time install (no controller yet)');
               }
             }
           });
@@ -177,26 +147,20 @@ if ('serviceWorker' in navigator) {
 
         // Check if there's already a waiting service worker
         if (registration.waiting) {
-          console.log('[PWA] ⚡ UPDATE ALREADY WAITING ON LOAD!');
           updateAvailable = true;
           waitingWorker = registration.waiting;
           showUpdateNotification();
-        } else {
-          console.log('[PWA] No waiting worker on load');
         }
 
         // Listen for controlling service worker change
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[PWA] 🔄 Controller changed, reloading...');
           window.location.reload();
         });
       })
       .catch(error => {
-        console.error('[PWA] ❌ Service worker registration failed:', error);
+        console.error('[PWA] Service worker registration failed:', error);
       });
   });
-} else {
-  console.warn('[PWA] ⚠️ Service workers not supported in this browser');
 }
 
 // Load Google Identity Services (OAuth) - only when online

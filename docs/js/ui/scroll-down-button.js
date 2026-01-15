@@ -54,7 +54,7 @@ export function initScrollDownButton() {
         scrollToBottomSmooth(container);
       }
     }, SCROLL_TO_BOTTOM_DELAY);
-  });
+  }, { passive: false });
 
   // Touch move - cancel all actions if dragging
   button.addEventListener('touchmove', (e) => {

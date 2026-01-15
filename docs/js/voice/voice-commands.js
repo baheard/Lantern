@@ -38,13 +38,15 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     'with': 'west',
     'so': 'south',
     'self': 'south',
+    'quickie': 'quick save',
   };
 
-  // Apply pronunciation corrections (only for single-word transcripts)
+  // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
   const words = transcript.trim().split(/\s+/);
-  if (words.length === 1 && PRONUNCIATION_DICT[lower]) {
-    transcript = PRONUNCIATION_DICT[lower];
-    lower = transcript;
+  const singleWordLower = words.length === 1 ? words[0].toLowerCase() : null;
+  if (singleWordLower && PRONUNCIATION_DICT[singleWordLower]) {
+    transcript = PRONUNCIATION_DICT[singleWordLower];
+    lower = transcript.toLowerCase();
   }
 
   // If "back [word]" where word is NOT a number, strip the word and just use "back"
