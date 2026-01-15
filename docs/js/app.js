@@ -52,7 +52,7 @@ let mapModule = null;
 
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
-import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus } from './utils/lock-screen.js';
+import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
 // PWA Service Worker Registration with Beautiful Update Notification
@@ -489,6 +489,7 @@ export const voiceCommandHandlers = {
     updateStatus('Starting microphone...');
     updateNavButtons();
     updateLockScreenMicStatus();
+    updateLockButtonVisibility();
 
     // Update message input placeholder
     const messageInput = document.getElementById('messageInput');
@@ -520,6 +521,7 @@ export const voiceCommandHandlers = {
         stopVoiceMeter();
         updateNavButtons();
         updateLockScreenMicStatus();
+        updateLockButtonVisibility();
 
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
@@ -548,6 +550,7 @@ export const voiceCommandHandlers = {
     updateStatus('Microphone muted');
     updateNavButtons();
     updateLockScreenMicStatus();
+    updateLockButtonVisibility();
 
     // Update message input placeholder
     const messageInput = document.getElementById('messageInput');
@@ -772,6 +775,9 @@ async function initApp() {
     try {
       const processVoice = (transcript, confidence) => processVoiceKeywords(transcript, voiceCommandHandlers, confidence);
       state.recognition = initVoiceRecognition(processVoice);
+
+      // Update lock button visibility now that recognition is initialized
+      updateLockButtonVisibility();
     } catch (error) {
       // Voice recognition failed
     }
