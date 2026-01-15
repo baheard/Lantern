@@ -21,6 +21,7 @@ let inputEnabled = false; // Is input currently enabled?
 let inputType = null; // Type of input requested: 'line' or 'char' (null until game requests)
 let inputWindowId = null; // Window ID for the current input request
 let lastStatusLine = ''; // Track status line for scene change detection
+let lastCharModePlainText = ''; // Track previous plain text in char mode for diffing
 let resizeTimeout = null; // Debounce resize events
 let skipFirstAutosave = false; // Skip first autosave if we're about to restore
 let skipNextUpdateAfterBootstrap = false; // Skip next update after bootstrap input (suppress "I beg your pardon")
@@ -684,7 +685,50 @@ export function createVoxGlk(textOutputCallback) {
 
 
           if (textForTTS.trim() && onTextOutput) {
-            onTextOutput(textForTTS);
+            // In char mode (press any key screens), only narrate changed content
+            // This prevents re-reading entire menus/pages when only a small part changes
+            let finalTextForTTS = textForTTS;
+
+            if (inputType === 'char') {
+              // Diff against previous text to find what changed
+              const newLines = textForTTS.split('\n');
+              const oldLines = lastCharModePlainText.split('\n');
+
+              // Find the first line that differs
+              let firstDiff = 0;
+              while (firstDiff < Math.min(newLines.length, oldLines.length) &&
+                     newLines[firstDiff] === oldLines[firstDiff]) {
+                firstDiff++;
+              }
+
+              // Find the last line that differs (working backwards)
+              let lastDiffNew = newLines.length - 1;
+              let lastDiffOld = oldLines.length - 1;
+              while (lastDiffNew >= firstDiff && lastDiffOld >= firstDiff &&
+                     newLines[lastDiffNew] === oldLines[lastDiffOld]) {
+                lastDiffNew--;
+                lastDiffOld--;
+              }
+
+              // Extract only the changed portion
+              if (firstDiff <= lastDiffNew) {
+                const changedLines = newLines.slice(firstDiff, lastDiffNew + 1);
+                finalTextForTTS = changedLines.join('\n');
+              } else {
+                // No changes detected - don't narrate anything
+                finalTextForTTS = '';
+              }
+
+              // Store current text for next comparison
+              lastCharModePlainText = textForTTS;
+            } else {
+              // Line mode - reset tracking
+              lastCharModePlainText = '';
+            }
+
+            if (finalTextForTTS.trim()) {
+              onTextOutput(finalTextForTTS);
+            }
           }
 
           // Check for location change (for auto-mapping)
