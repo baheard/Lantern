@@ -270,51 +270,33 @@ export function populateVoiceDropdown() {
 }
 
 /**
- * Load browser voice config from server
+ * Load browser voice config from localStorage
+ * (No server-side config - fully client-side app)
  */
 export async function loadBrowserVoiceConfig() {
-  try {
-    // Race between fetch and 2-second timeout
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Config fetch timeout')), 2000)
-    );
-
-    const fetchPromise = fetch('/api/config').then(r => r.json());
-
-    const config = await Promise.race([fetchPromise, timeoutPromise]);
-
-    if (config?.voice?.tts?.browser) {
-      state.browserVoiceConfig = config.voice.tts.browser;
-    }
-  } catch (error) {
-    // Silently fail - not critical for app functionality
-    // This will catch both network errors and timeouts
-  }
+  // Initialize config object if needed
+  if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
 
   // Load global voice settings from localStorage
   const savedNarratorVoice = localStorage.getItem('iftalk_narratorVoice');
   if (savedNarratorVoice) {
-    if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
     state.browserVoiceConfig.voice = savedNarratorVoice;
   }
 
   const savedAppVoice = localStorage.getItem('iftalk_appVoice');
   if (savedAppVoice) {
-    if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
     state.browserVoiceConfig.appVoice = savedAppVoice;
   }
 
   // Load global speech rate
   const savedSpeechRate = localStorage.getItem('iftalk_speechRate');
   if (savedSpeechRate) {
-    if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
     state.browserVoiceConfig.rate = parseFloat(savedSpeechRate);
   }
 
   // Load global volume
   const savedVolume = localStorage.getItem('iftalk_masterVolume');
   const volume = savedVolume ? parseInt(savedVolume) / 100 : 1.0;
-  if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
   state.browserVoiceConfig.volume = volume;
 
   // Populate dropdown after loading config
