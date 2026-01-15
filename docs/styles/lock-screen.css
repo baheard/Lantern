@@ -139,11 +139,8 @@
   color: var(--accent-warm);
 }
 
-/* Mic button needs to be above overlay too (for push-to-talk when locked) */
-#muteBtn {
-  position: relative;
-  z-index: 5100; /* Above lock screen overlay when present */
-}
+/* Mic button elevated z-index only when lock screen is active */
+/* This prevents it from appearing above settings panel when not locked */
 
 /* Lock Button Progress Meter (appears above lock button when holding) */
 .lock-progress-meter {
@@ -181,6 +178,8 @@
 
 /* Mic Button emphasized in push-to-talk mode when locked */
 #muteBtn.push-to-talk-locked {
+  position: relative;
+  z-index: 5100; /* Above lock screen overlay */
   background: rgba(45, 212, 191, 0.2);
   border-color: var(--accent-primary);
   box-shadow: 0 0 16px rgba(45, 212, 191, 0.4);
@@ -198,6 +197,8 @@
 
 /* Hide mic button from taps when screen is locked and NOT in push-to-talk mode */
 #muteBtn.mic-locked-hidden {
+  position: relative;
+  z-index: 5100; /* Above lock screen overlay */
   pointer-events: none;
   opacity: 0.3;
 }
