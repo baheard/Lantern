@@ -34,9 +34,85 @@ function updateGDriveUI() {
 }
 
 /**
+ * Open Google Picker to select a folder
+ */
+async function openFolderPicker() {
+  try {
+    const { getAccessToken } = await import('../../utils/gdrive/gdrive-auth.js');
+    const accessToken = getAccessToken();
+
+    if (!accessToken) {
+      updateStatus('Please sign in to Google Drive first', 'error');
+      return;
+    }
+
+    // Wait for gapi to load
+    if (!window.gapi) {
+      updateStatus('Google Picker not loaded yet, please try again', 'error');
+      return;
+    }
+
+    // Load the picker library
+    await new Promise((resolve, reject) => {
+      window.gapi.load('picker', { callback: resolve, onerror: reject });
+    });
+
+    // Create picker
+    const picker = new google.picker.PickerBuilder()
+      .addView(google.picker.ViewId.FOLDERS)
+      .setOAuthToken(accessToken)
+      .setDeveloperKey('AIzaSyDqt8P9vGz0YJLvQxS0YqF_6wZ0PqT9vZc') // Public API key for Picker
+      .setCallback(async (data) => {
+        if (data.action === google.picker.Action.PICKED) {
+          const folder = data.docs[0];
+          const folderId = folder.id;
+          const folderName = folder.name;
+
+          // Save folder selection
+          const { setDriveFolder } = await import('../../utils/gdrive/gdrive-api.js');
+          setDriveFolder(folderId, folderName);
+
+          // Update UI
+          const folderNameEl = document.getElementById('gdriveFolderName');
+          if (folderNameEl) {
+            folderNameEl.textContent = folderName;
+          }
+
+          updateStatus(`Folder set to: ${folderName}`, 'success');
+        }
+      })
+      .build();
+
+    picker.setVisible(true);
+  } catch (error) {
+    updateStatus('Failed to open folder picker: ' + error.message, 'error');
+  }
+}
+
+/**
+ * Update folder name display
+ */
+function updateFolderNameDisplay() {
+  const folderNameEl = document.getElementById('gdriveFolderName');
+  if (folderNameEl) {
+    const folderName = localStorage.getItem('iftalk_gdrive_folder_name') || 'IFTalk';
+    folderNameEl.textContent = folderName;
+  }
+}
+
+/**
  * Initialize Google Drive UI
  */
 export function initGDriveUI() {
+  // Update folder name display
+  updateFolderNameDisplay();
+
+  // Folder picker button
+  const gdrivePickFolderBtn = document.getElementById('gdrivePickFolderBtn');
+  if (gdrivePickFolderBtn) {
+    gdrivePickFolderBtn.addEventListener('click', openFolderPicker);
+  }
+
   // Sync button (triggers sign-in when not signed in)
   const gdriveSyncBtn = document.getElementById('gdriveSyncBtn');
   if (gdriveSyncBtn) {

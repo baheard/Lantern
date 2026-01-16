@@ -163,14 +163,22 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Load Google Identity Services (OAuth) - only when online
+// Load Google Identity Services (OAuth) and Picker API - only when online
 // This prevents 60-second timeout when offline
 if (navigator.onLine) {
-  const script = document.createElement('script');
-  script.src = 'https://accounts.google.com/gsi/client';
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
+  // Load Google Identity Services (for auth)
+  const gsiScript = document.createElement('script');
+  gsiScript.src = 'https://accounts.google.com/gsi/client';
+  gsiScript.async = true;
+  gsiScript.defer = true;
+  document.head.appendChild(gsiScript);
+
+  // Load Google API client (for Picker)
+  const gapiScript = document.createElement('script');
+  gapiScript.src = 'https://apis.google.com/js/api.js';
+  gapiScript.async = true;
+  gapiScript.defer = true;
+  document.head.appendChild(gapiScript);
 }
 
 // PWA Install Prompt Handling

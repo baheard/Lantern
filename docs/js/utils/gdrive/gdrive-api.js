@@ -19,6 +19,43 @@ export function clearAppFolderId() {
 }
 
 /**
+ * Get configured Drive folder ID (from localStorage or null for default)
+ * @returns {string|null} Folder ID or null to use default folder name
+ */
+export function getDriveFolderId() {
+  return localStorage.getItem('iftalk_gdrive_folder_id');
+}
+
+/**
+ * Get configured Drive folder name (from localStorage or default)
+ * @returns {string} Folder name
+ */
+export function getDriveFolderName() {
+  return localStorage.getItem('iftalk_gdrive_folder_name') || APP_CONFIG.driveFolderName;
+}
+
+/**
+ * Set Drive folder (ID and name)
+ * @param {string} folderId - Folder ID
+ * @param {string} folderName - Folder name
+ */
+export function setDriveFolder(folderId, folderName) {
+  localStorage.setItem('iftalk_gdrive_folder_id', folderId);
+  localStorage.setItem('iftalk_gdrive_folder_name', folderName);
+  // Clear cached folder ID so next sync uses new folder
+  appFolderId = null;
+}
+
+/**
+ * Clear Drive folder selection (revert to default)
+ */
+export function clearDriveFolder() {
+  localStorage.removeItem('iftalk_gdrive_folder_id');
+  localStorage.removeItem('iftalk_gdrive_folder_name');
+  appFolderId = null;
+}
+
+/**
  * Ensure app folder exists in Google Drive
  * @returns {Promise<string>} Folder ID
  */
@@ -28,9 +65,19 @@ export async function ensureAppFolder() {
   }
 
   const accessToken = getAccessToken();
+  const customFolderId = getDriveFolderId();
+
+  // If user selected a custom folder via picker, use that
+  if (customFolderId) {
+    appFolderId = customFolderId;
+    return appFolderId;
+  }
+
+  // Otherwise, use default folder name
+  const folderName = getDriveFolderName();
 
   // Search for existing folder
-  const query = `name='${APP_CONFIG.driveFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`
@@ -56,7 +103,7 @@ export async function ensureAppFolder() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      name: APP_CONFIG.driveFolderName,
+      name: folderName,
       mimeType: 'application/vnd.google-apps.folder'
     })
   });

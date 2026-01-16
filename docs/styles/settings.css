@@ -1214,6 +1214,32 @@ body.voice-controls-hidden #settings-btn {
   color: var(--text-muted, #888);
 }
 
+/* Google Drive Folder Selector */
+.gdrive-folder-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.gdrive-folder-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  font-size: 0.95em;
+  color: var(--text-primary);
+}
+
+.gdrive-folder-info .material-icons {
+  font-size: 18px;
+  color: var(--accent-warm);
+}
+
 .link-button {
   background: none;
   border: none;
