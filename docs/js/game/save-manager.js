@@ -771,7 +771,7 @@ export async function importSaveFromFile() {
     // Create file input
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.sav,.json';
+    input.accept = '.sav';
 
     // Use promise to handle file selection
     const file = await new Promise((resolve) => {
