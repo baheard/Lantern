@@ -149,10 +149,6 @@ These commands work whether typed or spoken:<br>
 • GET HINT - ChatGPT assistance<br>
 • GET GEMINI HINT - UHS-style progressive hints<br>
 <br>
-<b>Char Mode Keys (menus/press any key screens):</b><br>
-• ENTER, ESCAPE, SPACE, BACKSPACE<br>
-• UP, DOWN, LEFT, RIGHT - Arrow keys<br>
-<br>
 <b>Game Management:</b><br>
 • QUIT - Auto-save and return to game selection<br>
 • REPAIR - Fix broken game state (if not responding)<br>
