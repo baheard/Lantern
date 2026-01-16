@@ -696,9 +696,15 @@ export async function autoLoad() {
         return false;
     }
 
+    // Check if this is from a file import
+    const wasFileImported = sessionStorage.getItem('iftalk_file_imported') === 'true';
+    if (wasFileImported) {
+        sessionStorage.removeItem('iftalk_file_imported');
+    }
+
     const key = `iftalk_autosave_${state.currentGameName}`;
     return await performRestore(key, null, {
-        successStatus: 'Restored from last session'
+        successStatus: wasFileImported ? 'File restored' : 'Restored from last session'
     });
 }
 
@@ -722,22 +728,34 @@ export async function quickLoad() {
 }
 
 /**
- * Export current quick save to a file on disk
+ * Export current game state to a file on disk
+ * Automatically creates an autosave if one doesn't exist
  */
-export function exportSaveToFile() {
+export async function exportSaveToFile() {
     try {
         if (!state.currentGameName) {
             updateStatus('Error: No game loaded', 'error');
             return;
         }
 
-        // Get the quick save from localStorage
-        const key = `iftalk_quicksave_${state.currentGameName}`;
-        const saveData = getJSON(key);
+        // Get the autosave from localStorage
+        const key = `iftalk_autosave_${state.currentGameName}`;
+        let saveData = getJSON(key);
 
+        // If no autosave exists, create one first
         if (!saveData) {
-            updateStatus('No quick save found - Use Quick Save button first', 'error');
-            return;
+            updateStatus('Creating save...', 'processing');
+            const success = await autoSave();
+            if (!success) {
+                updateStatus('Failed to create save', 'error');
+                return;
+            }
+            // Get the newly created save
+            saveData = getJSON(key);
+            if (!saveData) {
+                updateStatus('Failed to create save data', 'error');
+                return;
+            }
         }
 
         // Create a blob with the save data
@@ -798,30 +816,23 @@ export async function importSaveFromFile() {
             return;
         }
 
-        // Store in localStorage as quick save using current game name
+        // Store in localStorage as autosave using current game name
         if (!state.currentGameName) {
             updateStatus('Error: No game loaded', 'error');
             return;
         }
-        const key = `iftalk_quicksave_${state.currentGameName}`;
+        const key = `iftalk_autosave_${state.currentGameName}`;
         setJSON(key, saveData);
 
-        updateStatus('Importing save...', 'processing');
+        updateStatus('Import successful, reloading...', 'success');
 
-        // Import successful - prompt user to reload
-        const { confirmDialog } = await import('../ui/confirm-dialog.js');
-        const shouldReload = await confirmDialog(
-            'Import complete! Reload now to load the imported save?',
-            'Reload Now',
-            'Later'
-        );
+        // Set flag so we can show "File Restored" message on reload
+        sessionStorage.setItem('iftalk_file_imported', 'true');
 
-        if (shouldReload) {
-            // Reload the page to load the imported save
+        // Reload the page to load the imported save
+        setTimeout(() => {
             window.location.reload();
-        } else {
-            updateStatus('Save imported! Use Quick Load to restore it', 'success');
-        }
+        }, 500);
 
     } catch (error) {
         console.error('Import error:', error);
