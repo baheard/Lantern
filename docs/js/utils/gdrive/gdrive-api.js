@@ -56,7 +56,63 @@ export function clearDriveFolder() {
 }
 
 /**
- * Ensure app folder exists in Google Drive
+ * Find or create a folder by name in a parent folder
+ * @param {string} folderName - Name of the folder
+ * @param {string|null} parentId - Parent folder ID (null for root)
+ * @returns {Promise<string>} Folder ID
+ */
+async function findOrCreateFolder(folderName, parentId = null) {
+  const accessToken = getAccessToken();
+
+  // Search for existing folder
+  const parentQuery = parentId ? `'${parentId}' in parents` : "'root' in parents";
+  const query = `name='${folderName}' and ${parentQuery} and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to search for folder: ${folderName}`);
+  }
+
+  const data = await response.json();
+
+  if (data.files && data.files.length > 0) {
+    return data.files[0].id;
+  }
+
+  // Create folder
+  const folderMetadata = {
+    name: folderName,
+    mimeType: 'application/vnd.google-apps.folder'
+  };
+
+  if (parentId) {
+    folderMetadata.parents = [parentId];
+  }
+
+  const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(folderMetadata)
+  });
+
+  if (!createResponse.ok) {
+    throw new Error(`Failed to create folder: ${folderName}`);
+  }
+
+  const folderData = await createResponse.json();
+  return folderData.id;
+}
+
+/**
+ * Ensure app folder exists in Google Drive (handles nested paths)
  * @returns {Promise<string>} Folder ID
  */
 export async function ensureAppFolder() {
@@ -67,53 +123,31 @@ export async function ensureAppFolder() {
   const accessToken = getAccessToken();
   const customFolderId = getDriveFolderId();
 
-  // If user selected a custom folder via picker, use that
-  if (customFolderId) {
+  // Check if it's a path-based folder (e.g., "path:Games/IF")
+  if (customFolderId && customFolderId.startsWith('path:')) {
+    const folderPath = customFolderId.substring(5); // Remove "path:" prefix
+    const pathParts = folderPath.split('/').filter(part => part.trim());
+
+    // Create nested folders one by one
+    let currentParentId = null; // Start at root
+
+    for (const folderName of pathParts) {
+      currentParentId = await findOrCreateFolder(folderName, currentParentId);
+    }
+
+    appFolderId = currentParentId;
+    return appFolderId;
+  }
+
+  // If user selected a custom folder via old picker (direct ID), use that
+  if (customFolderId && customFolderId !== 'root') {
     appFolderId = customFolderId;
     return appFolderId;
   }
 
-  // Otherwise, use default folder name
+  // Otherwise, use default folder name (single folder at root)
   const folderName = getDriveFolderName();
-
-  // Search for existing folder
-  const query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-  const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to search for app folder');
-  }
-
-  const data = await response.json();
-
-  if (data.files && data.files.length > 0) {
-    appFolderId = data.files[0].id;
-    return appFolderId;
-  }
-
-  // Create folder
-  const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: folderName,
-      mimeType: 'application/vnd.google-apps.folder'
-    })
-  });
-
-  if (!createResponse.ok) {
-    throw new Error('Failed to create app folder');
-  }
-
-  const folderData = await createResponse.json();
-  appFolderId = folderData.id;
+  appFolderId = await findOrCreateFolder(folderName, null);
 
   return appFolderId;
 }

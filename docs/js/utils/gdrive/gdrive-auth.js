@@ -9,6 +9,7 @@ import { state } from '../../core/state.js';
 import { updateStatus } from '../status.js';
 
 // Google API configuration
+// drive.file: Create/modify app files, userinfo.email: Get user email
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
 // Google API client instances
@@ -238,7 +239,7 @@ export async function signIn() {
     throw new Error('Google Drive sync not initialized');
   }
 
-  // Request access token
+  // Request access token (prompt: consent forces re-authorization with updated scopes)
   tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
