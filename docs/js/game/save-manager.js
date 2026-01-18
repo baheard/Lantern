@@ -824,15 +824,18 @@ export async function importSaveFromFile() {
         const key = `iftalk_autosave_${state.currentGameName}`;
         setJSON(key, saveData);
 
-        updateStatus('Import successful, reloading...', 'success');
+        updateStatus('Import successful!', 'success');
 
-        // Set flag so we can show "File Restored" message on reload
-        sessionStorage.setItem('iftalk_file_imported', 'true');
+        // Ask user if they want to load the imported save now
+        const shouldLoad = confirm('Save file imported successfully!\n\nDo you want to load it now?');
 
-        // Reload the page to load the imported save
-        setTimeout(() => {
+        if (shouldLoad) {
+            // Set flag so we can show "File Restored" message on reload
+            sessionStorage.setItem('iftalk_file_imported', 'true');
+
+            // Reload the page to load the imported save
             window.location.reload();
-        }, 500);
+        }
 
     } catch (error) {
         console.error('Import error:', error);
