@@ -86,7 +86,7 @@ export function skipToChunk(offset, speakTextChunked) {
 }
 
 /**
- * Skip to beginning
+ * Skip to beginning (skips app chunks, starts at first narrator chunk)
  * @param {Function} speakTextChunked - Function to resume narration
  */
 export function skipToStart(speakTextChunked) {
@@ -104,13 +104,25 @@ export function skipToStart(speakTextChunked) {
 
   // Stop but preserve highlighting (we'll update it next)
   stopNarration(true);
-  state.currentChunkIndex = 0;
+
+  // Find first non-app chunk (skip app chunks at the beginning)
+  let startIndex = 0;
+  for (let i = 0; i < state.narrationChunks.length; i++) {
+    const chunk = state.narrationChunks[i];
+    const voiceType = typeof chunk === 'object' ? chunk.voice : 'narrator';
+    if (voiceType !== 'app') {
+      startIndex = i;
+      break;
+    }
+  }
+
+  state.currentChunkIndex = startIndex;
 
   setTimeout(async () => {
     state.isNavigating = false;
 
-    // Always update highlighting to first chunk
-    updateTextHighlight(0);
+    // Always update highlighting to first non-app chunk
+    updateTextHighlight(startIndex);
 
     // Update nav button states
     updateNavButtons();
@@ -119,7 +131,7 @@ export function skipToStart(speakTextChunked) {
     if (state.autoplayEnabled) {
       state.isPaused = false;
       state.narrationEnabled = true;
-      speakTextChunked(null, 0);
+      speakTextChunked(null, startIndex);
     } else {
       // Stay paused but keep first chunk highlighted
       state.isPaused = true;
