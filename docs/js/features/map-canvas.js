@@ -145,6 +145,9 @@ function createMapUI() {
           <button class="map-fab map-fab-undo" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
             <span class="material-icons">undo</span>
           </button>
+          <button class="map-fab map-fab-center" id="mapCenterBtn" title="Center on current location" aria-label="Center on current location">
+            <span class="material-icons">my_location</span>
+          </button>
           <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
             <span class="material-icons">timeline</span>
           </button>
@@ -221,6 +224,7 @@ function setupEventListeners() {
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
+  document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
   // Legend toggle - click button to expand, click legend to collapse
   const legendToggle = document.getElementById('mapLegendToggle');
@@ -574,24 +578,28 @@ function handleLocationChange(e) {
       !hasEdgeBetween(previousLocationId, locationName);
 
     if (hasNoDirectEdge) {
-      // Calculate where we'd expect to be based on direction traveled
-      const direction = command ? getDirectionFromCommand(command) : null;
-      const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
-      let expectedPos = null;
-      if (parentNode && direction && DIRECTION_OFFSETS[direction]) {
-        const offset = DIRECTION_OFFSETS[direction];
-        expectedPos = { x: parentNode.x + offset.x, y: parentNode.y + offset.y };
-      }
+      // For "go to" commands, just mark the existing location as current (no connection)
+      if (isGoToCommand(command)) {
+        mapState.selectedNode = locationName;
+        mapState.currentNodeId = locationName;
+      } else {
+        // Calculate where we'd expect to be based on direction traveled
+        const direction = command ? getDirectionFromCommand(command) : null;
+        const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
+        let expectedPos = null;
+        if (parentNode && direction && DIRECTION_OFFSETS[direction]) {
+          const offset = DIRECTION_OFFSETS[direction];
+          expectedPos = { x: parentNode.x + offset.x, y: parentNode.y + offset.y };
+        }
 
-      // If expected position matches the existing node's position (within tolerance),
-      // it's the same room - just add an edge. Otherwise create a duplicate.
-      const positionMatches = expectedPos &&
-        Math.abs(expectedPos.x - existingNode.x) < 50 &&
-        Math.abs(expectedPos.y - existingNode.y) < 50;
+        // If expected position matches the existing node's position (within tolerance),
+        // it's the same room - just add an edge. Otherwise create a duplicate.
+        const positionMatches = expectedPos &&
+          Math.abs(expectedPos.x - existingNode.x) < 50 &&
+          Math.abs(expectedPos.y - existingNode.y) < 50;
 
-      if (positionMatches) {
-        // Same room via different route - add edge (unless it's a "go to" command)
-        if (!isGoToCommand(command)) {
+        if (positionMatches) {
+          // Same room via different route - add edge
           const edgeKey = `${previousLocationId}-${locationName}`;
           if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
             mapState.edges.set(edgeKey, {
@@ -601,19 +609,19 @@ function handleLocationChange(e) {
             });
             mapState.protectedEdges.add(edgeKey);
           }
-        }
-        mapState.selectedNode = locationName;
-        mapState.currentNodeId = locationName;
-      } else {
-        // Different position - likely a duplicate room with same name
-        const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
-        if (duplicateId) {
-          mapState.selectedNode = duplicateId;
-          mapState.currentNodeId = duplicateId;  // Duplicate is the current location
-          showHint(`Found "${locationName}" via different route. Merge if same place.`);
-        } else {
           mapState.selectedNode = locationName;
           mapState.currentNodeId = locationName;
+        } else {
+          // Different position - likely a duplicate room with same name
+          const duplicateId = createDuplicateNode(locationName, existingNode, previousLocationId, command);
+          if (duplicateId) {
+            mapState.selectedNode = duplicateId;
+            mapState.currentNodeId = duplicateId;  // Duplicate is the current location
+            showHint(`Found "${locationName}" via different route. Merge if same place.`);
+          } else {
+            mapState.selectedNode = locationName;
+            mapState.currentNodeId = locationName;
+          }
         }
       }
     } else {
@@ -660,12 +668,13 @@ function handleLocationChange(e) {
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
-  // Skip adding edge if it's a "go to" command (teleportation, not a physical connection)
-  if (previousLocationId && previousLocationId !== locationName && !isGoToCommand(command)) {
+  if (previousLocationId && previousLocationId !== locationName) {
     const edgeKey = `${previousLocationId}-${locationName}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
-      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationName, command: command || '', connectionType: getConnectionTypeFromCommand(command), isManual: false, isEdited: false });
+      // "go to" commands create portal connections (dotted lines)
+      const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
+      mapState.edges.set(edgeKey, { from: previousLocationId, to: locationName, command: command || '', connectionType, isManual: false, isEdited: false });
       // Protect from future auto-mapper modifications
       mapState.protectedEdges.add(edgeKey);
     }
@@ -1159,8 +1168,9 @@ function showDontShowAgainToast() {
   });
 
   toast.querySelector('#toastKeepShowing').addEventListener('click', () => {
-    // Clear all dismissed toasts so they show again next time
+    // Clear all dismissed toasts AND first-use flag so they show again next time
     localStorage.removeItem(TOAST_STORAGE_KEY);
+    localStorage.removeItem(FIRST_USE_KEY);
     hideToast(toast);
     showHint('Map tips will show again next time');
   });
@@ -1189,7 +1199,7 @@ function showOnboardingToasts() {
     },
     {
       id: 'map-intro-2',
-      message: '<strong>Auto-mapping is disabled by default.</strong><br>Tap the <span class="material-icons" style="font-size:16px;vertical-align:middle">auto_fix_high</span> Auto button to enable automatic location tracking.',
+      message: '<strong>Auto-mapping is enabled by default.</strong><br>Tap the <span class="material-icons" style="font-size:16px;vertical-align:middle">auto_fix_high</span> Auto button to disable it if you prefer manual mapping.',
       persistent: true,
       index: '2/5'
     },
@@ -1227,7 +1237,7 @@ function showOnboardingOrHint() {
     localStorage.setItem(FIRST_USE_KEY, 'true');
     showOnboardingToasts();
   } else if (!mapState.autoMapEnabled && mapState.nodes.size === 0) {
-    showHint('Tap the Auto button to enable auto-mapping, or add locations manually');
+    showHint('Auto-mapping is off. Tap the Auto button to enable, or add locations manually');
   }
 }
 
@@ -1595,7 +1605,8 @@ function resetMap() {
   mapState.viewport = { x: 0, y: 0, scale: 1 };
   mapState.selectedNode = null; mapState.currentNodeId = null;
   // Check for user's default preference (only used for new games without saved map data)
-  mapState.autoMapEnabled = localStorage.getItem('iftalk_automap_default') === 'true';
+  const automapPref = localStorage.getItem('iftalk_automap_default');
+  mapState.autoMapEnabled = automapPref !== null ? automapPref === 'true' : true; // Default: enabled
   mapState.undoStack = [];
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
