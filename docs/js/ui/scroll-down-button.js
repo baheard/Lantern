@@ -14,9 +14,11 @@ import { createTouchTracker } from '../utils/touch-detection.js';
 let holdTimer = null;
 let scrollTimer = null;
 let isDragging = false;
+let debounceTimer = null; // For debouncing viewport resize updates
 const INITIAL_SCROLL_DELAY = 50; // ms - small delay to detect drag before scrolling
 const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
+const DEBOUNCE_DELAY = 100; // ms - debounce delay for viewport resize updates
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
 
 /**
@@ -226,6 +228,23 @@ export function initScrollDownButton() {
     updateFadeState(button, container);
   });
 
+  // Update fade state on viewport resize (debounced for keyboard animations)
+  // This ensures button visibility is correct when keyboard opens/closes
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      // Clear existing timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+
+      // Set new timer - only update after keyboard animation settles
+      debounceTimer = setTimeout(() => {
+        updateFadeState(button, container);
+        debounceTimer = null;
+      }, DEBOUNCE_DELAY);
+    });
+  }
+
   // Initial fade state check
   updateFadeState(button, container);
 }
@@ -283,6 +302,7 @@ function scrollToBottomSmooth(container) {
 
 /**
  * Update fade state based on scroll position
+ * Uses Visual Viewport API to account for mobile keyboard visibility
  * @param {HTMLElement} button - The scroll down button
  * @param {HTMLElement} container - The scroll container
  */
@@ -293,8 +313,27 @@ function updateFadeState(button, container) {
   const scrollHeight = container.scrollHeight;
   const clientHeight = container.clientHeight;
 
+  // Account for mobile keyboard using Visual Viewport API
+  // When keyboard is up, we need to check if we're at the bottom of the VISIBLE area
+  const vv = window.visualViewport;
+  const containerRect = container.getBoundingClientRect();
+
+  // Calculate how much of the container is actually visible
+  let visibleContainerHeight = clientHeight;
+  if (vv) {
+    const viewportBottom = vv.pageY + vv.height;
+    const containerBottom = containerRect.top + clientHeight + window.scrollY;
+    const containerTop = containerRect.top + window.scrollY;
+
+    // If keyboard covers part of container, use only visible portion
+    if (viewportBottom < containerBottom) {
+      visibleContainerHeight = Math.max(0, viewportBottom - containerTop - window.scrollY);
+    }
+  }
+
   // Check if we're at or near the bottom (within 50px threshold)
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
+  // Use visible height instead of full client height
+  const isAtBottom = scrollTop + visibleContainerHeight >= scrollHeight - 50;
 
   if (isAtBottom) {
     button.classList.add('faded');
@@ -340,7 +379,7 @@ export function refreshScrollButton() {
   const container = getScrollContainer();
 
   if (button && container && !button.classList.contains('hidden')) {
-    // Small delay to let content render
-    setTimeout(() => updateFadeState(button, container), 50);
+    // Delay to let content render and keyboard animations settle
+    setTimeout(() => updateFadeState(button, container), 150);
   }
 }

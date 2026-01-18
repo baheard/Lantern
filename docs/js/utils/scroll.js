@@ -84,9 +84,10 @@ export function scrollToNewContent(newElement, container) {
 
         messageInput.blur(); // Close keyboard
         // Give time for keyboard to close and viewport to resize, then scroll
+        // Increased delay for smoother keyboard animation on various devices
         setTimeout(() => {
           scrollToNewContentDelayed(newElement, el);
-        }, 150);
+        }, 300);
         return;
       }
     }
