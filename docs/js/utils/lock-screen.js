@@ -193,6 +193,9 @@ export function unlockScreen() {
   // Clear any active hold timer
   clearHoldTimer();
 
+  // Update lock button visibility (hide if mic inactive)
+  updateLockButtonVisibility();
+
   updateStatus('Screen unlocked');
 }
 

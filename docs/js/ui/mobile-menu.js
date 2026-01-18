@@ -6,7 +6,6 @@
  * - Map
  * - Quick Save
  * - Quick Restore
- * - Lock Screen (mobile only)
  */
 
 // Local storage keys for quick access preferences
@@ -16,8 +15,7 @@ const QA_PREFS_KEY = 'iftalk_quick_access_prefs';
 const DEFAULT_QA_PREFS = {
   map: true,
   save: true,
-  load: true,
-  lock: true
+  load: true
 };
 
 /**
@@ -99,7 +97,7 @@ export function initMobileMenu() {
       let nextIndex;
 
       if (e.key === 'ArrowDown') {
-        // Move down (toward bottom/Lock Screen)
+        // Move down (toward bottom)
         nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleItems.length;
       } else {
         // Move up (toward top/Settings)
@@ -200,15 +198,6 @@ async function handleMenuAction(action) {
       }
       break;
 
-
-    case 'lock':
-      // Trigger lock screen (mobile only)
-      const lockBtn = document.getElementById('lockScreenBtn');
-      if (lockBtn) {
-        lockBtn.click();
-      }
-      break;
-
     default:
       console.warn('Unknown menu action:', action);
   }
@@ -231,8 +220,7 @@ export function updateMobileMenuForGameState(inGame) {
   const menuItems = [
     { id: 'mobileMapIcon', pref: 'map', gameOnly: true },
     { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
-    { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
-    { id: 'mobileLockIcon', pref: 'lock', gameOnly: false }
+    { id: 'mobileLoadIcon', pref: 'load', gameOnly: true }
   ];
 
   menuItems.forEach(({ id, pref, gameOnly }) => {
@@ -255,8 +243,7 @@ function initQuickAccessToggles() {
   const toggles = {
     qaMapToggle: 'map',
     qaSaveToggle: 'save',
-    qaLoadToggle: 'load',
-    qaLockToggle: 'lock'
+    qaLoadToggle: 'load'
   };
 
   Object.entries(toggles).forEach(([toggleId, prefKey]) => {

@@ -250,7 +250,7 @@
 
           <!-- Pronunciation Dictionary -->
           <div class="settings-section collapsible collapsed" id="pronunciationSection">
-            <h4 class="section-header">Pronunciation</h4>
+            <h4 class="section-header">Narrator Pronunciation</h4>
             <div class="section-content">
               <p class="setting-description">Fix words that TTS pronounces incorrectly</p>
               <div id="pronunciationList" class="pronunciation-list"></div>
@@ -392,6 +392,14 @@
             </div>
           </div>
 
+          <!-- Update PWA button -->
+          <div class="setting-item">
+            <button id="updatePwaBtn" class="compact-btn quick-action-btn">
+              <span class="material-icons">system_update_alt</span> Check for Updates
+            </button>
+            <p class="setting-description">Update to the latest version of IFTalk</p>
+          </div>
+
           <!-- View Backup Saves button -->
           <div class="setting-item game-section-item">
             <button id="viewBackupSavesBtn" class="compact-btn quick-action-btn">
@@ -434,14 +442,16 @@
 
           <!-- Reset/Delete buttons (in-game only) -->
           <div class="game-section-item danger-zone">
-            <button id="restartGameBtn" class="compact-btn">
-              <span class="material-icons">refresh</span> Reset Current Game
-            </button>
+            <div class="button-group">
+              <button id="restartGameBtn" class="compact-btn" style="margin-bottom:8px;">
+                <span class="material-icons">refresh</span> Reset Current Game
+              </button>
 
-            <button id="clearAllDataBtn" class="compact-btn danger-btn">
-              <span class="material-icons">delete_forever</span> Delete Game Data
-            </button>
-            <p class="warning-text">Deletes saves for this game only</p>
+              <button id="clearAllDataBtn" class="compact-btn danger-btn">
+                <span class="material-icons">delete_forever</span> Delete Game Data
+              </button>
+              <p class="warning-text">Deletes saves for this game only</p>
+            </div>
           </div>
 
           <!-- Delete All Data (welcome only) -->
@@ -454,6 +464,15 @@
         </div>
       </div>
 
+      <!-- Donate Section -->
+      <div class="setting-item" style="padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 24px;">
+        <p class="setting-description" style="text-align: center; margin-bottom: 12px;">Enjoying IFTalk? Consider supporting development</p>
+        <div style="display: flex; justify-content: center;">
+          <a href="https://paypal.me/BenH800" target="_blank" rel="noopener" class="compact-btn quick-action-btn" style="text-decoration: none; display: inline-flex; justify-content: center;">
+            <span class="material-icons" style="padding-top:1px;">favorite</span> Donate
+          </a>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -751,11 +770,6 @@
       <!-- Keyboard button (opens virtual keyboard) -->
       <button class="btn-control btn-char btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
         <span class="material-icons">keyboard</span>
-      </button>
-
-      <!-- Escape button -->
-      <button class="btn-control btn-char btn-char-action" id="charEscapeBtn" title="Escape" aria-label="Escape Key">
-        <span class="material-icons">close</span>
       </button>
 
       <!-- Enter button (like Send button) -->

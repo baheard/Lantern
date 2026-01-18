@@ -502,13 +502,6 @@
   font-size: 24px;
 }
 
-.lock-screen-instructions {
-  font-family: var(--font-sans);
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 8px;
-}
-
 .lock-screen-transcript {
   font-family: var(--font-mono);
   font-size: 20px;

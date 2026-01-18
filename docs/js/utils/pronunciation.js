@@ -9,18 +9,14 @@ import { getJSON, setJSON } from './storage/storage-api.js';
 
 /**
  * Get the pronunciation map from localStorage
+ * All keys are stored in lowercase for case-insensitive matching
  * @returns {Object} Pronunciation map {word: pronunciation}
  */
 export function getPronunciationMap() {
   return getJSON('pronunciationMap', {
-    'Anchorhead': 'Anchor-head',
-    'ANCHORHEAD': 'ANCHOR-HEAD',
+    'anchorhead': 'Anchor-head',
     'resume': 'reh-zoom',
-    'Resume': 'Reh-zoom',
-    'RESUME': 'REH-ZOOM',
     'nome': 'gnome',
-    'Nome': 'Gnome',
-    'NOME': 'GNOME',
   });
 }
 
@@ -62,21 +58,25 @@ export function fixPronunciation(text) {
 
 /**
  * Add a new pronunciation mapping
+ * Words are stored in lowercase for case-insensitive matching
  * @param {string} word - Word to add
  * @param {string} pronunciation - How to pronounce it
  */
 export function addPronunciation(word, pronunciation) {
   const map = getPronunciationMap();
-  map[word] = pronunciation;
+  // Store word in lowercase for case-insensitive matching
+  map[word.toLowerCase()] = pronunciation;
   savePronunciationMap(map);
 }
 
 /**
  * Remove a pronunciation mapping
+ * Words are stored in lowercase for case-insensitive matching
  * @param {string} word - Word to remove
  */
 export function removePronunciation(word) {
   const map = getPronunciationMap();
-  delete map[word];
+  // Remove using lowercase key
+  delete map[word.toLowerCase()];
   savePronunciationMap(map);
 }

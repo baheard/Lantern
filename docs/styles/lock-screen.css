@@ -126,7 +126,7 @@
 #lockBtn {
   position: relative;
   transition: all 0.2s ease;
-  z-index: 5100; /* Above lock screen overlay when present */
+  z-index: 100; /* Default: below settings panel */
 }
 
 /* Emphasized state when screen is locked */
@@ -139,8 +139,11 @@
   color: var(--accent-warm);
 }
 
-/* Mic button elevated z-index only when lock screen is active */
+/* Elevated z-index only when lock screen is active */
 /* This prevents it from appearing above settings panel when not locked */
+.lock-screen-overlay:not(.hidden) ~ .container #lockBtn {
+  z-index: 5100; /* Above lock screen overlay when active */
+}
 
 /* Lock Button Progress Meter (appears above lock button when holding) */
 .lock-progress-meter {

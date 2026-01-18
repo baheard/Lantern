@@ -83,7 +83,7 @@ export function updateSettingsContext() {
   const welcomeItems = document.querySelectorAll('.welcome-section-item');
   welcomeItems.forEach(item => {
     if (isWelcome) {
-      item.style.display = '';
+      item.style.display = 'block'; // Explicitly show (overrides CSS display: none)
     } else {
       item.style.display = 'none';
     }
@@ -470,7 +470,8 @@ export function initSettings() {
   // Automap by Default toggle (welcome screen only)
   const automapByDefaultToggle = document.getElementById('automapByDefaultToggle');
   if (automapByDefaultToggle) {
-    const automapByDefault = localStorage.getItem('iftalk_automap_default') === 'true';
+    const automapPref = localStorage.getItem('iftalk_automap_default');
+    const automapByDefault = automapPref !== null ? automapPref === 'true' : true; // Default: enabled
     automapByDefaultToggle.checked = automapByDefault;
 
     automapByDefaultToggle.addEventListener('change', (e) => {
@@ -498,17 +499,6 @@ export function initSettings() {
         }
       }
       updateStatus(enabled ? '✓ Screen will stay awake' : '✗ Screen lock disabled');
-    });
-  }
-
-  // Lock Screen Now button
-  const lockScreenBtn = document.getElementById('lockScreenBtn');
-  if (lockScreenBtn) {
-    lockScreenBtn.addEventListener('click', () => {
-      if (window.screenLock) {
-        window.screenLock.lock();
-        updateStatus('✓ Screen locked');
-      }
     });
   }
 
