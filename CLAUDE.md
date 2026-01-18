@@ -55,27 +55,49 @@ cd /e/Project/IFTalk && npm start
 
 **IMPORTANT:** Every time a new feature is added or a significant change is made:
 
-1. **Increment the version number** in TWO places:
-   - `docs/index.html` (line ~685):
-     ```html
-     <span class="status-version">v1.1.9</span>
+**⚠️ Claude: ALWAYS increment the version number when making any code changes, bug fixes, or feature additions. No exceptions.**
+
+1. **Increment the version number** in THREE places:
+   - `docs/js/config.js` (line ~10) - **Single source of truth**:
+     ```javascript
+     version: '1.5.103',
      ```
    - `docs/service-worker.js` (line ~6):
      ```javascript
-     const CACHE_VERSION = 'v1.1.9';
+     const CACHE_VERSION = 'v1.5.103';
      ```
+   - `CLAUDE.md` (line ~93):
+     ```markdown
+     **Current Version:** v1.5.103
+     ```
+
+   **Notes:**
+   - Version in `config.js` is automatically injected into HTML status bars by `app.js`
+   - HTML files (`docs/index.html`) contain placeholder versions that get replaced on load
+   - All three locations must use the same version number
+
+   **Quick commands:**
+   ```bash
+   # Find current version
+   grep -n "version:" docs/js/config.js
+   grep -n "CACHE_VERSION" docs/service-worker.js
+   grep -n "Current Version" CLAUDE.md
+
+   # Verify HTML injection (should match config.js after page load)
+   grep -n "status-version" docs/index.html
+   ```
 
 2. **Include the version number in commit messages**:
    ```bash
-   git commit -m "v1.1.9: Add safe area insets for PWA mode"
+   git commit -m "v1.5.104: Add safe area insets for PWA mode"
    ```
 
 3. **Version numbering scheme:**
    - Major (v2.0.0): Breaking changes, major rewrites
-   - Minor (v1.1.0): New features, significant improvements
-   - Patch (v1.1.1): Bug fixes, small tweaks
+   - Minor (v1.5.0): New features, significant improvements
+   - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.44
+**Current Version:** v1.5.105
 
 ## Third-Party Libraries
 
@@ -123,6 +145,28 @@ For detailed technical information, see the `reference/` folder:
 ## Recent Changes
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed development history.
+
+### Recent Fixes (May Need Reversion)
+
+**Mobile Scrolling & Keyboard Behavior (v1.5.104 - 2026-01-17)**
+
+Fixed issues where scroll-down button and scrolling were off when mobile keyboard was up:
+
+**Changes made:**
+1. **Scroll button visibility**: Made `updateFadeState()` viewport-aware using Visual Viewport API
+   - Now checks if at bottom based on visible area (with keyboard), not full container height
+   - Files: `docs/js/ui/scroll-down-button.js` (lines ~289-304)
+
+2. **Timing adjustments**: Increased delays for keyboard animations
+   - Keyboard close delay: 150ms → 300ms
+   - Scroll button refresh delay: 50ms → 150ms
+   - Files: `docs/js/utils/scroll.js` (line ~87), `docs/js/ui/scroll-down-button.js` (line ~344)
+
+3. **Debounced updates**: Added debouncing to scroll button updates during viewport resizes
+   - Prevents multiple rapid calculations during keyboard animations
+   - Files: `docs/js/ui/scroll-down-button.js` (new debounce logic in init)
+
+**To revert:** Check git history for these files and revert the viewport-aware calculations and timing changes.
 
 ## Current Status
 

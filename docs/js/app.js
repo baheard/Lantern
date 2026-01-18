@@ -219,6 +219,41 @@ window.addEventListener('load', () => {
   }
 });
 
+// Handle update button click
+window.addEventListener('load', () => {
+  const updatePwaBtn = document.getElementById('updatePwaBtn');
+  if (updatePwaBtn) {
+    updatePwaBtn.addEventListener('click', async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            // Check for updates
+            await registration.update();
+
+            // If there's a waiting service worker, activate it
+            if (registration.waiting) {
+              const { APP_CONFIG } = await import('./config.js');
+              alert(`Updated to version ${APP_CONFIG.version}!\n\nThe page will reload now.`);
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+              setTimeout(() => window.location.reload(), 500);
+            } else {
+              const { APP_CONFIG } = await import('./config.js');
+              alert(`No updates found.\n\nYou're already on the latest version (v${APP_CONFIG.version}).`);
+            }
+          } else {
+            alert('Service worker not registered.\n\nPlease reload the app and try again.');
+          }
+        } catch (err) {
+          alert('Update check failed.\n\nPlease check your connection and try again.');
+        }
+      } else {
+        alert('Service worker not supported.\n\nYour browser may not support offline features.');
+      }
+    });
+  }
+});
+
 // Detect if app is already installed (standalone mode)
 window.addEventListener('load', () => {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -568,7 +603,7 @@ export const voiceCommandHandlers = {
   openMic: async () => {
     playUnmuteTone();
     state.isHoldMic = false;
-    updateStatus('Microphone open - Listening...');
+    updateStatus('Microphone listening...');
 
     // Update voice transcript to show "Listening..."
     updateVoiceTranscript('Listening...', 'listening');
@@ -578,7 +613,7 @@ export const voiceCommandHandlers = {
 
     // Display in game area as system message (auto-narrated only in play mode)
     const { addGameText } = await import('./ui/game-output.js');
-    addGameText('<div class="system-message">Microphone open</div>', false);
+    addGameText('<div class="system-message">Microphone listening</div>', false);
 
     // Update lock screen if it's active
     const { updateLockScreenMicStatus } = await import('./utils/lock-screen.js');
@@ -683,6 +718,13 @@ async function initApp() {
 
   // Initialize DOM
   initDOM();
+
+  // Inject version from config into status bars
+  import('./config.js').then(({ APP_CONFIG }) => {
+    document.querySelectorAll('.status-version').forEach(el => {
+      el.textContent = `v${APP_CONFIG.version}`;
+    });
+  });
 
   // Update welcome screen status bar with protocol indicator
   const welcomeStatusProtocol = document.getElementById('welcomeStatusProtocol');
