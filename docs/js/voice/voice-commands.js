@@ -29,6 +29,11 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // Fix homophones for number commands (e.g., "back to" -> "back two", "skip for" -> "skip four")
   transcript = transcript.replace(/\b(back|skip)\s+(to|too)\b/gi, '$1 two');
   transcript = transcript.replace(/\b(back|skip)\s+for\b/gi, '$1 four');
+
+  // Fix common misrecognitions that should always be replaced
+  transcript = transcript.replace(/\bali\b/gi, 'alley');
+  transcript = transcript.replace(/\ballie\b/gi, 'alley');
+
   lower = transcript.toLowerCase().trim();
 
   // Pronunciation dictionary for common misrecognitions
@@ -39,6 +44,9 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     'so': 'south',
     'self': 'south',
     'quickie': 'quick save',
+    'away': 'west',  // "go away" should be "go west" (phrase-level will be "go west")
+    'murphy': 'northeast',
+    'artist': 'northeast',
   };
 
   // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
@@ -158,10 +166,21 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // VOICE-SPECIFIC: "Enter" - Send empty command (for "press any key" screens)
+  // VOICE-SPECIFIC: "Enter" - Send enter key in char mode, empty command in line mode
   if (lower === 'enter') {
-    handlers.sendCommandDirect('');
-    return false;
+    const { getInputType } = await import('../game/voxglk.js');
+    const inputType = getInputType();
+
+    if (inputType === 'char') {
+      // Char mode (press any key screen) - send enter key
+      const { sendInput } = await import('../game/voxglk.js');
+      sendInput('return', 'char');
+      return false;
+    } else {
+      // Line mode - send empty command (for "press any key" prompts in line mode)
+      handlers.sendCommandDirect('');
+      return false;
+    }
   }
 
   // VOICE-SPECIFIC: "Escape" - Send escape key

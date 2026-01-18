@@ -37,14 +37,15 @@ const INSTANT_COMMANDS = [
   'n', 's', 'e', 'w', 'u', 'd',
   'northeast', 'northwest', 'southeast', 'southwest',
   'ne', 'nw', 'se', 'sw',
-  'in', 'out',
+  'out',  // 'in' removed - conflicts with "inventory"
+  'enter', 'exit',
   // Common IF commands
   'look', 'l',
   'inventory', 'i',
   'wait', 'z',
   'undo',
   'score',
-  'yes', 'no',
+  // 'yes' and 'no' removed - not instant commands
   'again', 'g',
   'verbose', 'brief', 'superbrief'
 ];
@@ -62,6 +63,12 @@ const INSTANT_PATTERNS = [
   /^back$/i,  // just "back" - for navigation
   /^back\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i,  // back 3
 
+  // Quick save/load patterns (app commands)
+  /^quick\s+save$/i,  // quick save
+  /^quicksave$/i,     // quicksave
+  /^quick\s+load$/i,  // quick load
+  /^quickload$/i,     // quickload
+
   // Go + direction (common game commands)
   /^go\s+(north|south|east|west|up|down|in|out|n|s|e|w|u|d|ne|nw|se|sw|northeast|northwest|southeast|southwest)$/i
 ];
@@ -76,6 +83,18 @@ const INSTANT_PATTERNS = [
  * - "back for something" being heard as "back"
  */
 const INTERIM_WAIT_MS = 300;
+
+/**
+ * Longer delay for directions that have extended versions
+ * (e.g., south -> southwest, north -> northeast)
+ * This gives more time for the second part of the word to come through
+ */
+const INTERIM_WAIT_DIRECTION_MS = 500;
+
+/**
+ * Directions that have longer versions (need extended delay)
+ */
+const EXTENDABLE_DIRECTIONS = ['north', 'south', 'east', 'west', 'n', 's', 'e', 'w'];
 
 /**
  * Update the last heard text in voice panel
@@ -155,9 +174,9 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
 
   // Reset transcript after 3 seconds
   state.transcriptResetTimeout = setTimeout(() => {
-    updateVoiceTranscript(state.isMuted ? 'Muted' : (state.isHoldMic ? 'Mic locked' : 'Listening...'), 'listening');
+    updateVoiceTranscript(state.isHoldMic ? 'Mic locked - say unlock mic...' : 'Listening...', 'listening');
     if (dom.voiceTranscript) {
-      dom.voiceTranscript.textContent = state.isMuted ? 'Muted' : 'Listening...';
+      dom.voiceTranscript.textContent = state.isHoldMic ? 'Mic locked - say unlock mic...' : 'Listening...';
       dom.voiceTranscript.classList.remove('confirmed', 'nav-command');
     }
     // Change lock screen transcript to processed state (dim it) instead of clearing
@@ -434,6 +453,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
         // Capture current transcript in closure
         const capturedTranscript = interimTranscript;
 
+        // Determine delay: use longer delay for extendable directions (south -> southwest, etc.)
+        const isExtendableDirection = EXTENDABLE_DIRECTIONS.includes(interimLower);
+        const delay = isExtendableDirection ? INTERIM_WAIT_DIRECTION_MS : INTERIM_WAIT_MS;
+
         // Start new timeout to wait for potential continuation
         state.interimCommandTimeout = setTimeout(async () => {
           state.interimCommandTimeout = null;
@@ -468,7 +491,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
               state.recognition.stop();
             }
           }
-        }, INTERIM_WAIT_MS);
+        }, delay);
 
         // Update display but don't process yet - waiting for potential continuation
         updateVoiceTranscript(interimTranscript, 'interim');

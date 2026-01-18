@@ -22,8 +22,8 @@ export const APP_COMMANDS = {
   UNMUTE: [], // Voice unmute disabled - mic fully off when muted (click button to unmute)
   STATUS: ['status'],
   READ_LAST_COMMAND: ['read last command', 'last command', 'what did i say'],
-  LOCK_MIC: ['lock mic'],
-  UNLOCK_MIC: ['unlock mic'],
+  LOCK_MIC: ['lock mic', 'lock mike'],
+  UNLOCK_MIC: ['unlock mic', 'unlock mike'],
   LOCK_SCREEN: ['lock screen'],
   UNLOCK_SCREEN: ['unlock screen'],
 
@@ -84,4 +84,39 @@ export function isAppCommand(cmd) {
   }
 
   return false;
+}
+
+/**
+ * Get the canonical (normalized) form of an app command
+ * Maps variations like "lock mike" to "lock mic"
+ * @param {string} cmd - Command to normalize
+ * @returns {string|null} Canonical form of the command, or null if not an app command
+ */
+export function getCanonicalAppCommand(cmd) {
+  if (!cmd) return null;
+
+  const lower = cmd.toLowerCase().trim();
+
+  // Check each command category for a match
+  for (const [category, commands] of Object.entries(APP_COMMANDS)) {
+    if (commands.includes(lower)) {
+      // Return the first (canonical) form
+      return commands[0];
+    }
+  }
+
+  // Check pattern-based commands (return as-is if they match)
+  if (/^(?:load|restore)\s+slot\s+\d+$/.test(lower)) {
+    return lower;
+  }
+
+  if (/^skip(?:\s+forward)?\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/.test(lower)) {
+    return lower;
+  }
+
+  if (/^(?:back|go\s+back)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/.test(lower)) {
+    return lower;
+  }
+
+  return null;
 }

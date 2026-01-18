@@ -12,7 +12,7 @@ import { addGameText } from '../../ui/game-output.js';
 import { sendCommandToGame } from '../game-loader.js';
 import { isSystemEntryMode } from '../../input/keyboard/index.js';
 import { getInputType, sendInput, isInputEnabled } from '../voxglk.js';
-import { isAppCommand } from '../../core/app-commands.js';
+import { isAppCommand, getCanonicalAppCommand } from '../../core/app-commands.js';
 import { LOW_CONFIDENCE_THRESHOLD, playAppCommand } from '../../utils/audio-feedback.js';
 import { setLastCommand } from '../../features/auto-mapper.js';
 import {
@@ -453,7 +453,17 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
       // The game will also echo it, but we'll filter that out of narration
       // Use app-command styling for app/meta-commands or when in system entry mode
       const isAppCmd = isSystemEntryMode() || isAppCommand(input);
-      addGameText(input || '[ENTER]', true, isVoiceCommand, isAppCmd, confidence);
+
+      // Normalize app commands (e.g., "Lock Mike" → "lock mic")
+      let displayText = input || '[ENTER]';
+      if (isAppCmd && !isSystemEntryMode()) {
+        const canonical = getCanonicalAppCommand(input);
+        if (canonical) {
+          displayText = canonical;
+        }
+      }
+
+      addGameText(displayText, true, isVoiceCommand, isAppCmd, confidence);
     }
   }
 
