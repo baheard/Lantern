@@ -505,9 +505,10 @@ function showResumeDialog(gamePath, gameName) {
       if (!action) return;
 
       if (action === 'restart') {
-        // Delete autosave before starting over
+        // Delete autosave and map data before starting over
         const autosaveKey = `iftalk_autosave_${gameName}`;
         localStorage.removeItem(autosaveKey);
+        localStorage.removeItem(`iftalk_map_${gameName}`);
       }
 
       overlay.remove();
