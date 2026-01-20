@@ -118,8 +118,12 @@ if ('serviceWorker' in navigator) {
     }
   });
 
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
+  window.addEventListener('load', async () => {
+    // Add cache-busting to service worker URL using app version
+    // This forces the browser to fetch the new service worker when version changes
+    const { APP_CONFIG } = await import('./config.js');
+    const cacheBust = APP_CONFIG.version.replace(/\./g, ''); // e.g., 1.5.108 -> 15108
+    navigator.serviceWorker.register(`./service-worker.js?v=${cacheBust}`)
       .then(registration => {
         // Check for updates on page load
         registration.update();
