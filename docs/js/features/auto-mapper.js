@@ -145,6 +145,19 @@ export function checkLocationChange(statusBarText, generation) {
   const location = getCurrentLocation(statusBarText);
   if (!location) return;
 
+  // IMPORTANT: Skip location tracking during char mode (press any key screens)
+  // These are menus, pagers, and intro screens - not real game locations
+  // Check if voxglk is loaded and has getInputType function
+  const voxglk = window._voxglkModule;
+  if (voxglk && voxglk.getInputType) {
+    const inputType = voxglk.getInputType();
+    if (inputType === 'char') {
+      // Char mode - this is a press-any-key screen, not a real location
+      // Don't add to journey or fire location change events
+      return;
+    }
+  }
+
   const locationChanged = location.name !== lastLocationName;
 
   if (locationChanged) {

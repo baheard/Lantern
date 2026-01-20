@@ -885,6 +885,13 @@ export function createVoxGlk(textOutputCallback) {
   // Store instance globally for access from save-manager
   window._voxglkInstance = voxglk;
 
+  // Store module functions globally for access from auto-mapper
+  window._voxglkModule = {
+    getInputType,
+    isInputEnabled,
+    getGeneration
+  };
+
   return voxglk;
 }
 

@@ -592,13 +592,17 @@ function handleLocationChange(e) {
           expectedPos = { x: parentNode.x + offset.x, y: parentNode.y + offset.y };
         }
 
-        // If expected position matches the existing node's position (within tolerance),
-        // it's the same room - just add an edge. Otherwise create a duplicate.
-        const positionMatches = expectedPos &&
+        // Determine if this is the same room or a different one:
+        // 1. If no direction info (expectedPos is null), assume same room - just add edge
+        // 2. If direction info exists and position matches (within tolerance), same room - add edge
+        // 3. If direction info exists but position doesn't match, create duplicate
+        const hasDirectionInfo = expectedPos !== null;
+        const positionMatches = hasDirectionInfo &&
           Math.abs(expectedPos.x - existingNode.x) < 50 &&
           Math.abs(expectedPos.y - existingNode.y) < 50;
 
-        if (positionMatches) {
+        // Same room if: no direction info OR position matches
+        if (!hasDirectionInfo || positionMatches) {
           // Same room via different route - add edge
           const edgeKey = `${previousLocationId}-${locationName}`;
           if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
@@ -789,7 +793,8 @@ function createDuplicateNode(locationName, originalNode, previousLocationId, com
   // Add edge from previous location to duplicate
   if (previousLocationId) {
     const edgeKey = `${previousLocationId}-${duplicateId}`;
-    if (!mapState.edges.has(edgeKey)) {
+    // Check for both existing edges and deleted edges (user might have deleted this connection)
+    if (!mapState.edges.has(edgeKey) && !mapState.deletedEdges.has(edgeKey)) {
       mapState.edges.set(edgeKey, {
         from: previousLocationId,
         to: duplicateId,

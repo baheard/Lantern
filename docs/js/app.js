@@ -233,8 +233,7 @@ window.addEventListener('load', () => {
 
             // If there's a waiting service worker, activate it
             if (registration.waiting) {
-              const { APP_CONFIG } = await import('./config.js');
-              alert(`Updated to version ${APP_CONFIG.version}!\n\nThe page will reload now.`);
+              alert(`Update found!\n\nThe page will reload now to apply the latest version.`);
               registration.waiting.postMessage({ type: 'SKIP_WAITING' });
               setTimeout(() => window.location.reload(), 500);
             } else {

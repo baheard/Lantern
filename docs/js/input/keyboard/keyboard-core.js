@@ -497,7 +497,8 @@ export function initKeyboardInput() {
     'save', 'restore',
     'quit', 'q',
     'help',
-    'yes', 'y', 'no'
+    'yes', 'y', 'no',
+    'repair', 'confirm'
   ];
 
   const handleGameMouseMove = (e) => {
