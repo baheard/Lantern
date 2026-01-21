@@ -141,21 +141,25 @@ function getCurrentLocationFromVM() {
  * @param {string} statusBarText - Status bar text from the game
  * @param {number} generation - Current game turn number
  */
-export function checkLocationChange(statusBarText, generation) {
+export function checkLocationChange(statusBarText, generation, currentInputType = null) {
   const location = getCurrentLocation(statusBarText);
   if (!location) return;
 
   // IMPORTANT: Skip location tracking during char mode (press any key screens)
   // These are menus, pagers, and intro screens - not real game locations
-  // Check if voxglk is loaded and has getInputType function
-  const voxglk = window._voxglkModule;
-  if (voxglk && voxglk.getInputType) {
-    const inputType = voxglk.getInputType();
-    if (inputType === 'char') {
-      // Char mode - this is a press-any-key screen, not a real location
-      // Don't add to journey or fire location change events
-      return;
+  // Use the current turn's input type (passed from voxglk) or fall back to getInputType()
+  let inputType = currentInputType;
+  if (inputType === null) {
+    const voxglk = window._voxglkModule;
+    if (voxglk && voxglk.getInputType) {
+      inputType = voxglk.getInputType();
     }
+  }
+
+  if (inputType === 'char') {
+    // Char mode - this is a press-any-key screen, not a real location
+    // Don't add to journey or fire location change events
+    return;
   }
 
   const locationChanged = location.name !== lastLocationName;

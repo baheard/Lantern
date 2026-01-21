@@ -27,6 +27,8 @@ let skipFirstAutosave = false; // Skip first autosave if we're about to restore
 let skipNextUpdateAfterBootstrap = false; // Skip next update after bootstrap input (suppress "I beg your pardon")
 let autosaveCounter = 0; // Count autosaves to skip the first N
 let introInputType = null; // Track the input type from the first request (gen 1) for bootstrap
+let previousInputType = null; // Track previous input type to detect transitions
+let justExitedCharMode = false; // True when we just transitioned from char to line (VM state needs to settle)
 let gridStates = new Map(); // Track full grid state for each window to handle partial updates
 
 // Watchdog timer for detecting broken VM state
@@ -428,8 +430,18 @@ export function createVoxGlk(textOutputCallback) {
             if (arg.input.length > 0 && arg.input[0].id !== undefined) {
               inputWindowId = arg.input[0].id;
             }
+
+            // If VM is in char mode (press any key/menu), let it render so display matches VM state
+            // Otherwise skip rendering (suppress "I beg your pardon" response)
+            if (inputType === 'char') {
+              // Fall through to render
+            } else {
+              // Line mode - skip rendering as normal
+              return;
+            }
+          } else {
+            return; // Skip rendering
           }
-          return; // Skip rendering
         }
 
         // Process window definitions
@@ -723,6 +735,7 @@ export function createVoxGlk(textOutputCallback) {
               lastCharModePlainText = textForTTS;
             } else {
               // Line mode - reset tracking
+              // Also clear when transitioning away from char mode to prevent stale diffs
               lastCharModePlainText = '';
             }
 
@@ -731,9 +744,18 @@ export function createVoxGlk(textOutputCallback) {
             }
           }
 
+          // Determine current turn's input type BEFORE checking location
+          // (checkLocationChange needs the NEW input type, not the old one)
+          let currentTurnInputType = null;
+          if (arg.input) {
+            const inputTypes = arg.input.map(i => i.type);
+            currentTurnInputType = inputTypes.includes('char') ? 'char' : 'line';
+          }
+
           // Check for location change (for auto-mapping)
           // Pass status bar text for name-based location tracking
-          checkLocationChange(statusBarText, generation);
+          // Pass current turn's input type (not previous turn's)
+          checkLocationChange(statusBarText, generation, currentTurnInputType);
         }
 
         // Handle special input requests (file dialogs for save/restore)
@@ -773,6 +795,16 @@ export function createVoxGlk(textOutputCallback) {
           inputType = inputTypes.includes('char') ? 'char' : 'line';
           inputEnabled = true;
 
+          // Detect transition from char to line mode (exiting menus/press-any-key screens)
+          // VM state needs to settle - one line command must be processed before saving
+          if (previousInputType === 'char' && inputType === 'line') {
+            justExitedCharMode = true;
+          } else if (inputType === 'line' && justExitedCharMode) {
+            // Clear flag after one line input is processed
+            justExitedCharMode = false;
+          }
+          previousInputType = inputType;
+
           // Store the window ID from the first input request
           if (arg.input.length > 0 && arg.input[0].id !== undefined) {
             inputWindowId = arg.input[0].id;
@@ -797,9 +829,10 @@ export function createVoxGlk(textOutputCallback) {
           }
 
           // Auto-save after each turn (only on line input, skip first 3)
+          // Skip autosave if we just exited char mode (VM state needs to settle)
           // Check global auto-save setting
           const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
-          if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN) {
+          if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
             setTimeout(async () => {
               try {
                 const { autoSave } = await import('./save-manager.js');
@@ -810,7 +843,6 @@ export function createVoxGlk(textOutputCallback) {
             }, 100);
           } else if (skipFirstAutosave) {
             skipFirstAutosave = false; // Only skip once
-          } else if (!shouldAutosaveThisTurn) {
           }
         } else {
         }
@@ -989,6 +1021,14 @@ export function getInputType() {
  */
 export function getInputWindowId() {
   return inputWindowId;
+}
+
+/**
+ * Check if it's safe to save (VM state has settled after mode transitions)
+ * Returns false if we just exited char mode and VM needs one command to settle
+ */
+export function isSafeToSave() {
+  return !justExitedCharMode;
 }
 
 /**

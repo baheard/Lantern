@@ -407,9 +407,10 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         const compressedMapData = mapDataStr ? compressString(mapDataStr) : '';
 
         // Get VoxGlk state
-        const { getGeneration, getInputWindowId } = await import('./voxglk.js');
+        const { getGeneration, getInputWindowId, getInputType } = await import('./voxglk.js');
         const savedGeneration = getGeneration();
         const savedInputWindowId = getInputWindowId();
+        const savedInputType = getInputType();
 
         // Build save data object with compressed data
         const saveData = {
@@ -428,7 +429,8 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             mapDataCompressed: compressedMapData ? true : false,
             voxglkState: {
                 generation: savedGeneration,
-                inputWindowId: savedInputWindowId
+                inputWindowId: savedInputWindowId,
+                inputType: savedInputType
             },
             // Note: narrationState removed - start fresh on each load
             ...additionalData // Merge any additional data (saveName, verification, etc.)

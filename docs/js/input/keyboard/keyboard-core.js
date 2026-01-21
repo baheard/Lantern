@@ -28,6 +28,7 @@ let charDownBtnEl = null;
 let charRightBtnEl = null;
 let charEnterBtnEl = null;
 let charKeyboardBtnEl = null;
+let charEscBtnEl = null;
 let hiddenKeyInputEl = null;
 
 // Tap-to-examine state (track when word was just populated)
@@ -63,6 +64,7 @@ export function initKeyboardInput() {
   charRightBtnEl = document.getElementById('charRightBtn');
   charEnterBtnEl = document.getElementById('charEnterBtn');
   charKeyboardBtnEl = document.getElementById('charKeyboardBtn');
+  charEscBtnEl = document.getElementById('charEscBtn');
 
   // Create hidden input for arbitrary key capture (keyboard button)
   hiddenKeyInputEl = document.createElement('input');
@@ -253,6 +255,11 @@ export function initKeyboardInput() {
       hiddenKeyInputEl.value = '';
       hiddenKeyInputEl.focus();
     });
+  }
+
+  // ESC button: Send escape key to game
+  if (charEscBtnEl) {
+    charEscBtnEl.addEventListener('click', () => sendInput('escape', 'char'));
   }
 
   // Capture key from hidden input

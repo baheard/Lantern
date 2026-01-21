@@ -750,7 +750,7 @@
     <div class="char-input-panel hidden" id="charInputPanel">
       <!-- Arrow navigation group (tighter spacing) -->
       <div class="arrow-button-group">
-        <button class="btn-control btn-char btn-char-nav" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
+        <button class="btn-control btn-char btn-char-nav btn-char-horizontal" id="charLeftBtn" title="Left Arrow" aria-label="Left Arrow">
           <span class="material-icons">arrow_back</span>
         </button>
         <button class="btn-control btn-char btn-char-nav" id="charUpBtn" title="Up Arrow" aria-label="Up Arrow">
@@ -759,7 +759,7 @@
         <button class="btn-control btn-char btn-char-nav" id="charDownBtn" title="Down Arrow" aria-label="Down Arrow">
           <span class="material-icons">arrow_downward</span>
         </button>
-        <button class="btn-control btn-char btn-char-nav" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
+        <button class="btn-control btn-char btn-char-nav btn-char-horizontal" id="charRightBtn" title="Right Arrow" aria-label="Right Arrow">
           <span class="material-icons">arrow_forward</span>
         </button>
       </div>
@@ -770,6 +770,11 @@
       <!-- Keyboard button (opens virtual keyboard) -->
       <button class="btn-control btn-char btn-char-action" id="charKeyboardBtn" title="Type any key" aria-label="Open Keyboard">
         <span class="material-icons">keyboard</span>
+      </button>
+
+      <!-- ESC button -->
+      <button class="btn-control btn-char btn-char-action" id="charEscBtn" title="Escape" aria-label="Escape Key">
+        <span class="btn-char-esc-text">ESC</span>
       </button>
 
       <!-- Enter button (like Send button) -->

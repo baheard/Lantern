@@ -520,6 +520,18 @@
   font-size: 14px;
 }
 
+/* Hide horizontal arrow buttons (left/right) in char mode */
+.btn-char-horizontal {
+  display: none;
+}
+
+/* ESC button text */
+.btn-char-esc-text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 /* Status Bar */
 .status:not(.hidden) {
   position: relative; /* For ::after pseudo-element */
