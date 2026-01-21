@@ -59,9 +59,53 @@ import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 if ('serviceWorker' in navigator) {
   let updateAvailable = false;
   let waitingWorker = null;
+  let newVersionNumber = null; // Track the new version from service worker
+  let lastNotificationTime = 0; // Prevent showing notification multiple times
+
+  // Helper function to extract version from cache names
+  async function getLatestCacheVersion() {
+    try {
+      const cacheNames = await caches.keys();
+      // Find all IFTalk core cache names (e.g., "iftalk-core-v1.5.117")
+      const versions = cacheNames
+        .filter(name => name.startsWith('iftalk-core-v'))
+        .map(name => name.replace('iftalk-core-v', ''))
+        .sort((a, b) => {
+          // Sort by version number (simple string comparison works for x.y.z format)
+          const aParts = a.split('.').map(Number);
+          const bParts = b.split('.').map(Number);
+          for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+            const diff = (bParts[i] || 0) - (aParts[i] || 0);
+            if (diff !== 0) return diff;
+          }
+          return 0;
+        });
+      return versions[0] ? `v${versions[0]}` : null;
+    } catch (err) {
+      return null;
+    }
+  }
 
   // Function to show beautiful update notification
   function showUpdateNotification() {
+    // Prevent showing notification if we just applied an update (within last 5 seconds)
+    const justUpdated = sessionStorage.getItem('iftalk_just_updated');
+    if (justUpdated) {
+      const timeSinceUpdate = Date.now() - parseInt(justUpdated);
+      if (timeSinceUpdate < 5000) {
+        return;
+      }
+      // Clear the flag after 5 seconds
+      sessionStorage.removeItem('iftalk_just_updated');
+    }
+
+    // Prevent showing notification if it was shown in the last 2 seconds
+    const now = Date.now();
+    if (now - lastNotificationTime < 2000) {
+      return;
+    }
+    lastNotificationTime = now;
+
     // Remove existing notification if any
     const existing = document.getElementById('updateNotification');
     if (existing) {
@@ -96,6 +140,8 @@ if ('serviceWorker' in navigator) {
     // Handle update button click
     document.getElementById('updateButton').addEventListener('click', () => {
       if (waitingWorker) {
+        // Mark that we just triggered an update to prevent duplicate notification after reload
+        sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       }
       // Reload will happen automatically when controllerchange event fires
@@ -113,8 +159,8 @@ if ('serviceWorker' in navigator) {
   // Listen for messages from service worker
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'NEW_VERSION_ACTIVATED') {
-      // Optionally reload the page to use the new version
-      // window.location.reload();
+      // Store the new version number for use in update messages
+      newVersionNumber = event.data.version;
     }
   });
 
@@ -237,12 +283,16 @@ window.addEventListener('load', () => {
 
             // If there's a waiting service worker, activate it
             if (registration.waiting) {
-              alert(`Update found!\n\nThe page will reload now to apply the latest version.`);
+              // Try to get version from cache, message, or use 'latest'
+              const newVersion = newVersionNumber || await getLatestCacheVersion() || 'latest';
+              alert(`Update found!\n\nUpdating to version ${newVersion}.\n\nThe page will reload now.`);
+              // Mark that we just triggered an update to prevent duplicate notification after reload
+              sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
               registration.waiting.postMessage({ type: 'SKIP_WAITING' });
               setTimeout(() => window.location.reload(), 500);
             } else {
               const { APP_CONFIG } = await import('./config.js');
-              alert(`No updates found.\n\nYou're already on the latest version (v${APP_CONFIG.version}).`);
+              alert(`No updates found.\n\nYou're already on the latest version (${APP_CONFIG.version}).`);
             }
           } else {
             alert('Service worker not registered.\n\nPlease reload the app and try again.');
