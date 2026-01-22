@@ -87,7 +87,7 @@ if ('serviceWorker' in navigator) {
   }
 
   // Function to show beautiful update notification
-  function showUpdateNotification() {
+  async function showUpdateNotification() {
     // Prevent showing notification if we just applied an update (within last 5 seconds)
     const justUpdated = sessionStorage.getItem('iftalk_just_updated');
     if (justUpdated) {
@@ -105,6 +105,24 @@ if ('serviceWorker' in navigator) {
       return;
     }
     lastNotificationTime = now;
+
+    // Check if we're already on the latest version
+    // This prevents duplicate notifications after updating
+    try {
+      const { APP_CONFIG } = await import('./config.js');
+      const currentVersion = `v${APP_CONFIG.version}`;
+
+      // Get the new version from service worker or cache
+      const newVersion = newVersionNumber || await getLatestCacheVersion();
+
+      // If versions match, we're already up to date - don't show notification
+      if (newVersion && currentVersion === newVersion) {
+        return;
+      }
+    } catch (err) {
+      // If version check fails, continue and show notification
+      // (better to show unnecessary notification than miss a real update)
+    }
 
     // Remove existing notification if any
     const existing = document.getElementById('updateNotification');
@@ -183,13 +201,13 @@ if ('serviceWorker' in navigator) {
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
 
-          newWorker.addEventListener('statechange', () => {
+          newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed') {
               if (navigator.serviceWorker.controller) {
                 // New service worker is waiting to activate
                 updateAvailable = true;
                 waitingWorker = newWorker;
-                showUpdateNotification();
+                await showUpdateNotification();
               }
             }
           });
@@ -199,7 +217,7 @@ if ('serviceWorker' in navigator) {
         if (registration.waiting) {
           updateAvailable = true;
           waitingWorker = registration.waiting;
-          showUpdateNotification();
+          await showUpdateNotification();
         }
 
         // Listen for controlling service worker change
