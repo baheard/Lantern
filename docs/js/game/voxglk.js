@@ -584,15 +584,6 @@ export function createVoxGlk(textOutputCallback) {
 
           // Render status bar (1 line only)
           const statusBarEl = document.getElementById('statusBar');
-          // DEBUG: Log status bar updates to diagnose stuck status bar
-          if (window._debugStatusBar) {
-            console.log('[STATUS DEBUG]', {
-              statusBarHTML,
-              statusBarText,
-              changed: statusBarHTML !== lastStatusLine,
-              lastStatusLine
-            });
-          }
           if (statusBarHTML) {
             if (statusBarEl) {
               statusBarEl.innerHTML = statusBarHTML;
