@@ -598,8 +598,8 @@ function handleLocationChange(e) {
         // 3. If direction info exists but position doesn't match, create duplicate
         const hasDirectionInfo = expectedPos !== null;
         const positionMatches = hasDirectionInfo &&
-          Math.abs(expectedPos.x - existingNode.x) < 50 &&
-          Math.abs(expectedPos.y - existingNode.y) < 50;
+          Math.abs(expectedPos.x - existingNode.x) <= 120 &&
+          Math.abs(expectedPos.y - existingNode.y) <= 120;
 
         // Same room if: no direction info OR position matches
         if (!hasDirectionInfo || positionMatches) {

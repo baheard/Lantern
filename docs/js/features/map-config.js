@@ -7,17 +7,16 @@
 // ============================================================================
 
 export const DIRECTION_OFFSETS = {
-  // Cardinal directions - 120px grid
+  // Cardinal directions - 120px (1 grid line at 120px spacing)
   north: { x: 0, y: -120 }, south: { x: 0, y: 120 },
   east: { x: 120, y: 0 }, west: { x: -120, y: 0 },
-  // Diagonals: NW = N + W, etc. Forms a proper grid
+  // Diagonals: NW = N + W style (120px in each direction)
   northeast: { x: 120, y: -120 }, northwest: { x: -120, y: -120 },
   southeast: { x: 120, y: 120 }, southwest: { x: -120, y: 120 },
-  // Vertical - 1.5x N/S distance (180px), offset by half E/W (60px) for clarity
-  up: { x: 60, y: -180 }, down: { x: 60, y: 180 },
-  // Portal/special exits - offset diagonally
-  enter: { x: 100, y: -60 }, exit: { x: -100, y: 60 },
-  'in': { x: 100, y: -60 }, out: { x: -100, y: 60 }
+  // Vertical - 180px vertical (1.5 grid lines), offset 60px horizontal (0.5 grid lines)
+  up: { x: 60, y: -180 }, down: { x: -60, y: 180 }
+  // Portal/special exits (enter, exit, in, out) - NO OFFSETS
+  // These will use the last cardinal direction traveled (fallback logic in map-canvas.js)
 };
 
 // Connection types for visual distinction
@@ -68,8 +67,8 @@ export const NODE_COLORS = {
   current: '#22c55e'  // Green
 };
 
-export const NODE_RADIUS = 23;
-export const NODE_RADIUS_SMALL = 14;  // 60% of normal
+export const NODE_RADIUS = 20;
+export const NODE_RADIUS_SMALL = 12;  // 60% of normal
 export const SMALL_NODE_FADE_SCALE = 0.6;  // Fade out small nodes below this zoom
 export const TOUCH_TARGET = 44;
 export const LONG_PRESS_DURATION = 400;

@@ -56,7 +56,7 @@ export function render() {
 // ============================================================================
 
 function drawGrid(width, height) {
-  const gridSize = 50 * mapState.viewport.scale;
+  const gridSize = 120 * mapState.viewport.scale;
   const offsetX = ((mapState.viewport.x + width / 2) % gridSize + gridSize) % gridSize;
   const offsetY = ((mapState.viewport.y + height / 2) % gridSize + gridSize) % gridSize;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
@@ -174,11 +174,9 @@ function drawNodes() {
     // Never used for metadata or warnings
     ctx.lineWidth = isSmall ? 1.5 : 2;
     if (isCurrent) {
-      // Strong green halo for current location
-      ctx.beginPath(); ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(34,197,94,0.6)'; ctx.stroke();
+      // Strong green ring for current location
       ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = isSmall ? 2 : 3; ctx.stroke();
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = isSmall ? 2.5 : 3.5; ctx.stroke();
     } else if (isSelected || isEdgeStart) {
       // Weaker white halo for selection
       ctx.beginPath(); ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
