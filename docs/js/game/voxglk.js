@@ -30,6 +30,7 @@ let introInputType = null; // Track the input type from the first request (gen 1
 let previousInputType = null; // Track previous input type to detect transitions
 let justExitedCharMode = false; // True when we just transitioned from char to line (VM state needs to settle)
 let gridStates = new Map(); // Track full grid state for each window to handle partial updates
+let justRestored = false; // Flag to prevent grid state creation right after restore (preserves restored HTML)
 
 // Watchdog timer for detecting broken VM state
 let watchdogTimer = null; // Timer for detecting when VM doesn't respond to input
@@ -418,29 +419,27 @@ export function createVoxGlk(textOutputCallback) {
           // Location check moved to after render (needs statusBarText)
         }
 
+        // Determine input mode early (needed for grid state processing)
+        if (arg.input) {
+          const inputTypes = arg.input.map(i => i.type);
+          inputType = inputTypes.includes('char') ? 'char' : 'line';
+          inputEnabled = true;
+          if (arg.input.length > 0 && arg.input[0].id !== undefined) {
+            inputWindowId = arg.input[0].id;
+          }
+        }
+
         // Suppress output after bootstrap input (the "I beg your pardon" response)
         if (skipNextUpdateAfterBootstrap) {
           skipNextUpdateAfterBootstrap = false;
 
-          // Still process input requests so the game can continue
-          if (arg.input) {
-            const inputTypes = arg.input.map(i => i.type);
-            inputType = inputTypes.includes('char') ? 'char' : 'line';
-            inputEnabled = true;
-            if (arg.input.length > 0 && arg.input[0].id !== undefined) {
-              inputWindowId = arg.input[0].id;
-            }
-
-            // If VM is in char mode (press any key/menu), let it render so display matches VM state
-            // Otherwise skip rendering (suppress "I beg your pardon" response)
-            if (inputType === 'char') {
-              // Fall through to render
-            } else {
-              // Line mode - skip rendering as normal
-              return;
-            }
+          // If VM is in char mode (press any key/menu), let it render so display matches VM state
+          // Otherwise skip rendering (suppress "I beg your pardon" response)
+          if (inputType === 'char') {
+            // Fall through to render
           } else {
-            return; // Skip rendering
+            // Line mode - skip rendering as normal
+            return;
           }
         }
 
@@ -481,6 +480,9 @@ export function createVoxGlk(textOutputCallback) {
               }
 
               if (restored) {
+                // Set flag to preserve restored HTML (prevent grid state from overwriting it)
+                justRestored = true;
+
                 // VM state and display HTML restored
                 // For manual restores (quicksave/customsave), ALWAYS send bootstrap with gen:1
                 // For autosave, only send if at gen:1
@@ -492,12 +494,15 @@ export function createVoxGlk(textOutputCallback) {
                   // Wake VM by sending dummy input to fulfill intro's pending request
                   setTimeout(() => {
 
-                    // Set flag to suppress next update (the "I beg your pardon" response)
+                    // Always suppress the bootstrap response
+                    // For manual restores it's garbage output, for autorestore it's "I beg your pardon"
                     skipNextUpdateAfterBootstrap = true;
 
-                    // The intro screen request was created at gen: 1
-                    // IMPORTANT: Must match the input TYPE the VM expects (captured as introInputType)
-                    const bootstrapType = introInputType || 'line'; // Default to line if not captured
+                    // CRITICAL: Always send the intro's input type to satisfy glkapi's expectations
+                    // After restore_file(), glkapi is still at gen:1 waiting for intro input
+                    // We send that input type to "complete" the intro request
+                    // Then VM sends fresh update with the REAL restored state (which we don't suppress)
+                    const bootstrapType = introInputType || 'line';
 
                     if (bootstrapType === 'char') {
                       acceptCallback({
@@ -528,9 +533,23 @@ export function createVoxGlk(textOutputCallback) {
         // Use VoxGlk renderer to convert to frotz HTML
         if (arg.content) {
           // Process grid window updates and maintain full state for partial updates
+          // CRITICAL: Only use grid state tracking in CHAR mode (press-any-key/menu screens)
+          // In LINE mode, the VM always sends complete status bar updates
           arg.content.forEach(c => {
             const win = windows.get(c.id);
             if (win && win.type === 'grid' && c.lines) {
+              // CRITICAL: If we just restored, skip grid state processing entirely
+              // The restored HTML already has the content - preserve it for this update
+              if (justRestored && !c.clear) {
+                return; // Skip this window - let renderer use restored HTML
+              }
+
+              // CRITICAL: Only use grid state tracking in char mode (press-any-key screens)
+              // In line mode, VM sends complete updates - grid tracking breaks it
+              if (inputType !== 'char') {
+                return; // Skip grid state processing - not in char mode
+              }
+
               // Get or create grid state for this window
               let gridState = gridStates.get(c.id);
 
@@ -790,11 +809,6 @@ export function createVoxGlk(textOutputCallback) {
 
         // Handle input requests
         if (arg.input) {
-          const inputTypes = arg.input.map(i => i.type);
-          // Determine if we need char or line input
-          inputType = inputTypes.includes('char') ? 'char' : 'line';
-          inputEnabled = true;
-
           // Detect transition from char to line mode (exiting menus/press-any-key screens)
           // VM state needs to settle - one line command must be processed before saving
           if (previousInputType === 'char' && inputType === 'line') {
@@ -804,11 +818,6 @@ export function createVoxGlk(textOutputCallback) {
             justExitedCharMode = false;
           }
           previousInputType = inputType;
-
-          // Store the window ID from the first input request
-          if (arg.input.length > 0 && arg.input[0].id !== undefined) {
-            inputWindowId = arg.input[0].id;
-          }
 
           // Capture the intro input type (first request at gen 1) for bootstrap after restore
           if (generation === 1 && introInputType === null) {
@@ -845,6 +854,11 @@ export function createVoxGlk(textOutputCallback) {
             skipFirstAutosave = false; // Only skip once
           }
         } else {
+        }
+
+        // Clear justRestored flag after processing first update
+        if (justRestored) {
+          justRestored = false;
         }
 
       } catch (error) {
@@ -1059,4 +1073,13 @@ export function getAcceptCallback() {
  */
 export function setSkipNextUpdateAfterBootstrap(skip) {
   skipNextUpdateAfterBootstrap = skip;
+}
+
+/**
+ * Update lastStatusLine after a manual restore
+ * This ensures voxglk tracks the restored status bar correctly
+ * @param {string} statusHTML - The restored status bar HTML
+ */
+export function updateLastStatusLine(statusHTML) {
+  lastStatusLine = statusHTML;
 }
