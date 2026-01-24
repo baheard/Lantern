@@ -55,6 +55,7 @@ const STYLE_TO_CLASS = {
  * @returns {Object} - { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText }
  */
 export function renderUpdate(updateObj, persistentWindows = null) {
+  console.log('[Renderer] renderUpdate called');
   let statusBarHTML = '';
   let statusBarText = '';
   let upperWindowHTML = '';
@@ -70,20 +71,27 @@ export function renderUpdate(updateObj, persistentWindows = null) {
       updateObj.windows.forEach(w => windows.set(w.id, w));
     }
   }
+  console.log('[Renderer] Windows available:', Array.from(windows.entries()).map(([id, w]) => `${id}:${w.type}`));
 
   // Process content for each window
   if (updateObj.content) {
+    console.log('[Renderer] Processing', updateObj.content.length, 'content items');
     updateObj.content.forEach(content => {
       const window = windows.get(content.id);
       if (!window) {
+        console.log('[Renderer] Warning: content for window', content.id, 'but window not found');
         return;
       }
+
+      console.log('[Renderer] Processing window', content.id, 'type:', window.type, 'lines:', content.lines?.length);
 
       if (window.type === WINTYPE_TEXT_GRID) {
         // Determine window height (number of lines)
         const height = content.lines ? content.lines.length : 0;
+        console.log('[Renderer] Grid window height:', height);
 
         if (height === 1) {
+          console.log('[Renderer] Single-line grid = status bar');
           // Single line = status bar (simple left/right text)
           const statusHTML = renderStatusBar(content);
           const plain = extractPlainText(content);

@@ -14,10 +14,10 @@ The temporary marker system preserves original HTML formatting while enabling ac
 
 **Code has been modularized** (as of December 2024). The highlighting system is now split across multiple ES6 modules instead of a monolithic `app.js`:
 
-- `public/js/narration/chunking.js` - Marker insertion and chunk creation
-- `public/js/narration/highlighting.js` - CSS Highlight API integration
-- `public/js/ui/game-output.js` - Lazy chunking and content rendering
-- `public/js/utils/text-processing.js` - Text transformations and sentence splitting
+- `docs/js/narration/chunking.js` - Marker insertion and chunk creation
+- `docs/js/narration/highlighting.js` - CSS Highlight API integration
+- `docs/js/ui/game-output.js` - Lazy chunking and content rendering
+- `docs/js/utils/text-processing.js` - Text transformations and sentence splitting
 
 ---
 
@@ -229,22 +229,22 @@ Chunk 6: "A sullen belch...you open your umbrella." (marker 6)
 
 **Modularized Architecture (December 2024):**
 
-**`public/js/narration/chunking.js`:**
+**`docs/js/narration/chunking.js`:**
 - `insertTemporaryMarkers(html)` line 15 - Inserts `⚐N⚐` at boundaries
 - `createNarrationChunks(html)` line 60 - Extracts marker IDs from processed chunks
 - `insertRealMarkersAtIDs(container, markerIDs)` line 100 - Replaces temp markers with DOM spans
 - `removeTemporaryMarkers(container, chunks)` line 193 - Cleans up remaining temp markers
 
-**`public/js/narration/highlighting.js`:**
+**`docs/js/narration/highlighting.js`:**
 - `highlightUsingMarkers(chunkIndex)` line 16 - Queries markers and highlights
 - `removeHighlight()` line 129 - Clears CSS highlights
 - `updateTextHighlight(chunkIndex)` line 141 - Updates highlight for specific chunk
 
-**`public/js/ui/game-output.js`:**
+**`docs/js/ui/game-output.js`:**
 - `ensureChunksReady()` line 19 - **NEW:** Lazy chunking system
 - `addGameText(text, isCommand, isVoiceCommand)` line 121 - Renders game output
 
-**`public/js/utils/text-processing.js`:**
+**`docs/js/utils/text-processing.js`:**
 - `splitIntoSentences(processedText)` line 48 - **Critical:** Split regex preserves markers
 - `processTextForTTS(text)` line 23 - Normalizes text for speech synthesis
 
@@ -477,7 +477,7 @@ So the regex didn't match and the split didn't happen.
 
 Each sentence now correctly becomes its own chunk for TTS narration.
 
-**File:** `public/js/utils/text-processing.js` line 55
+**File:** `docs/js/utils/text-processing.js` line 55
 
 ---
 
@@ -507,7 +507,7 @@ text = beforeNode.textContent;
 - ✅ No more collapsed ranges
 - ✅ No more chunks bleeding into each other's highlight
 
-**File:** `public/js/narration/chunking.js` line 158
+**File:** `docs/js/narration/chunking.js` line 158
 
 ---
 
@@ -521,7 +521,7 @@ text = beforeNode.textContent;
 - **Within 3 seconds** of chunk start → go to **previous chunk**
 - **After 3 seconds** → **restart current chunk**
 
-**File:** `public/js/narration/navigation.js` line 34
+**File:** `docs/js/narration/navigation.js` line 34
 
 ---
 
@@ -542,7 +542,7 @@ state.currentChunkIndex = targetIndex;
 updateTextHighlight(targetIndex);
 ```
 
-**Files:** `public/js/narration/navigation.js` (skipToChunk, skipToStart)
+**Files:** `docs/js/narration/navigation.js` (skipToChunk, skipToStart)
 
 **Result:** ✅ Highlights persist smoothly during navigation
 
@@ -570,7 +570,7 @@ state.pendingNarrationText = text;
 // speakTextChunked() will detect isNarrating and stop cleanly
 ```
 
-**File:** `public/js/app.js` line 92-94
+**File:** `docs/js/app.js` line 92-94
 
 **Result:** ✅ Chunk 0 now highlights correctly
 
@@ -602,7 +602,7 @@ if (currentSessionId === state.narrationSessionId) {
 // If session was superseded, exit silently - new session will manage it
 ```
 
-**File:** `public/js/narration/tts-player.js` line 276-298
+**File:** `docs/js/narration/tts-player.js` line 276-298
 
 **Result:** ✅ Old sessions exit cleanly without touching highlights
 
@@ -624,7 +624,7 @@ if (i === 0) {
 updateTextHighlight(i);
 ```
 
-**File:** `public/js/narration/tts-player.js` line 252-254
+**File:** `docs/js/narration/tts-player.js` line 252-254
 
 **Why it works:** Same technique used for VM start timing fix - ensures DOM is fully laid out before applying CSS highlights.
 

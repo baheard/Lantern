@@ -5,7 +5,7 @@
 
 /* Z-index system - centralized layer management */
 :root {
-  --z-map-overlay: 1000;          /* Map overlay base layer */
+  --z-map-overlay: 950;           /* Map overlay base layer - below modals and settings (1000) */
   --z-map-backdrop: 1;            /* Backdrop within overlay */
   --z-map-panel: 2;               /* Map panel above backdrop */
   --z-map-resize-handle: 3;       /* Resize handle above panel */

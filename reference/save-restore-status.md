@@ -47,9 +47,9 @@ The restore process uses a "bootstrap" technique to wake the VM:
 
 ### Files Modified
 
-- `public/js/game/game-loader.js` - Sets flag to trigger restore after VM starts
-- `public/js/game/voxglk.js` - Triggers autoLoad() on first update, sends bootstrap char input
-- `public/js/game/save-manager.js` - Handles VM restore, VoxGlk state restore, and display HTML restoration
+- `docs/js/game/game-loader.js` - Sets flag to trigger restore after VM starts
+- `docs/js/game/voxglk.js` - Triggers autoLoad() on first update, sends bootstrap char input
+- `docs/js/game/save-manager.js` - Handles VM restore, VoxGlk state restore, and display HTML restoration
 
 ### Key Code
 

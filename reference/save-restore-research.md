@@ -114,7 +114,7 @@ Quote: "The I/O state must include the same number of windows, same text visible
 
 ### Current Approach (Correct ✅)
 
-**File:** `public/js/game/save-manager.js`
+**File:** `docs/js/game/save-manager.js`
 
 ```javascript
 // Save
@@ -149,7 +149,7 @@ autoLoad() {
 }
 ```
 
-**File:** `public/js/game/voxglk.js`
+**File:** `docs/js/game/voxglk.js`
 
 ```javascript
 update(arg) {

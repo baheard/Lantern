@@ -9,6 +9,7 @@ import { renderUpdate } from './voxglk-renderer.js';
 import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
 import { checkLocationChange } from '../features/auto-mapper.js';
+import { updateInputVisibility } from '../input/keyboard/keyboard-core.js';
 
 /**
  * State
@@ -359,6 +360,9 @@ export function createVoxGlk(textOutputCallback) {
       clearWatchdog(); // Clear any stale watchdog timer
       isAutoRepairInProgress = false; // Reset repair flag
 
+      // Update input UI immediately
+      updateInputVisibility();
+
       // Store the accept callback - we'll use it to send input later
       acceptCallback = options.accept;
 
@@ -427,6 +431,9 @@ export function createVoxGlk(textOutputCallback) {
           if (arg.input.length > 0 && arg.input[0].id !== undefined) {
             inputWindowId = arg.input[0].id;
           }
+
+          // Update input UI immediately (don't wait for 500ms interval)
+          updateInputVisibility();
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
@@ -918,6 +925,9 @@ export function createVoxGlk(textOutputCallback) {
       inputWindowId = savedInputWindowId;
       inputEnabled = true;
       inputType = 'line';
+
+      // Update input UI immediately
+      updateInputVisibility();
     },
 
     /**

@@ -188,7 +188,7 @@ if ('serviceWorker' in navigator) {
     const { APP_CONFIG } = await import('./config.js');
     const cacheBust = APP_CONFIG.version.replace(/\./g, ''); // e.g., 1.5.108 -> 15108
     navigator.serviceWorker.register(`./service-worker.js?v=${cacheBust}`)
-      .then(registration => {
+      .then(async (registration) => {
         // Check for updates on page load
         registration.update();
 

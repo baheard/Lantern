@@ -27,7 +27,7 @@ Primary state variables for narration and voice control:
 - `manuallyMuted` prevents auto-unmute when pressing play (respects user's explicit choice)
 - `currentInterimTranscript` preserves partial speech on tab switch (sent as 0% confidence command)
 - `pushToTalkMode` disables auto-restart of recognition (only active while button held)
-- `isNavigating` includes 100ms delay to prevent race conditions
+- `isNavigating` includes 100ms delay to prevent race conditions (between navigation actions, not for input polling)
 - Chunks are ALWAYS created when new text arrives, regardless of `narrationEnabled`
 
 ---

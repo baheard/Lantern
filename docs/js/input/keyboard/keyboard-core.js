@@ -794,7 +794,7 @@ function updateClearButtonVisibility() {
 /**
  * Update input visibility based on input type and mute state
  */
-function updateInputVisibility() {
+export function updateInputVisibility() {
   const inputType = getInputType();
   const hasKeyboard = hasPhysicalKeyboard();
   const isMuted = state.isMuted;

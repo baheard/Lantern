@@ -1017,6 +1017,8 @@
   width: 100%;
 }
 
+
+
 .compact-btn:hover {
   background: var(--highlight-active);
   border-color: var(--accent-muted);
@@ -1089,7 +1091,6 @@
 
 .button-group .compact-btn {
   width: 100%;
-  max-width: 180px;
 }
 
 /* Mobile-only elements */

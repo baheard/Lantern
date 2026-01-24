@@ -8,10 +8,12 @@
    - Transparent background, monospace font matches game text
    - Native browser cursor for full editing capabilities
 
-2. **Input Mode Detection**: Polls `getInputType()` every 100ms
+2. **Input Mode Detection**:
+   - **Immediate updates**: `updateInputVisibility()` called immediately when input type changes in voxglk.js
+   - **Fallback polling**: Polls `getInputType()` every 500ms as backup
    - **Line mode**: Shows input with `>` prompt, accepts text commands
    - **Char mode**: Hides input entirely, any keypress sends immediately
-   - Prevents flash on transitions by starting hidden
+   - Prevents flash on transitions by updating immediately on mode change
 
 3. **Echo Suppression**: Detects and skips game command echoes
    - Pattern matching for `glk-input` styled spans (blue echo text)
