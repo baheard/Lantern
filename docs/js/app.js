@@ -138,10 +138,10 @@ if ('serviceWorker' in navigator) {
       <div class="update-content">
         <div class="update-text">
           <div class="update-title">Update available</div>
-          <div class="update-description">Refresh to get the latest version</div>
+          <div class="update-description">Refreshing in <span id="updateCountdown">5</span>s...</div>
         </div>
         <button class="update-button" id="updateButton">
-          Refresh
+          Refresh Now
         </button>
         <button class="update-dismiss" id="updateDismiss">
           <span class="material-icons">close</span>
@@ -155,8 +155,31 @@ if ('serviceWorker' in navigator) {
       notification.classList.add('visible');
     }, 100);
 
+    // Auto-refresh countdown (5 seconds)
+    let countdown = 5;
+    const countdownEl = document.getElementById('updateCountdown');
+
+    const autoRefreshTimer = setInterval(() => {
+      countdown--;
+      if (countdownEl) {
+        countdownEl.textContent = countdown;
+      }
+
+      if (countdown <= 0) {
+        clearInterval(autoRefreshTimer);
+        // Auto-refresh
+        if (waitingWorker) {
+          sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
+          waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+        }
+        notification.classList.remove('visible');
+        setTimeout(() => notification.remove(), 300);
+      }
+    }, 1000);
+
     // Handle update button click
     document.getElementById('updateButton').addEventListener('click', () => {
+      clearInterval(autoRefreshTimer); // Cancel auto-refresh
       if (waitingWorker) {
         // Mark that we just triggered an update to prevent duplicate notification after reload
         sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
@@ -169,6 +192,7 @@ if ('serviceWorker' in navigator) {
 
     // Handle dismiss button click
     document.getElementById('updateDismiss').addEventListener('click', () => {
+      clearInterval(autoRefreshTimer); // Cancel auto-refresh
       notification.classList.remove('visible');
       setTimeout(() => notification.remove(), 300);
     });
