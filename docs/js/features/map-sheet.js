@@ -176,14 +176,43 @@ export function openNodeSheet(node) {
     mergeSection.classList.add('hidden');
   }
 
+  const sheet = document.getElementById('nodeEditSheet');
   document.getElementById('nodeEditBackdrop').classList.remove('hidden');
-  document.getElementById('nodeEditSheet').classList.remove('hidden');
+  sheet.classList.remove('hidden');
+
+  // Reset sheet height to default when opening
+  sheet.style.maxHeight = '';
+  const sheetContent = sheet.querySelector('.sheet-content');
+  if (sheetContent) {
+    sheetContent.style.maxHeight = '';
+  }
+
+  // Immediately adjust height if visual viewport is constrained (keyboard already open)
+  if (window.visualViewport) {
+    const currentHeight = window.visualViewport.height;
+    const maxSheetHeight = Math.max(currentHeight - 20, 300);
+    sheet.style.maxHeight = `${maxSheetHeight}px`;
+    if (sheetContent) {
+      const headerHeight = 80;
+      sheetContent.style.maxHeight = `${maxSheetHeight - headerHeight}px`;
+    }
+  }
+
   render();
 }
 
 export function closeNodeSheet() {
-  document.getElementById('nodeEditSheet').classList.add('hidden');
+  const sheet = document.getElementById('nodeEditSheet');
+  sheet.classList.add('hidden');
   document.getElementById('nodeEditBackdrop').classList.add('hidden');
+
+  // Reset sheet height to default when closing
+  sheet.style.maxHeight = '';
+  const sheetContent = sheet.querySelector('.sheet-content');
+  if (sheetContent) {
+    sheetContent.style.maxHeight = '';
+  }
+
   callbacks.saveMapForGame();
 }
 

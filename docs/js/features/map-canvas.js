@@ -274,6 +274,22 @@ function setupEventListeners() {
     let recenterTimer = null;
     window.visualViewport.addEventListener('resize', () => {
       const currentHeight = window.visualViewport.height;
+
+      // Adjust node edit sheet height to fit within visible viewport
+      const nodeSheet = document.getElementById('nodeEditSheet');
+      if (nodeSheet && !nodeSheet.classList.contains('hidden')) {
+        // Use visual viewport height to constrain sheet (leave 20px margin at top)
+        const maxSheetHeight = Math.max(currentHeight - 20, 300); // Min 300px for usability
+        nodeSheet.style.maxHeight = `${maxSheetHeight}px`;
+
+        // Also update sheet content max-height to ensure scrollability
+        const sheetContent = nodeSheet.querySelector('.sheet-content');
+        if (sheetContent) {
+          const headerHeight = 80; // Approximate header height
+          sheetContent.style.maxHeight = `${maxSheetHeight - headerHeight}px`;
+        }
+      }
+
       // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
       if (isVisible && Math.abs(currentHeight - lastHeight) > 100) {
         // Delay recentering to wait for keyboard animation and scroll settling (150-200ms)
@@ -1356,7 +1372,12 @@ export function centerOnCurrentLocation() {
       mapState.viewport.y = -target.y * mapState.viewport.scale;
     }
 
-    mapState.selectedNode = target.id;
+    // Only update selectedNode if the node edit sheet is not open
+    // This prevents overriding the user's selection when keyboard opens
+    const nodeSheet = document.getElementById('nodeEditSheet');
+    if (!nodeSheet || nodeSheet.classList.contains('hidden')) {
+      mapState.selectedNode = target.id;
+    }
     render();
   }
 }

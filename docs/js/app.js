@@ -340,7 +340,8 @@ window.addEventListener('load', () => {
             alert('Service worker not registered.\n\nPlease reload the app and try again.');
           }
         } catch (err) {
-          alert('Update check failed.\n\nPlease check your connection and try again.');
+          console.error('Update check error:', err);
+          alert(`Update check failed.\n\nError: ${err.message}\n\nPlease check your connection and try again.`);
         }
       } else {
         alert('Service worker not supported.\n\nYour browser may not support offline features.');
