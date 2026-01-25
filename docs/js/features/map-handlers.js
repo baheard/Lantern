@@ -170,12 +170,22 @@ export function handleTouchMove(e) {
   } else if (e.touches.length === 2) {
     const dx = e.touches[1].clientX - e.touches[0].clientX, dy = e.touches[1].clientY - e.touches[0].clientY;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    if (touchState.lastTouchDistance > 0) mapState.viewport.scale = Math.max(0.25, Math.min(4, mapState.viewport.scale * distance / touchState.lastTouchDistance));
+
+    if (touchState.lastTouchDistance > 0) {
+      const rect = canvas.getBoundingClientRect();
+      const center = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+
+      // Convert touch center to canvas-relative coordinates
+      const canvasX = center.x - rect.left;
+      const canvasY = center.y - rect.top;
+
+      // Zoom around the pinch center
+      const zoomFactor = distance / touchState.lastTouchDistance;
+      zoom(zoomFactor, canvasX, canvasY);
+    }
+
     touchState.lastTouchDistance = distance;
-    const center = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-    mapState.viewport.x += center.x - touchState.lastTouchCenter.x;
-    mapState.viewport.y += center.y - touchState.lastTouchCenter.y;
-    touchState.lastTouchCenter = center;
+    touchState.lastTouchCenter = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
     render();
   }
 }
