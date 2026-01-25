@@ -140,16 +140,6 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
         clearTimeout(startTimeout);
         startTimeout = null;
       }
-
-      // Pause voice recognition during TTS to prevent echo
-      // This is more reliable than echo detection filtering alone, especially in Bluetooth/car environments
-      if (state.recognition && state.isRecognitionActive && state.listeningEnabled) {
-        try {
-          state.recognition.stop();
-        } catch (err) {
-          // Ignore errors if already stopped
-        }
-      }
     };
 
     utterance.onend = () => {
@@ -159,19 +149,7 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
       }
       // Don't set isNarrating = false here - let speakTextChunked manage it
       state.ttsIsSpeaking = false;
-
-      // Restart voice recognition after TTS finishes
-      if (state.listeningEnabled && !state.isMuted && !state.isRecognitionActive) {
-        setTimeout(() => {
-          if (state.recognition && state.listeningEnabled && !state.isMuted && !state.isRecognitionActive) {
-            try {
-              state.recognition.start();
-            } catch (err) {
-              // Ignore errors if already running
-            }
-          }
-        }, 100); // Small delay to ensure TTS audio has fully stopped
-      }
+      // Recognition stays active (echo detection filters out game text, allows navigation commands)
 
       // Check if page is hidden (tab switch) - if so, mark as interrupted
       if (document.hidden) {
@@ -201,33 +179,20 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
       }
       // Don't set isNarrating = false here - let speakTextChunked or stopNarration manage it
       state.ttsIsSpeaking = false;
-
-      // Restart voice recognition after error
-      if (state.listeningEnabled && !state.isMuted && !state.isRecognitionActive) {
-        setTimeout(() => {
-          if (state.recognition && state.listeningEnabled && !state.isMuted && !state.isRecognitionActive) {
-            try {
-              state.recognition.start();
-            } catch (err) {
-              // Ignore errors if already running
-            }
-          }
-        }, 100);
-      }
-
+      // Recognition stays active (no need to restart - we don't stop it anymore)
       resolve();
     };
 
     // Stop any current speech
     speechSynthesis.cancel();
 
-    // Mark that TTS is speaking (recognition will be paused during playback)
+    // Mark that TTS is speaking (but keep recognition active - echo detection will filter it)
     state.ttsIsSpeaking = true;
 
-    // Record for echo detection (backup filter in case recognition restarts early)
+    // Record for echo detection BEFORE speaking (so recognition can filter it out)
     recordSpokenChunk(text);
 
-    // Speak (recognition will be paused during playback to prevent echo)
+    // Speak (recognition stays active, echo detection filters out our own voice)
     speechSynthesis.speak(utterance);
 
     // Safety timeout: If TTS doesn't start within 2 seconds, assume it failed

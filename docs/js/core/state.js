@@ -122,8 +122,8 @@ if (typeof window !== 'undefined') {
 export const constants = {
   SOUND_THRESHOLD: 60,
   SILENCE_DELAY: 800,
-  ECHO_CHUNK_RETENTION_MS: 3000,  // 3 seconds - catch TTS echoes that mic picks up
-  ECHO_SIMILARITY_THRESHOLD: 0.4,  // More aggressive matching to catch variations
+  ECHO_CHUNK_RETENTION_MS: 5000,  // 5 seconds - longer retention for Bluetooth audio delays
+  ECHO_SIMILARITY_THRESHOLD: 0.3,  // Lower threshold = more aggressive echo blocking (was 0.4)
   VOICE_CONFIDENCE_THRESHOLD: 0.5
 };
 

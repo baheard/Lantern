@@ -22,6 +22,7 @@ let inputEnabled = false; // Is input currently enabled?
 let inputType = null; // Type of input requested: 'line' or 'char' (null until game requests)
 let inputWindowId = null; // Window ID for the current input request
 let lastStatusLine = ''; // Track status line for scene change detection
+let lastContentGeneration = -1; // Track generation when content was last rendered (prevents clearing on resize)
 let lastCharModePlainText = ''; // Track previous plain text in char mode for diffing
 let resizeTimeout = null; // Debounce resize events
 let skipFirstAutosave = false; // Skip first autosave if we're about to restore
@@ -352,6 +353,7 @@ export function createVoxGlk(textOutputCallback) {
       windows.clear();
       gridStates.clear(); // Clear grid states for new game
       lastStatusLine = '';
+      lastContentGeneration = -1; // Reset content generation tracker
       inputEnabled = false;
       inputType = 'line';
       inputWindowId = null;
@@ -677,7 +679,9 @@ export function createVoxGlk(textOutputCallback) {
 
           // Clear stale lower window content when upper window updates without main content
           // This prevents old transcript from being re-narrated when switching to upper-window-only scenes
-          if (hasUpperWindowContent && !hasMainContent) {
+          // IMPORTANT: Only clear if generation changed (new turn) - prevents clearing during resize/arrange
+          const generationChanged = generation !== lastContentGeneration;
+          if (hasUpperWindowContent && !hasMainContent && generationChanged) {
             const lowerWindowEl = document.getElementById('lowerWindow');
             if (lowerWindowEl) {
               // Remove all game-text elements (but preserve command line)
@@ -695,6 +699,11 @@ export function createVoxGlk(textOutputCallback) {
           // Render lower window (main scrolling text)
           if (mainWindowHTML && mainWindowHTML.trim()) {
             addGameText(mainWindowHTML, false); // false = not a command
+          }
+
+          // Track that we've rendered content for this generation (prevents clearing on resize)
+          if (hasUpperWindowContent || hasMainContent) {
+            lastContentGeneration = generation;
           }
 
           // Send plain text to TTS callback
