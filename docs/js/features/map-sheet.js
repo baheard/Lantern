@@ -17,6 +17,9 @@ let callbacks = {
   pushUndo: () => {}
 };
 
+// Track node state when sheet opens (for undo on close)
+let initialNodeState = null;
+
 export function setSheetCallbacks(cbs) {
   callbacks = { ...callbacks, ...cbs };
 }
@@ -122,6 +125,17 @@ export function createNodeEditSheet() {
 
 export function openNodeSheet(node) {
   mapState.selectedNode = node.id;
+
+  // Capture initial state for undo on close
+  initialNodeState = {
+    nodeId: node.id,
+    name: node.name,
+    notes: node.notes || '',
+    type: node.type || 'location',
+    isSmall: node.isSmall || false,
+    wasEdited: node.isEdited || false
+  };
+
   const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
 
@@ -211,6 +225,31 @@ export function closeNodeSheet() {
   const sheetContent = sheet.querySelector('.sheet-content');
   if (sheetContent) {
     sheetContent.style.maxHeight = '';
+  }
+
+  // Push undo entry if node was edited
+  if (initialNodeState) {
+    const node = mapState.nodes.get(initialNodeState.nodeId);
+    if (node) {
+      // Check if any editable properties changed
+      const nameChanged = node.name !== initialNodeState.name;
+      const notesChanged = (node.notes || '') !== initialNodeState.notes;
+      const typeChanged = (node.type || 'location') !== initialNodeState.type;
+      const sizeChanged = (node.isSmall || false) !== initialNodeState.isSmall;
+
+      if (nameChanged || notesChanged || typeChanged || sizeChanged) {
+        callbacks.pushUndo({
+          type: 'editNode',
+          nodeId: initialNodeState.nodeId,
+          oldName: initialNodeState.name,
+          oldNotes: initialNodeState.notes,
+          oldType: initialNodeState.type,
+          oldIsSmall: initialNodeState.isSmall,
+          wasEdited: initialNodeState.wasEdited
+        });
+      }
+    }
+    initialNodeState = null; // Clear captured state
   }
 
   callbacks.saveMapForGame();

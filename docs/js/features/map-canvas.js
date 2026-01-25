@@ -1684,6 +1684,17 @@ function performUndo() {
         if (!node.isEdited) mapState.protectedNodes.delete(action.nodeId);
       }
       break;
+    case 'editNode':
+      const editedNode = mapState.nodes.get(action.nodeId);
+      if (editedNode) {
+        editedNode.name = action.oldName;
+        editedNode.notes = action.oldNotes;
+        editedNode.type = action.oldType;
+        editedNode.isSmall = action.oldIsSmall;
+        editedNode.isEdited = action.wasEdited;
+        if (!editedNode.isEdited) mapState.protectedNodes.delete(action.nodeId);
+      }
+      break;
   }
 
   updateUndoButton();
