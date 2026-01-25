@@ -715,6 +715,7 @@ body.map-resizing .map-canvas-overlay * {
   bottom: 0;
   left: 0;
   right: 0;
+  top: max(80px, env(safe-area-inset-top, 0px)); /* Prevent hiding behind browser bar */
   background: #1e293b;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
@@ -1269,6 +1270,7 @@ body.map-resizing .map-canvas-overlay * {
   }
 
   .node-edit-sheet {
+    top: max(40px, env(safe-area-inset-top, 0px)); /* Smaller top margin in landscape */
     max-height: 92vh;
   }
 
