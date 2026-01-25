@@ -252,8 +252,20 @@ function setupEventListeners() {
   // Sheet
   document.getElementById('sheetCloseBtn').addEventListener('click', closeNodeSheet);
   document.getElementById('nodeNameInput').addEventListener('input', handleNodeNameChange);
-  document.getElementById('nodeNameInput').addEventListener('focus', (e) => e.target.select());
+  document.getElementById('nodeNameInput').addEventListener('focus', (e) => {
+    e.target.select();
+    // Scroll into view after keyboard opens (delay to wait for keyboard animation)
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  });
   document.getElementById('nodeNotesInput').addEventListener('input', handleNodeNotesChange);
+  document.getElementById('nodeNotesInput').addEventListener('focus', (e) => {
+    // Scroll into view after keyboard opens (delay to wait for keyboard animation)
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  });
   document.getElementById('nodeDeleteBtn').addEventListener('click', handleNodeDelete);
   document.getElementById('nodeConnectBtn').addEventListener('click', startConnectionFromSheet);
   document.getElementById('nodeMergeWithBtn').addEventListener('click', startMergeFromSheet);
@@ -288,6 +300,17 @@ function setupEventListeners() {
           const headerHeight = 80; // Approximate header height
           sheetContent.style.maxHeight = `${maxSheetHeight - headerHeight}px`;
         }
+
+        // Ensure focused input is visible after keyboard appears
+        requestAnimationFrame(() => {
+          const focusedElement = document.activeElement;
+          if (focusedElement && (focusedElement.tagName === 'INPUT' || focusedElement.tagName === 'TEXTAREA')) {
+            // Check if focused element is inside the sheet
+            if (nodeSheet.contains(focusedElement)) {
+              focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        });
       }
 
       // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
