@@ -55,36 +55,36 @@ import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, a
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 
+// Helper function to extract version from cache names (used by service worker and update button)
+async function getLatestCacheVersion() {
+  try {
+    const cacheNames = await caches.keys();
+    // Find all IFTalk core cache names (e.g., "iftalk-core-v1.5.117")
+    const versions = cacheNames
+      .filter(name => name.startsWith('iftalk-core-v'))
+      .map(name => name.replace('iftalk-core-v', ''))
+      .sort((a, b) => {
+        // Sort by version number (simple string comparison works for x.y.z format)
+        const aParts = a.split('.').map(Number);
+        const bParts = b.split('.').map(Number);
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          const diff = (bParts[i] || 0) - (aParts[i] || 0);
+          if (diff !== 0) return diff;
+        }
+        return 0;
+      });
+    return versions[0] ? `v${versions[0]}` : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 // PWA Service Worker Registration with Beautiful Update Notification
 if ('serviceWorker' in navigator) {
   let updateAvailable = false;
   let waitingWorker = null;
   let newVersionNumber = null; // Track the new version from service worker
   let lastNotificationTime = 0; // Prevent showing notification multiple times
-
-  // Helper function to extract version from cache names
-  async function getLatestCacheVersion() {
-    try {
-      const cacheNames = await caches.keys();
-      // Find all IFTalk core cache names (e.g., "iftalk-core-v1.5.117")
-      const versions = cacheNames
-        .filter(name => name.startsWith('iftalk-core-v'))
-        .map(name => name.replace('iftalk-core-v', ''))
-        .sort((a, b) => {
-          // Sort by version number (simple string comparison works for x.y.z format)
-          const aParts = a.split('.').map(Number);
-          const bParts = b.split('.').map(Number);
-          for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-            const diff = (bParts[i] || 0) - (aParts[i] || 0);
-            if (diff !== 0) return diff;
-          }
-          return 0;
-        });
-      return versions[0] ? `v${versions[0]}` : null;
-    } catch (err) {
-      return null;
-    }
-  }
 
   // Function to show beautiful update notification
   async function showUpdateNotification() {
