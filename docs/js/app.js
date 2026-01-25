@@ -325,8 +325,8 @@ window.addEventListener('load', () => {
 
             // If there's a waiting service worker, activate it
             if (registration.waiting) {
-              // Try to get version from cache, message, or use 'latest'
-              const newVersion = newVersionNumber || await getLatestCacheVersion() || 'latest';
+              // Try to get version from cache or use 'latest'
+              const newVersion = await getLatestCacheVersion() || 'latest';
               alert(`Update found!\n\nUpdating to version ${newVersion}.\n\nThe page will reload now.`);
               // Mark that we just triggered an update to prevent duplicate notification after reload
               sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
