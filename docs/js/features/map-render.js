@@ -80,9 +80,9 @@ function drawEdges() {
     const connectionType = getConnectionType(edge);
     const style = CONNECTION_STYLES[connectionType] || CONNECTION_STYLES.cardinal;
 
-    // Player-created: purple solid. Auto-mapped: type color with type dash pattern
+    // Player-created: purple with type dash pattern. Auto-mapped: blue with type dash pattern
     const edgeColor = isUser ? '#8b5cf6' : style.color;
-    const edgeDash = isUser ? [] : style.dash;  // Player-created always solid
+    const edgeDash = style.dash;  // Respect connection type for both user and auto edges
 
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = edgeColor;
