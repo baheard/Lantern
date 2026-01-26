@@ -419,6 +419,9 @@ export function createVoxGlk(textOutputCallback) {
         // Always update generation from Glk - this is the current turn number
         if (arg.gen !== undefined) {
           generation = arg.gen;
+          // CRITICAL: Update lastContentGeneration IMMEDIATELY to prevent clearing on rapid updates (resize)
+          // This must happen BEFORE the clearing check below, not after rendering
+          lastContentGeneration = generation;
           // Clear watchdog since VM responded with a new generation
           clearWatchdog();
 
@@ -712,11 +715,6 @@ export function createVoxGlk(textOutputCallback) {
           // Render lower window (main scrolling text)
           if (mainWindowHTML && mainWindowHTML.trim()) {
             addGameText(mainWindowHTML, false); // false = not a command
-          }
-
-          // Track that we've rendered content for this generation (prevents clearing on resize)
-          if (hasUpperWindowContent || hasMainContent) {
-            lastContentGeneration = generation;
           }
 
           // Send plain text to TTS callback
