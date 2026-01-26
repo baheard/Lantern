@@ -522,10 +522,8 @@ async function performRestore(storageKey, displayName = null, options = {}) {
 
         // Restore using ZVM
         const result = window.zvmInstance.restore_file(bytes.buffer);
-        console.log('[SaveManager] restore_file() result:', result);
 
         if (result === 2) { // ZVM returns 2 on successful restore
-            console.log('[SaveManager] Restore successful, restoring HTML...');
             // DON'T restore VoxGlk generation - keep it at 1 (current intro state)
             // After page reload, glkapi.js is at gen:1, so VoxGlk must stay at gen:1
             // The saved generation is just VM memory state, not the UI turn counter
@@ -538,10 +536,8 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 const lowerWindowEl = document.getElementById('lowerWindow');
 
                 if (statusBarEl && saveData.displayHTML.statusBar) {
-                    console.log('[SaveManager] Restoring status bar HTML:', saveData.displayHTML.statusBar.substring(0, 100));
                     statusBarEl.innerHTML = saveData.displayHTML.statusBar;
                     statusBarEl.style.display = '';
-                    console.log('[SaveManager] Status bar restored, element now contains:', statusBarEl.innerHTML.substring(0, 100));
 
                     // Update voxglk's lastStatusLine so it knows the current status
                     const voxglk = await import('./voxglk.js');
