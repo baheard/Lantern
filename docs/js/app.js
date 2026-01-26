@@ -1087,7 +1087,18 @@ async function initApp() {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
     };
-    skipToStartBtn.addEventListener('click', handleSkipToStart);
+    skipToStartBtn.addEventListener('click', (e) => {
+      // Preserve focus on input to keep keyboard open
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
+      handleSkipToStart();
+
+      // Restore focus to input after handling action
+      if (isInputFocused) {
+        setTimeout(() => activeElement.focus(), 0);
+      }
+    });
     skipToStartBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1102,7 +1113,18 @@ async function initApp() {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToChunk(-1, () => speakTextChunked(null, state.currentChunkIndex));
     };
-    prevChunkBtn.addEventListener('click', handlePrev);
+    prevChunkBtn.addEventListener('click', (e) => {
+      // Preserve focus on input to keep keyboard open
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
+      handlePrev();
+
+      // Restore focus to input after handling action
+      if (isInputFocused) {
+        setTimeout(() => activeElement.focus(), 0);
+      }
+    });
     prevChunkBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1224,7 +1246,18 @@ async function initApp() {
         updateNavButtons();
       }
     };
-    pausePlayBtn.addEventListener('click', handlePausePlay);
+    pausePlayBtn.addEventListener('click', (e) => {
+      // Preserve focus on input to keep keyboard open
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
+      handlePausePlay();
+
+      // Restore focus to input after handling pause/play
+      if (isInputFocused) {
+        setTimeout(() => activeElement.focus(), 0);
+      }
+    });
     pausePlayBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1239,7 +1272,18 @@ async function initApp() {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToChunk(1, () => speakTextChunked(null, state.currentChunkIndex));
     };
-    nextChunkBtn.addEventListener('click', handleNext);
+    nextChunkBtn.addEventListener('click', (e) => {
+      // Preserve focus on input to keep keyboard open
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
+      handleNext();
+
+      // Restore focus to input after handling action
+      if (isInputFocused) {
+        setTimeout(() => activeElement.focus(), 0);
+      }
+    });
     nextChunkBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1254,7 +1298,18 @@ async function initApp() {
       state.autoplayEnabled = true;  // Enable autoplay when clicking nav buttons
       skipToEnd();
     };
-    skipToEndBtn.addEventListener('click', handleSkipToEnd);
+    skipToEndBtn.addEventListener('click', (e) => {
+      // Preserve focus on input to keep keyboard open
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+
+      handleSkipToEnd();
+
+      // Restore focus to input after handling action
+      if (isInputFocused) {
+        setTimeout(() => activeElement.focus(), 0);
+      }
+    });
     skipToEndBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
