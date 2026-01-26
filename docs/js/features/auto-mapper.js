@@ -142,11 +142,8 @@ function getCurrentLocationFromVM() {
  * @param {number} generation - Current game turn number
  */
 export function checkLocationChange(statusBarText, generation, currentInputType = null) {
-  console.log('[AutoMapper] checkLocationChange called - statusBarText:', statusBarText, 'gen:', generation, 'inputType:', currentInputType);
   const location = getCurrentLocation(statusBarText);
-  console.log('[AutoMapper] Parsed location:', location);
   if (!location) {
-    console.log('[AutoMapper] No location found, returning');
     return;
   }
 
@@ -160,17 +157,14 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
       inputType = voxglk.getInputType();
     }
   }
-  console.log('[AutoMapper] Final inputType:', inputType);
 
   if (inputType === 'char') {
-    console.log('[AutoMapper] Char mode detected, skipping location tracking');
     // Char mode - this is a press-any-key screen, not a real location
     // Don't add to journey or fire location change events
     return;
   }
 
   const locationChanged = location.name !== lastLocationName;
-  console.log('[AutoMapper] lastLocationName:', lastLocationName, 'new location:', location.name, 'changed:', locationChanged);
 
   if (locationChanged) {
     const previousLocationName = lastLocationName;
