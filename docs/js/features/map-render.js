@@ -59,7 +59,7 @@ function drawGrid(width, height) {
   const gridSize = 120 * mapState.viewport.scale;
   const offsetX = ((mapState.viewport.x + width / 2) % gridSize + gridSize) % gridSize;
   const offsetY = ((mapState.viewport.y + height / 2) % gridSize + gridSize) % gridSize;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
   for (let x = offsetX; x < width; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
   for (let y = offsetY; y < height; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }

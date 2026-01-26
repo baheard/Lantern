@@ -515,7 +515,20 @@ function toggleAutoMap() {
 
   // When turning automap ON, immediately map the current location if not already mapped
   if (mapState.autoMapEnabled) {
-    const currentLocationName = getLastLocationName();
+    // Actively check the status bar for current location (don't just rely on cached lastLocationName)
+    const statusBarEl = document.getElementById('statusBar');
+    const statusText = statusBarEl?.textContent?.trim();
+
+    let currentLocationName = getLastLocationName();
+
+    // If we have status bar text, try to extract the current location from it
+    if (statusText && statusText.length > 0) {
+      const location = window.getCurrentLocation ? window.getCurrentLocation(statusText) : null;
+      if (location?.name) {
+        currentLocationName = location.name;
+      }
+    }
+
     if (currentLocationName && !mapState.nodes.has(currentLocationName) && !mapState.deletedNodes.has(currentLocationName)) {
       // Add the current location at origin (0, 0) since we have no context
       mapState.nodes.set(currentLocationName, {
