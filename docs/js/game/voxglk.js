@@ -685,23 +685,11 @@ export function createVoxGlk(textOutputCallback) {
           // IMPORTANT: Only clear if generation changed (new turn) - prevents clearing during resize/arrange
           const generationChanged = generation !== lastContentGeneration;
 
-          // DEBUG: Log clearing decision
-          console.log('[voxglk] Clear check:', {
-            generation,
-            lastContentGeneration,
-            generationChanged,
-            hasUpperWindowContent,
-            hasMainContent,
-            willClear: hasUpperWindowContent && !hasMainContent && generationChanged
-          });
-
           if (hasUpperWindowContent && !hasMainContent && generationChanged) {
-            console.log('[voxglk] CLEARING game-text elements (generation changed from', lastContentGeneration, 'to', generation, ')');
             const lowerWindowEl = document.getElementById('lowerWindow');
             if (lowerWindowEl) {
               // Remove all game-text elements (but preserve command line)
               const gameTexts = lowerWindowEl.querySelectorAll('.game-text');
-              console.log('[voxglk] Removing', gameTexts.length, 'game-text elements');
               gameTexts.forEach(el => el.remove());
               // Clear currentGameTextElement so ensureChunksReady won't use stale content
               state.currentGameTextElement = null;
