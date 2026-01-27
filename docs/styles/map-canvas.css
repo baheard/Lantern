@@ -64,7 +64,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  left: 40%; /* Default 40% from left edge - balanced view of game + map */
+  left: 35%; /* Default 35% from left edge - more map space */
   background: #0f172a;
   display: flex;
   flex-direction: column;
