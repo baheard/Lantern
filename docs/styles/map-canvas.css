@@ -73,8 +73,7 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
   cursor: default; /* Reset cursor inside panel */
-  /* PWA safe area insets */
-  padding-top: env(safe-area-inset-top);
+  /* PWA safe area insets - only on sides and bottom */
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -718,12 +717,11 @@ body.map-resizing .map-canvas-overlay * {
   bottom: 0;
   left: 0;
   right: 0;
-  top: max(80px, env(safe-area-inset-top, 0px)); /* Prevent hiding behind browser bar */
+  top: max(10px, env(safe-area-inset-top, 10px)); /* Small gap at top, cover map header */
   background: #1e293b;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
-  max-height: 80vh;
   overflow: hidden;
   z-index: var(--z-map-edit-sheet);
   animation: sheetSlideUp 0.3s ease-out;
@@ -1273,12 +1271,7 @@ body.map-resizing .map-canvas-overlay * {
   }
 
   .node-edit-sheet {
-    top: max(40px, env(safe-area-inset-top, 0px)); /* Smaller top margin in landscape */
-    max-height: 92vh;
-  }
-
-  .sheet-content {
-    max-height: calc(92vh - 24px);
+    top: max(10px, env(safe-area-inset-top, 10px)); /* Small gap at top in landscape too */
   }
 
   .map-fab-container {
