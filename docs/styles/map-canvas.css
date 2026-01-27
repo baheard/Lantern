@@ -73,7 +73,8 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
   cursor: default; /* Reset cursor inside panel */
-  /* PWA safe area insets - only on sides and bottom */
+  /* PWA safe area insets */
+  padding-top: env(safe-area-inset-top);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
