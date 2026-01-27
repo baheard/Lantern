@@ -9,6 +9,7 @@
   --z-map-backdrop: 1;            /* Backdrop within overlay */
   --z-map-panel: 2;               /* Map panel above backdrop */
   --z-map-resize-handle: 3;       /* Resize handle above panel */
+  --z-map-toolbar: 4;             /* Toolbar header */
   --z-map-legend: 5;              /* Legend floating element */
   --z-map-legend-toggle: 6;       /* Legend toggle above legend */
   --z-map-fab: 10;                /* Floating action buttons */
@@ -160,6 +161,7 @@ body.map-resizing .map-canvas-overlay * {
   min-height: 56px;
   flex-shrink: 0;
   position: relative;
+  z-index: var(--z-map-toolbar);
 }
 
 .map-title {
