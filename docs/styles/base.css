@@ -223,7 +223,6 @@ body {
   overflow: hidden;
   display: flex;
   justify-content: center;
-  padding-top: env(safe-area-inset-top);
   position: relative; /* For absolute positioning of scroll-down button and map overlay */
 }
 
