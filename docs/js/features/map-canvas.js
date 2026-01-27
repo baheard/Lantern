@@ -178,8 +178,9 @@ function createMapUI() {
       </div>
     </div>
   `;
-  // Append to body so map overlay (including node sheet) can appear above controls
-  document.body.appendChild(cont);
+  // Append to .container so map stays behind controls
+  const gameContainer = document.querySelector('.container');
+  gameContainer.appendChild(cont);
   setContainer(cont);
 
   const canvasEl = document.getElementById('mapCanvas');

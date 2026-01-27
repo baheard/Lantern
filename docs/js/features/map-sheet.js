@@ -33,7 +33,8 @@ export function createNodeEditSheet() {
   const backdrop = document.createElement('div');
   backdrop.id = 'nodeEditBackdrop';
   backdrop.className = 'node-edit-backdrop hidden';
-  container.appendChild(backdrop);
+  // Append to body so it can appear above controls
+  document.body.appendChild(backdrop);
 
   const sheet = document.createElement('div');
   sheet.id = 'nodeEditSheet';
@@ -116,7 +117,8 @@ export function createNodeEditSheet() {
       </div>
     </div>
   `;
-  container.appendChild(sheet);
+  // Append to body so it can appear above controls
+  document.body.appendChild(sheet);
 }
 
 // ============================================================================

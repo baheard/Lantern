@@ -15,9 +15,10 @@
   --z-map-fab: 10;                /* Floating action buttons */
   --z-map-mode-indicator: 15;     /* Mode indicator banner */
   --z-map-hint: 20;               /* Hint toasts */
-  --z-map-edit-backdrop: 49;      /* Node edit backdrop */
-  --z-map-edit-sheet: 50;         /* Node edit sheet */
-  --z-map-context-menu: 100;      /* Context menu */
+  --z-controls: 100;              /* Control panel (navigation + input) */
+  --z-map-edit-backdrop: 2000;    /* Node edit backdrop (above controls) */
+  --z-map-edit-sheet: 2001;       /* Node edit sheet (above controls) */
+  --z-map-context-menu: 2010;     /* Context menu */
 }
 
 /* Map Overlay - Slide from right with backdrop */
@@ -692,7 +693,7 @@ body.map-resizing .map-canvas-overlay * {
 
 /* Node Edit Backdrop */
 .node-edit-backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -713,7 +714,7 @@ body.map-resizing .map-canvas-overlay * {
 
 /* Node Edit Bottom Sheet */
 .node-edit-sheet {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
