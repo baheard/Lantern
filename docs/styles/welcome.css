@@ -5,7 +5,6 @@
   position: relative;
   text-align: center;
   padding: 20px 20px;
-  padding-top: max(20px, env(safe-area-inset-top));
   width: 100%;
   overflow-y: auto;
   height: 100%; /* Fill container height to enable scrolling */

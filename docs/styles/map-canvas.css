@@ -73,7 +73,8 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
   cursor: default; /* Reset cursor inside panel */
-  /* PWA safe area insets - only on sides and bottom, toolbar handles top */
+  /* PWA safe area insets */
+  padding-top: env(safe-area-inset-top);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -156,7 +157,6 @@ body.map-resizing .map-canvas-overlay * {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  padding-top: max(8px, env(safe-area-inset-top)); /* Account for notch/safe area */
   background: #1e293b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 56px;
