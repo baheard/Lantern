@@ -206,12 +206,10 @@ export function openNodeSheet(node) {
   // Immediately adjust height if visual viewport is constrained (keyboard already open)
   if (window.visualViewport) {
     const currentHeight = window.visualViewport.height;
-    const maxSheetHeight = Math.max(currentHeight - 20, 300);
+    const topGap = 80;
+    const maxSheetHeight = Math.max(currentHeight - topGap, 300);
     sheet.style.maxHeight = `${maxSheetHeight}px`;
-    if (sheetContent) {
-      const headerHeight = 80;
-      sheetContent.style.maxHeight = `${maxSheetHeight - headerHeight}px`;
-    }
+    // Note: sheet-content uses flexbox and will size automatically
   }
 
   render();

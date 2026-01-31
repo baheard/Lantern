@@ -290,16 +290,12 @@ function setupEventListeners() {
       // Adjust node edit sheet height to fit within visible viewport
       const nodeSheet = document.getElementById('nodeEditSheet');
       if (nodeSheet && !nodeSheet.classList.contains('hidden')) {
-        // Use visual viewport height to constrain sheet (leave 20px margin at top)
-        const maxSheetHeight = Math.max(currentHeight - 20, 300); // Min 300px for usability
+        // Use visual viewport height to constrain sheet (leave 80px margin at top)
+        const topGap = 80;
+        const maxSheetHeight = Math.max(currentHeight - topGap, 300); // Min 300px for usability
         nodeSheet.style.maxHeight = `${maxSheetHeight}px`;
 
-        // Also update sheet content max-height to ensure scrollability
-        const sheetContent = nodeSheet.querySelector('.sheet-content');
-        if (sheetContent) {
-          const headerHeight = 80; // Approximate header height
-          sheetContent.style.maxHeight = `${maxSheetHeight - headerHeight}px`;
-        }
+        // Note: sheet-content uses flexbox and will size automatically
 
         // Ensure focused input is visible after keyboard appears
         requestAnimationFrame(() => {
@@ -307,11 +303,25 @@ function setupEventListeners() {
           if (focusedElement && (focusedElement.tagName === 'INPUT' || focusedElement.tagName === 'TEXTAREA')) {
             // Check if focused element is inside the sheet
             if (nodeSheet.contains(focusedElement)) {
-              focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Scroll within the sheet-content only, not the whole viewport
+              const sheetContent = nodeSheet.querySelector('.sheet-content');
+              if (sheetContent) {
+                const inputRect = focusedElement.getBoundingClientRect();
+                const contentRect = sheetContent.getBoundingClientRect();
+
+                // Only scroll if input is below the visible area
+                if (inputRect.bottom > contentRect.bottom - 20) {
+                  const scrollOffset = inputRect.bottom - contentRect.bottom + 60; // Add 60px padding
+                  sheetContent.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+                }
+              }
             }
           }
         });
       }
+
+      // Hide toolbar and FAB buttons when keyboard is up (to maximize canvas space)
+      updateUIVisibilityForKeyboard();
 
       // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
       if (isVisible && Math.abs(currentHeight - lastHeight) > 100) {
@@ -1302,6 +1312,25 @@ function showOnboardingOrHint() {
 // MAP VISIBILITY
 // ============================================================================
 
+/**
+ * Update toolbar and FAB visibility based on keyboard state
+ */
+function updateUIVisibilityForKeyboard() {
+  if (!isVisible || !window.visualViewport) return;
+
+  const fabContainer = container.querySelector('.map-fab-container');
+  const toolbar = container.querySelector('.map-toolbar');
+  const currentHeight = window.visualViewport.height;
+  const isKeyboardUp = currentHeight < window.innerHeight - 100;
+
+  if (fabContainer) {
+    fabContainer.style.display = isKeyboardUp ? 'none' : '';
+  }
+  if (toolbar) {
+    toolbar.style.display = isKeyboardUp ? 'none' : '';
+  }
+}
+
 export function showMap() {
   container.classList.remove('hidden');
   // Trigger reflow to ensure transition happens
@@ -1319,6 +1348,11 @@ export function showMap() {
 
   resizeCanvas(); updateNodeCount(); centerOnCurrentLocation();
   showOnboardingOrHint();
+
+  // Check keyboard state and hide UI elements if keyboard is up
+  setTimeout(() => {
+    updateUIVisibilityForKeyboard();
+  }, 100);
 }
 
 export async function hideMap() {
@@ -1329,6 +1363,17 @@ export async function hideMap() {
   // Clear any visible toasts (without marking as dismissed)
   clearAllToasts();
   exitAddMode();
+
+  // Reset FAB and toolbar visibility (from keyboard handling)
+  const fabContainer = container?.querySelector('.map-fab-container');
+  const toolbar = container?.querySelector('.map-toolbar');
+  if (fabContainer) {
+    fabContainer.style.display = '';
+  }
+  if (toolbar) {
+    toolbar.style.display = '';
+  }
+
   saveMapForGame(true);  // Immediate save when hiding map
 
   // If user made changes to the map, trigger a full autosave
@@ -1388,8 +1433,8 @@ export function centerOnCurrentLocation() {
       const visibleHeight = Math.max(0, visibleBottom - visibleTop);
 
       // Target screen Y position (center of visible area, with upward bias) in viewport coordinates
-      // Use 40% from top instead of 50% to account for controls at bottom
-      const targetScreenY = visibleTop + visibleHeight * 0.4;
+      // Use 30% from top to position node higher when keyboard is visible
+      const targetScreenY = visibleTop + visibleHeight * 0.3;
 
       // Convert to canvas-relative coordinates
       const targetCanvasY = targetScreenY - canvasRect.top;

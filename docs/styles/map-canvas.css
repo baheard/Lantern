@@ -15,7 +15,7 @@
   --z-map-fab: 10;                /* Floating action buttons */
   --z-map-mode-indicator: 15;     /* Mode indicator banner */
   --z-map-hint: 20;               /* Hint toasts */
-  --z-controls: 100;              /* Control panel (navigation + input) */
+  --z-controls: 980;              /* Control panel (navigation + input) - above map overlay */
   --z-map-edit-backdrop: 2000;    /* Node edit backdrop (above controls) */
   --z-map-edit-sheet: 2001;       /* Node edit sheet (above controls) */
   --z-map-context-menu: 2010;     /* Context menu */
@@ -718,12 +718,13 @@ body.map-resizing .map-canvas-overlay * {
   bottom: 0;
   left: 0;
   right: 0;
-  top: max(10px, env(safe-area-inset-top, 10px)); /* Small gap at top, cover map header */
+  top: max(80px, calc(env(safe-area-inset-top, 0px) + 80px)); /* Larger gap at top for backdrop tap area */
   background: #1e293b;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   z-index: var(--z-map-edit-sheet);
   animation: sheetSlideUp 0.3s ease-out;
 }
@@ -742,9 +743,11 @@ body.map-resizing .map-canvas-overlay * {
 }
 
 .sheet-handle-area {
-  padding: 6px 0;
+  padding: 8px 0;
   cursor: grab;
   touch-action: none;
+  flex-shrink: 0;
+  background: #1e293b;
 }
 
 .sheet-handle-area:active {
@@ -762,7 +765,8 @@ body.map-resizing .map-canvas-overlay * {
 .sheet-content {
   padding: 0 20px 24px;
   overflow-y: auto;
-  max-height: calc(70vh - 24px);
+  flex: 1;
+  min-height: 0; /* Allow flex child to shrink */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -771,6 +775,12 @@ body.map-resizing .map-canvas-overlay * {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background: #1e293b;
+  z-index: 10;
+  padding-top: 16px;
+  margin-top: -16px; /* Compensate for padding to maintain spacing */
 }
 
 .sheet-header-left {
@@ -1272,7 +1282,7 @@ body.map-resizing .map-canvas-overlay * {
   }
 
   .node-edit-sheet {
-    top: max(10px, env(safe-area-inset-top, 10px)); /* Small gap at top in landscape too */
+    top: max(60px, calc(env(safe-area-inset-top, 0px) + 60px)); /* Slightly smaller gap in landscape */
   }
 
   .map-fab-container {

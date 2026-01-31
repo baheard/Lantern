@@ -590,7 +590,8 @@
  *   - 1000: Welcome settings (#welcomeSettingsPanel)
  *
  * 100-999 (Overlay layer - Floating UI elements)
- *   - 950: Mobile menu (#mobileMenu)
+ *   - 970: Mobile menu (#mobileMenu) - above map overlay
+ *   - 950: Map overlay (map-canvas.css)
  *   - 900: Quick action bar (#quickActionBar)
  *   - 100: Welcome screen game thumbnails
  *
@@ -623,7 +624,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
-  z-index: 950; /* Overlay layer - below modals (see Z-INDEX HIERARCHY) */
+  z-index: 970; /* Above map overlay (950) but below modals (1000+) */
   min-width: 200px;
   transform-origin: bottom right;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
