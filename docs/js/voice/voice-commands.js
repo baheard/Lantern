@@ -33,6 +33,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // Fix common misrecognitions that should always be replaced
   transcript = transcript.replace(/\bali\b/gi, 'alley');
   transcript = transcript.replace(/\ballie\b/gi, 'alley');
+  transcript = transcript.replace(/\bquick\s+safe\b/gi, 'quick save');
 
   lower = transcript.toLowerCase().trim();
 
@@ -47,6 +48,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     'away': 'west',  // "go away" should be "go west" (phrase-level will be "go west")
     'murphy': 'northeast',
     'artist': 'northeast',
+    'luck': 'look',
   };
 
   // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)

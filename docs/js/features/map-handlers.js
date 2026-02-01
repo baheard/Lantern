@@ -5,7 +5,8 @@
 import {
   canvas, mapState, domRefs,
   NODE_RADIUS, TOUCH_TARGET,
-  timers, touchState, isVisible
+  timers, touchState, isVisible,
+  DIRECTION_TO_TYPE, COMMAND_DIRECTIONS
 } from './map-config.js';
 import { render, screenToCanvas, zoom } from './map-render.js';
 import { openNodeSheet, createManualEdge, closeNodeSheet, performManualMerge } from './map-sheet.js';
@@ -110,6 +111,19 @@ export function handlePointerUp(e) {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
   const canvasPoint = screenToCanvas(x, y);
+
+  // Check for question mark tap first (before node tap detection)
+  if (!mapState.isDragging && !mapState.dragNode && !mapState.hasDragged) {
+    const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);
+    if (hitQuestionMark) {
+      const fromNode = mapState.nodes.get(hitQuestionMark.from);
+      const toNode = mapState.nodes.get(hitQuestionMark.to);
+      const command = hitQuestionMark.command || 'portal';
+      callbacks.showHint(`Uncertain connection "${command}" from "${fromNode?.name}" to "${toNode?.name}". Move either location to confirm this path.`);
+      return;
+    }
+  }
+
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
   if (mapState.dragNode && !mapState.isDragging) {
@@ -253,5 +267,51 @@ export function getNodeAtPoint(x, y) {
   for (const node of mapState.nodes.values()) {
     if (Math.sqrt((node.x - x) ** 2 + (node.y - y) ** 2) <= hitRadius) return node;
   }
+  return null;
+}
+
+// ============================================================================
+// QUESTION MARK HIT DETECTION
+// ============================================================================
+
+/**
+ * Check if a tap is on a question mark of an uncertain portal connection
+ * @param {number} x - Canvas X coordinate
+ * @param {number} y - Canvas Y coordinate
+ * @returns {Object|null} Edge object if hit, null otherwise
+ */
+export function getQuestionMarkAtPoint(x, y) {
+  const hitRadius = 15 / mapState.viewport.scale;  // 15px touch target in screen space
+
+  for (const edge of mapState.edges.values()) {
+    const from = mapState.nodes.get(edge.from);
+    const to = mapState.nodes.get(edge.to);
+    if (!from || !to) continue;
+
+    // Determine connection type
+    let connectionType = edge.connectionType;
+    if (!connectionType && edge.command) {
+      const direction = COMMAND_DIRECTIONS[edge.command.toLowerCase().trim()];
+      if (direction && DIRECTION_TO_TYPE[direction]) {
+        connectionType = DIRECTION_TO_TYPE[direction];
+      }
+    }
+    if (!connectionType) connectionType = 'cardinal';
+
+    // Check if this is an unverified portal edge (same criteria as rendering)
+    const isUser = edge.isManual;
+    if (connectionType === 'portal' && !isUser && !edge.isEdited && !from.isEdited && !to.isEdited) {
+      // Calculate midpoint
+      const midX = (from.x + to.x) / 2;
+      const midY = (from.y + to.y) / 2;
+
+      // Check if tap is within hit radius
+      const dist = Math.sqrt((x - midX) ** 2 + (y - midY) ** 2);
+      if (dist <= hitRadius) {
+        return edge;
+      }
+    }
+  }
+
   return null;
 }

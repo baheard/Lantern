@@ -38,7 +38,7 @@ const INSTANT_COMMANDS = [
   'northeast', 'northwest', 'southeast', 'southwest',
   'ne', 'nw', 'se', 'sw',
   'out',  // 'in' removed - conflicts with "inventory"
-  'enter', 'exit',
+  'exit',  // 'enter' removed - only process on press any key screens
   // Common IF commands
   'look', 'l',
   'inventory', 'i',
