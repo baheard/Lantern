@@ -767,9 +767,6 @@ export function initGameSelection(onOutput) {
       localStorage.removeItem('iftalk_last_game');
     }
 
-    // Render recently played section for custom games
-    renderRecentlyPlayedSection(onOutput);
-
     // Fade out loading overlay to reveal welcome screen
     setTimeout(() => {
       const loadingOverlay = document.getElementById('loadingOverlay');
@@ -778,7 +775,14 @@ export function initGameSelection(onOutput) {
         // Remove from DOM after animation completes
         loadingOverlay.addEventListener('transitionend', () => {
           loadingOverlay.remove();
+
+          // Render recently played section AFTER overlay has faded
+          // This prevents DOM modifications from causing a visible flash during fade
+          renderRecentlyPlayedSection(onOutput);
         }, { once: true });
+      } else {
+        // No overlay present - render immediately
+        renderRecentlyPlayedSection(onOutput);
       }
     }, 100);
   }

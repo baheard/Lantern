@@ -235,12 +235,10 @@ function drawNodes() {
       ctx.fillStyle = '#ffffff'; ctx.font = `${10 * badgeScale}px Material Icons`;
       ctx.fillText('edit_note', badgeX, badgeY + 1);
     } else if (isEdited) {
-      // Edited badge - purple with edit icon
-      ctx.beginPath(); ctx.arc(badgeX, badgeY, 6 * badgeScale, 0, Math.PI * 2);
-      ctx.fillStyle = '#a78bfa'; ctx.fill();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5 * badgeScale; ctx.stroke();
-      ctx.fillStyle = '#ffffff'; ctx.font = `${8 * badgeScale}px Material Icons`;
-      ctx.fillText('edit', badgeX, badgeY + 1);
+      // Edited badge - small subtle purple dot (manually repositioned nodes)
+      ctx.beginPath(); ctx.arc(badgeX, badgeY, 3.5 * badgeScale, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.9)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 1 * badgeScale; ctx.stroke();
     }
   }
 }

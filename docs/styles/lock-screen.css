@@ -133,16 +133,11 @@
 #lockBtn.locked {
   background: rgba(196, 163, 90, 0.2);
   border-color: var(--accent-warm);
+  z-index: 5100; /* Above lock screen overlay when active */
 }
 
 #lockBtn.locked .material-icons {
   color: var(--accent-warm);
-}
-
-/* Elevated z-index only when lock screen is active */
-/* This prevents it from appearing above settings panel when not locked */
-.lock-screen-overlay:not(.hidden) ~ .container #lockBtn {
-  z-index: 5100; /* Above lock screen overlay when active */
 }
 
 /* Lock Button Progress Meter (appears above lock button when holding) */
