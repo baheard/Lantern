@@ -1543,7 +1543,7 @@ function syncFromAutoMapper() {
     'sw': { x: -120, y: 120 }, 'southwest': { x: -120, y: 120 },
     // Vertical (1.5x N/S distance = 180px, offset by half E/W = 60px for clarity)
     'u': { x: 60, y: -180 }, 'up': { x: 60, y: -180 },
-    'd': { x: 60, y: 180 }, 'down': { x: 60, y: 180 },
+    'd': { x: -60, y: 180 }, 'down': { x: -60, y: 180 },
     // Portal (diagonal offset)
     'in': { x: 100, y: -60 }, 'enter': { x: 100, y: -60 },
     'out': { x: -100, y: 60 }, 'exit': { x: -100, y: 60 }
