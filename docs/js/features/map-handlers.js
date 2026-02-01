@@ -138,7 +138,7 @@ export function handlePointerUp(e) {
     const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);
     if (hitQuestionMark) {
       const command = hitQuestionMark.command || 'portal';
-      callbacks.showHint(`"${command}" command used for move, direction uncertain. Move node to clear.`);
+      callbacks.showHint(`"${command}" used for move, direction uncertain. Move either location node to clear.`);
     } else if (mapState.selectedNode) {
       // Tapped on empty canvas - unselect any selected node
       mapState.selectedNode = null;

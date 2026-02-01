@@ -170,7 +170,10 @@ function createMapUI() {
           <div class="legend-item"><span class="legend-line legend-player"></span><span>Player-created</span></div>
         </div>
       </div>
-      <div class="map-hint hidden" id="mapHint"></div>
+      <div class="map-hint hidden" id="mapHint">
+        <span class="map-hint-text"></span>
+        <button class="map-hint-close" aria-label="Close hint">×</button>
+      </div>
       <div class="map-mode-indicator hidden" id="mapModeIndicator">
         <span class="material-icons">touch_app</span>
         <span>Tap to add location</span>
@@ -226,6 +229,13 @@ function setupEventListeners() {
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
   document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
+
+  // Hint close button
+  const hintCloseBtn = domRefs.hint.querySelector('.map-hint-close');
+  if (hintCloseBtn) {
+    hintCloseBtn.addEventListener('click', hideHint);
+  }
+
   // Legend toggle - click button to expand, click legend to collapse
   const legendToggle = document.getElementById('mapLegendToggle');
   const toggleLegend = (show) => {
@@ -995,10 +1005,11 @@ export function addNodeAtPosition(x, y) {
 // ============================================================================
 
 export function showHint(message) {
-  domRefs.hint.textContent = message;
+  const hintText = domRefs.hint.querySelector('.map-hint-text');
+  if (hintText) hintText.textContent = message;
   domRefs.hint.classList.remove('hidden');
   clearTimeout(timers.hintTimeout);
-  timers.hintTimeout = setTimeout(() => domRefs.hint.classList.add('hidden'), 3000);
+  timers.hintTimeout = setTimeout(() => domRefs.hint.classList.add('hidden'), 6000);
 }
 
 export function hideHint() {
@@ -1543,10 +1554,8 @@ function syncFromAutoMapper() {
     'sw': { x: -120, y: 120 }, 'southwest': { x: -120, y: 120 },
     // Vertical (1.5x N/S distance = 180px, offset by half E/W = 60px for clarity)
     'u': { x: 60, y: -180 }, 'up': { x: 60, y: -180 },
-    'd': { x: -60, y: 180 }, 'down': { x: -60, y: 180 },
-    // Portal (diagonal offset)
-    'in': { x: 100, y: -60 }, 'enter': { x: 100, y: -60 },
-    'out': { x: -100, y: 60 }, 'exit': { x: -100, y: 60 }
+    'd': { x: -60, y: 180 }, 'down': { x: -60, y: 180 }
+    // Portal commands (in, out, enter, exit) use recent directional command or 'up' fallback
   };
 
   // Replay journey to create nodes/edges with proper positions

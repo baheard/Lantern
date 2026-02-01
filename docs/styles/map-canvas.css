@@ -586,19 +586,49 @@ body.map-resizing .map-canvas-overlay * {
   left: 50%;
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
-  padding: 12px 20px;
+  padding: 12px 40px 12px 20px;
   background: rgba(0, 0, 0, 0.9);
   color: #ffffff;
   border-radius: 24px;
   font-size: 14px;
   text-align: center;
-  pointer-events: none;
+  pointer-events: auto;
   animation: hintFadeIn 0.2s ease-out;
   z-index: var(--z-map-hint);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .map-hint.hidden {
-  display: none;
+  display: none !important;
+}
+
+.map-hint-text {
+  flex: 1;
+}
+
+.map-hint-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.map-hint-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 @keyframes hintFadeIn {
@@ -1271,7 +1301,7 @@ body.map-resizing .map-canvas-overlay * {
 /* Tablet and larger - map shows more of the game text */
 @media (min-width: 768px) {
   .map-panel {
-    left: 40%; /* Balanced view on larger screens */
+    left: 15%; /* Use most of width on desktop - 85% map space */
   }
 }
 
