@@ -174,9 +174,9 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
 
   // Reset transcript after 3 seconds
   state.transcriptResetTimeout = setTimeout(() => {
-    updateVoiceTranscript(state.isHoldMic ? 'Mic locked - say unlock mic...' : 'Listening...', 'listening');
+    updateVoiceTranscript(state.isHoldMic ? 'Frozen - say unfreeze...' : 'Listening...', 'listening');
     if (dom.voiceTranscript) {
-      dom.voiceTranscript.textContent = state.isHoldMic ? 'Mic locked - say unlock mic...' : 'Listening...';
+      dom.voiceTranscript.textContent = state.isHoldMic ? 'Frozen - say unfreeze...' : 'Listening...';
       dom.voiceTranscript.classList.remove('confirmed', 'nav-command');
     }
     // Change lock screen transcript to processed state (dim it) instead of clearing
@@ -562,12 +562,12 @@ export function initVoiceRecognition(processVoiceKeywords) {
         return;
       }
 
-      // When mic is locked, silently discard all commands except "unlock mic"
-      // (processVoiceKeywords will handle "unlock mic" if it comes through)
+      // When mic is frozen, silently discard all commands except "unfreeze"
+      // (processVoiceKeywords will handle "unfreeze" if it comes through)
       if (state.isHoldMic) {
         const lower = finalTranscript.toLowerCase().trim();
-        // Only allow "unlock mic" variants through
-        if (!(lower === 'unlock mic' || lower === 'unlock mike' || lower === 'unlockmic')) {
+        // Only allow "unfreeze" through
+        if (lower !== 'unfreeze') {
           state.hasManualTyping = false;
           return; // Silently discard
         }

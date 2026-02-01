@@ -34,6 +34,10 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/\bali\b/gi, 'alley');
   transcript = transcript.replace(/\ballie\b/gi, 'alley');
   transcript = transcript.replace(/\bquick\s+safe\b/gi, 'quick save');
+  transcript = transcript.replace(/\bgronk\b/gi, 'grunk');
+
+  // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
+  transcript = transcript.replace(/^paul\b/i, 'pull');
 
   lower = transcript.toLowerCase().trim();
 
@@ -49,6 +53,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     'murphy': 'northeast',
     'artist': 'northeast',
     'luck': 'look',
+    'gronk': 'grunk',
   };
 
   // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
@@ -135,9 +140,9 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // When mic is locked, only respond to "unlock mic"
+  // When mic is frozen, only respond to "unfreeze"
   if (state.isHoldMic) {
-    if (lower === 'unlock mic' || lower === 'unlock mike' || lower === 'unlockmic') {
+    if (lower === 'unfreeze') {
       state.pendingCommandProcessed = true;
       handlers.openMic();
       return false;
