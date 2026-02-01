@@ -39,6 +39,7 @@ export const dom = {
   // Settings
   settingsBtn: null,
   settingsPanel: null,
+  settingsOverlay: null,
   closeSettingsBtn: null,
   addPronunciationBtn: null,
   pronunciationList: null,
@@ -84,6 +85,7 @@ export function initDOM() {
   // Settings
   dom.settingsBtn = document.getElementById('settingsBtn');
   dom.settingsPanel = document.getElementById('settingsPanel');
+  dom.settingsOverlay = document.getElementById('settingsOverlay');
   dom.closeSettingsBtn = document.getElementById('closeSettingsBtn');
   dom.addPronunciationBtn = document.getElementById('addPronunciationBtn');
   dom.pronunciationList = document.getElementById('pronunciationList');

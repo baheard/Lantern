@@ -11,6 +11,7 @@ import { showMessageInput } from '../input/keyboard/index.js';
 import { scrollToBottom } from '../utils/scroll.js';
 import { addGameText } from '../ui/game-output.js';
 import { getItem, setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
+import { closeSettings } from '../ui/settings/settings-panel.js';
 
 // ============================================================================
 // COMPRESSION HELPERS
@@ -975,10 +976,7 @@ export function initSaveHandlers() {
         quickSaveBtn.addEventListener('click', () => {
             quickSave();
             // Close settings panel if open
-            const settingsPanel = document.getElementById('settingsPanel');
-            if (settingsPanel) {
-                settingsPanel.classList.remove('open');
-            }
+            closeSettings();
         });
     }
 

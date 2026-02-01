@@ -23,6 +23,24 @@
   transform: rotate(90deg) scale(1.05);
 }
 
+/* Settings Overlay */
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;  /* Below settings panel (z-index: 1000) */
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.settings-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Settings Panel */
 .settings-panel {
   position: fixed;

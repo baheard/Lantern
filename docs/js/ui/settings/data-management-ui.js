@@ -9,6 +9,7 @@ import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 import { clearAllGameData, clearAllAppData } from '../../utils/game-settings.js';
 import { confirmDialog } from '../confirm-dialog.js';
+import { closeSettings } from './settings-panel.js';
 
 /**
  * Check if we're on the welcome screen (no game loaded)
@@ -130,9 +131,7 @@ export function initDataManagementUI() {
           }
 
           // Close settings panel
-          if (dom.settingsPanel) {
-            dom.settingsPanel.classList.remove('open');
-          }
+          closeSettings();
 
         } catch (error) {
           updateStatus('Error clearing data');
@@ -179,9 +178,7 @@ export function initDataManagementUI() {
           alert('Successfully deleted all app data.\n\nAll saves, progress, and settings have been cleared.');
 
           // Close settings panel
-          if (dom.settingsPanel) {
-            dom.settingsPanel.classList.remove('open');
-          }
+          closeSettings();
         } catch (error) {
           updateStatus('Error clearing data');
           alert('Failed to clear data: ' + error.message);

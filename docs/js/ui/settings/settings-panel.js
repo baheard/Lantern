@@ -9,6 +9,42 @@ import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 
 /**
+ * Open the settings panel with overlay
+ */
+export function openSettings() {
+  if (dom.settingsPanel) {
+    updateSettingsContext();
+    dom.settingsPanel.classList.add('open');
+    if (dom.settingsOverlay) {
+      dom.settingsOverlay.classList.remove('hidden');
+    }
+  }
+}
+
+/**
+ * Close the settings panel and overlay
+ */
+export function closeSettings() {
+  if (dom.settingsPanel) {
+    dom.settingsPanel.classList.remove('open');
+    if (dom.settingsOverlay) {
+      dom.settingsOverlay.classList.add('hidden');
+    }
+  }
+}
+
+/**
+ * Toggle the settings panel and overlay
+ */
+export function toggleSettings() {
+  if (dom.settingsPanel?.classList.contains('open')) {
+    closeSettings();
+  } else {
+    openSettings();
+  }
+}
+
+/**
  * Check if we're on the welcome screen (no game loaded)
  * @returns {boolean} True if on welcome screen
  */
@@ -295,33 +331,23 @@ export async function reloadSettingsForGame() {
 export function initSettings() {
   // Settings button (in-game)
   if (dom.settingsBtn) {
-    dom.settingsBtn.addEventListener('click', () => {
-      if (dom.settingsPanel) {
-        // Update labels based on context before showing
-        updateSettingsContext();
-        dom.settingsPanel.classList.toggle('open');
-      }
-    });
+    dom.settingsBtn.addEventListener('click', toggleSettings);
   }
 
   // Settings button (welcome screen)
   const welcomeSettingsBtn = document.getElementById('welcomeSettingsBtn');
   if (welcomeSettingsBtn) {
-    welcomeSettingsBtn.addEventListener('click', () => {
-      if (dom.settingsPanel) {
-        updateSettingsContext();
-        dom.settingsPanel.classList.add('open');
-      }
-    });
+    welcomeSettingsBtn.addEventListener('click', openSettings);
   }
 
   // Close settings button
   if (dom.closeSettingsBtn) {
-    dom.closeSettingsBtn.addEventListener('click', () => {
-      if (dom.settingsPanel) {
-        dom.settingsPanel.classList.remove('open');
-      }
-    });
+    dom.closeSettingsBtn.addEventListener('click', closeSettings);
+  }
+
+  // Click overlay to close settings
+  if (dom.settingsOverlay) {
+    dom.settingsOverlay.addEventListener('click', closeSettings);
   }
 
 
@@ -510,9 +536,7 @@ export function initSettings() {
       const { unloadGame } = await import('../../game/game-loader.js');
       unloadGame();
       // Close settings panel
-      if (dom.settingsPanel) {
-        dom.settingsPanel.classList.remove('open');
-      }
+      closeSettings();
     });
   }
 }

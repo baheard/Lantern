@@ -11,6 +11,7 @@ import { updateNavButtons } from '../ui/nav-buttons.js';
 import { stopNarration } from '../narration/tts-player.js';
 import { createVoxGlk, sendInput, getInputType } from './voxglk.js';
 import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
+import { closeSettings } from '../ui/settings/settings-panel.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
@@ -541,8 +542,7 @@ export function initGameSelection(onOutput) {
   gameCards.forEach((card, index) => {
     card.addEventListener('click', async (e) => {
       // Close settings panel if open
-      const settingsPanel = document.getElementById('settingsPanel');
-      if (settingsPanel) settingsPanel.classList.remove('open');
+      closeSettings();
 
       const gamePath = card.dataset.game;
       const gameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();

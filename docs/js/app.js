@@ -35,6 +35,7 @@ import { initScrollDetection } from './narration/highlighting.js';
 import { updateNavButtons } from './ui/nav-buttons.js';
 import { addGameText } from './ui/game-output.js';
 import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from './ui/settings/index.js';
+import { toggleSettings, closeSettings } from './ui/settings/settings-panel.js';
 import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
 import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
@@ -1469,7 +1470,7 @@ async function initApp() {
 
 
   // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', async (e) => {
     // Arrow keys - navigation
     if (e.key === 'ArrowLeft') {
       skipToChunk(-1, () => speakTextChunked(null, state.currentChunkIndex));
@@ -1477,16 +1478,49 @@ async function initApp() {
       skipToChunk(1, () => speakTextChunked(null, state.currentChunkIndex));
     }
 
-    // Ctrl+L - Lock/unlock screen (for testing)
-    if (e.key === 'l' && e.ctrlKey) {
+    // Ctrl+M - Toggle map
+    if (e.key === 'm' && e.ctrlKey) {
       e.preventDefault();
-      toggleLockScreen();
+      if (!mapModule) {
+        // First time opening map - load UI modules dynamically
+        mapModule = await import('./features/map-canvas.js');
+        mapModule.initMapCanvas();
+      }
+      mapModule.toggleMap();
       return;
     }
 
+    // Ctrl+S - Quick save
+    if (e.key === 's' && e.ctrlKey) {
+      e.preventDefault();
+      await quickSave();
+      return;
+    }
 
-    // Escape key is reserved for closing dialogs and clearing input only
-    // (No longer stops autoplay/narration)
+    // Ctrl+R - Quick restore/load
+    if (e.key === 'r' && e.ctrlKey) {
+      e.preventDefault();
+      await quickLoad();
+      return;
+    }
+
+    // Ctrl+X - Toggle settings panel
+    if (e.key === 'x' && e.ctrlKey) {
+      e.preventDefault();
+      toggleSettings();
+      return;
+    }
+
+    // Escape key - Close settings panel if open (otherwise reserved for dialogs)
+    if (e.key === 'Escape') {
+      // Check if settings panel is open
+      if (dom.settingsPanel?.classList.contains('open')) {
+        e.preventDefault();
+        closeSettings();
+        return;
+      }
+      // Otherwise, Escape is reserved for closing dialogs and clearing input
+    }
   });
 
 

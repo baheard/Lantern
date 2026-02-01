@@ -164,14 +164,9 @@ function closeMenu() {
 async function handleMenuAction(action) {
   switch(action) {
     case 'settings':
-      // Open settings panel directly
-      const settingsPanel = document.getElementById('settingsPanel');
-      if (settingsPanel) {
-        // Import and call updateSettingsContext
-        const { updateSettingsContext } = await import('./settings/index.js');
-        updateSettingsContext();
-        settingsPanel.classList.toggle('open');
-      }
+      // Toggle settings panel
+      const { toggleSettings } = await import('./settings/settings-panel.js');
+      toggleSettings();
       break;
 
     case 'map':
