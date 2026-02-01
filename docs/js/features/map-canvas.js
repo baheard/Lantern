@@ -1551,7 +1551,16 @@ function syncFromAutoMapper() {
 
   // Replay journey to create nodes/edges with proper positions
   let previousNode = null;
-  let lastKnownDirection = null; // Track last known direction for unknown commands
+  const recentDirections = []; // Track last 10 directional commands (excluding portals)
+
+  // Directional commands that have spatial meaning
+  const directionalCommands = ['n', 'north', 's', 'south', 'e', 'east', 'w', 'west',
+    'ne', 'northeast', 'nw', 'northwest', 'se', 'southeast', 'sw', 'southwest',
+    'u', 'up', 'd', 'down'];
+
+  // Portal commands that use recent direction for placement
+  const portalCommands = ['in', 'out', 'enter', 'exit'];
+
   for (const visit of autoMapperData.journey) {
     const locationName = visit.locationName;
 
@@ -1570,25 +1579,42 @@ function syncFromAutoMapper() {
       let x = 0, y = 0;
       if (previousNode && visit.command) {
         const cmd = visit.command.toLowerCase();
-        const offset = directionOffsets[cmd];
 
-        if (offset) {
-          // Known direction - use it
-          x = previousNode.x + offset.x;
-          y = previousNode.y + offset.y;
-          lastKnownDirection = cmd; // Remember this direction
-        } else {
-          // Unknown command - use last known direction, or portal offset as fallback
-          const fallbackOffset = (lastKnownDirection && directionOffsets[lastKnownDirection])
-            ? directionOffsets[lastKnownDirection]
-            : directionOffsets['enter'];
+        // Portal commands use most recent directional command
+        if (portalCommands.includes(cmd)) {
+          const fallbackDirection = recentDirections.length > 0
+            ? recentDirections[recentDirections.length - 1]  // Most recent from last 10
+            : 'up';  // Default to "up" if no recent directions
+          const fallbackOffset = directionOffsets[fallbackDirection];
           x = previousNode.x + fallbackOffset.x;
           y = previousNode.y + fallbackOffset.y;
+        } else {
+          const offset = directionOffsets[cmd];
+
+          if (offset) {
+            // Known directional command - use it
+            x = previousNode.x + offset.x;
+            y = previousNode.y + offset.y;
+
+            // Track directional commands (not portals) for fallback
+            if (directionalCommands.includes(cmd)) {
+              recentDirections.push(cmd);
+              if (recentDirections.length > 10) recentDirections.shift();
+            }
+          } else {
+            // Unknown command - use most recent direction from last 10, or "up" as fallback
+            const fallbackDirection = recentDirections.length > 0
+              ? recentDirections[recentDirections.length - 1]  // Most recent
+              : 'up';
+            const fallbackOffset = directionOffsets[fallbackDirection];
+            x = previousNode.x + fallbackOffset.x;
+            y = previousNode.y + fallbackOffset.y;
+          }
         }
       } else if (previousNode) {
-        // No command - use portal offset as default
-        x = previousNode.x + directionOffsets['enter'].x;
-        y = previousNode.y + directionOffsets['enter'].y;
+        // No command - use "up" as default
+        x = previousNode.x + directionOffsets['up'].x;
+        y = previousNode.y + directionOffsets['up'].y;
       }
       // else: first node stays at (0, 0)
 

@@ -78,8 +78,8 @@ export function createNodeEditSheet() {
               { type: 'person', label: 'Person', icon: 'person' },
               { type: 'door', label: 'Door', icon: 'door_front' },
               { type: 'puzzle', label: 'Puzzle', icon: 'extension' },
-              { type: 'star', label: 'Star', icon: 'star' },
-              { type: 'question', label: 'Question', icon: 'help' }
+              { type: 'star', label: 'Star', icon: 'waving_hand' },
+              { type: 'question', label: 'Question', icon: 'question_mark' }
             ].map(t =>
               `<button class="type-btn" data-type="${t.type}" aria-label="${t.label}" role="radio" title="${t.label}">
                 ${t.icon ? `<span class="material-icons">${t.icon}</span>` : '<span class="no-icon">—</span>'}

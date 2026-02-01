@@ -111,19 +111,6 @@ export function handlePointerUp(e) {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
   const canvasPoint = screenToCanvas(x, y);
-
-  // Check for question mark tap first (before node tap detection)
-  if (!mapState.isDragging && !mapState.dragNode && !mapState.hasDragged) {
-    const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);
-    if (hitQuestionMark) {
-      const fromNode = mapState.nodes.get(hitQuestionMark.from);
-      const toNode = mapState.nodes.get(hitQuestionMark.to);
-      const command = hitQuestionMark.command || 'portal';
-      callbacks.showHint(`Uncertain connection "${command}" from "${fromNode?.name}" to "${toNode?.name}". Move either location to confirm this path.`);
-      return;
-    }
-  }
-
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
   if (mapState.dragNode && !mapState.isDragging) {
@@ -147,8 +134,13 @@ export function handlePointerUp(e) {
       openNodeSheet(mapState.dragNode);
     }
   } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode && !mapState.isMerging) {
-    // Tapped on empty canvas - unselect any selected node
-    if (mapState.selectedNode) {
+    // Check for question mark tap on uncertain portal connections
+    const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);
+    if (hitQuestionMark) {
+      const command = hitQuestionMark.command || 'portal';
+      callbacks.showHint(`"${command}" command used for move, direction uncertain. Move node to clear.`);
+    } else if (mapState.selectedNode) {
+      // Tapped on empty canvas - unselect any selected node
       mapState.selectedNode = null;
       render();
     }
