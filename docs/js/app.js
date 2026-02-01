@@ -1400,10 +1400,12 @@ async function initApp() {
       state.pushToTalkActive = false;
 
       dom.muteBtn.classList.remove('push-to-talk-active');
-      updateStatus('Hold mic button to speak');
+      updateStatus('Processing...');
 
-      // Re-mute and stop recognition
-      state.isMuted = true;
+      // IMPORTANT: Don't set isMuted=true yet!
+      // Setting isMuted before stop() causes onresult to discard final results
+      // Instead, set listeningEnabled=false to prevent auto-restart
+      // The onend handler will set isMuted=true after processing results
       state.listeningEnabled = false;
 
       // Play mute tone
@@ -1420,10 +1422,17 @@ async function initApp() {
 
       if (state.recognition && state.isRecognitionActive) {
         try {
+          // Stop recognition - this will trigger onresult (final) then onend
           state.recognition.stop();
         } catch (err) {
-          // Recognition already stopped
+          // Recognition already stopped - set isMuted immediately
+          state.isMuted = true;
+          updateStatus('Hold mic button to speak');
         }
+      } else {
+        // No active recognition - set isMuted immediately
+        state.isMuted = true;
+        updateStatus('Hold mic button to speak');
       }
     };
 

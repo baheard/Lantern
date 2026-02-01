@@ -790,6 +790,13 @@ export function initVoiceRecognition(processVoiceKeywords) {
     // Voice commands are now sent immediately in onresult handler
     // No need to check for input field or auto-send here
 
+    // If push-to-talk was released, now we can safely mute
+    // (results have been processed above)
+    if (wasPushToTalkRelease && !state.isMuted) {
+      state.isMuted = true;
+      updateStatus('Hold mic button to speak');
+    }
+
     // Don't restart if muted - mic should be fully off
     if (state.isMuted) {
       return;
