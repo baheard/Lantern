@@ -238,16 +238,12 @@ See Settings → Voice Commands for complete reference.
       (await getVoiceCommandHandlers()).unmute();
       return true;
 
-    case 'lock mic':
-    case 'lock mike':
-    case 'lockmic':
+    case 'freeze':
       playAppCommand();
       (await getVoiceCommandHandlers()).holdMic();
       return true;
 
-    case 'unlock mic':
-    case 'unlock mike':
-    case 'unlockmic':
+    case 'unfreeze':
       playAppCommand();
       (await getVoiceCommandHandlers()).openMic();
       return true;

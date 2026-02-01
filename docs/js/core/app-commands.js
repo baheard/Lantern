@@ -22,8 +22,8 @@ export const APP_COMMANDS = {
   UNMUTE: [], // Voice unmute disabled - mic fully off when muted (click button to unmute)
   STATUS: ['status'],
   READ_LAST_COMMAND: ['read last command', 'last command', 'what did i say'],
-  LOCK_MIC: ['lock mic', 'lock mike'],
-  UNLOCK_MIC: ['unlock mic', 'unlock mike'],
+  LOCK_MIC: ['freeze'],
+  UNLOCK_MIC: ['unfreeze'],
   LOCK_SCREEN: ['lock screen'],
   UNLOCK_SCREEN: ['unlock screen'],
 
@@ -88,7 +88,7 @@ export function isAppCommand(cmd) {
 
 /**
  * Get the canonical (normalized) form of an app command
- * Maps variations like "lock mike" to "lock mic"
+ * Maps variations to canonical form (e.g., "quicksave" to "quick save")
  * @param {string} cmd - Command to normalize
  * @returns {string|null} Canonical form of the command, or null if not an app command
  */
