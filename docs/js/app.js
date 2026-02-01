@@ -678,24 +678,24 @@ export const voiceCommandHandlers = {
     // Clear any interim transcript to prevent it from being displayed
     state.currentInterimTranscript = '';
 
-    updateStatus('Mic locked - Say "Unlock mic" to resume');
+    updateStatus('Frozen - Say "Unfreeze" to resume');
 
-    // Update voice transcript to show "Mic locked"
-    updateVoiceTranscript('Mic locked', 'listening');
+    // Update voice transcript to show "Frozen"
+    updateVoiceTranscript('Frozen', 'listening');
     if (dom.voiceTranscript) {
-      dom.voiceTranscript.textContent = 'Mic locked';
+      dom.voiceTranscript.textContent = 'Frozen';
     }
 
     // Display in game area as system message (auto-narrated only in play mode)
     const { addGameText } = await import('./ui/game-output.js');
-    addGameText('<div class="system-message">Mic locked. Say "unlock mic" to resume.</div>', false);
+    addGameText('<div class="system-message">Frozen. Say "unfreeze" to resume.</div>', false);
 
     // Update lock screen if it's active
     const { updateLockScreenMicStatus } = await import('./utils/lock-screen.js');
     updateLockScreenMicStatus();
 
-    // Keep mic active but only listening for "unlock mic"
-    // Don't stop recognition - we still want to hear "unlock mic"
+    // Keep mic active but only listening for "unfreeze"
+    // Don't stop recognition - we still want to hear "unfreeze"
   },
   openMic: async () => {
     playUnmuteTone();
@@ -1089,6 +1089,7 @@ async function initApp() {
       skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
     };
     skipToStartBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent keyboard dismissal
       // Preserve focus on input to keep keyboard open
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
@@ -1115,6 +1116,7 @@ async function initApp() {
       skipToChunk(-1, () => speakTextChunked(null, state.currentChunkIndex));
     };
     prevChunkBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent keyboard dismissal
       // Preserve focus on input to keep keyboard open
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
@@ -1248,6 +1250,7 @@ async function initApp() {
       }
     };
     pausePlayBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent keyboard dismissal
       // Preserve focus on input to keep keyboard open
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
@@ -1274,6 +1277,7 @@ async function initApp() {
       skipToChunk(1, () => speakTextChunked(null, state.currentChunkIndex));
     };
     nextChunkBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent keyboard dismissal
       // Preserve focus on input to keep keyboard open
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
@@ -1300,6 +1304,7 @@ async function initApp() {
       skipToEnd();
     };
     skipToEndBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent keyboard dismissal
       // Preserve focus on input to keep keyboard open
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
