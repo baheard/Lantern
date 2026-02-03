@@ -411,16 +411,16 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
   // Determine if this is a low confidence command
   const isLowConfidence = confidence !== null && confidence < LOW_CONFIDENCE_THRESHOLD;
 
-  // Add to command history (show [ENTER] for empty commands)
-  // History params: original, translated, confidence, isVoiceCommand
-  addToCommandHistory(input || '[ENTER]', null, confidence, isVoiceCommand);
-
   // Check if we're in char mode (press any key) - don't display commands in char mode
   const inputType = getInputType();
   const isCharMode = inputType === 'char';
 
   // Only display commands in line mode, not in char mode (press any key screens)
-  if (!isCharMode) {
+  // Skip display entirely for empty input — let the VM handle it silently
+  if (!isCharMode && input) {
+    // Add to command history
+    addToCommandHistory(input, null, confidence, isVoiceCommand);
+
     // Check for "print [text]" command - special display formatting
     const printMatch = input.match(/^print\s+(.+)$/i);
     if (printMatch) {
@@ -445,13 +445,11 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
       }
     } else {
       // Normal command display
-      // Always display the command with proper styling (voice/typed, confidence)
-      // The game will also echo it, but we'll filter that out of narration
       // Use app-command styling for app/meta-commands or when in system entry mode
       const isAppCmd = isSystemEntryMode() || isAppCommand(input);
 
       // Normalize app commands (e.g., "Lock Mike" → "lock mic")
-      let displayText = input || '[ENTER]';
+      let displayText = input;
       if (isAppCmd && !isSystemEntryMode()) {
         const canonical = getCanonicalAppCommand(input);
         if (canonical) {
