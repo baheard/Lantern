@@ -507,13 +507,20 @@ export function createVoxGlk(textOutputCallback) {
                   setTimeout(() => {
 
                     // Always suppress the bootstrap response
-                    // For manual restores it's garbage output, for autorestore it's "I beg your pardon"
                     skipNextUpdateAfterBootstrap = true;
 
-                    // CRITICAL: Always send the intro's input type to satisfy glkapi's expectations
-                    // After restore_file(), glkapi is still at gen:1 waiting for intro input
-                    // We send that input type to "complete" the intro request
-                    // Then VM sends fresh update with the REAL restored state (which we don't suppress)
+                    // CRITICAL: Always send the intro's input type to satisfy glkapi's expectations.
+                    // After restore_file(), glkapi is still at gen:1 waiting for intro input.
+                    // We send that input type to "complete" the intro request, then the VM
+                    // resumes from the restored state and requests the next real input.
+                    //
+                    // WARNING: Do NOT send empty string for line input.  restore_file() restores
+                    // the game's internal "last command" buffer along with all other VM memory.
+                    // Many Z-machine parsers treat zero-length input as AGAIN (repeat last command),
+                    // which silently re-executes whatever the player did before saving — including
+                    // movement commands that change location.  A nonsense word the parser won't
+                    // recognise is safe: it produces an "unknown word" error (suppressed below)
+                    // without changing any game state.
                     const bootstrapType = introInputType || 'line';
 
                     if (bootstrapType === 'char') {
@@ -528,7 +535,7 @@ export function createVoxGlk(textOutputCallback) {
                         type: 'line',
                         gen: 1,  // Always use intro's generation after page reload
                         window: 1,
-                        value: '',  // Empty command
+                        value: 'bootstrap wake',  // Must not be empty (see WARNING above)
                         terminator: 'enter'
                       });
                     }

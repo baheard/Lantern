@@ -23,6 +23,7 @@ let lockProgressMeter = null;
 let lockProgressFill = null;
 let screenLockedMessage = null;
 let lockScreenInstructions = null;
+let controlsWrapper = null;
 
 // Hold-to-unlock state
 let holdTimer = null;
@@ -46,6 +47,7 @@ export function initLockScreen() {
   lockProgressFill = document.getElementById('lockProgressFill');
   screenLockedMessage = document.getElementById('screenLockedMessage');
   lockScreenInstructions = document.getElementById('lockScreenInstructions');
+  controlsWrapper = document.getElementById('controlsWrapper');
 
   if (!lockScreenOverlay || !lockBtn || !lockProgressMeter || !lockProgressFill) {
     return;
@@ -84,6 +86,11 @@ export function lockScreen() {
       await module.enableKeepAwake();
     }
   });
+
+  // Raise controls wrapper above overlay (pointer-events: none keeps other buttons blocked)
+  if (controlsWrapper) {
+    controlsWrapper.classList.add('screen-locked');
+  }
 
   // Show overlay
   if (lockScreenOverlay) {
@@ -149,6 +156,11 @@ export function unlockScreen() {
       await module.disableKeepAwake();
     }
   });
+
+  // Restore controls wrapper z-index
+  if (controlsWrapper) {
+    controlsWrapper.classList.remove('screen-locked');
+  }
 
   // Hide overlay
   if (lockScreenOverlay) {

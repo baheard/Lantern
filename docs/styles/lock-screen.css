@@ -129,11 +129,19 @@
   z-index: 100; /* Default: below settings panel */
 }
 
+/* Raise controls wrapper above overlay when locked, but block all pointer
+   events on it — only the lock/mic buttons re-enable pointer-events below */
+.controls-wrapper.screen-locked {
+  z-index: 5200;
+  pointer-events: none;
+}
+
 /* Emphasized state when screen is locked */
 #lockBtn.locked {
   background: rgba(196, 163, 90, 0.2);
   border-color: var(--accent-warm);
-  z-index: 5100; /* Above lock screen overlay when active */
+  z-index: 5100;
+  pointer-events: all;
 }
 
 #lockBtn.locked .material-icons {
@@ -178,6 +186,7 @@
 #muteBtn.push-to-talk-locked {
   position: relative;
   z-index: 5100; /* Above lock screen overlay */
+  pointer-events: all;
   background: rgba(45, 212, 191, 0.2);
   border-color: var(--accent-primary);
   box-shadow: 0 0 16px rgba(45, 212, 191, 0.4);
