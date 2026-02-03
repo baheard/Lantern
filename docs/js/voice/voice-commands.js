@@ -57,8 +57,8 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
   transcript = transcript.replace(/^paul\b/i, 'pull');
 
-  // Fix "if alone" -> "east" (common misrecognition of direction)
-  transcript = transcript.replace(/^if\.?\s+alone$/i, 'east');
+  // Fix "if" alone -> "east" (speech recognition misrecognition of direction)
+  transcript = transcript.replace(/^if\.?$/i, 'east');
 
   lower = transcript.toLowerCase().trim();
 

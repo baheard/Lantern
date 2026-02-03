@@ -315,7 +315,7 @@ export function initKeyboardInput() {
         populatedWordLength = word.length;
       } else {
         // Regular word or direction - add prefix
-        const prefix = isDirection ? 'go' : 'x';
+        const prefix = isDirection ? 'go' : 'examine';
         messageInputEl.value = `${prefix} ${word}`;
         // Select the prefix so user can type to replace it (only if input will be/is focused)
         if (hasPhysicalKeyboard() || document.activeElement === messageInputEl) {
