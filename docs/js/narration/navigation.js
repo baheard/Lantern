@@ -13,6 +13,11 @@ import { scrollToBottom } from '../utils/scroll.js';
 import { ensureChunksReady } from '../ui/game-output.js';
 import { updateNavButtons } from '../ui/nav-buttons.js';
 
+/** Returns true if a chunk is an app-voice chunk (not game output) */
+function isAppChunk(chunk) {
+  return typeof chunk === 'object' && chunk.voice === 'app';
+}
+
 /**
  * Navigate chunks (skip forward or backward)
  * @param {number} offset - Number of chunks to skip (negative = backward)
@@ -36,9 +41,10 @@ export function skipToChunk(offset, speakTextChunked) {
 
   let targetIndex = state.currentChunkIndex + offset;
 
-  // Special case: if at end and going back, jump to last chunk
+  // Special case: if at end and going back, jump to last non-app chunk
   if (offset === -1 && state.currentChunkIndex >= state.narrationChunks.length) {
     targetIndex = state.narrationChunks.length - 1;
+    while (targetIndex >= 0 && isAppChunk(state.narrationChunks[targetIndex])) targetIndex--;
   }
   // Smart back button: if going back and within 3 seconds, go to previous chunk
   // When paused, always go to previous chunk (don't replay current)
@@ -47,9 +53,22 @@ export function skipToChunk(offset, speakTextChunked) {
     // If paused OR within 3 seconds of start, go to previous chunk
     if ((state.isPaused || timeSinceStart < 3000) && state.currentChunkIndex > 0) {
       targetIndex = state.currentChunkIndex - 1;
+      while (targetIndex >= 0 && isAppChunk(state.narrationChunks[targetIndex])) targetIndex--;
     } else {
       targetIndex = state.currentChunkIndex;
     }
+  }
+  // Back N (N > 1): count only game chunks, skip app chunks
+  else if (offset < -1) {
+    let remaining = Math.abs(offset);
+    let idx = state.currentChunkIndex - 1;
+    while (idx >= 0 && remaining > 0) {
+      if (!isAppChunk(state.narrationChunks[idx])) {
+        remaining--;
+      }
+      if (remaining > 0) idx--;
+    }
+    targetIndex = idx;
   }
 
   if (targetIndex < 0 || targetIndex >= state.narrationChunks.length) {
@@ -82,7 +101,7 @@ export function skipToChunk(offset, speakTextChunked) {
       // Just update highlight if not in autoplay mode
       state.isPaused = true;
     }
-  }, 100);
+  }, 50);
 }
 
 /**

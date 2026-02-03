@@ -394,8 +394,8 @@ export function initKeyboardInput() {
       return; // Not in line mode - allow normal behavior
     }
 
-    // Check if tap-to-examine is enabled
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') === 'true';
+    // Check if tap-to-examine is enabled (default: on; only disabled if explicitly set to 'false')
+    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
     if (!isTapExamineEnabled) {
       // Tap-to-examine disabled - on PC, just focus the input for easy typing
       if (hasPhysicalKeyboard()) {
@@ -528,8 +528,8 @@ export function initKeyboardInput() {
       return;
     }
 
-    // Check if tap-to-examine is enabled
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') === 'true';
+    // Check if tap-to-examine is enabled (default: on; only disabled if explicitly set to 'false')
+    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
     if (!isTapExamineEnabled) {
       if (highlightOverlay) {
         highlightOverlay.style.display = 'none';
@@ -597,7 +597,7 @@ export function initKeyboardInput() {
 
   // Function to update cursor based on tap-to-examine setting
   function updateTapExamineCursor() {
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') === 'true';
+    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
     if (isTapExamineEnabled) {
       document.body.classList.add('tap-to-examine-enabled');
     } else {

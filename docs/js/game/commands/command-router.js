@@ -271,12 +271,12 @@ See Settings → Voice Commands for complete reference.
     case 'last command':
     case 'what did i say':
       playAppCommand();
-      // Find the last command that isn't "read last command" or "stop"
+      // Find the last game command (skip meta/app commands and navigation)
       let lastCmd = null;
       const skipCommands = ['read last command', 'last command', 'what did i say', 'stop', 'pause'];
       for (let i = 0; i < state.commandHistoryItems.length; i++) {
         const cmdLower = state.commandHistoryItems[i].original.toLowerCase().trim();
-        if (!skipCommands.includes(cmdLower)) {
+        if (!skipCommands.includes(cmdLower) && !isAppCommand(state.commandHistoryItems[i].original)) {
           lastCmd = state.commandHistoryItems[i];
           break;
         }

@@ -57,6 +57,9 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
   transcript = transcript.replace(/^paul\b/i, 'pull');
 
+  // Fix "if alone" -> "east" (common misrecognition of direction)
+  transcript = transcript.replace(/^if\.?\s+alone$/i, 'east');
+
   lower = transcript.toLowerCase().trim();
 
   // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
@@ -151,6 +154,13 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
       return false;
     }
     // Dismiss all other commands silently
+    return false;
+  }
+
+  // Freeze mic immediately (before narration blocking check)
+  if (lower === 'freeze') {
+    state.pendingCommandProcessed = true;
+    handlers.holdMic();
     return false;
   }
 
