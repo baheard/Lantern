@@ -206,14 +206,27 @@ function autosave_write(key, snapshot) {
         // If snapshot exists, extend it with HTML content
         if (snapshot) {
             // Capture window HTML
-            var statusBarEl = document.getElementById('status-bar');
-            var upperWindowEl = document.getElementById('upper-window');
-            var lowerWindowEl = document.getElementById('lower-window');
+            var statusBarEl = document.getElementById('statusBar');
+            var upperWindowEl = document.getElementById('upperWindow');
+            var lowerWindowEl = document.getElementById('lowerWindow');
+
+            var lowerWindowHTML = '';
+            if (lowerWindowEl) {
+                var commandLine = document.getElementById('commandLine');
+                if (commandLine) {
+                    var clone = lowerWindowEl.cloneNode(true);
+                    var clonedCommandLine = clone.querySelector('#commandLine');
+                    if (clonedCommandLine) clonedCommandLine.remove();
+                    lowerWindowHTML = clone.innerHTML;
+                } else {
+                    lowerWindowHTML = lowerWindowEl.innerHTML;
+                }
+            }
 
             snapshot.displayHTML = {
                 statusBar: statusBarEl ? statusBarEl.innerHTML : '',
                 upperWindow: upperWindowEl ? upperWindowEl.innerHTML : '',
-                lowerWindow: lowerWindowEl ? lowerWindowEl.innerHTML : ''
+                lowerWindow: lowerWindowHTML
             };
 
             // Capture narration state if available
@@ -227,6 +240,12 @@ function autosave_write(key, snapshot) {
         }
 
         localStorage.setItem('iftalk_auto_' + key, JSON.stringify(snapshot));
+
+        // Write sentinel for welcome-screen badge and Quixe autosave cleanup
+        if (window.state && window.state.currentGameName) {
+            localStorage.setItem('iftalk_autosave_' + window.state.currentGameName,
+                JSON.stringify({ hasAutosave: true, vmType: 'quixe', signature: key }));
+        }
     } catch (e) {
         console.error('[Dialog] Autosave write error:', e);
     }
@@ -242,13 +261,17 @@ function autosave_read(key) {
             if (snapshot.displayHTML) {
                 // Use setTimeout to restore HTML after ifvms.js finishes do_autorestore
                 setTimeout(function() {
-                    var statusBarEl = document.getElementById('status-bar');
-                    var upperWindowEl = document.getElementById('upper-window');
-                    var lowerWindowEl = document.getElementById('lower-window');
+                    var statusBarEl = document.getElementById('statusBar');
+                    var upperWindowEl = document.getElementById('upperWindow');
+                    var lowerWindowEl = document.getElementById('lowerWindow');
 
                     if (statusBarEl) statusBarEl.innerHTML = snapshot.displayHTML.statusBar;
                     if (upperWindowEl) upperWindowEl.innerHTML = snapshot.displayHTML.upperWindow;
-                    if (lowerWindowEl) lowerWindowEl.innerHTML = snapshot.displayHTML.lowerWindow;
+                    if (lowerWindowEl && snapshot.displayHTML.lowerWindow) {
+                        var commandLine = document.getElementById('commandLine');
+                        lowerWindowEl.innerHTML = snapshot.displayHTML.lowerWindow;
+                        if (commandLine) lowerWindowEl.appendChild(commandLine);
+                    }
 
                     // Restore narration state
                     if (snapshot.narrationState && window.state) {
