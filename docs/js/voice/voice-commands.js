@@ -17,6 +17,24 @@ import { displayBlockedCommand } from '../ui/game-output.js';
 import { playBlockedCommand } from '../utils/audio-feedback.js';
 
 /**
+ * Pronunciation dictionary for common misrecognitions.
+ * Only applies to single-word commands to avoid false positives.
+ * Exported so recognition.js can apply corrections before confidence checks.
+ */
+export const PRONUNCIATION_DICT = {
+  'wet': 'west',
+  'with': 'west',
+  'so': 'south',
+  'self': 'south',
+  'quickie': 'quick save',
+  'away': 'west',  // "go away" should be "go west" (phrase-level will be "go west")
+  'murphy': 'northeast',
+  'artist': 'northeast',
+  'luck': 'look',
+  'gronk': 'grunk',
+};
+
+/**
  * Process voice keywords
  * @param {string} transcript - Voice recognition transcript
  * @param {Object} handlers - Object with handler functions
@@ -40,21 +58,6 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/^paul\b/i, 'pull');
 
   lower = transcript.toLowerCase().trim();
-
-  // Pronunciation dictionary for common misrecognitions
-  // Only applies to single-word commands to avoid false positives
-  const PRONUNCIATION_DICT = {
-    'wet': 'west',
-    'with': 'west',
-    'so': 'south',
-    'self': 'south',
-    'quickie': 'quick save',
-    'away': 'west',  // "go away" should be "go west" (phrase-level will be "go west")
-    'murphy': 'northeast',
-    'artist': 'northeast',
-    'luck': 'look',
-    'gronk': 'grunk',
-  };
 
   // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
   const words = transcript.trim().split(/\s+/);

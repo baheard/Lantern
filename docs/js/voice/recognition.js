@@ -12,6 +12,7 @@ import { isEchoOfSpokenText } from './echo-detection.js';
 import { updateVoiceTranscript } from '../input/keyboard/index.js';
 import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand, LOW_CONFIDENCE_THRESHOLD } from '../utils/audio-feedback.js';
 import { scrollToBottom } from '../utils/scroll.js';
+import { PRONUNCIATION_DICT } from './voice-commands.js';
 
 /**
  * Commands that process INSTANTLY with NO delay (whitelist)
@@ -604,6 +605,14 @@ export function initVoiceRecognition(processVoiceKeywords) {
         }
       } catch (e) {
         // Echo detection error (final) - silently ignored
+      }
+
+      // Apply single-word pronunciation corrections before confidence checks
+      // (e.g., "wet" → "west") so corrected commands are recognized as instant
+      const corrWords = finalTranscript.trim().split(/\s+/);
+      if (corrWords.length === 1) {
+        const corrected = PRONUNCIATION_DICT[corrWords[0].toLowerCase()];
+        if (corrected) finalTranscript = corrected;
       }
 
       // Check for low confidence

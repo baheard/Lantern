@@ -244,7 +244,7 @@ function setupEventListeners() {
     legendToggle.classList.toggle('legend-open', isVisible);
   };
   legendToggle.addEventListener('click', () => toggleLegend(true));
-  domRefs.legend.addEventListener('click', () => toggleLegend(false));
+  domRefs.legend.addEventListener('pointerdown', (e) => { e.preventDefault(); toggleLegend(false); });
 
   // Canvas
   const canvasEl = document.getElementById('mapCanvas');
@@ -559,7 +559,8 @@ function toggleAutoMap() {
         type: 'room',
         notes: '',
         isManual: false,
-        isEdited: false
+        isEdited: false,
+        isSmall: false
       });
       mapState.protectedNodes.add(currentLocationName);
       mapState.currentNodeId = currentLocationName;
@@ -737,7 +738,7 @@ function handleLocationChange(e) {
 
     mapState.nodes.set(locationName, {
       id: locationName, name: locationName, x: position.x, y: position.y,
-      type: 'room', notes: '', isManual: false, isEdited: false
+      type: 'room', notes: '', isManual: false, isEdited: false, isSmall: false
     });
     // Protect from future auto-mapper modifications
     mapState.protectedNodes.add(locationName);
@@ -856,6 +857,7 @@ function createDuplicateNode(locationName, originalNode, previousLocationId, com
     notes: `Possible duplicate of "${locationName}". Merge if same location.`,
     isManual: false,
     isEdited: false,
+    isSmall: false,
     isDuplicate: true,
     duplicateGroup: locationName,  // Group for merging
     originalNodeId: locationName
@@ -991,7 +993,7 @@ export function addNodeAtPosition(x, y) {
 
   const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const position = findAvailablePosition({ x, y });
-  const node = { id, name: 'New Location', x: position.x, y: position.y, type: 'room', notes: '', isManual: true, isEdited: false };
+  const node = { id, name: 'New Location', x: position.x, y: position.y, type: 'room', notes: '', isManual: true, isEdited: false, isSmall: false };
   mapState.nodes.set(id, node);
   mapState.protectedNodes.add(id);
   mapState.selectedNode = id;
@@ -1332,7 +1334,13 @@ function updateUIVisibilityForKeyboard() {
   const fabContainer = container.querySelector('.map-fab-container');
   const toolbar = container.querySelector('.map-toolbar');
   const currentHeight = window.visualViewport.height;
-  const isKeyboardUp = currentHeight < window.innerHeight - 100;
+
+  // More aggressive keyboard detection for iPhone
+  // Check if viewport height is significantly reduced OR if an input is focused
+  const hasActiveInput = document.activeElement &&
+    (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+  const heightReduced = currentHeight < window.innerHeight - 50; // Reduced threshold from 100 to 50
+  const isKeyboardUp = heightReduced || hasActiveInput;
 
   if (fabContainer) {
     fabContainer.style.display = isKeyboardUp ? 'none' : '';
@@ -1494,7 +1502,8 @@ function loadMapForGame(gameName) {
       const validNodes = (data.nodes || []).filter(n => n && n.id && n.name).map(n => ({
         ...n,
         x: typeof n.x === 'number' && !isNaN(n.x) ? n.x : 0,
-        y: typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0
+        y: typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0,
+        isSmall: n.isSmall === true
       }));
       mapState.nodes = new Map(validNodes.map(n => [n.id, n]));
       mapState.edges = new Map((data.edges || []).map(e => [`${e.from}-${e.to}`, e]));
@@ -1636,7 +1645,8 @@ function syncFromAutoMapper() {
         type: 'room',
         notes: '',
         isManual: false,
-        isEdited: false
+        isEdited: false,
+        isSmall: false
       };
 
       mapState.nodes.set(locationName, currentNode);
@@ -1699,7 +1709,7 @@ function syncFromAutoMapper() {
 function saveMapImmediately() {
   if (!mapState.gameName) return false;
   try {
-    localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify({
+    const dataToSave = {
       nodes: Array.from(mapState.nodes.values()),
       edges: Array.from(mapState.edges.values()),
       protectedNodes: Array.from(mapState.protectedNodes),
@@ -1709,9 +1719,11 @@ function saveMapImmediately() {
       viewport: mapState.viewport,
       autoMapEnabled: mapState.autoMapEnabled,
       currentNodeId: mapState.currentNodeId
-    }));
+    };
+    localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify(dataToSave));
     return true;
   } catch (e) {
+    console.error('Map save failed:', e);
     return false;
   }
 }
@@ -1737,6 +1749,19 @@ export function saveMapForGame(immediate = false) {
       saveMapImmediately();
       timers.saveTimer = null;
     }, 500);
+  }
+}
+
+/**
+ * Flush any pending debounced map save immediately.
+ * Called by autosave before reading map data from localStorage
+ * to ensure the latest move is captured (avoids 500ms debounce race).
+ */
+export function flushMapSave() {
+  if (timers.saveTimer) {
+    clearTimeout(timers.saveTimer);
+    timers.saveTimer = null;
+    saveMapImmediately();
   }
 }
 
@@ -1874,7 +1899,8 @@ export async function syncMapFromAutoMapper(gameName) {
         type: 'room',
         notes: '',
         isManual: false,
-        isEdited: false
+        isEdited: false,
+        isSmall: false
       });
 
       existingNodes.set(locationName, true);

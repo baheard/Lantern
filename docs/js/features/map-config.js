@@ -57,7 +57,7 @@ export const NODE_ICONS = {
   person: 'person',       // NPC or character
   door: 'door_front',     // Exit or entrance
   puzzle: 'extension',    // Puzzle element
-  star: 'star',           // Important/notable
+  star: 'back_hand',      // Hand icon
   question: 'help'        // Unknown or mystery
 };
 

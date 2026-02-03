@@ -101,6 +101,13 @@ function limitHTMLHistory(html, maxTurns = 100) {
 async function getOptimizedMapData(gameName) {
     if (!gameName) return null;
 
+    // Flush any pending debounced map save before reading
+    // (avoids race: map save debounces 500ms, autosave fires at 100ms)
+    try {
+        const { flushMapSave } = await import('../features/map-canvas.js');
+        flushMapSave();
+    } catch (e) { /* map-canvas not loaded yet — no pending save */ }
+
     // Check for map canvas data first (user opened the map)
     const mapKey = `iftalk_map_${gameName}`;
     const mapDataStr = localStorage.getItem(mapKey);
@@ -127,6 +134,7 @@ async function getOptimizedMapData(gameName) {
                 if (node.notes && node.notes !== '') optimized.notes = node.notes;
                 if (node.isManual === true) optimized.isManual = true;
                 if (node.isEdited === true) optimized.isEdited = true;
+                if (node.isSmall === true) optimized.isSmall = true;
 
                 return optimized;
             });
@@ -251,7 +259,8 @@ async function restoreMapData(optimizedMapData, gameName) {
                 type: node.type || 'room',
                 notes: node.notes || '',
                 isManual: node.isManual || false,
-                isEdited: node.isEdited || false
+                isEdited: node.isEdited || false,
+                isSmall: node.isSmall || false
             }));
 
             // Restore edges with default values, convert 'cmd' back to 'command'
@@ -285,9 +294,13 @@ async function restoreMapData(optimizedMapData, gameName) {
 
             // Set auto-mapper current location so it can track from here
             // Then clear journey since map canvas now has everything
-            // Auto-mapper will track only new moves from this point
+            // Use journey's last entry if available — it's more recent than canvas
+            // currentNodeId (which may be stale if autosave ran before map save flushed)
             const { setCurrentLocation, clearJourney } = await import('../features/auto-mapper.js');
-            setCurrentLocation(mapData.currentNodeId, gameName);
+            const lastJourneyLocation = optimizedMapData.autoMapper?.journey?.length > 0
+                ? optimizedMapData.autoMapper.journey[optimizedMapData.autoMapper.journey.length - 1].locationName
+                : null;
+            setCurrentLocation(lastJourneyLocation || mapData.currentNodeId, gameName);
             clearJourney();
 
         } catch (error) {

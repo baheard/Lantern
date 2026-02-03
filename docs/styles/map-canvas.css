@@ -480,6 +480,7 @@ body.map-resizing .map-canvas-overlay * {
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: var(--z-map-legend);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .map-legend.legend-visible {
@@ -1298,10 +1299,10 @@ body.map-resizing .map-canvas-overlay * {
   }
 }
 
-/* Tablet and larger - map shows more of the game text */
+/* Tablet and larger - map takes most of the screen */
 @media (min-width: 768px) {
   .map-panel {
-    left: 15%; /* Use most of width on desktop - 85% map space */
+    left: 15%; /* Nearly full-width on desktop - 85% map space */
   }
 }
 
