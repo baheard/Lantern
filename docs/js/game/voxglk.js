@@ -1021,15 +1021,23 @@ export function sendInput(text, type = 'line') {
     // Watchdog start failed silently
   });
 
-  // Clear the 1-line grid status window before sending input.
-  // Some games don't call erase_window(1) before drawing the status bar,
-  // leaving stale characters from previous longer location names in glkapi's
-  // char array.  Clearing here ensures the game writes onto a clean slate.
+  // Clear line 0 of the status bar window before sending input.
+  // Some games (e.g. Theatre) reuse a multi-line TextGrid as a 1-line status
+  // bar and never call erase_window(1), so stale characters from previous
+  // longer location names persist in glkapi's char array.  We cannot use
+  // glk_window_clear here because (a) it clears ALL lines of the window and
+  // (b) it throws if a line_request is pending.  Clearing only line 0 and
+  // marking it dirty is sufficient: glkapi sends the full char array for every
+  // dirty line, so the renderer will see a clean slate.
   if (type === 'line') {
     try {
       const win = window.zvmInstance?.statuswin || window.zvmInstance?.upperwin;
-      if (win && win.gridheight === 1 && window.Glk?.glk_window_clear) {
-        window.Glk.glk_window_clear(win);
+      if (win && win.lines && win.lines[0]) {
+        const lineobj = win.lines[0];
+        lineobj.dirty = true;
+        for (let cx = 0; cx < win.gridwidth; cx++) {
+          lineobj.chars[cx] = ' ';
+        }
       }
     } catch (e) { /* ignore — e.g. window not yet created */ }
   }
