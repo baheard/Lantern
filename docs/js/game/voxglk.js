@@ -514,13 +514,11 @@ export function createVoxGlk(textOutputCallback) {
                     // We send that input type to "complete" the intro request, then the VM
                     // resumes from the restored state and requests the next real input.
                     //
-                    // WARNING: Do NOT send empty string for line input.  restore_file() restores
-                    // the game's internal "last command" buffer along with all other VM memory.
-                    // Many Z-machine parsers treat zero-length input as AGAIN (repeat last command),
-                    // which silently re-executes whatever the player did before saving — including
-                    // movement commands that change location.  A nonsense word the parser won't
-                    // recognise is safe: it produces an "unknown word" error (suppressed below)
-                    // without changing any game state.
+                    // WARNING: Do NOT send any real words here.  skipNextUpdateAfterBootstrap
+                    // suppresses the OUTPUT of this input, but the parser still EXECUTES it.
+                    // Any recognised verb (e.g. "wake" broke Theatre) will produce side effects
+                    // even though the response text is hidden.  Empty string is safe — tested
+                    // and confirmed not to trigger AGAIN in any bundled game.
                     const bootstrapType = introInputType || 'line';
 
                     if (bootstrapType === 'char') {
@@ -535,7 +533,7 @@ export function createVoxGlk(textOutputCallback) {
                         type: 'line',
                         gen: 1,  // Always use intro's generation after page reload
                         window: 1,
-                        value: 'bootstrap wake',  // Must not be empty (see WARNING above)
+                        value: '',  // Must not contain any valid IF verbs (see WARNING above)
                         terminator: 'enter'
                       });
                     }
