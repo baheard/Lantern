@@ -430,7 +430,7 @@ function getProgressIcon(status) {
 /**
  * Show summary state
  */
-function showSummary(results) {
+function showSummary(results, autosaveImported = false) {
   const progress = document.getElementById('syncProgressContent');
   const summary = document.getElementById('syncSummaryContent');
   const summaryIcon = document.getElementById('syncSummaryIcon');
@@ -469,6 +469,10 @@ function showSummary(results) {
     messages.push(`<div class="sync-summary-line muted">⊘ ${skipped} save${skipped > 1 ? 's' : ''} skipped</div>`);
   }
 
+  if (autosaveImported) {
+    messages.push(`<div class="sync-summary-line success">↻ Reloading game to apply imported autosave...</div>`);
+  }
+
   summaryMessage.innerHTML = messages.join('');
 
   // Update buttons
@@ -477,6 +481,13 @@ function showSummary(results) {
   confirmBtn.textContent = 'Done';
   confirmBtn.disabled = false;
   confirmBtn.onclick = closeSyncPreview;
+
+  // Reload game if autosave was imported so it takes effect
+  if (autosaveImported) {
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  }
 }
 
 /**
@@ -526,8 +537,12 @@ export async function performSync() {
     completed++;
   }
 
+  // Check if autosave was successfully imported (needs game reload)
+  const autosaveImported = syncDirection === 'import' &&
+    results.some(r => r.status === 'success' && r.id.includes('_autosave_'));
+
   // Show summary
-  setTimeout(() => showSummary(results), 500);
+  setTimeout(() => showSummary(results, autosaveImported), 500);
 }
 
 /**

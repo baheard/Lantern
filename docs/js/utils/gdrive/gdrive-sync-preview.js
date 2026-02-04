@@ -140,10 +140,18 @@ export async function compareSaves(gameName, direction) {
   for (const file of driveFiles) {
     const localKey = filenameToLocalStorageKey(file.name);
 
-    // Filter by game name
+    // Filter by game name (same extraction logic as local scan above)
     if (gameName) {
-      const parts = localKey.split('_');
-      const saveGameName = parts.slice(2).join('_');
+      let saveGameName;
+      if (localKey.startsWith(`${APP_CONFIG.storagePrefix}_autosave_`)) {
+        saveGameName = localKey.substring(`${APP_CONFIG.storagePrefix}_autosave_`.length);
+      } else if (localKey.startsWith(`${APP_CONFIG.storagePrefix}_quicksave_`)) {
+        saveGameName = localKey.substring(`${APP_CONFIG.storagePrefix}_quicksave_`.length);
+      } else if (localKey.startsWith(`${APP_CONFIG.storagePrefix}_customsave_`)) {
+        const afterPrefix = localKey.substring(`${APP_CONFIG.storagePrefix}_customsave_`.length);
+        const firstUnderscore = afterPrefix.indexOf('_');
+        saveGameName = firstUnderscore > 0 ? afterPrefix.substring(0, firstUnderscore) : afterPrefix;
+      }
       if (saveGameName !== gameName) {
         continue;
       }
