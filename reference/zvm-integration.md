@@ -38,7 +38,18 @@ IFTalk uses **ifvms.js** (Z-machine interpreter) + **GlkOte** (display library) 
    - Handles text styles and formatting
    - Manages line input and character input
 
-3. **Command Processing**
+3. **Status Bar Rendering**
+   - v3 games use `statuswin` (rock 202), created automatically by ifvms
+     - ifvms writes the status bar internally via `v3_status()` each turn
+     - `v3_status()` writes `width` spaces first (clears the line), then location + score
+     - Game code does not need to do anything
+   - v5+ games use `upperwin` (rock 203), created by the game via `split_window`
+     - The game is fully responsible for writing AND clearing the status bar
+     - Some games (e.g. Theatre) reuse a multi-line TextGrid (created for an intro screen) as a 1-line status bar without ever calling `erase_window` — see `bug-fixes-history.md` for the stale-character fix
+   - `gridheight` on a glkapi window object is fixed at creation and never updated; the renderer uses `content.lines.length` from each update to distinguish a 1-line status bar from a multi-line upper window
+   - `voxglk.js` clears line 0 of the status window before each turn to handle games that don't clear it themselves; only line 0 is touched to avoid disturbing multi-line upper windows
+
+4. **Command Processing**
    - User types command in input field
    - JavaScript sends to ZVM via GlkOte API
    - ZVM processes command

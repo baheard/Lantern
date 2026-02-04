@@ -1,5 +1,29 @@
 # Bug Fixes & Key Learnings History
 
+## Status Bar Stale Characters in Theatre (Bug Fix - 2026-02-04)
+
+**Bug**: Status bar displayed concatenated/mashed location names (e.g. "Sick Bayf Long Corridor" instead of "Sick Bay") after loading a saved game.
+
+**Symptoms**:
+- First move after load: location displays correctly
+- Second move: previous location name bleeds through on the right side
+- Subsequent moves: location names accumulate, especially visible when a short location name follows longer ones (short name doesn't overwrite the tail of the previous name)
+
+**Root cause**: Theatre (z5) creates a 24-line TextGrid for its intro screen (`window id=4, gridheight=24`), then reuses that same window as a 1-line status bar during gameplay. The game writes only leading spaces + location name to line 0 and never calls `erase_window(1)` or `glk_window_clear`. In glkapi, each dirty line's full `chars` array (all `gridwidth` positions) is sent to the renderer — positions the game didn't write retain whatever was there before. All Theatre corridor locations share the "...of Long Corridor" suffix (~17 chars), so their tails perfectly mask each other. Only when visiting a short location like "Sick Bay" do positions ~34+ expose the stale tail from the previous longer name.
+
+**Why `glk_window_clear` didn't work (first fix attempt)**: The initial fix used `glk_window_clear(win)` guarded by `win.gridheight === 1`. Theatre's window retains `gridheight=24` from when it was created for the intro screen — this value is never updated by the game. The guard blocked the clear entirely. Additionally, `glk_window_clear` is unsuitable here because (a) it clears ALL lines of the window, which would break multi-line upper windows in other games, and (b) it throws if a `line_request` is pending on the window.
+
+**Fix** (`docs/js/game/voxglk.js`, in `sendInput()`): Before each line-mode input is sent to Glk, directly zero `win.lines[0].chars` (set every char to `' '`) and set `lines[0].dirty = true`. Only line 0 is touched, so multi-line upper windows in other games are unaffected. glkapi sends the full char array for every dirty line in its update, so the renderer sees a clean slate before the game writes the new location name.
+
+**v3 vs v5+ status bars**: v3 games use `statuswin` (rock 202), created automatically by ifvms. ifvms's internal `v3_status()` writes `width` spaces first (clearing the line) then the location + score — no game code needed. v5+ games use `upperwin` (rock 203), created by the game via `split_window`, and are fully responsible for their own clearing. Theatre is z5 and doesn't clear.
+
+**Key diagnostic detail**: `gridheight` on a glkapi window object is set at creation and never updated. The renderer correctly uses `content.lines.length` from each update (not `gridheight`) to distinguish a 1-line status bar from a multi-line upper window.
+
+**Implementation files**:
+- `docs/js/game/voxglk.js` (in `sendInput()`): Line-0 clearing before each turn, guarded by `type === 'line'`
+
+---
+
 ## Mobile Keyboard Viewport Handling (Bug Fix - 2025-01-05)
 
 **Bug**: Mobile keyboard appearance caused black space, content jumping, and poor UX
