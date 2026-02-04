@@ -1021,6 +1021,19 @@ export function sendInput(text, type = 'line') {
     // Watchdog start failed silently
   });
 
+  // Clear the 1-line grid status window before sending input.
+  // Some games don't call erase_window(1) before drawing the status bar,
+  // leaving stale characters from previous longer location names in glkapi's
+  // char array.  Clearing here ensures the game writes onto a clean slate.
+  if (type === 'line') {
+    try {
+      const win = window.zvmInstance?.statuswin || window.zvmInstance?.upperwin;
+      if (win && win.gridheight === 1 && window.Glk?.glk_window_clear) {
+        window.Glk.glk_window_clear(win);
+      }
+    } catch (e) { /* ignore — e.g. window not yet created */ }
+  }
+
   // Send the input event to Glk
   acceptCallback(inputEvent);
 
