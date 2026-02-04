@@ -400,8 +400,6 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
 
         // Get Quetzal save data from ZVM
         const pc = window.zvmInstance.pc;
-        const statusBarElForLog = document.getElementById('statusBar');
-        console.log('[SAVE] pc=' + pc + ' statusBar=' + (statusBarElForLog?.textContent?.trim()));
         const quetzalData = window.zvmInstance.save_file(pc);
 
         // Convert to base64 for localStorage
@@ -428,6 +426,9 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         const savedInputWindowId = getInputWindowId();
         const savedInputType = getInputType();
 
+        // Capture read_data addresses so we can clear stale buffers on restore
+        const readData = window.zvmInstance?.read_data;
+
         // Build save data object with compressed data
         const saveData = {
             timestamp: new Date().toISOString(),
@@ -446,7 +447,9 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             voxglkState: {
                 generation: savedGeneration,
                 inputWindowId: savedInputWindowId,
-                inputType: savedInputType
+                inputType: savedInputType,
+                bufaddr: readData?.bufaddr,
+                parseaddr: readData?.parseaddr
             },
             // Note: narrationState removed - start fresh on each load
             ...additionalData // Merge any additional data (saveName, verification, etc.)
@@ -537,11 +540,21 @@ async function performRestore(storageKey, displayName = null, options = {}) {
         }
 
         // Restore using ZVM
-        console.log('[RESTORE] calling restore_file, saved statusBar=' + (saveData.displayHTML?.statusBar?.replace(/<[^>]+>/g, '').trim()));
         const result = window.zvmInstance.restore_file(bytes.buffer);
-        console.log('[RESTORE] restore_file returned ' + result + ' pc=' + (window.zvmInstance?.pc));
 
         if (result === 2) { // ZVM returns 2 on successful restore
+            // Clear stale text/parse buffers in VM memory.
+            // After Quetzal restore, bootstrap resumes via CharInput (not LineInput),
+            // so handle_line_input never runs to overwrite these buffers.
+            // Games that read the parse buffer on resume (e.g. Theatre) would
+            // otherwise re-execute the previous command from stale tokens.
+            const { bufaddr, parseaddr } = saveData.voxglkState || {};
+            if (bufaddr && window.zvmInstance?.m) {
+                window.zvmInstance.m.setUint8(bufaddr + 1, 0); // text buffer length = 0
+            }
+            if (parseaddr && window.zvmInstance?.m) {
+                window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0
+            }
             // DON'T restore VoxGlk generation - keep it at 1 (current intro state)
             // After page reload, glkapi.js is at gen:1, so VoxGlk must stay at gen:1
             // The saved generation is just VM memory state, not the UI turn counter
