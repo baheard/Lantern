@@ -415,6 +415,8 @@ export function createVoxGlk(textOutputCallback) {
      */
     update: async function(arg) {
       try {
+        console.log('[UPDATE] gen=' + arg.gen + ' hasContent=' + !!arg.content + ' hasInput=' + !!arg.input + ' skipBootstrap=' + skipNextUpdateAfterBootstrap);
+
         // Track generation (Glk uses this to prevent old input)
         // Always update generation from Glk - this is the current turn number
         if (arg.gen !== undefined) {
@@ -444,6 +446,9 @@ export function createVoxGlk(textOutputCallback) {
         // Suppress output after bootstrap input (the "I beg your pardon" response)
         if (skipNextUpdateAfterBootstrap) {
           skipNextUpdateAfterBootstrap = false;
+
+          console.log('[BOOTSTRAP] suppressing update, gen=' + generation + ' inputType=' + inputType);
+          console.log('[BOOTSTRAP] suppressed arg:', JSON.stringify(arg, null, 2));
 
           // If VM is in char mode (press any key/menu), let it render so display matches VM state
           // Otherwise skip rendering (suppress "I beg your pardon" response)
@@ -492,6 +497,8 @@ export function createVoxGlk(textOutputCallback) {
               }
 
               if (restored) {
+                const statusBarEl = document.getElementById('statusBar');
+                console.log('[RESTORE] success. gen=' + generation + ' pc=' + (window.zvmInstance?.pc) + ' statusBar=' + (statusBarEl?.textContent?.trim()));
                 // Set flag to preserve restored HTML (prevent grid state from overwriting it)
                 justRestored = true;
 
@@ -516,10 +523,12 @@ export function createVoxGlk(textOutputCallback) {
                     //
                     // WARNING: Do NOT send any real words here.  skipNextUpdateAfterBootstrap
                     // suppresses the OUTPUT of this input, but the parser still EXECUTES it.
-                    // Any recognised verb (e.g. "wake" broke Theatre) will produce side effects
-                    // even though the response text is hidden.  Empty string is safe — tested
-                    // and confirmed not to trigger AGAIN in any bundled game.
+                    // Any recognised verb will produce side effects even though the response
+                    // text is hidden.  "bootstrap wake" is safe because neither word appears
+                    // in any standard Z-machine dictionary.
                     const bootstrapType = introInputType || 'line';
+
+                    console.log('[BOOTSTRAP] sending bootstrap input, type=' + bootstrapType + ' gen=1 introInputType=' + introInputType);
 
                     if (bootstrapType === 'char') {
                       acceptCallback({
@@ -533,7 +542,7 @@ export function createVoxGlk(textOutputCallback) {
                         type: 'line',
                         gen: 1,  // Always use intro's generation after page reload
                         window: 1,
-                        value: '',  // Must not contain any valid IF verbs (see WARNING above)
+                        value: 'bootstrap wake',
                         terminator: 'enter'
                       });
                     }
@@ -862,6 +871,8 @@ export function createVoxGlk(textOutputCallback) {
           // Check global auto-save setting
           const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
           if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
+            const statusBarElForLog = document.getElementById('statusBar');
+            console.log('[AUTOSAVE] triggering. gen=' + generation + ' pc=' + (window.zvmInstance?.pc) + ' statusBar=' + (statusBarElForLog?.textContent?.trim()));
             setTimeout(async () => {
               try {
                 const { autoSave } = await import('./save-manager.js');

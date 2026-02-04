@@ -400,6 +400,8 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
 
         // Get Quetzal save data from ZVM
         const pc = window.zvmInstance.pc;
+        const statusBarElForLog = document.getElementById('statusBar');
+        console.log('[SAVE] pc=' + pc + ' statusBar=' + (statusBarElForLog?.textContent?.trim()));
         const quetzalData = window.zvmInstance.save_file(pc);
 
         // Convert to base64 for localStorage
@@ -535,7 +537,9 @@ async function performRestore(storageKey, displayName = null, options = {}) {
         }
 
         // Restore using ZVM
+        console.log('[RESTORE] calling restore_file, saved statusBar=' + (saveData.displayHTML?.statusBar?.replace(/<[^>]+>/g, '').trim()));
         const result = window.zvmInstance.restore_file(bytes.buffer);
+        console.log('[RESTORE] restore_file returned ' + result + ' pc=' + (window.zvmInstance?.pc));
 
         if (result === 2) { // ZVM returns 2 on successful restore
             // DON'T restore VoxGlk generation - keep it at 1 (current intro state)
