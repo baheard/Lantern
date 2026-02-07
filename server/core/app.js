@@ -112,7 +112,8 @@ export function createApp() {
       'ifdb.org',
       'www.ifdb.org',
       'web.archive.org',
-      'archive.org'
+      'archive.org',
+      'eblong.com'
     ];
 
     const urlObj = new URL(gameUrl);
