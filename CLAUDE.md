@@ -42,7 +42,7 @@
 
 ```bash
 cd /e/Project/IFTalk && npm start
-# Access at http://localhost:3000
+# Access at http://localhost:3002 (port set in config.json)
 ```
 
 ## Working with Claude

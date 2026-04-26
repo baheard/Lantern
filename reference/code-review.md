@@ -54,8 +54,8 @@ _Status: complete (2026-04-25)_
 
 - `[ ]` **Low** — `docs/js/input/keyboard/keyboard-core.js:619` — `setInterval(updateInputVisibility, 500)` polls input mode every 500ms for the page lifetime. Single timer, no accumulation, but wasteful — visibility only changes on mute toggle, system-entry mode toggle, or input-type change, all of which are event-driven elsewhere. Could be called from those events instead of polling.
 - `[ ]` **Low** — `docs/js/app.js:221` — `setInterval(() => registration.update(), 30000)` for SW update check is never cleared. Page-lifetime singleton, no real leak, but worth noting as a one-shot timer that could be paired or moved to a Page Visibility-aware schedule.
-- `[ ]` **Low** — `docs/js/narration/tts-player.js:200` — `startTimeout` (2s safety) is cleared on `onstart`/`onend`/`onerror`. `speechSynthesis.cancel()` triggers `onerror('interrupted')` which clears it, so the leak window is bounded by 2s in adversarial cases. Marginal — could explicitly clear in `stopNarration()` for clarity.
-- `[ ]` **Low** — `docs/js/features/map-canvas.js:290` — `window.addEventListener('resize', resizeCanvas)` is added once during lazy init and never removed. Not a leak (single listener, page lifetime, map DOM persists after `hideMap`), but the listener fires while map is hidden — wasted work on every viewport resize. Consider gating on `isVisible`.
+- `[-]` **Low** — `docs/js/narration/tts-player.js:200` — `startTimeout` (2s safety) is cleared on `onstart`/`onend`/`onerror`. `speechSynthesis.cancel()` triggers `onerror('interrupted')` which clears it, so the leak window is bounded by 2s in adversarial cases. **Won't fix in 6ea0eea: behavior is self-healing; added a clarifying comment instead.**
+- `[x]` **Low** — `docs/js/features/map-canvas.js:290` — `window.addEventListener('resize', resizeCanvas)` is added once during lazy init and never removed. Not a leak (single listener, page lifetime, map DOM persists after `hideMap`), but the listener fires while map is hidden — wasted work on every viewport resize. **Fixed in 6ea0eea: gated on `isVisible`.**
 
 #### Verified safe
 - `setInterval` cleanups: save-manager backup (`backupIntervalId`), voice-meter (`state.voiceMeterInterval`), lock-screen hold (`holdUpdateInterval`), wake-lock periodic check (`periodicCheckTimer`), update countdown (`autoRefreshTimer`) — all properly paired with `clearInterval`.
@@ -75,9 +75,9 @@ _Status: complete (2026-04-25)_
 - `[x]` **Medium** — `docs/js/game/save-manager.js:864` — Imported save file written via `setJSON(key, saveData)` without checking return. If the import is large enough to exceed quota, `setJSON` returns `false`, but the user sees `updateStatus('Import successful!')` and is prompted to load, finding nothing on reload. **Fixed in 4b73a06: check return and surface "Import failed: storage full." error.**
 - `[x]` **Medium** — `docs/js/game/save-manager.js:928` — Backup save (`createBackup`) calls `setJSON(backupKey, saveData)` and ignores the return. Backups can grow large (full game state + map data); quota failures here mean the backup chain silently breaks. **Fixed in 4b73a06: return false from createBackup() when setJSON fails.**
 - `[ ]` **Low** — `docs/js/utils/storage/storage-api.js:30-37,90-97` — `setItem`/`setJSON` return `false` for *any* error (quota, security, type). Callers can't distinguish without re-throwing. The save-manager primary path works around this by re-probing; cleaner long-term: throw a typed error and let callers catch by `error.name === 'QuotaExceededError'`.
-- `[ ]` **Low** — `docs/js/features/auto-mapper.js:119` — Empty `catch (e) {}` in VM-memory probe loop. Likely intentional (probing past valid memory regions throws expected errors), but the silence makes diagnosis hard if the auto-mapper actually breaks. A one-line comment explaining "intentional: VM-memory probe expected to throw past objects" would suffice.
-- `[ ]` **Low** — `docs/js/utils/remote-console.js:161` — Empty catch around `sendLog` to keep wrapped console from re-throwing. Defensible (don't disrupt original `console.*`), but worth a comment.
-- `[ ]` **Low** — `docs/js/app.js:1589-1591` — `visibilitychange` handler catches and silently drops errors stopping recognition. Cleanup path, acceptable, but a comment explaining intent would help.
+- `[x]` **Low** — `docs/js/features/auto-mapper.js:119` — Empty `catch (e) {}` in VM-memory probe loop. Likely intentional (probing past valid memory regions throws expected errors), but the silence makes diagnosis hard if the auto-mapper actually breaks. **Fixed in 6ea0eea: added intent comment.**
+- `[x]` **Low** — `docs/js/utils/remote-console.js:161` — Empty catch around `sendLog` to keep wrapped console from re-throwing. Defensible (don't disrupt original `console.*`), but worth a comment. **Fixed in 6ea0eea: added intent comment.**
+- `[x]` **Low** — `docs/js/app.js:1589-1591` — `visibilitychange` handler catches and silently drops errors stopping recognition. Cleanup path, acceptable, but a comment explaining intent would help. **Fixed in 6ea0eea: added intent comment.**
 
 #### Verified safe (overstated by audit)
 - Dynamic `import().then()` without `.catch()` — multiple instances flagged; in this codebase modules are bundled & cached by SW. Realistic failure rate is near zero. Not a real concern in practice.
@@ -104,7 +104,8 @@ _Status: complete (2026-04-25)_
 
   Git history is the right tool for this. They're not served by Express (extension wouldn't match), but they bloat the tree and confuse search. **Deleted in 4b73a06; `*.bak` was already in `.gitignore`.**
 - `[x]` **Medium** — `docs/js/app.js:417` — `if (false && !state.pushToTalkMode && ...)` dead branch with comment "TEMPORARILY DISABLED for debugging". This is blocking auto-mute-on-pause logic. **Fixed in 4b73a06: removed the `false && ` gating, restoring the auto-mute-on-pause behavior described by the comment above it.**
-- `[ ]` **Low** — `docs/js/game/voxglk-renderer.js:352` — `// TODO: Re-enable with correct pattern if needed` — stale TODO with no actionable info. Either remove the comment or file an issue.
+- `[x]` **Low** — `docs/js/game/voxglk-renderer.js:352` — `// TODO: Re-enable with correct pattern if needed` — stale TODO with no actionable info. **Fixed in 6ea0eea: removed the entire ~20-line commented-out blank-line compression block.**
+- `[x]` **Low** — `docs/js/game/voxglk-renderer.js:720` — Duplicate private `escapeHtml` function. **Fixed in 6ea0eea: removed; now imports shared `escapeHtml` from `utils/text-processing.js`.**
 
 #### Verified safe
 - No copy-pasted blocks ≥10 lines anywhere (good — refactoring effort paid off).
@@ -119,9 +120,9 @@ _Status: complete (2026-04-25)_
 
 #### Findings
 
-- `[ ]` **Low** — `docs/js/utils/storage/storage-api.js:240-265` — `printStorageReport()` is a user-invokable debug helper that does ~10 sequential `console.log` calls. Not called automatically. Could be one structured `console.table` or `console.group` for readability, but harmless as-is.
-- `[ ]` **Low** — `docs/js/features/map-canvas.js:478,516,1222` and `docs/js/ui/mobile-menu.js:272,287` — `console.warn` used for actual errors (failed saves, parse failures). Should be `console.error`. Minor — error → warn mismatches just affect devtools filtering.
-- `[ ]` **Low** — `docs/js/game/save-manager.js:31,52` — Compression/decompression `console.error` lines lack context (which save, which key). When debugging real failures, this matters; the error alone is rarely enough.
+- `[x]` **Low** — `docs/js/utils/storage/storage-api.js:240-265` — `printStorageReport()` is a user-invokable debug helper that does ~10 sequential `console.log` calls. **Fixed in 6ea0eea: collapsed to `console.group` + `console.table`.**
+- `[x]` **Low** — `docs/js/features/map-canvas.js:478,516,1222` and `docs/js/ui/mobile-menu.js:272,287` — `console.warn` used for actual errors. **Fixed in 6ea0eea: changed to `console.error` on all 5 sites.**
+- `[x]` **Low** — `docs/js/game/save-manager.js:31,52` — Compression/decompression `console.error` lines lack context. **Fixed in 6ea0eea: now logs input length alongside error.**
 
 #### Verified safe
 - No logs in hot loops (per-frame render, per-chunk narration, per-keystroke input).
