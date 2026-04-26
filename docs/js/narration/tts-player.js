@@ -195,8 +195,10 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
     // Speak (recognition stays active, echo detection filters out our own voice)
     speechSynthesis.speak(utterance);
 
-    // Safety timeout: If TTS doesn't start within 2 seconds, assume it failed
-    // This catches iOS permission dialog interruptions and other silent failures
+    // Safety timeout: If TTS doesn't start within 2 seconds, assume it failed.
+    // This catches iOS permission dialog interruptions and other silent failures.
+    // Also self-healing in stopNarration's path: cancel() fires onerror('interrupted'),
+    // which clears this timer. If a browser ever fails to fire onerror, this still resolves.
     startTimeout = setTimeout(() => {
       if (!ttsStarted && state.ttsIsSpeaking) {
         // TTS claimed to start but never actually began speaking

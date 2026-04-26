@@ -116,7 +116,9 @@ function getCurrentLocationFromVM() {
               break;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Probing past valid objects throws; skip and keep scanning.
+        }
       }
     }
 

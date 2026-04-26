@@ -1586,7 +1586,7 @@ async function initApp() {
 
           state.recognition.stop();
         } catch (err) {
-          // Error stopping voice recognition
+          // Visibility-change cleanup path; recognition may already be stopped — ignore.
         }
       }
     } else {

@@ -269,7 +269,7 @@ function getQuickAccessPrefs() {
     try {
       return { ...DEFAULT_QA_PREFS, ...JSON.parse(stored) };
     } catch (e) {
-      console.warn('Failed to parse quick access preferences:', e);
+      console.error('Failed to parse quick access preferences:', e);
       return { ...DEFAULT_QA_PREFS };
     }
   }
@@ -284,7 +284,7 @@ function saveQuickAccessPrefs(prefs) {
   try {
     localStorage.setItem(QA_PREFS_KEY, JSON.stringify(prefs));
   } catch (e) {
-    console.warn('Failed to save quick access preferences:', e);
+    console.error('Failed to save quick access preferences:', e);
   }
 }
 

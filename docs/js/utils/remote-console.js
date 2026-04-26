@@ -158,7 +158,9 @@ if (INTERCEPT_ALL) {
       original.apply(console, args);
       try {
         sendLog(level, args);
-      } catch (e) {}
+      } catch (e) {
+        // Never let the logger break the original console.* call.
+      }
     };
   });
 }

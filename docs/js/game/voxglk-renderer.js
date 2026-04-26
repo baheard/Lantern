@@ -5,6 +5,8 @@
  * Handles status line (grid windows) and main story text (buffer windows).
  */
 
+import { escapeHtml } from '../utils/text-processing.js';
+
 /**
  * Window types (from Glk spec)
  * Note: ifvms sends these as strings, not numbers
@@ -348,28 +350,7 @@ function formatTextLines(lines) {
     return '';
   }
 
-  // DISABLED: Blank line compression
-  // TODO: Re-enable with correct pattern if needed
-  // const compressed = [];
-  // let consecutiveBlanks = 0;
-  //
-  // for (const line of lines) {
-  //   const isBlank = line.trim() === '';
-  //
-  //   if (isBlank) {
-  //     consecutiveBlanks++;
-  //
-  //     // Keep odd-numbered blanks (1st, 3rd, 5th...), skip even-numbered (2nd, 4th, 6th...)
-  //     if (consecutiveBlanks % 2 === 1) {
-  //       compressed.push(line);
-  //     }
-  //   } else {
-  //     consecutiveBlanks = 0;
-  //     compressed.push(line);
-  //   }
-  // }
-
-  const compressed = lines; // No compression - use all lines as-is
+  const compressed = lines;
 
   // Wrap each line in a div element
   // Blank lines get a spacer class instead of content
@@ -711,17 +692,6 @@ function extractPlainText(content) {
   return plain;
 }
 
-/**
- * Escape HTML special characters
- *
- * @param {string} text - Text to escape
- * @returns {string} - Escaped text
- */
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 /**
  * Strip HTML tags from text

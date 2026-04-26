@@ -29,7 +29,7 @@ function compressString(str) {
         const uint8array = pako.gzip(str);
         return btoa(String.fromCharCode(...uint8array));
     } catch (error) {
-        console.error('Compression failed:', error);
+        console.error(`Compression failed (input length ${str.length}):`, error);
         return str; // Return original on error
     }
 }
@@ -50,7 +50,7 @@ function decompressString(compressed) {
         const decompressed = pako.ungzip(uint8array, { to: 'string' });
         return decompressed;
     } catch (error) {
-        console.error('Decompression failed:', error);
+        console.error(`Decompression failed (input length ${compressed.length}):`, error);
         return compressed; // Return original on error
     }
 }

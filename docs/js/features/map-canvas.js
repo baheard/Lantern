@@ -286,8 +286,8 @@ function setupEventListeners() {
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
 
-  // Global
-  window.addEventListener('resize', resizeCanvas);
+  // Global — only redraw the canvas when the map is actually showing.
+  window.addEventListener('resize', () => { if (isVisible) resizeCanvas(); });
   document.addEventListener('keydown', handleKeyDown);
 
   // Visual viewport resize (keyboard open/close detection)
@@ -475,7 +475,7 @@ function setupResizeHandle() {
       const leftPercent = (rect.left / window.innerWidth) * 100;
       localStorage.setItem('iftalk_map_left_percent', leftPercent.toString());
     } catch (e) {
-      console.warn('Failed to save map panel position:', e);
+      console.error('Failed to save map panel position:', e);
     }
 
     // Reset wasResizing flag after a short delay to prevent backdrop click
@@ -513,7 +513,7 @@ function setupResizeHandle() {
       }
     }
   } catch (e) {
-    console.warn('Failed to restore map panel position:', e);
+    console.error('Failed to restore map panel position:', e);
   }
 
   // Expose state and cleanup function for backdrop click handler
@@ -1219,7 +1219,7 @@ function markToastDismissed(id) {
       setTimeout(() => showDontShowAgainToast(), 1000);
     }
   } catch (e) {
-    console.warn('Failed to save toast dismissal:', e);
+    console.error('Failed to save toast dismissal:', e);
   }
 }
 

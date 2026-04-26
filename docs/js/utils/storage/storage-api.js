@@ -239,31 +239,21 @@ export function getStorageInfo() {
  */
 export function printStorageReport() {
     const info = getStorageInfo();
-    console.log('=== IFTalk Storage Report ===');
-    console.log(`Total keys: ${info.totalKeys} (${info.iftalkKeys} from IFTalk)`);
-    console.log(`Total size: ${info.estimatedSizeKB} KB (${info.estimatedSizeMB} MB)`);
-    console.log('\nSize by type:');
-    info.sizeByType.forEach(({ type, sizeKB, count }) => {
-        console.log(`  ${type}: ${sizeKB} KB (${count} items)`);
-    });
-    console.log('\nTop 10 largest items:');
+    const estimatedQuotaMB = 5; // Conservative estimate; real quota is 5-10MB and varies by browser.
+    const usagePercent = ((parseFloat(info.estimatedSizeMB) / estimatedQuotaMB) * 100).toFixed(1);
     const itemSizes = info.keys.map(key => {
         const value = localStorage.getItem(key);
-        const size = value ? value.length : 0;
-        return { key, sizeKB: (size / 1024).toFixed(2) };
-    }).sort((a, b) => parseFloat(b.sizeKB) - parseFloat(a.sizeKB)).slice(0, 10);
-    itemSizes.forEach(({ key, sizeKB }) => {
-        console.log(`  ${key}: ${sizeKB} KB`);
-    });
+        return { key, sizeKB: parseFloat(((value ? value.length : 0) / 1024).toFixed(2)) };
+    }).sort((a, b) => b.sizeKB - a.sizeKB).slice(0, 10);
 
-    // Estimate quota (typically 5-10MB, varies by browser)
-    const estimatedQuotaMB = 5; // Conservative estimate
-    const usagePercent = ((parseFloat(info.estimatedSizeMB) / estimatedQuotaMB) * 100).toFixed(1);
-    console.log(`\nEstimated quota usage: ~${usagePercent}% (assuming ${estimatedQuotaMB}MB limit)`);
-
+    console.group(`IFTalk Storage Report — ${info.estimatedSizeMB} MB (~${usagePercent}% of ${estimatedQuotaMB}MB), ${info.iftalkKeys}/${info.totalKeys} keys`);
+    console.table(info.sizeByType);
+    console.log('Top 10 largest items:');
+    console.table(itemSizes);
     if (parseFloat(info.estimatedSizeMB) > 3) {
-        console.warn('WARNING: Storage usage is high! Consider exporting and deleting old saves.');
+        console.warn('Storage usage is high — consider exporting and deleting old saves.');
     }
+    console.groupEnd();
 
     return info;
 }
