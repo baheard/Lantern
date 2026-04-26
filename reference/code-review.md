@@ -28,9 +28,9 @@ _Status: complete (2026-04-25)_
 
 #### Findings
 
-- `[ ]` **High** — `docs/js/game/save-manager.js:570,580,595` — Restored save's `displayHTML.statusBar/upperWindow/lowerWindow` is written to `innerHTML` without sanitization. A crafted save file (imported via file picker or Google Drive sync) can execute arbitrary JS. This is the realistic XSS vector — saves are the cross-user data path.
-- `[ ]` **High** — `docs/js/game/save-manager.js:492` — `displayName` (user-controlled save name) is interpolated raw into a `<div class="system-message">…</div>` HTML string, then passed to `addGameText(html, isCommand=false)`. `addGameText` non-command branch calls `div.innerHTML = text` (`docs/js/ui/game-output.js:291`) without escaping. A save name like `<img src=x onerror=…>` executes.
-- `[ ]` **High** — `docs/js/ui/sync-preview-modal.js:116` — `item.name` (save filename from local or remote) interpolated raw into the modal's `innerHTML`. Same template injection class as above.
+- `[x]` **High** — `docs/js/game/save-manager.js:570,580,595` — Restored save's `displayHTML.statusBar/upperWindow/lowerWindow` is written to `innerHTML` without sanitization. A crafted save file (imported via file picker or Google Drive sync) can execute arbitrary JS. This is the realistic XSS vector — saves are the cross-user data path. **Fixed in 4b73a06: wrap with `sanitizeRestoredHTML()`.**
+- `[x]` **High** — `docs/js/game/save-manager.js:492` — `displayName` (user-controlled save name) is interpolated raw into a `<div class="system-message">…</div>` HTML string, then passed to `addGameText(html, isCommand=false)`. `addGameText` non-command branch calls `div.innerHTML = text` (`docs/js/ui/game-output.js:291`) without escaping. A save name like `<img src=x onerror=…>` executes. **Fixed in 4b73a06: `escapeHtml(displayName)` at both save and restore message sites (lines 493, 639).**
+- `[x]` **High** — `docs/js/ui/sync-preview-modal.js:116` — `item.name` (save filename from local or remote) interpolated raw into the modal's `innerHTML`. Same template injection class as above. **Fixed in 4b73a06: `escapeHtml()` on `item.id`, `item.name`, `statusClass`, `statusLabel`. Also upgraded `escapeHtml` to escape quotes for attribute-context safety.**
 - `[ ]` **Medium** — `docs/js/utils/gdrive/gdrive-auth.js` — Google OAuth access token in plain `localStorage`. Standard for client-side OAuth; the practical mitigation is closing XSS holes (above), not encrypting at rest (which would be theater since the key has to live client-side). Recording as awareness — fixing the XSS findings reduces this risk significantly.
 - `[ ]` **Low** — `docs/index.html` — No CSP meta tag. App uses inline styles in some places, but no `eval` / `new Function` / string-arg timers, so a `default-src 'self'; script-src 'self';` CSP would be feasible and close many residual XSS paths.
 
@@ -72,8 +72,8 @@ _Status: complete (2026-04-25)_
 
 #### Findings
 
-- `[ ]` **Medium** — `docs/js/game/save-manager.js:864` — Imported save file written via `setJSON(key, saveData)` without checking return. If the import is large enough to exceed quota, `setJSON` returns `false`, but the user sees `updateStatus('Import successful!')` and is prompted to load, finding nothing on reload. Compare with the primary save path at `save-manager.js:459` which correctly probes for `QuotaExceededError` and surfaces a meaningful error.
-- `[ ]` **Medium** — `docs/js/game/save-manager.js:928` — Backup save (`createBackup`) calls `setJSON(backupKey, saveData)` and ignores the return. Backups can grow large (full game state + map data); quota failures here mean the backup chain silently breaks.
+- `[x]` **Medium** — `docs/js/game/save-manager.js:864` — Imported save file written via `setJSON(key, saveData)` without checking return. If the import is large enough to exceed quota, `setJSON` returns `false`, but the user sees `updateStatus('Import successful!')` and is prompted to load, finding nothing on reload. **Fixed in 4b73a06: check return and surface "Import failed: storage full." error.**
+- `[x]` **Medium** — `docs/js/game/save-manager.js:928` — Backup save (`createBackup`) calls `setJSON(backupKey, saveData)` and ignores the return. Backups can grow large (full game state + map data); quota failures here mean the backup chain silently breaks. **Fixed in 4b73a06: return false from createBackup() when setJSON fails.**
 - `[ ]` **Low** — `docs/js/utils/storage/storage-api.js:30-37,90-97` — `setItem`/`setJSON` return `false` for *any* error (quota, security, type). Callers can't distinguish without re-throwing. The save-manager primary path works around this by re-probing; cleaner long-term: throw a typed error and let callers catch by `error.name === 'QuotaExceededError'`.
 - `[ ]` **Low** — `docs/js/features/auto-mapper.js:119` — Empty `catch (e) {}` in VM-memory probe loop. Likely intentional (probing past valid memory regions throws expected errors), but the silence makes diagnosis hard if the auto-mapper actually breaks. A one-line comment explaining "intentional: VM-memory probe expected to throw past objects" would suffice.
 - `[ ]` **Low** — `docs/js/utils/remote-console.js:161` — Empty catch around `sendLog` to keep wrapped console from re-throwing. Defensible (don't disrupt original `console.*`), but worth a comment.
@@ -93,8 +93,8 @@ _Status: complete (2026-04-25)_
 
 #### Findings
 
-- `[ ]` **Medium** — `docs/js/utils/gdrive/gdrive-sync-preview-temp.js` — Orphan file, zero importers, contains broken syntax (escaped `\!` chars on lines 64 and 133, parameter/variable name mismatch `gameNames` vs `gameName`). Looks like an abandoned in-progress refactor. Safe to delete after verifying via grep that no dynamic-import string references it (none found).
-- `[ ]` **Medium** — Six `.bak` files in tree:
+- `[x]` **Medium** — `docs/js/utils/gdrive/gdrive-sync-preview-temp.js` — Orphan file, zero importers, contains broken syntax (escaped `\!` chars on lines 64 and 133, parameter/variable name mismatch `gameNames` vs `gameName`). Looks like an abandoned in-progress refactor. Safe to delete after verifying via grep that no dynamic-import string references it (none found). **Deleted in 4b73a06.**
+- `[x]` **Medium** — Six `.bak` files in tree:
   - `docs/js/game/game-loader.js.bak`
   - `docs/js/game/save-manager.js.bak`
   - `docs/js/ui/confirm-dialog.js.bak`
@@ -102,8 +102,8 @@ _Status: complete (2026-04-25)_
   - `docs/js/ui/sync-preview-modal.js.bak`
   - `docs/js/utils/gdrive/gdrive-sync-preview.js.bak`
 
-  Git history is the right tool for this. They're not served by Express (extension wouldn't match), but they bloat the tree and confuse search. Add `*.bak` to `.gitignore` after deletion.
-- `[ ]` **Medium** — `docs/js/app.js:417` — `if (false && !state.pushToTalkMode && ...)` dead branch with comment "TEMPORARILY DISABLED for debugging". This is blocking auto-mute-on-pause logic. Either commit to the change (delete the gated block) or delete the `false &&` if the gating was a debug experiment that should now be on. Stale debug gating in `master` is a smell.
+  Git history is the right tool for this. They're not served by Express (extension wouldn't match), but they bloat the tree and confuse search. **Deleted in 4b73a06; `*.bak` was already in `.gitignore`.**
+- `[x]` **Medium** — `docs/js/app.js:417` — `if (false && !state.pushToTalkMode && ...)` dead branch with comment "TEMPORARILY DISABLED for debugging". This is blocking auto-mute-on-pause logic. **Fixed in 4b73a06: removed the `false && ` gating, restoring the auto-mute-on-pause behavior described by the comment above it.**
 - `[ ]` **Low** — `docs/js/game/voxglk-renderer.js:352` — `// TODO: Re-enable with correct pattern if needed` — stale TODO with no actionable info. Either remove the comment or file an issue.
 
 #### Verified safe
@@ -197,17 +197,12 @@ _Pending until Tiers 1 & 2 complete._
 
 | Sev | File:Line | Hook |
 |-----|-----------|------|
-| High | `save-manager.js:570,580,595` | Save HTML restored via `innerHTML` — XSS via crafted save file |
-| High | `save-manager.js:492` | Save name interpolated raw into `addGameText` HTML |
-| High | `sync-preview-modal.js:116` | Sync item name interpolated raw into modal `innerHTML` |
 | Medium | `gdrive-auth.js` | OAuth token in plain localStorage (mitigated by fixing XSS) |
 | Low | `index.html` | No CSP meta tag |
 | Low | `keyboard-core.js:619` | 500ms polling for input visibility — could be event-driven |
 | Low | `app.js:221` | SW update interval never cleared (page-lifetime singleton) |
 | Low | `tts-player.js:200` | TTS startTimeout not explicitly cleared in stopNarration |
 | Low | `map-canvas.js:290` | Window resize listener fires while map is hidden |
-| Medium | `save-manager.js:864` | Imported save quota failure not surfaced to user |
-| Medium | `save-manager.js:928` | Backup save quota failure silently breaks backup chain |
 | Low | `storage-api.js:30,90` | setItem/setJSON return bool — caller can't distinguish error type |
 | Low | `auto-mapper.js:119` | Empty catch in VM probe — needs intent comment |
 | Low | `remote-console.js:161` | Empty catch in console wrapper — needs intent comment |
@@ -215,10 +210,13 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `storage-api.js:240-265` | `printStorageReport()` cluster of console.log — could be grouped |
 | Low | `map-canvas.js:478,516,1222`, `mobile-menu.js:272,287` | `console.warn` used for real errors, should be `console.error` |
 | Low | `save-manager.js:31,52` | Compression error logs lack context for debugging |
-| Medium | `gdrive-sync-preview-temp.js` | Orphan file with broken syntax — delete |
-| Medium | 6 × `*.bak` files | Cluttering tree; rely on git history instead |
-| Medium | `app.js:417` | Dead `if (false && …)` branch — debug gating left in master |
 | Low | `voxglk-renderer.js:352` | Stale TODO with no actionable info |
 | Low | `command-router.js:34-36` | Dynamic import of `app.js` to break entry-point cycle |
 | Low | `voxglk.js`, `game-output.js`, `tts-player.js` | Lazy imports in hot paths — could be static |
 | Low | various | `window.*` used as cross-module signal channel |
+| Low | `voxglk-renderer.js:720` | Duplicate private `escapeHtml` — could share `text-processing.js` version |
+
+### Fixed in v1.5.222 (commit 4b73a06)
+- 3 High security findings (innerHTML XSS via save HTML and save names)
+- 2 Medium quota error findings (silent failures on import/backup)
+- 3 Medium dead-code findings (`.bak` files, orphan temp, dead debug branch)
