@@ -201,22 +201,11 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `index.html` | No CSP meta tag |
 | Low | `keyboard-core.js:619` | 500ms polling for input visibility — could be event-driven |
 | Low | `app.js:221` | SW update interval never cleared (page-lifetime singleton) |
-| Low | `tts-player.js:200` | TTS startTimeout not explicitly cleared in stopNarration |
-| Low | `map-canvas.js:290` | Window resize listener fires while map is hidden |
 | Low | `storage-api.js:30,90` | setItem/setJSON return bool — caller can't distinguish error type |
-| Low | `auto-mapper.js:119` | Empty catch in VM probe — needs intent comment |
-| Low | `remote-console.js:161` | Empty catch in console wrapper — needs intent comment |
-| Low | `app.js:1589-1591` | Visibilitychange swallows recognition stop errors |
-| Low | `storage-api.js:240-265` | `printStorageReport()` cluster of console.log — could be grouped |
-| Low | `map-canvas.js:478,516,1222`, `mobile-menu.js:272,287` | `console.warn` used for real errors, should be `console.error` |
-| Low | `save-manager.js:31,52` | Compression error logs lack context for debugging |
-| Low | `voxglk-renderer.js:352` | Stale TODO with no actionable info |
 | Low | `command-router.js:34-36` | Dynamic import of `app.js` to break entry-point cycle |
 | Low | `voxglk.js`, `game-output.js`, `tts-player.js` | Lazy imports in hot paths — could be static |
 | Low | various | `window.*` used as cross-module signal channel |
-| Low | `voxglk-renderer.js:720` | Duplicate private `escapeHtml` — could share `text-processing.js` version |
 
-### Fixed in v1.5.222 (commit 4b73a06)
-- 3 High security findings (innerHTML XSS via save HTML and save names)
-- 2 Medium quota error findings (silent failures on import/backup)
-- 3 Medium dead-code findings (`.bak` files, orphan temp, dead debug branch)
+### Fixed
+- **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
+- **v1.5.223 (commit 6ea0eea)** — 8 Low: duplicate `escapeHtml` consolidated, stale TODO/commented block deleted, intent comments on 3 empty catches, `console.warn`→`console.error` on 5 real-error sites, compression error context, `printStorageReport` collapsed to `console.group`+`console.table`, TTS safety-timeout self-healing comment, map resize listener gated on `isVisible`.
