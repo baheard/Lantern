@@ -8,11 +8,15 @@ import { state } from '../../core/state.js';
 import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 
-/**
- * Open the settings panel with overlay
- */
+// Element to return focus to when the panel closes (typically the trigger button)
+let lastFocusedBeforeOpen = null;
+
+// inert removes the panel from focus + interaction; aria-hidden is added because
+// some tooling (Playwright ariaSnapshot, older screen readers) does not yet honor
+// inert as a signal to drop a subtree from the accessibility tree.
 export function openSettings() {
   if (dom.settingsPanel) {
+    lastFocusedBeforeOpen = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     updateSettingsContext();
     dom.settingsPanel.removeAttribute('inert');
     dom.settingsPanel.removeAttribute('aria-hidden');
@@ -23,9 +27,6 @@ export function openSettings() {
   }
 }
 
-/**
- * Close the settings panel and overlay
- */
 export function closeSettings() {
   if (dom.settingsPanel) {
     dom.settingsPanel.classList.remove('open');
@@ -34,6 +35,10 @@ export function closeSettings() {
     if (dom.settingsOverlay) {
       dom.settingsOverlay.classList.add('hidden');
     }
+    if (lastFocusedBeforeOpen && document.contains(lastFocusedBeforeOpen)) {
+      lastFocusedBeforeOpen.focus();
+    }
+    lastFocusedBeforeOpen = null;
   }
 }
 
