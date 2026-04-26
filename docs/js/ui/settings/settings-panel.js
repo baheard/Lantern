@@ -14,6 +14,8 @@ import { updateStatus } from '../../utils/status.js';
 export function openSettings() {
   if (dom.settingsPanel) {
     updateSettingsContext();
+    dom.settingsPanel.removeAttribute('inert');
+    dom.settingsPanel.removeAttribute('aria-hidden');
     dom.settingsPanel.classList.add('open');
     if (dom.settingsOverlay) {
       dom.settingsOverlay.classList.remove('hidden');
@@ -27,6 +29,8 @@ export function openSettings() {
 export function closeSettings() {
   if (dom.settingsPanel) {
     dom.settingsPanel.classList.remove('open');
+    dom.settingsPanel.setAttribute('inert', '');
+    dom.settingsPanel.setAttribute('aria-hidden', 'true');
     if (dom.settingsOverlay) {
       dom.settingsOverlay.classList.add('hidden');
     }
