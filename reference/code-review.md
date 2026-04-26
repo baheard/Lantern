@@ -224,8 +224,37 @@ _Status: complete (2026-04-26)_
 4. **Wrap voxglk module state into a `VoxGlkState` object** — High value, ~4 hrs. Big readability win, but touches every closure access.
 5. **Extract bootstrap-restore to `voxglk-bootstrap.js`** — Medium value, ~2 hrs. Makes a fragile multi-file flow explicit and testable.
 
-### Batch 3: Save/restore (`game/save-manager.js`, save formatters)
-_Status: pending_
+### Batch 3: Save/restore (`game/save-manager.js`)
+_Status: complete (2026-04-26)_
+
+**Headline:** Focused, well-maintained module (1079 lines). Prior Tier 1 fixes (XSS sanitization, quota-error propagation) leave no security gaps. Two medium concerns: ~200 lines of map-domain logic embedded here, and `initSaveHandlers` mixing UI wiring with save logic. No data-loss bugs. The agent-flagged race condition was a false positive — `flushMapSave()` is synchronous and the flush-before-read pattern is correct.
+
+#### Findings
+
+- `[ ]` **Medium** — `docs/js/game/save-manager.js:102-222, 230-310` — `getOptimizedMapData()` (121 lines) and `restoreMapData()` (80 lines) embed map-domain knowledge in the save module: they hardcode the `iftalk_map_${gameName}` localStorage key and know the internal structure of map node/edge data. This is map-module knowledge. Better: export `exportMapState()` / `importMapState(data)` from `features/map-canvas.js` and have save-manager call those abstractions. Current coupling: if map storage keys or data shape change, save-manager breaks silently.
+- `[ ]` **Medium** — `docs/js/game/save-manager.js:1008-1079` — `initSaveHandlers()` wires 5 DOM button event listeners and calls `closeSettings()` (imported from settings module). Save logic and UI-binding are mixed. Save functions are already exported; the event-listener wiring could move to a UI-layer module (e.g., `ui/settings/settings-panel.js` or a toolbar init file), leaving save-manager purely for save/restore operations.
+- `[ ]` **Low** — `docs/js/game/save-manager.js:626` — `performRestore()` directly mutates `state.skipNarrationAfterLoad` and `state.currentChunkIndex`. Not a bug, but restore logic is coupled to narration state — testing in isolation requires the full `state` object.
+- `[ ]` **Low** — `docs/js/game/save-manager.js:82-84` — `limitHTMLHistory`: if the character-boundary truncation point falls before the first `<` tag, the text before that tag is silently dropped. Minor edge case — the oldest visible turn can lose a trailing text node at the boundary.
+
+#### Verified safe / not concerns
+- Race condition in `getOptimizedMapData`: `flushMapSave()` is synchronous (clears debounce timer + calls `saveMapImmediately()` → writes to localStorage synchronously). The flush-before-read pattern is correct. Agent's High flag was a false positive.
+- Dynamic `await import('./voxglk.js')` in `performSave()`: voxglk.js ↔ save-manager.js is a real circular dependency (voxglk dynamically imports `quickLoad`, `autoLoad`, `autoSave`). Dynamic import is the correct resolution — not a smell.
+- GDrive sync `catch (error) {}` at line 486: intentionally silent — Drive sync is optional, async, and best-effort. Documented in the comment.
+- Backup cleanup (`cleanupOldBackups`): collects all keys into an array first, then deletes — no iteration hazard. Sort-by-timestamp + slice logic is correct.
+- `performSave`/`performRestore` length (112/144 lines): well-decomposed with private helpers (`compressString`, `getOptimizedMapData`, `getCurrentDisplayState`, etc.). Not a concern.
+- Timer: `stopAutosaveBackupTimer()` correctly pairs `clearInterval(backupIntervalId)` and nulls the ID.
+- Compression fallback: both `compressString`/`decompressString` catch and return original on error — safe.
+
+#### Top 5 longest functions in batch
+1. `performRestore()` — `save-manager.js:518-661` (144 lines)
+2. `getOptimizedMapData()` — `save-manager.js:102-222` (121 lines)
+3. `performSave()` — `save-manager.js:394-505` (112 lines)
+4. `restoreMapData()` — `save-manager.js:230-315` (86 lines)
+5. `initSaveHandlers()` — `save-manager.js:1008-1079` (72 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Export `exportMapState()`/`importMapState()` from map-canvas.js** — Medium value, ~2 hrs. Removes 200 lines of map knowledge from save-manager; makes both modules independently testable.
+2. **Move `initSaveHandlers()` wiring to UI layer** — Low value, ~30 min. Minor separation improvement; unblocks removal of the `closeSettings` import from save-manager.
 
 ### Batch 4: Commands (`game/commands/`)
 _Status: pending_
@@ -282,6 +311,10 @@ _Pending until Tiers 1 & 2 complete._
 | Medium | `voxglk.js:552-599` | Char-mode grid reconstruction nested in main loop — extract |
 | Low | `voxglk.js:1088-1090` | `isSafeToSave()` misleading name for char→line transition guard |
 | Low | `voxglk.js:974-1053` | `sendInput()` lacks defensive re-check on `acceptCallback` |
+| Medium | `save-manager.js:102-222,230-310` | Map-domain logic (200 lines) embedded in save module — belongs in map-canvas.js |
+| Medium | `save-manager.js:1008-1079` | `initSaveHandlers()` mixes UI event wiring + settings coupling into save module |
+| Low | `save-manager.js:626` | `performRestore()` mutates `state.skipNarrationAfterLoad` — couples save to narration state |
+| Low | `save-manager.js:82-84` | `limitHTMLHistory` silently drops text before first tag at truncation boundary |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
