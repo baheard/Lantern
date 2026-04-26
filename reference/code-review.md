@@ -269,15 +269,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `keyboard-core.js:619` | 500ms polling for input visibility — could be event-driven |
 | Low | `app.js:221` | SW update interval never cleared (page-lifetime singleton) |
 | Low | `storage-api.js:30,90` | setItem/setJSON return bool — caller can't distinguish error type |
-| Low | `command-router.js:34-36` | Dynamic import of `app.js` to break entry-point cycle |
 | Low | `voxglk.js`, `game-output.js`, `tts-player.js` | Lazy imports in hot paths — could be static |
 | Low | various | `window.*` used as cross-module signal channel |
-| High | `app.js:747-1649` | `initApp()` is a 902-line mega-orchestrator |
+| High | `app.js:747-1649` | `initApp()` is a 902-line mega-orchestrator (ember `20260426-053946-a702`) |
 | Medium | `core/state.js` | 98 props, kitchen-sink — consider nesting by subsystem |
 | Low | `app.js:1486-1537` | Keyboard shortcuts as if-cascade; could be a Map dispatcher |
 | Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
-| High | `voxglk.js:343-965` | `createVoxGlk()` closure conflates 5+ concerns — extract watchdog/grid/bootstrap |
-| High | `voxglk.js:14-45` | 22 module-level `let` decls with implicit lifecycle — wrap in state object |
+| High | `voxglk.js:343-965` | `createVoxGlk()` closure conflates 5+ concerns (ember `20260426-054005-7990`) |
+| High | `voxglk.js:14-45` | 22 module-level `let` decls with implicit lifecycle (ember `20260426-054023-392e`) |
 | Medium | `voxglk.js:612` | Status-bar change detection compares HTML strings — use plain text |
 | Medium | `game-loader.js:381-444` | Recently-played UI rendering belongs in `ui/recently-played.js` |
 | Medium | `voxglk-renderer.js:59-74` | Dead fallback for missing `persistentWindows` — tighten signature |
