@@ -10,6 +10,21 @@ import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
 import { checkLocationChange } from '../features/auto-mapper.js';
 import { updateInputVisibility } from '../input/keyboard/keyboard-core.js';
+import {
+  startWatchdog,
+  clearWatchdog,
+  resetWatchdogState,
+} from './voxglk-watchdog.js';
+import { processGridUpdates, resetGridState } from './voxglk-grid.js';
+import {
+  resetBootstrapState,
+  captureIntroInputType,
+  checkSuppressUpdate,
+  isBootstrapping,
+  isJustRestored,
+  clearJustRestored,
+  handleAutoRestore,
+} from './voxglk-bootstrap.js';
 
 /**
  * State
@@ -26,23 +41,9 @@ let lastContentGeneration = -1; // Track generation when content was last render
 let lastCharModePlainText = ''; // Track previous plain text in char mode for diffing
 let resizeTimeout = null; // Debounce resize events
 let skipFirstAutosave = false; // Skip first autosave if we're about to restore
-let skipNextUpdateAfterBootstrap = false; // Skip next update after bootstrap input (suppress "I beg your pardon")
 let autosaveCounter = 0; // Count autosaves to skip the first N
-let introInputType = null; // Track the input type from the first request (gen 1) for bootstrap
 let previousInputType = null; // Track previous input type to detect transitions
 let justExitedCharMode = false; // True when we just transitioned from char to line (VM state needs to settle)
-let gridStates = new Map(); // Track full grid state for each window to handle partial updates
-let justRestored = false; // Flag to prevent grid state creation right after restore (preserves restored HTML)
-
-// Watchdog timer for detecting broken VM state
-let watchdogTimer = null; // Timer for detecting when VM doesn't respond to input
-let lastInputGeneration = null; // Generation when last input was sent
-let isAutoRepairInProgress = false; // Prevent multiple concurrent repairs
-let currentRepairFlagKey = null; // Game-specific repair flag key for current watchdog
-
-// Watchdog configuration constants
-const WATCHDOG_TIMEOUT_MS = 5000; // 5 seconds to wait for VM response
-const REPAIR_RETRY_WINDOW_MS = 15000; // 15 seconds between repair attempts
 
 /**
  * Calculate metrics based on actual window dimensions
@@ -142,198 +143,6 @@ function handleResize() {
 }
 
 /**
- * Automatically trigger repair when VM state is broken
- * Called by watchdog timer when VM doesn't respond to input
- */
-async function autoRepairVMState() {
-  await promptRepairVMState();
-}
-
-/**
- * Show warning when VM state appears broken
- * Just displays a message - user must manually type REPAIR
- */
-async function promptRepairVMState() {
-  if (isAutoRepairInProgress) {
-    return;
-  }
-
-  isAutoRepairInProgress = true;
-
-  const { updateStatus } = await import('../utils/status.js');
-  const { addGameText } = await import('../ui/game-output.js');
-
-  const errorMessage = '⚠️ Game not responding. Save may be corrupted.';
-  updateStatus(errorMessage, 'error');
-
-  // Show warning message in game output
-  addGameText('<div class="system-message">⚠️ <b>Game not responding</b><br>Save may be corrupted. Type REPAIR to attempt to fix.</div>', false);
-
-  // Trigger TTS for the warning
-  if (window.handleGameOutput) {
-    window.handleGameOutput('Game not responding. Save may be corrupted. Type REPAIR to attempt to fix.');
-  }
-
-  // Don't enter system mode - let user manually type REPAIR when ready
-  // Reset flag so REPAIR command can proceed
-  isAutoRepairInProgress = false;
-}
-
-/**
- * Perform repair (save current state and reload)
- * Called from commands.js when user confirms repair
- */
-export async function performRepair() {
-  try {
-    const { updateStatus } = await import('../utils/status.js');
-    const { state } = await import('../core/state.js');
-    updateStatus('Repairing game state...', 'processing');
-
-    // Step 1: Clean up unanswered commands from display before saving
-    const lowerWindow = document.getElementById('lowerWindow');
-    if (lowerWindow) {
-      const commands = lowerWindow.querySelectorAll('.user-command');
-      const gameTexts = lowerWindow.querySelectorAll('.game-text:not(.user-command)');
-
-      // Remove commands that appear after the last game response
-      if (commands.length > 0 && gameTexts.length > 0) {
-        const lastGameText = gameTexts[gameTexts.length - 1];
-        const commandsToRemove = [];
-
-        for (const cmd of commands) {
-          // If command appears after last game text, it's unanswered
-          if (lastGameText.compareDocumentPosition(cmd) & Node.DOCUMENT_POSITION_FOLLOWING) {
-            commandsToRemove.push(cmd);
-          }
-        }
-
-        commandsToRemove.forEach(cmd => cmd.remove());
-      }
-    }
-
-    // Step 2: Save current state (cleaned up, without broken commands)
-    const { autoSave } = await import('./save-manager.js');
-    const saved = await autoSave();
-
-    if (!saved) {
-      updateStatus('⚠️ Repair failed - could not save state', 'error');
-
-      const { addGameText } = await import('../ui/game-output.js');
-      addGameText('<div class="system-message">⚠️ Repair failed. Please restart the game from Settings.</div>', false);
-
-      isAutoRepairInProgress = false;
-      return false;
-    }
-
-    // Step 3: Set up pending restore (same mechanism as manual RESTORE command)
-    // This ensures the restore happens correctly with proper bootstrap
-    sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
-      type: 'autosave',
-      key: state.currentGameName,
-      gameName: state.currentGameName
-    }));
-
-    // Step 4: Set flag to track repair attempt (prevents infinite loop)
-    // Use game-specific key to avoid interference between multiple tabs
-    const repairFlagKey = `iftalk_last_repair_attempt_${state.currentGameName}`;
-    sessionStorage.setItem(repairFlagKey, Date.now().toString());
-
-    // Step 5: Reload page to restore
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-
-    return true;
-
-  } catch (error) {
-    const { updateStatus } = await import('../utils/status.js');
-    updateStatus('⚠️ Repair failed: ' + error.message, 'error');
-    isAutoRepairInProgress = false;
-    return false;
-  }
-}
-
-/**
- * Reset repair flag (called when user cancels repair)
- */
-export function resetRepairFlag() {
-  isAutoRepairInProgress = false;
-}
-
-/**
- * Clear watchdog timer when VM responds normally
- */
-function clearWatchdog() {
-  if (watchdogTimer) {
-    clearTimeout(watchdogTimer);
-    watchdogTimer = null;
-    lastInputGeneration = null;
-
-    // Clear repair attempt flag since VM responded successfully
-    if (currentRepairFlagKey) {
-      sessionStorage.removeItem(currentRepairFlagKey);
-      currentRepairFlagKey = null;
-    }
-  }
-}
-
-/**
- * Start watchdog timer to detect broken VM state
- * If VM doesn't respond within timeout, trigger auto-repair
- */
-async function startWatchdog(currentGeneration) {
-  // Don't start watchdog during restore or repair operations
-  if (isAutoRepairInProgress || skipNextUpdateAfterBootstrap) {
-    return;
-  }
-
-  // Clear any existing watchdog
-  clearWatchdog();
-
-  // Store the generation when input was sent
-  lastInputGeneration = currentGeneration;
-
-  // Store game-specific repair flag key for this watchdog session
-  const { state } = await import('../core/state.js');
-  currentRepairFlagKey = `iftalk_last_repair_attempt_${state.currentGameName}`;
-
-  // Set timeout - if VM doesn't respond, it's broken
-  watchdogTimer = setTimeout(async () => {
-    // Check if generation has advanced
-    if (generation === lastInputGeneration) {
-      // Check if we recently attempted a repair using stored flag key
-      const lastRepairAttempt = currentRepairFlagKey ? sessionStorage.getItem(currentRepairFlagKey) : null;
-
-      if (lastRepairAttempt) {
-        const timeSinceRepair = Date.now() - parseInt(lastRepairAttempt);
-        if (timeSinceRepair < REPAIR_RETRY_WINDOW_MS) {
-
-          const { updateStatus } = await import('../utils/status.js');
-          const { addGameText } = await import('../ui/game-output.js');
-
-          const errorMsg = '❌ Auto-repair failed. The save file may be corrupted. Please restart the game from Settings.';
-          updateStatus(errorMsg, 'error');
-          addGameText(`<div class="system-message">${errorMsg}</div>`, false);
-
-          if (window.handleGameOutput) {
-            window.handleGameOutput('Auto-repair failed. The save file may be corrupted. Please restart the game from Settings.');
-          }
-
-          // Clear the flag so user can try manual operations
-          if (currentRepairFlagKey) {
-            sessionStorage.removeItem(currentRepairFlagKey);
-          }
-          return;
-        }
-      }
-
-      // Trigger auto-repair (only if not recently attempted)
-      await autoRepairVMState();
-    }
-  }, WATCHDOG_TIMEOUT_MS);
-}
-
-/**
  * Create VoxGlk display interface
  * This is what Glk will use (passed as options.GlkOte)
  *
@@ -351,16 +160,15 @@ export function createVoxGlk(textOutputCallback) {
     init: function(options) {
       generation = 0;
       windows.clear();
-      gridStates.clear(); // Clear grid states for new game
+      resetGridState(); // Clear grid states for new game
       lastStatusLine = '';
       lastContentGeneration = -1; // Reset content generation tracker
       inputEnabled = false;
       inputType = 'line';
       inputWindowId = null;
       autosaveCounter = 0; // Reset counter for new game session
-      introInputType = null; // Reset intro input type for new game
-      clearWatchdog(); // Clear any stale watchdog timer
-      isAutoRepairInProgress = false; // Reset repair flag
+      resetBootstrapState(); // Clear bootstrap flags for new game session
+      resetWatchdogState(); // Clear any stale watchdog timer + repair flag
 
       // Update input UI immediately
       updateInputVisibility();
@@ -442,18 +250,7 @@ export function createVoxGlk(textOutputCallback) {
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
-        if (skipNextUpdateAfterBootstrap) {
-          skipNextUpdateAfterBootstrap = false;
-
-          // If VM is in char mode (press any key/menu), let it render so display matches VM state
-          // Otherwise skip rendering (suppress "I beg your pardon" response)
-          if (inputType === 'char') {
-            // Fall through to render
-          } else {
-            // Line mode - skip rendering as normal
-            return;
-          }
-        }
+        if (checkSuppressUpdate(inputType)) return;
 
         // Process window definitions
         if (arg.windows) {
@@ -463,141 +260,11 @@ export function createVoxGlk(textOutputCallback) {
         }
 
         // Auto-restore AFTER first update completes (VM is fully running)
-        let shouldSkipAutosave = false;
-        if (window.shouldAutoRestore) {
-          window.shouldAutoRestore = false; // Only once
-          const restoreType = window.pendingRestoreType || 'autosave';
-          const restoreKey = window.pendingRestoreKey;
-          window.pendingRestoreType = null;
-          window.pendingRestoreKey = null;
-
-          // Let this update complete normally, then restore
-          setTimeout(async () => {
-            try {
-              // Call appropriate load function based on type
-              let restored;
-              if (restoreType === 'quicksave') {
-                // Quicksave: triggered by Quick Load button reload
-                const { quickLoad } = await import('./save-manager.js');
-                restored = await quickLoad();
-              } else if (restoreType === 'customsave') {
-                // Customsave: triggered by RESTORE command reload
-                // restoreKey is just the save name
-                const { customLoad } = await import('./save-manager.js');
-                restored = await customLoad(restoreKey);
-              } else {
-                // Autosave: normal autorestore flow
-                const { autoLoad } = await import('./save-manager.js');
-                restored = await autoLoad();
-              }
-
-              if (restored) {
-                // Set flag to preserve restored HTML (prevent grid state from overwriting it)
-                justRestored = true;
-
-                // VM state and display HTML restored
-                // For manual restores (quicksave/customsave), ALWAYS send bootstrap with gen:1
-                // For autosave, only send if at gen:1
-                const isManualRestore = (restoreType === 'quicksave' || restoreType === 'customsave');
-                const isGenOne = generation === 1;
-                const shouldSendBootstrap = isManualRestore || isGenOne;
-
-                if (shouldSendBootstrap) {
-                  // Wake VM by sending dummy input to fulfill intro's pending request
-                  setTimeout(() => {
-
-                    // Always suppress the bootstrap response
-                    skipNextUpdateAfterBootstrap = true;
-
-                    // CRITICAL: Always send the intro's input type to satisfy glkapi's expectations.
-                    // After restore_file(), glkapi is still at gen:1 waiting for intro input.
-                    // We send that input type to "complete" the intro request, then the VM
-                    // resumes from the restored state and requests the next real input.
-                    //
-                    // WARNING: Do NOT send any real words here.  skipNextUpdateAfterBootstrap
-                    // suppresses the OUTPUT of this input, but the parser still EXECUTES it.
-                    // Any recognised verb will produce side effects even though the response
-                    // text is hidden.  "bootstrap wake" is safe because neither word appears
-                    // in any standard Z-machine dictionary.
-                    const bootstrapType = introInputType || 'line';
-
-                    if (bootstrapType === 'char') {
-                      acceptCallback({
-                        type: 'char',
-                        gen: 1,  // Always use intro's generation after page reload
-                        window: 1,
-                        value: ' '  // Space character
-                      });
-                    } else {
-                      acceptCallback({
-                        type: 'line',
-                        gen: 1,  // Always use intro's generation after page reload
-                        window: 1,
-                        value: 'bootstrap wake',
-                        terminator: 'enter'
-                      });
-                    }
-
-                  }, 100);
-                }
-              }
-            } catch (error) {
-              // Auto-restore failed silently
-            }
-          }, 100);
-        }
+        await handleAutoRestore(generation, () => acceptCallback);
 
         // Use VoxGlk renderer to convert to frotz HTML
         if (arg.content) {
-          // Process grid window updates and maintain full state for partial updates
-          // CRITICAL: Only use grid state tracking in CHAR mode (press-any-key/menu screens)
-          // In LINE mode, the VM always sends complete status bar updates
-          arg.content.forEach(c => {
-            const win = windows.get(c.id);
-            if (win && win.type === 'grid' && c.lines) {
-              // CRITICAL: If we just restored, skip grid state processing entirely
-              // The restored HTML already has the content - preserve it for this update
-              if (justRestored && !c.clear) {
-                return; // Skip this window - let renderer use restored HTML
-              }
-
-              // CRITICAL: Only use grid state tracking in char mode (press-any-key screens)
-              // In line mode, VM sends complete updates - grid tracking breaks it
-              if (inputType !== 'char') {
-                return; // Skip grid state processing - not in char mode
-              }
-
-              // Get or create grid state for this window
-              let gridState = gridStates.get(c.id);
-
-              if (c.clear || !gridState) {
-                // Clear flag or first time - create new state
-                gridState = new Map();
-                gridStates.set(c.id, gridState);
-              }
-
-              // Apply line updates to grid state
-              c.lines.forEach(lineObj => {
-                const lineNum = lineObj.line !== undefined ? lineObj.line : 0;
-                gridState.set(lineNum, lineObj);
-              });
-
-              // Rebuild full content object with all lines in order
-              const maxLine = Math.max(...Array.from(gridState.keys()));
-              const fullLines = [];
-              for (let i = 0; i <= maxLine; i++) {
-                if (gridState.has(i)) {
-                  fullLines.push(gridState.get(i));
-                } else {
-                  // Empty line
-                  fullLines.push({ line: i, content: ['normal', ''] });
-                }
-              }
-
-              // Replace the partial content with full reconstructed content
-              c.lines = fullLines;
-            }
-          });
+          processGridUpdates(arg.content, windows, inputType, isJustRestored());
 
           const { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText } = renderUpdate(arg, windows);
 
@@ -840,9 +507,7 @@ export function createVoxGlk(textOutputCallback) {
           previousInputType = inputType;
 
           // Capture the intro input type (first request at gen 1) for bootstrap after restore
-          if (generation === 1 && introInputType === null) {
-            introInputType = inputType;
-          }
+          captureIntroInputType(generation, inputType);
 
 
           // Note: Command line visibility is handled automatically by keyboard.js polling
@@ -861,7 +526,7 @@ export function createVoxGlk(textOutputCallback) {
           // Skip autosave if we just exited char mode (VM state needs to settle)
           // Check global auto-save setting
           const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
-          if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
+          if (autosaveEnabled && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
             setTimeout(async () => {
               try {
                 const { autoSave } = await import('./save-manager.js');
@@ -877,9 +542,7 @@ export function createVoxGlk(textOutputCallback) {
         }
 
         // Clear justRestored flag after processing first update
-        if (justRestored) {
-          justRestored = false;
-        }
+        clearJustRestored();
 
       } catch (error) {
         // Error in update() - silently ignored
@@ -1017,7 +680,7 @@ export function sendInput(text, type = 'line') {
 
   // Start watchdog BEFORE sending input (Glk may call update synchronously)
   // Don't await - we want the watchdog to start immediately without blocking
-  startWatchdog(generation).catch(err => {
+  startWatchdog(generation, () => generation, isBootstrapping()).catch(err => {
     // Watchdog start failed silently
   });
 
@@ -1101,22 +764,6 @@ export function setSkipFirstAutosave(skip) {
  */
 export function getVoxGlk() {
   return window._voxglkInstance;
-}
-
-/**
- * Get acceptCallback for sending input events
- * Used by quickLoad to send bootstrap input
- */
-export function getAcceptCallback() {
-  return acceptCallback;
-}
-
-/**
- * Set flag to skip next update after bootstrap
- * Used by quickLoad to suppress "I beg your pardon" message
- */
-export function setSkipNextUpdateAfterBootstrap(skip) {
-  skipNextUpdateAfterBootstrap = skip;
 }
 
 /**

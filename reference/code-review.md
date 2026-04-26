@@ -196,12 +196,12 @@ _Status: complete (2026-04-26)_
 
 #### Findings
 
-- `[ ]` **High** — `docs/js/game/voxglk.js:343-965` — `createVoxGlk()` closure (623 lines including the 471-line `update()` method) conflates Glk dispatch, autosave triggering, watchdog/repair state, grid-state reconstruction, status-line tracking, input mode transitions, and bootstrap restore. Each is a separable concern. Best split: `voxglk-watchdog.js` (5s timer + REPAIR command flow), `voxglk-grid.js` (char-mode grid reconstruction), `voxglk-bootstrap.js` (auto-restore sequencing).
+- `[x]` **High** — `docs/js/game/voxglk.js:343-965` — `createVoxGlk()` closure conflates 5+ concerns. **All three sub-extractions complete: `voxglk-watchdog.js` (v1.5.228), `voxglk-grid.js` (v1.5.229), `voxglk-bootstrap.js` (v1.5.231).**
 - `[ ]` **High** — `docs/js/game/voxglk.js:14-45` — 22 module-level `let` declarations are state for the closure but read like globals. Lifecycle is implicit: which reset per-game vs per-turn vs never? Examples: `lastContentGeneration` (used once at line 691, set at 424 — race condition with resize), `gridStates` cleared in `init()` unconditionally (line 354), `skipNextUpdateAfterBootstrap` lifecycle spans two updates. Wrap in a typed state object or move into `createVoxGlk()` closure scope so the lifecycle is visible.
 - `[ ]` **Medium** — `docs/js/game/voxglk.js:612, 1127` — Status-bar change detection compares the rendered HTML string (`statusBarHTML !== lastStatusLine`). Brittle: any rendering change (extra space, attribute order) triggers a false "changed" signal that re-narrates an unchanged room. Compare extracted plain text instead.
 - `[ ]` **Medium** — `docs/js/game/game-loader.js:381-444` — `renderRecentlyPlayedSection()` is UI rendering (DOM creation, event listeners, dialog construction) inside the game-loader. Belongs in `ui/recently-played.js`. Same goes for the resume dialog and custom-game tracking helpers (`showResumeDialog`, `trackCustomGame`, `removeCustomGame`, `getCustomGamesWithAutosaves`).
 - `[ ]` **Medium** — `docs/js/game/voxglk-renderer.js:59-74` — `renderUpdate(updateObj, persistentWindows)` accepts both the update's own windows and the persistent map, with fallback logic for when persistentWindows is missing. The only caller (`voxglk.js:602`) always passes persistentWindows, so the fallback is dead. Tighten the signature: require the windows map, document that it must be current.
-- `[ ]` **Medium** — `docs/js/game/voxglk.js:552-599` — Grid-state reconstruction (rebuilding multi-line grid content from partial updates) is char-mode-only but lives inside the main `update()` loop. Hides what's actually a niche optimization for menus / "press any key" screens. Extract to a `processGridUpdates()` function called only when `inputType === 'char'`.
+- `[x]` **Medium** — `docs/js/game/voxglk.js:552-599` — Grid-state reconstruction nested in main loop. **Fixed in v1.5.229: extracted to `voxglk-grid.js`.**
 - `[ ]` **Low** — `docs/js/game/voxglk.js:1088-1090` — `isSafeToSave()` exports `!justExitedCharMode`. Misleading name for a very specific check (only guards against autosaving during char-mode→line transitions). Either rename to `isCharModeTransitioning()` or inline at the call site.
 - `[ ]` **Low** — `docs/js/game/voxglk.js:974-1053` — `sendInput()` guards on `acceptCallback` at entry but not before the final call (line 1046). Theoretical race; in practice the callback isn't nullified mid-function. Add a defensive re-check before invoking.
 
@@ -303,12 +303,12 @@ _Pending until Tiers 1 & 2 complete._
 | Medium | `core/state.js` | 98 props, kitchen-sink — consider nesting by subsystem |
 | Low | `app.js:1486-1537` | Keyboard shortcuts as if-cascade; could be a Map dispatcher |
 | Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
-| High | `voxglk.js:343-965` | `createVoxGlk()` closure conflates 5+ concerns (ember `20260426-054005-7990`) |
+| ~~High~~ DONE | `voxglk.js` | `createVoxGlk()` closure split: watchdog (v1.5.228), grid (v1.5.229), bootstrap (v1.5.231) |
 | High | `voxglk.js:14-45` | 22 module-level `let` decls with implicit lifecycle (ember `20260426-054023-392e`) |
 | Medium | `voxglk.js:612` | Status-bar change detection compares HTML strings — use plain text |
 | Medium | `game-loader.js:381-444` | Recently-played UI rendering belongs in `ui/recently-played.js` |
 | Medium | `voxglk-renderer.js:59-74` | Dead fallback for missing `persistentWindows` — tighten signature |
-| Medium | `voxglk.js:552-599` | Char-mode grid reconstruction nested in main loop — extract |
+| ~~Medium~~ DONE | `voxglk.js:552-599` | Char-mode grid reconstruction — extracted to `voxglk-grid.js` (v1.5.229) |
 | Low | `voxglk.js:1088-1090` | `isSafeToSave()` misleading name for char→line transition guard |
 | Low | `voxglk.js:974-1053` | `sendInput()` lacks defensive re-check on `acceptCallback` |
 | Medium | `save-manager.js:102-222,230-310` | Map-domain logic (200 lines) embedded in save module — belongs in map-canvas.js |

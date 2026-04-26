@@ -30,6 +30,14 @@ The flow spans three modules (`game-loader.js`, `voxglk.js`, `save-manager.js`) 
 - Changing how `introInputType` is captured if char vs line input semantics shift.
 - Suppressing or modifying the first `update()` event for any other reason — the bootstrap relies on it being the trigger.
 
-## If you refactor
+## Current implementation
 
-The agent in the Tier 2 Batch 2 review proposed a `voxglk-bootstrap.js` module with a `BootstrapManager` class encapsulating the flow. That'd make the flag lifecycle explicit. Until then: any code touching this path needs to preserve the order: flag → first update → restore-via-save-manager → capture intro type → send bootstrap → suppress next update.
+As of v1.5.231, the flow lives in `docs/js/game/voxglk-bootstrap.js`. Exports:
+- `resetBootstrapState()` — called from `voxglk.init()` for each new game
+- `captureIntroInputType(gen, type)` — records gen:1 input type
+- `checkSuppressUpdate(inputType)` — returns true if update should be skipped (clears flag as side effect)
+- `isBootstrapping()` — used by watchdog to suppress during restore
+- `isJustRestored()` / `clearJustRestored()` — grid guard getters
+- `handleAutoRestore(generation, getAcceptCallback)` — orchestrates the full restore flow
+
+Any code touching this path must preserve the order: flag → first update → restore-via-save-manager → capture intro type → send bootstrap → suppress next update.
