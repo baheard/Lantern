@@ -413,7 +413,8 @@ export const voiceCommandHandlers = {
       stopNarration(true);  // Preserve highlight when pausing
 
       // Auto-mute mic when pausing (unless manually controlled or in push-to-talk mode)
-      if (!state.pushToTalkMode && !state.isMuted && !state.manuallyMuted) {
+      // TEMPORARILY DISABLED for debugging — keep in sync with sibling blocks at app.js:463, 1150, 1186 and tts-player.js:259
+      if (false && !state.pushToTalkMode && !state.isMuted && !state.manuallyMuted) {
         state.isMuted = true;
         state.listeningEnabled = false;
 

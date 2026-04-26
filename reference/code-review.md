@@ -153,7 +153,41 @@ _Status: complete (2026-04-25)_
 ## Tier 2 — Module-by-module review
 
 ### Batch 1: Core (`app.js`, `config.js`, `core/`)
-_Status: pending_
+_Status: complete (2026-04-26)_
+
+**Headline:** `app.js` (1714 lines) is doing far more than entry-point wiring — it owns PWA update UI, install-prompt handling, the entire voice-command handler implementation, game-output narration glue, and a 902-line `initApp()` orchestrator. `state.js` is a coherent but kitchen-sink object (98 properties, no nesting). `core/dom.js` and `config.js` are appropriately thin.
+
+#### Findings
+
+- `[ ]` **High** — `docs/js/app.js:391-719` — `voiceCommandHandlers` is ~330 lines of business logic (pause/play/skip/mute/unmute behavior) defined in the entry point. Should live in a `voice/command-handlers.js` module that app.js imports and wires. Currently any new voice command requires editing the entry point.
+- `[ ]` **High** — `docs/js/app.js:747-1649` — `initApp()` is a 902-line orchestrator covering viewport, DOM init, voice init, UI components, event listeners, keyboard shortcuts, and lifecycle handlers. Single function with implicit ordering dependencies. Best split: phase functions (`initViewport`, `initVoice`, `initUI`, `wireEvents`, `wireLifecycle`) called from a thin coordinator.
+- `[ ]` **Medium** — `docs/js/app.js:60-257` — ~200 lines of PWA service-worker registration, update notification UI, and countdown logic. Self-contained — extracts cleanly to `utils/pwa-updater.js` with one `initPWAUpdates()` export.
+- `[ ]` **Medium** — `docs/js/app.js:1140-1250` and `docs/js/app.js:391-445` — pause/play state mutations duplicated between the button handler (`handlePausePlay`) and the voice-command handler. Both do nearly identical work (`autoplayEnabled=false`, `narrationEnabled=false`, `stopNarration`, UI update). Begs for shared `setPauseState()` / `setPlayState()` helpers.
+- `[ ]` **Medium** — `docs/js/core/state.js` — 98 properties, comment-grouped but not structurally grouped. A few clearly misplaced (`ttsIsSpeaking`, `appVoicePromise` wedged between narration and audio analysis; `soundDetected`/`soundPauseTimeout` interrupting the narration block). Consider nesting by subsystem (`state.voice`, `state.narration`, `state.gdrive`, etc.) — large refactor (100+ refs across the codebase) but big readability win.
+- `[ ]` **Low** — `docs/js/app.js:463, 1150, 1186` and `docs/js/narration/tts-player.js:259` — Three more `if (false && ...)` "TEMPORARILY DISABLED for debugging" auto-mute/unmute branches I missed in v1.5.222. The tts-player one is marked "mic and narration are now decoupled" (intentional). The three in app.js form a behavior cluster (auto-mute on pause / auto-unmute on play). The one I enabled at app.js:417 has been reverted to keep the four in sync — see commit reverting that. **Decision needed:** enable all four (sync with 417's restored intent) or leave all four disabled (current state).
+- `[ ]` **Low** — `docs/js/app.js:1486-1537` — Keyboard shortcuts as a flat if/else cascade (`Ctrl+M`, `Ctrl+S`, `Ctrl+R`, `Ctrl+X`, `Escape`, arrow keys). Could be a `Map<string, handler>` with a single dispatcher. Quick win, marginal impact.
+- `[ ]` **Low** — `docs/js/core/dom.js:103-118` — `validateDOM()` throws when critical IDs are missing. Defensive and correct, but couples `dom.js` to the HTML structure such that any HTML refactor needs this updated too. Acceptable; flag for awareness.
+
+#### Verified safe / not concerns
+- `core/dom.js` is genuinely just a DOM-ref cache + one validator; no logic creep.
+- `core/config.js` is the right shape — single `APP_CONFIG` object, no logic.
+- `core/app-commands.js` — focused module for `/`-prefixed app commands; not bloated.
+- No inverted layering in `core/` — those modules don't import from `ui/`, `features/`, or `game/`.
+- Cyclomatic complexity ≤10 across the batch — `handlePausePlay()` is the closest at ~8 nested branches.
+
+#### Top 5 longest functions in batch
+1. `initApp()` — `app.js:747-1649` (902 lines) — the elephant
+2. `setupMuteButton` event cluster — `app.js:1332-1482` (~150 lines)
+3. `handlePausePlay()` — `app.js:1140-1250` (~110 lines)
+4. `showUpdateNotification()` — `app.js:91-200` (~110 lines)
+5. Voice command pause handler — `app.js:407-445` (~40 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Extract `voiceCommandHandlers`** to `voice/command-handlers.js` — High value, ~2 hrs. Removes 330 lines from entry point; voice behavior becomes testable.
+2. **Extract PWA update logic** to `utils/pwa-updater.js` — Medium value, ~1 hr. Trivial and self-contained.
+3. **Consolidate pause/play helpers** — Medium value, ~30 min. Quick DRY-up.
+4. **Phase-split `initApp()`** — Medium value, ~4 hrs. Big readability win, careful to preserve init order.
+5. **Nest `state.js` by subsystem** — Lower value, ~2 hrs core change + auditing 100+ refs. Defer until other refactors settle.
 
 ### Batch 2: Game engine (`game/voxglk*`, `game/game-loader.js`)
 _Status: pending_
@@ -206,6 +240,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `command-router.js:34-36` | Dynamic import of `app.js` to break entry-point cycle |
 | Low | `voxglk.js`, `game-output.js`, `tts-player.js` | Lazy imports in hot paths — could be static |
 | Low | various | `window.*` used as cross-module signal channel |
+| High | `app.js:391-719` | `voiceCommandHandlers` (~330 lines of business logic) lives in entry point — extract |
+| High | `app.js:747-1649` | `initApp()` is a 902-line mega-orchestrator |
+| Medium | `app.js:60-257` | PWA update logic — extract to `utils/pwa-updater.js` |
+| Medium | `app.js:1140-1250` + `391-445` | Pause/play state mutation duplicated between button and voice |
+| Medium | `core/state.js` | 98 props, kitchen-sink — consider nesting by subsystem |
+| Low | `app.js:463,1150,1186`, `tts-player.js:259` | Sibling `if (false &&)` blocks I missed in v1.5.222; cluster decision needed |
+| Low | `app.js:1486-1537` | Keyboard shortcuts as if-cascade; could be a Map dispatcher |
+| Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
