@@ -12,6 +12,7 @@ import { scrollToBottom } from '../utils/scroll.js';
 import { addGameText } from '../ui/game-output.js';
 import { getItem, setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
 import { closeSettings } from '../ui/settings/settings-panel.js';
+import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
 
 // ============================================================================
 // COMPRESSION HELPERS
@@ -489,7 +490,7 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
 
         // Show system message in game area (if displayName provided)
         if (displayName) {
-            addGameText(`<div class="system-message">Game saved - ${displayName}</div>`, false);
+            addGameText(`<div class="system-message">Game saved - ${escapeHtml(displayName)}</div>`, false);
             updateStatus(`Saved: ${displayName}`, 'success');
         }
 
@@ -567,17 +568,18 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 const lowerWindowEl = document.getElementById('lowerWindow');
 
                 if (statusBarEl && saveData.displayHTML.statusBar) {
-                    statusBarEl.innerHTML = saveData.displayHTML.statusBar;
+                    const safeStatusBar = sanitizeRestoredHTML(saveData.displayHTML.statusBar);
+                    statusBarEl.innerHTML = safeStatusBar;
                     statusBarEl.style.display = '';
 
                     // Update voxglk's lastStatusLine so it knows the current status
                     const voxglk = await import('./voxglk.js');
                     if (voxglk.updateLastStatusLine) {
-                        voxglk.updateLastStatusLine(saveData.displayHTML.statusBar);
+                        voxglk.updateLastStatusLine(safeStatusBar);
                     }
                 }
                 if (upperWindowEl) {
-                    upperWindowEl.innerHTML = saveData.displayHTML.upperWindow || '';
+                    upperWindowEl.innerHTML = sanitizeRestoredHTML(saveData.displayHTML.upperWindow || '');
                     if (saveData.displayHTML.upperWindow && saveData.displayHTML.upperWindow.trim()) {
                         upperWindowEl.style.display = '';
                     } else {
@@ -592,7 +594,7 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     }
 
                     const commandLine = document.getElementById('commandLine');
-                    lowerWindowEl.innerHTML = lowerWindowHTML;
+                    lowerWindowEl.innerHTML = sanitizeRestoredHTML(lowerWindowHTML);
                     if (commandLine) {
                         lowerWindowEl.appendChild(commandLine);
                     }
@@ -634,7 +636,7 @@ async function performRestore(storageKey, displayName = null, options = {}) {
 
             // Show system message in game area (if requested)
             if (options.showSystemMessage && displayName) {
-                addGameText(`<div class="system-message">Game restored - ${displayName}</div>`, false);
+                addGameText(`<div class="system-message">Game restored - ${escapeHtml(displayName)}</div>`, false);
             }
 
             // Update status (if provided)
@@ -861,7 +863,10 @@ export async function importSaveFromFile() {
             return;
         }
         const key = `iftalk_autosave_${state.currentGameName}`;
-        setJSON(key, saveData);
+        if (!setJSON(key, saveData)) {
+            updateStatus('Import failed: storage full. Export old saves and clear data.', 'error');
+            return;
+        }
 
         updateStatus('Import successful!', 'success');
 
@@ -925,7 +930,9 @@ export async function createBackup(saveType, exemptFromLimit = false) {
         ? `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}_exempt`
         : `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}`;
 
-    setJSON(backupKey, saveData);
+    if (!setJSON(backupKey, saveData)) {
+        return false;
+    }
 
     // Clean up old backups (unless this is exempt)
     if (!exemptFromLimit) {

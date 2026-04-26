@@ -8,6 +8,7 @@
 import { state } from '../core/state.js';
 import { updateStatus } from '../utils/status.js';
 import { getGameDisplayName } from './settings/settings-panel.js';
+import { escapeHtml } from '../utils/text-processing.js';
 
 // Timestamp comparison thresholds
 const SYNC_THRESHOLD_MS = 1000;      // Within 1 second = synced
@@ -107,14 +108,15 @@ function renderSyncItems(items) {
     const directionIcon = syncDirection === 'export' ? 'cloud_upload' : 'cloud_download';
     const directionText = syncDirection === 'export' ? 'Local → Cloud' : 'Cloud → Local';
 
+    const safeId = escapeHtml(item.id);
     return `
-      <div class="sync-item ${isChecked ? 'selected' : ''}" data-item-id="${item.id}">
+      <div class="sync-item ${isChecked ? 'selected' : ''}" data-item-id="${safeId}">
         <label class="sync-item-checkbox">
-          <input type="checkbox" ${isChecked ? 'checked' : ''} data-item-id="${item.id}">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} data-item-id="${safeId}">
           <div class="sync-item-info">
             <div class="sync-item-header">
-              <span class="sync-item-name">${item.name}</span>
-              <span class="sync-status-badge ${statusClass}">${statusLabel}</span>
+              <span class="sync-item-name">${escapeHtml(item.name)}</span>
+              <span class="sync-status-badge ${escapeHtml(statusClass)}">${escapeHtml(statusLabel)}</span>
             </div>
             <div class="sync-item-details">
               <span class="sync-item-direction">

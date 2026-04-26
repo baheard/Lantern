@@ -413,8 +413,7 @@ export const voiceCommandHandlers = {
       stopNarration(true);  // Preserve highlight when pausing
 
       // Auto-mute mic when pausing (unless manually controlled or in push-to-talk mode)
-      // TEMPORARILY DISABLED for debugging
-      if (false && !state.pushToTalkMode && !state.isMuted && !state.manuallyMuted) {
+      if (!state.pushToTalkMode && !state.isMuted && !state.manuallyMuted) {
         state.isMuted = true;
         state.listeningEnabled = false;
 
