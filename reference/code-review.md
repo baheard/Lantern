@@ -190,7 +190,39 @@ _Status: complete (2026-04-26)_
 5. **Nest `state.js` by subsystem** — Lower value, ~2 hrs core change + auditing 100+ refs. Defer until other refactors settle.
 
 ### Batch 2: Game engine (`game/voxglk*`, `game/game-loader.js`)
-_Status: pending_
+_Status: complete (2026-04-26)_
+
+**Headline:** Clean three-way split between ZVM bridging (`voxglk.js`), HTML rendering (`voxglk-renderer.js`), and orchestration (`game-loader.js`). But `voxglk.js` is 1129 lines with 22 module-level `let` declarations and a single `update()` method that's 471 lines covering 5+ concerns. Renderer is properly side-effect-free. Game-loader mixes orchestration with recently-played UI rendering.
+
+#### Findings
+
+- `[ ]` **High** — `docs/js/game/voxglk.js:343-965` — `createVoxGlk()` closure (623 lines including the 471-line `update()` method) conflates Glk dispatch, autosave triggering, watchdog/repair state, grid-state reconstruction, status-line tracking, input mode transitions, and bootstrap restore. Each is a separable concern. Best split: `voxglk-watchdog.js` (5s timer + REPAIR command flow), `voxglk-grid.js` (char-mode grid reconstruction), `voxglk-bootstrap.js` (auto-restore sequencing).
+- `[ ]` **High** — `docs/js/game/voxglk.js:14-45` — 22 module-level `let` declarations are state for the closure but read like globals. Lifecycle is implicit: which reset per-game vs per-turn vs never? Examples: `lastContentGeneration` (used once at line 691, set at 424 — race condition with resize), `gridStates` cleared in `init()` unconditionally (line 354), `skipNextUpdateAfterBootstrap` lifecycle spans two updates. Wrap in a typed state object or move into `createVoxGlk()` closure scope so the lifecycle is visible.
+- `[ ]` **Medium** — `docs/js/game/voxglk.js:612, 1127` — Status-bar change detection compares the rendered HTML string (`statusBarHTML !== lastStatusLine`). Brittle: any rendering change (extra space, attribute order) triggers a false "changed" signal that re-narrates an unchanged room. Compare extracted plain text instead.
+- `[ ]` **Medium** — `docs/js/game/game-loader.js:381-444` — `renderRecentlyPlayedSection()` is UI rendering (DOM creation, event listeners, dialog construction) inside the game-loader. Belongs in `ui/recently-played.js`. Same goes for the resume dialog and custom-game tracking helpers (`showResumeDialog`, `trackCustomGame`, `removeCustomGame`, `getCustomGamesWithAutosaves`).
+- `[ ]` **Medium** — `docs/js/game/voxglk-renderer.js:59-74` — `renderUpdate(updateObj, persistentWindows)` accepts both the update's own windows and the persistent map, with fallback logic for when persistentWindows is missing. The only caller (`voxglk.js:602`) always passes persistentWindows, so the fallback is dead. Tighten the signature: require the windows map, document that it must be current.
+- `[ ]` **Medium** — `docs/js/game/voxglk.js:552-599` — Grid-state reconstruction (rebuilding multi-line grid content from partial updates) is char-mode-only but lives inside the main `update()` loop. Hides what's actually a niche optimization for menus / "press any key" screens. Extract to a `processGridUpdates()` function called only when `inputType === 'char'`.
+- `[ ]` **Low** — `docs/js/game/voxglk.js:1088-1090` — `isSafeToSave()` exports `!justExitedCharMode`. Misleading name for a very specific check (only guards against autosaving during char-mode→line transitions). Either rename to `isCharModeTransitioning()` or inline at the call site.
+- `[ ]` **Low** — `docs/js/game/voxglk.js:974-1053` — `sendInput()` guards on `acceptCallback` at entry but not before the final call (line 1046). Theoretical race; in practice the callback isn't nullified mid-function. Add a defensive re-check before invoking.
+
+#### Verified safe / not concerns
+- `voxglk-renderer.js` is genuinely side-effect-free (good — pure functions for HTML generation).
+- No cycles between `voxglk.js` and `voxglk-renderer.js`.
+- `game-loader.js`'s actual loading path (ZVM init → fetch game file → start) is appropriately structured.
+
+#### Top 5 longest functions in batch
+1. `createVoxGlk()` closure — `voxglk.js:343-965` (623 lines)
+2. `update()` method body — `voxglk.js:416-887` (471 lines)
+3. `initGameSelection()` — `game-loader.js:538-789` (252 lines)
+4. `startGame()` — `game-loader.js:24-264` (241 lines)
+5. `processStyledContent()` — `voxglk-renderer.js:186-340` (155 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Extract watchdog/repair to `voxglk-watchdog.js`** — High value, ~3 hrs. Self-contained module, removes ~150 lines from voxglk.js.
+2. **Move recently-played UI to `ui/recently-played.js`** — Medium value, ~1.5 hrs. Clean separation; no shared mutable state.
+3. **Status-bar plain-text comparison** — Medium value, ~30 min. Two variable renames + one extraction.
+4. **Wrap voxglk module state into a `VoxGlkState` object** — High value, ~4 hrs. Big readability win, but touches every closure access.
+5. **Extract bootstrap-restore to `voxglk-bootstrap.js`** — Medium value, ~2 hrs. Makes a fragile multi-file flow explicit and testable.
 
 ### Batch 3: Save/restore (`game/save-manager.js`, save formatters)
 _Status: pending_
@@ -248,6 +280,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `app.js:463,1150,1186`, `tts-player.js:259` | Sibling `if (false &&)` blocks I missed in v1.5.222; cluster decision needed |
 | Low | `app.js:1486-1537` | Keyboard shortcuts as if-cascade; could be a Map dispatcher |
 | Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
+| High | `voxglk.js:343-965` | `createVoxGlk()` closure conflates 5+ concerns — extract watchdog/grid/bootstrap |
+| High | `voxglk.js:14-45` | 22 module-level `let` decls with implicit lifecycle — wrap in state object |
+| Medium | `voxglk.js:612` | Status-bar change detection compares HTML strings — use plain text |
+| Medium | `game-loader.js:381-444` | Recently-played UI rendering belongs in `ui/recently-played.js` |
+| Medium | `voxglk-renderer.js:59-74` | Dead fallback for missing `persistentWindows` — tighten signature |
+| Medium | `voxglk.js:552-599` | Char-mode grid reconstruction nested in main loop — extract |
+| Low | `voxglk.js:1088-1090` | `isSafeToSave()` misleading name for char→line transition guard |
+| Low | `voxglk.js:974-1053` | `sendInput()` lacks defensive re-check on `acceptCallback` |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
