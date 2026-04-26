@@ -4,6 +4,7 @@ Project knowledge base. Maintained by the /tome skill.
 
 ## Entries
 
+- [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26
 - [bootstrap-restore-flow](bootstrap-restore-flow.md) — How the dummy-input + skip-next-update trick wakes the VM after restore (zvm, save-restore, voxglk) — updated 2026-04-26
 - [watchdog-repair-flow](watchdog-repair-flow.md) — 5s VM-hang detection + manual REPAIR recovery flow (zvm, watchdog, recovery) — updated 2026-04-26
 - [mic-narration-coupling](mic-narration-coupling.md) — Mic state and narration state are independent; vestigial `if (false &&)` clusters (voice, narration, design) — updated 2026-04-26

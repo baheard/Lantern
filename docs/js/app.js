@@ -106,8 +106,7 @@ function handleGameOutput(text) {
   }
 }
 
-// Initialize app
-async function initApp() {
+function initViewport() {
   // Fix mobile viewport height for browser chrome and keyboard
   let viewportUpdateTimeout;
   let previousViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -174,7 +173,9 @@ async function initApp() {
       }
     }, 500); // Wait for orientation transition to complete
   });
+}
 
+function initDOMandValidation() {
   // Initialize DOM
   initDOM();
 
@@ -236,7 +237,9 @@ async function initApp() {
       }
     }
   });
+}
 
+function initVoice() {
   // Load voice configuration (with timeout, non-blocking)
   loadBrowserVoiceConfig().catch(() => {
     // Voice config failed (expected offline)
@@ -279,8 +282,9 @@ async function initApp() {
   state.browserVoiceConfig.appVoice = localStorage.getItem('iftalk_appVoice') || state.browserVoiceConfig.appVoice;
   state.browserVoiceConfig.rate = parseFloat(localStorage.getItem('iftalk_speechRate') || state.browserVoiceConfig.rate || '1.0');
   state.browserVoiceConfig.volume = parseFloat(localStorage.getItem('iftalk_masterVolume') || '100') / 100;
+}
 
-  // Initialize UI components
+function initUIComponents() {
   initAllSettings();
   initHistoryButtons();
   initConfirmDialog();
@@ -442,7 +446,9 @@ async function initApp() {
 
   // Initialize game selection with output callback
   initGameSelection(handleGameOutput);
+}
 
+function wireEventListeners() {
   // Navigation button handlers
   const skipToStartBtn = document.getElementById('skipToStartBtn');
   if (skipToStartBtn) {
@@ -581,11 +587,6 @@ async function initApp() {
       }
     });
   }
-
-  // Talk Mode button - REMOVED
-  // Talk mode functionality integrated into play button
-  // const talkModeBtn = document.getElementById('talkModeBtn');
-  // if (talkModeBtn) { ... }
 
   // Mute button with push-to-talk support
   if (dom.muteBtn) {
@@ -739,8 +740,9 @@ async function initApp() {
       }
     });
   }
+}
 
-
+function wireKeyboardShortcuts() {
   // Keyboard shortcuts
   document.addEventListener('keydown', async (e) => {
     // Arrow keys - navigation
@@ -794,8 +796,9 @@ async function initApp() {
       // Otherwise, Escape is reserved for closing dialogs and clearing input
     }
   });
+}
 
-
+function wireLifecycle() {
   // Stop narration immediately when navigating away from page
   window.addEventListener('beforeunload', () => {
     if ('speechSynthesis' in window) {
@@ -904,7 +907,17 @@ async function initApp() {
       scrollTarget.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   });
+}
 
+// Initialize app
+async function initApp() {
+  initViewport();
+  initDOMandValidation();
+  initVoice();
+  initUIComponents();
+  wireEventListeners();
+  wireKeyboardShortcuts();
+  wireLifecycle();
 }
 
 /**
