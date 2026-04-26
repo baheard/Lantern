@@ -28,9 +28,14 @@
   <!-- iOS icons -->
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <!-- Glk API and Dialog (required by ZVM) -->
+  <!-- Glk API and Dialog (required by ZVM and Quixe) -->
   <script src="lib/dialog-stub.js"></script>
   <script src="lib/glkapi.js"></script>
+
+  <!-- Quixe Glulx VM -->
+  <script src="lib/gi_blorb.js"></script>
+  <script src="lib/gi_dispa.js"></script>
+  <script src="lib/quixe.js"></script>
 
   <!-- ifvms ZVM interpreter -->
   <script src="lib/zvm.js"></script>
@@ -566,6 +571,10 @@
               <div class="game-title">Anchorhead <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1998" data-author="Michael Gentry" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
               <div class="game-desc">Lovecraftian horror - atmospheric masterpiece</div>
             </button>
+            <button class="game-card" data-game="CounterfeitMonkey.gblorb">
+              <div class="game-title">Counterfeit Monkey <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2013" data-author="Andrew Plotkin" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-desc">Word-magic puzzle adventure with linguistic creativity</div>
+            </button>
           </div>
         </div>
 
@@ -647,7 +656,7 @@
         <div class="if-database-section">
           <p>Want more? Browse thousands of games at the <a href="https://ifdb.org/" target="_blank" rel="noopener">Interactive Fiction Database</a></p>
           <div class="custom-url-section">
-            <h4>Or play any Z-machine game by URL:</h4>
+            <h4>Or play any Z-machine or Glulx game by URL:</h4>
             <form class="custom-url-form" id="customUrlForm">
               <input type="url"
                      class="custom-url-input"

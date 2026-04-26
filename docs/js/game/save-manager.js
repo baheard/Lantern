@@ -313,6 +313,7 @@ async function restoreMapData(optimizedMapData, gameName) {
  * Get current game signature from ZVM
  */
 function getGameSignature() {
+    if (window._vmType === 'quixe') return window.Quixe?.get_signature?.() || state.currentGameName;
     if (!window.zvmInstance) return null;
     return window.zvmInstance.get_signature?.() || state.currentGameName || 'unknown';
 }
@@ -392,6 +393,11 @@ function getCurrentDisplayState() {
  */
 async function performSave(storageKey, displayName = null, additionalData = {}) {
     try {
+        if (window._vmType === 'quixe') {
+            if (displayName) updateStatus('Manual save not available for Glulx games yet', 'info');
+            return false;
+        }
+
         const gameSignature = getGameSignature();
         if (!gameSignature) {
             if (displayName) updateStatus('Error: No game loaded', 'error');
@@ -511,6 +517,11 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
  */
 async function performRestore(storageKey, displayName = null, options = {}) {
     try {
+        if (window._vmType === 'quixe') {
+            if (displayName) updateStatus('Manual restore not available for Glulx games yet', 'info');
+            return false;
+        }
+
         // Read from localStorage using storage API
         const saveData = getJSON(storageKey);
 
@@ -695,6 +706,7 @@ export async function customLoad(saveName) {
  * Auto save (happens automatically every turn)
  */
 export async function autoSave() {
+    if (window._vmType === 'quixe') return false;
     if (!state.currentGameName) {
         return false;
     }

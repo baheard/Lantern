@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.208';
+const CACHE_VERSION = 'v1.5.210';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -98,10 +98,13 @@ const CORE_ASSETS = [
   './lib/glkote.css',
   './lib/glkote.js',
   './lib/pako.min.js',
-  './lib/zvm.js'
+  './lib/zvm.js',
+  './lib/gi_blorb.js',
+  './lib/gi_dispa.js',
+  './lib/quixe.js'
 ];
 
-// Bundled game files (28 games)
+// Bundled game files (29 games)
 const BUNDLED_GAMES = [
   './games/905.z5',
   './games/aisle.z5',
@@ -109,6 +112,7 @@ const BUNDLED_GAMES = [
   './games/amfv.z4',
   './games/anchorhead.z8',
   './games/bronze.zblorb',
+  './games/CounterfeitMonkey.gblorb',
   './games/curses.z5',
   './games/dreamhold.z8',
   './games/edifice.z5',

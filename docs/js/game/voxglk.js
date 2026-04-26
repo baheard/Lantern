@@ -856,7 +856,7 @@ export function createVoxGlk(textOutputCallback) {
           // Skip autosave if we just exited char mode (VM state needs to settle)
           // Check global auto-save setting
           const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
-          if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
+          if (autosaveEnabled && !shouldSkipAutosave && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode && window._vmType !== 'quixe') {
             setTimeout(async () => {
               try {
                 const { autoSave } = await import('./save-manager.js');
