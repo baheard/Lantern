@@ -272,12 +272,9 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `command-router.js:34-36` | Dynamic import of `app.js` to break entry-point cycle |
 | Low | `voxglk.js`, `game-output.js`, `tts-player.js` | Lazy imports in hot paths — could be static |
 | Low | various | `window.*` used as cross-module signal channel |
-| High | `app.js:391-719` | `voiceCommandHandlers` (~330 lines of business logic) lives in entry point — extract |
 | High | `app.js:747-1649` | `initApp()` is a 902-line mega-orchestrator |
 | Medium | `app.js:60-257` | PWA update logic — extract to `utils/pwa-updater.js` |
-| Medium | `app.js:1140-1250` + `391-445` | Pause/play state mutation duplicated between button and voice |
 | Medium | `core/state.js` | 98 props, kitchen-sink — consider nesting by subsystem |
-| Low | `app.js:463,1150,1186`, `tts-player.js:259` | Sibling `if (false &&)` blocks I missed in v1.5.222; cluster decision needed |
 | Low | `app.js:1486-1537` | Keyboard shortcuts as if-cascade; could be a Map dispatcher |
 | Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
 | High | `voxglk.js:343-965` | `createVoxGlk()` closure conflates 5+ concerns — extract watchdog/grid/bootstrap |
@@ -292,3 +289,4 @@ _Pending until Tiers 1 & 2 complete._
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
 - **v1.5.223 (commit 6ea0eea)** — 8 Low: duplicate `escapeHtml` consolidated, stale TODO/commented block deleted, intent comments on 3 empty catches, `console.warn`→`console.error` on 5 real-error sites, compression error context, `printStorageReport` collapsed to `console.group`+`console.table`, TTS safety-timeout self-healing comment, map resize listener gated on `isVisible`.
+- **v1.5.226 (commit 21d40cf)** — 1 High + 1 Medium + 2 Low: extracted `voiceCommandHandlers` (~330 lines) + shared `pausePlayback`/`resumePlayback` to `voice/command-handlers.js`; deleted 5 dead `if (false &&)` mic auto-mute blocks; killed the `command-router.js` entry-point cycle (now static import). app.js -447 lines.
