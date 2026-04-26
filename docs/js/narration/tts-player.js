@@ -254,35 +254,7 @@ export async function speakTextChunked(text, startFromIndex = 0) {
   state.isPaused = false;
   state.isNarrating = true;
 
-  // Auto-unmute mic when narration starts (if not in push-to-talk mode and not manually muted)
-  // TEMPORARILY DISABLED for debugging - mic and narration are now decoupled
-  if (false && !state.pushToTalkMode && state.isMuted && !state.manuallyMuted) {
-    state.isMuted = false;
-    state.listeningEnabled = true;
-
-    // Update UI to reflect unmuted state
-    const { playUnmuteTone } = await import('../utils/audio-feedback.js');
-    const { startVoiceMeter } = await import('../voice/voice-meter.js');
-    const { updateNavButtons } = await import('../ui/nav-buttons.js');
-
-    playUnmuteTone();
-
-    // Update mic button visual state
-    const icon = dom.muteBtn?.querySelector('.material-icons');
-    if (icon) icon.textContent = 'mic';
-    if (dom.muteBtn) dom.muteBtn.classList.remove('muted');
-
-    startVoiceMeter();
-    updateNavButtons();
-
-    // Update lock screen if active
-    try {
-      const { updateLockScreenMicStatus } = await import('../utils/lock-screen.js');
-      updateLockScreenMicStatus();
-    } catch (err) {
-      // Lock screen module may not be loaded yet
-    }
-  }
+  // Mic state is intentionally decoupled from narration — see .tome/mic-narration-coupling.md.
 
   // Start keep-alive for mobile background playback
   startKeepAlive();

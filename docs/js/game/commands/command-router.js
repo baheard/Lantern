@@ -26,16 +26,7 @@ import {
   setAwaitingMetaInput
 } from './meta-command-handlers.js';
 import { getCustomSaves, getUnifiedSavesList } from './save-list-formatter.js';
-
-// Import voice command handlers so typed commands can use them too
-let voiceCommandHandlers = null;
-async function getVoiceCommandHandlers() {
-  if (!voiceCommandHandlers) {
-    const appModule = await import('../../app.js');
-    voiceCommandHandlers = appModule.voiceCommandHandlers;
-  }
-  return voiceCommandHandlers;
-}
+import { voiceCommandHandlers } from '../../voice/command-handlers.js';
 
 /**
  * Parse number word to integer (e.g., "three" -> 3)
@@ -104,7 +95,7 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
     const countStr = skipNMatch[1].toLowerCase();
     const count = parseNumberWord(countStr);
     playAppCommand();
-    const handlers = await getVoiceCommandHandlers();
+    const handlers = voiceCommandHandlers;
     handlers.skipN(count);
     return true;
   }
@@ -115,7 +106,7 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
     const countStr = backNMatch[1].toLowerCase();
     const count = parseNumberWord(countStr);
     playAppCommand();
-    const handlers = await getVoiceCommandHandlers();
+    const handlers = voiceCommandHandlers;
     handlers.backN(count);
     return true;
   }
@@ -188,34 +179,34 @@ See Settings → Voice Commands for complete reference.
     // Navigation commands - work whether typed or spoken
     case 'repeat':
       playAppCommand();
-      const handlers = await getVoiceCommandHandlers();
+      const handlers = voiceCommandHandlers;
       handlers.restart();
       return true;
 
     case 'back':
       playAppCommand();
-      (await getVoiceCommandHandlers()).back();
+      voiceCommandHandlers.back();
       return true;
 
     case 'stop':
       playAppCommand();
-      (await getVoiceCommandHandlers()).skipToEnd();
+      voiceCommandHandlers.skipToEnd();
       return true;
 
     case 'pause':
       playAppCommand();
-      (await getVoiceCommandHandlers()).pause();
+      voiceCommandHandlers.pause();
       return true;
 
     case 'play':
     case 'resume':
       playAppCommand();
-      (await getVoiceCommandHandlers()).play();
+      voiceCommandHandlers.play();
       return true;
 
     case 'skip':
       playAppCommand();
-      (await getVoiceCommandHandlers()).skip();
+      voiceCommandHandlers.skip();
       return true;
 
     case 'skip all':
@@ -223,29 +214,29 @@ See Settings → Voice Commands for complete reference.
     case 'skip to the end':
     case 'end':
       playAppCommand();
-      (await getVoiceCommandHandlers()).skipToEnd();
+      voiceCommandHandlers.skipToEnd();
       return true;
 
     case 'mute':
       playAppCommand();
-      (await getVoiceCommandHandlers()).mute();
+      voiceCommandHandlers.mute();
       return true;
 
     case 'unmute':
     case 'on mute':
     case 'un mute':
       playAppCommand();
-      (await getVoiceCommandHandlers()).unmute();
+      voiceCommandHandlers.unmute();
       return true;
 
     case 'freeze':
       playAppCommand();
-      (await getVoiceCommandHandlers()).holdMic();
+      voiceCommandHandlers.holdMic();
       return true;
 
     case 'unfreeze':
       playAppCommand();
-      (await getVoiceCommandHandlers()).openMic();
+      voiceCommandHandlers.openMic();
       return true;
 
     case 'lock screen':
@@ -264,7 +255,7 @@ See Settings → Voice Commands for complete reference.
 
     case 'status':
       playAppCommand();
-      (await getVoiceCommandHandlers()).status();
+      voiceCommandHandlers.status();
       return true;
 
     case 'read last command':
@@ -293,7 +284,7 @@ See Settings → Voice Commands for complete reference.
     case 'quick save':
     case 'quicksave':
       playAppCommand();
-      (await getVoiceCommandHandlers()).quickSave();
+      voiceCommandHandlers.quickSave();
       return true;
 
     case 'quick load':
@@ -301,24 +292,24 @@ See Settings → Voice Commands for complete reference.
     case 'quick restore':
     case 'quickrestore':
       playAppCommand();
-      (await getVoiceCommandHandlers()).quickLoad();
+      voiceCommandHandlers.quickLoad();
       return true;
 
     case 'load game':
     case 'restore game':
       playAppCommand();
-      const h = await getVoiceCommandHandlers();
+      const h = voiceCommandHandlers;
       if (h.restoreLatest) h.restoreLatest();
       return true;
 
     case 'get hint':
       playAppCommand();
-      (await getVoiceCommandHandlers()).getHint();
+      voiceCommandHandlers.getHint();
       return true;
 
     case 'get gemini hint':
       playAppCommand();
-      (await getVoiceCommandHandlers()).getGeminiHint();
+      voiceCommandHandlers.getGeminiHint();
       return true;
 
     case 'quit':
@@ -332,7 +323,7 @@ See Settings → Voice Commands for complete reference.
       const slotMatch = cmd.match(/^(?:load|restore)\s+slot\s+(\d+)$/);
       if (slotMatch) {
         const slot = parseInt(slotMatch[1]);
-        const h = await getVoiceCommandHandlers();
+        const h = voiceCommandHandlers;
         if (h.restoreSlot) h.restoreSlot(slot);
         return true;
       }
