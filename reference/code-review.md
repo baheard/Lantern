@@ -378,7 +378,48 @@ _Status: complete (2026-04-27)_
 5. **Delete `hideFab()` + fix `window.getCurrentLocation` in `toggleAutoMap`** — Low value, ~10 min combined.
 
 ### Batch 7: Narration (`narration/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Four focused modules with clear responsibilities — `tts-player.js` (playback + keep-alive), `chunking.js` (text splitting + DOM marker insertion), `highlighting.js` (CSS Highlight API + scroll), `navigation.js` (skip/start/end controls). One High bug: the MediaSession `play` action handler calls a non-existent function — lock screen play button is silently broken. One Medium concern: a 40-line inline Glk-class detection block in `insertRealMarkersAtIDs` should be a private helper. Most other issues are Low housekeeping: a missing `stopKeepAlive()` call in `skipToEnd`, an empty catch lacking an intent comment, a confusing `while`/`break` that should be `if`, and a debug event dispatched on every narrated chunk.
+
+#### Findings
+
+- `[ ]` **High** — `docs/js/narration/tts-player.js:55` — MediaSession `play` action handler (inside `startKeepAlive`) does `import('./navigation.js').then(nav => nav.resumeNarration())`. `navigation.js` exports no `resumeNarration` function — the call silently throws a `TypeError` (swallowed by the missing `.catch()`). Lock screen play button does nothing. Fix: call `speakTextChunked(null, state.currentChunkIndex)` directly (same file; no import needed). The dynamic import of `navigation.js` exists only to call this non-existent function and can be removed.
+- `[ ]` **Medium** — `docs/js/narration/chunking.js:183-223` — `insertRealMarkersAtIDs` contains a ~40-line inline Glk-class detection block that first checks the immediate previous sibling, then walks ancestors up to `container`. It is a self-contained concern; extract to a private `getGlkClass(textNode, container)` helper to bring the parent function under 100 lines and make the detection logic independently readable.
+- `[ ]` **Low** — `docs/js/narration/navigation.js:178-193` — `skipToEnd()` bypasses `stopNarration()` and inlines its own audio teardown (stops `state.currentAudio`, calls `speechSynthesis.cancel()`, clears `state.isNarrating`). In doing so it omits `stopKeepAlive()` — the keep-alive AudioContext continues running unnecessarily after skip-to-end, wasting battery. Add a `stopKeepAlive()` call (import from `tts-player.js` which already exports it).
+- `[ ]` **Low** — `docs/js/narration/chunking.js:257` — Empty `catch (e) {}` in `insertRealMarkersAtIDs` (DOM manipulation failure during marker insertion) lacks an intent comment. Same pattern fixed across `auto-mapper.js`, `remote-console.js`, and `app.js` in v1.5.223 — add a brief comment explaining that marker failures are expected for certain DOM structures and narration continues without that marker.
+- `[ ]` **Low** — `docs/js/narration/chunking.js:186-202` — `while (prevSibling) { /* check classList */; break; }` is always a single-iteration loop — the `break` is unconditional, making this semantically identical to `if (prevSibling) { /* check classList */ }`. The comment "Only check immediate previous sibling" confirms the intent. Rewrite as `if (prevSibling)` to remove the misleading loop construct.
+- `[ ]` **Low** — `docs/js/narration/tts-player.js:223` — `text` parameter of `speakTextChunked` is documented "Unused (chunks come from state.narrationChunks)". All callers pass `null`. The parameter is a vestigial API remnant. Rename to `_text` or remove; if removed, update the two `speakTextChunked(null, ...)` calls in `navigation.js` (lines 99, 153).
+- `[ ]` **Low** — `docs/js/narration/highlighting.js:156-168` — `updateTextHighlight()` dispatches a `chunkHighlighted` CustomEvent on every chunk (the hot narration path). Commented as "for debugging/testing". No production listener exists — this is pure overhead on every spoken sentence. Gate behind a debug flag (e.g., `window._iftalkDebug`) or remove.
+- `[ ]` **Low** — `docs/js/narration/highlighting.js:127` — `removeHighlight()` fetches `gameOutput` via `document.getElementById('gameOutput')` directly. Every other module uses the pre-cached `dom.gameOutput` from `core/dom.js`. Import `dom` and use `dom.gameOutput` for consistency.
+- `[ ]` **Low** — `docs/js/narration/highlighting.js:14-16` — `initScrollDetection()` is a no-op export kept "for API compatibility". It is called from `app.js:295` but does nothing. Remove the export from `highlighting.js` and the import+call from `app.js`.
+
+#### Verified safe / not concerns
+- `speakTextChunked` session-ID mechanism (`narrationSessionId` check at line 271) correctly supersedes stale loops when narration restarts — well-designed guard.
+- `startTimeout` 2-second safety in `playWithBrowserTTS` — already documented as self-healing in Pass 2 (`[-]` entry).
+- Dynamic imports `await import('../ui/game-output.js')` (line 225) and `await import('../ui/nav-buttons.js')` (lines 265, 430) — break real circular dependencies (`game-output.js` and `nav-buttons.js` import from `tts-player.js`). Correctly cycle-avoiding, consistent with Pass 6 analysis.
+- Dynamic import of `navigation.js` in `startKeepAlive` (line 55) — also a justified cycle-break (`navigation.js` statically imports `stopNarration` from `tts-player.js`). The import itself is correct; only the target function name is wrong (see High finding).
+- `insertRealMarkersAtIDs` processes nodes in reverse order — correct approach to avoid position shifts during DOM manipulation.
+- `removeTemporaryMarkers` regex `lastIndex` handling — `test()` failure auto-resets `lastIndex` to 0; successful `test()` path has explicit `lastIndex = 0` (line 280). Correct.
+- `highlightUsingMarkers` forced repaint (`void containerEl.offsetHeight`, lines 104-106) — documented iOS WebKit workaround for the CSS Highlight API not always clearing visually. Correct and intentional.
+- `skipToChunk` smart back-button logic (3-second threshold, line 54) — correctly routes "within 3s or paused" to previous chunk, otherwise replays current.
+- `skipToEnd` does not guard on `state.isNavigating` (unlike `skipToChunk`/`skipToStart`) — intentional; force-stop should always work.
+- `createNarrationChunks` filters out `app` voice chunks (line 123) — correct; echoed user-input spans are not narrator TTS.
+- `startKeepAlive`/`stopKeepAlive` singleton guard (`if (keepAliveContext) return`) — correct. Only missing in `skipToEnd` (see Low finding).
+
+#### Top 5 longest functions in batch
+1. `speakTextChunked()` — `tts-player.js:223-390` (167 lines)
+2. `insertRealMarkersAtIDs()` — `chunking.js:135-262` (127 lines)
+3. `playWithBrowserTTS()` — `tts-player.js:95-216` (121 lines)
+4. `highlightUsingMarkers()` — `highlighting.js:24-116` (92 lines)
+5. `skipToChunk()` — `navigation.js:26-105` (79 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Fix MediaSession `play` handler** — `tts-player.js:52-56` — High value, ~5 min. Replace `import('./navigation.js').then(nav => nav.resumeNarration())` with direct `speakTextChunked(null, state.currentChunkIndex)`.
+2. **Add `stopKeepAlive()` to `skipToEnd`** — Low value, ~5 min. Import `stopKeepAlive` from tts-player.js and call it at the start of teardown.
+3. **Extract `getGlkClass()` helper from `insertRealMarkersAtIDs`** — Medium value, ~20 min. Pulls out 40-line self-contained sibling+ancestor detection block.
+4. **Add intent comment to empty catch + rewrite while/break as if** — Low value, ~5 min combined. Consistency with v1.5.223 pattern.
+5. **Gate `chunkHighlighted` event / use `dom.gameOutput` / delete `initScrollDetection`** — Low value, ~15 min combined.
 
 ### Batch 8: Voice (`voice/`)
 _Status: pending_
@@ -452,6 +493,15 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `map-canvas.js:1031` | `TOAST_STORAGE_KEY` inline constant — should live in `map-config.js` alongside `FIRST_USE_KEY` |
 | Low | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block — git history is the reference; delete it |
 | Low | `map-sheet.js:149` | `openNodeSheet` badges manual nodes (`isManual: true`) as `'Auto-mapped'` initially |
+| High | `tts-player.js:55` | MediaSession `play` action calls `nav.resumeNarration()` — function doesn't exist; lock screen play broken |
+| Medium | `chunking.js:183-223` | ~40-line Glk-class detection block in `insertRealMarkersAtIDs` — extract to `getGlkClass()` helper |
+| Low | `navigation.js:178-193` | `skipToEnd()` omits `stopKeepAlive()` — keep-alive AudioContext runs unnecessarily after skip-to-end |
+| Low | `chunking.js:257` | Empty `catch` in `insertRealMarkersAtIDs` lacks intent comment (inconsistent with v1.5.223 pattern) |
+| Low | `chunking.js:186-202` | `while (prevSibling) { …; break; }` — unconditional break; rewrite as `if (prevSibling)` |
+| Low | `tts-player.js:223` | `text` param to `speakTextChunked` is unused; all callers pass `null` — remove or rename `_text` |
+| Low | `highlighting.js:156-168` | `chunkHighlighted` debug event fired on every chunk (hot path) — gate behind debug flag or remove |
+| Low | `highlighting.js:127` | `removeHighlight` uses raw `getElementById('gameOutput')` — use `dom.gameOutput` from core/dom.js |
+| Low | `highlighting.js:14-16` | `initScrollDetection()` is a no-op stub; called from `app.js:295` but does nothing — delete both sites |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -460,4 +510,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.227 (commit f0fa1ac)** — 1 Medium: extracted PWA logic (SW reg, update notification, install prompt, standalone/iOS detection) to `utils/pwa-updater.js` with one `initPWA()` export. app.js -315 lines.
 - **v1.5.230** — 1 High: phase-split `initApp()` (798 lines) into 7 private coordinator functions (`initViewport`, `initDOMandValidation`, `initVoice`, `initUIComponents`, `wireEventListeners`, `wireKeyboardShortcuts`, `wireLifecycle`). `initApp()` reduced to 9-line thin coordinator. All phases kept in `app.js`.
 - **v1.5.233 (commit deb2998)** — Batch 6 review doc (4 Medium, 6 Low findings). Import path fixes: `resetRepairFlag`/`performRepair` now imported from `voxglk-watchdog.js`.
-- **v1.5.234** — 1 Medium security (XSS in `map-sheet.js:344` — `escapeHtml(c.node.name)` in connections list); 1 Medium regression (`MAX_SAVES = 5` restored in both save handlers in `meta-command-handlers.js`).
+- **v1.5.234** — 1 Medium security (XSS in `map-sheet.js:344` — `escapeHtml(c.node.name)` in connections list); 1 Medium regression (`MAX_SAVES = 5` restored in both save handlers in `meta-command-handlers.js`). Batch 7 review doc (1 High, 1 Medium, 8 Low findings).
