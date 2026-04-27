@@ -50,9 +50,9 @@ export function startKeepAlive() {
       });
 
       navigator.mediaSession.setActionHandler('play', () => {
-        // Resume narration if paused
+        // Resume narration from current position
         if (state.narrationEnabled && !state.isNarrating) {
-          import('./navigation.js').then(nav => nav.resumeNarration());
+          speakTextChunked(null, state.currentChunkIndex);
         }
       });
 

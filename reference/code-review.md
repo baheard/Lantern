@@ -493,15 +493,15 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `map-canvas.js:1031` | `TOAST_STORAGE_KEY` inline constant — should live in `map-config.js` alongside `FIRST_USE_KEY` |
 | Low | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block — git history is the reference; delete it |
 | Low | `map-sheet.js:149` | `openNodeSheet` badges manual nodes (`isManual: true`) as `'Auto-mapped'` initially |
-| High | `tts-player.js:55` | MediaSession `play` action calls `nav.resumeNarration()` — function doesn't exist; lock screen play broken |
+| ~~High~~ DONE | `tts-player.js:55` | MediaSession `play` fixed in v1.5.235 — now calls `speakTextChunked` directly |
 | Medium | `chunking.js:183-223` | ~40-line Glk-class detection block in `insertRealMarkersAtIDs` — extract to `getGlkClass()` helper |
-| Low | `navigation.js:178-193` | `skipToEnd()` omits `stopKeepAlive()` — keep-alive AudioContext runs unnecessarily after skip-to-end |
-| Low | `chunking.js:257` | Empty `catch` in `insertRealMarkersAtIDs` lacks intent comment (inconsistent with v1.5.223 pattern) |
-| Low | `chunking.js:186-202` | `while (prevSibling) { …; break; }` — unconditional break; rewrite as `if (prevSibling)` |
+| ~~Low~~ DONE | `navigation.js:178-193` | `skipToEnd` `stopKeepAlive` added in v1.5.235 |
+| ~~Low~~ DONE | `chunking.js:257` | Intent comment added to empty catch in v1.5.235 |
+| ~~Low~~ DONE | `chunking.js:186-202` | `while/break` rewritten as `if` in v1.5.235 |
 | Low | `tts-player.js:223` | `text` param to `speakTextChunked` is unused; all callers pass `null` — remove or rename `_text` |
 | Low | `highlighting.js:156-168` | `chunkHighlighted` debug event fired on every chunk (hot path) — gate behind debug flag or remove |
 | Low | `highlighting.js:127` | `removeHighlight` uses raw `getElementById('gameOutput')` — use `dom.gameOutput` from core/dom.js |
-| Low | `highlighting.js:14-16` | `initScrollDetection()` is a no-op stub; called from `app.js:295` but does nothing — delete both sites |
+| ~~Low~~ DONE | `highlighting.js:14-16` | `initScrollDetection()` deleted from highlighting.js and app.js in v1.5.235 |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -511,3 +511,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.230** — 1 High: phase-split `initApp()` (798 lines) into 7 private coordinator functions (`initViewport`, `initDOMandValidation`, `initVoice`, `initUIComponents`, `wireEventListeners`, `wireKeyboardShortcuts`, `wireLifecycle`). `initApp()` reduced to 9-line thin coordinator. All phases kept in `app.js`.
 - **v1.5.233 (commit deb2998)** — Batch 6 review doc (4 Medium, 6 Low findings). Import path fixes: `resetRepairFlag`/`performRepair` now imported from `voxglk-watchdog.js`.
 - **v1.5.234** — 1 Medium security (XSS in `map-sheet.js:344` — `escapeHtml(c.node.name)` in connections list); 1 Medium regression (`MAX_SAVES = 5` restored in both save handlers in `meta-command-handlers.js`). Batch 7 review doc (1 High, 1 Medium, 8 Low findings).
+- **v1.5.235** — 1 High fix (MediaSession `play` action: replaced broken `nav.resumeNarration()` dynamic import with direct `speakTextChunked` call — lock screen play now works); 4 Low: `stopKeepAlive()` added to `skipToEnd`, intent comment on empty catch in `insertRealMarkersAtIDs`, `while/break` → `if` in sibling Glk-class check, deleted `initScrollDetection` no-op from `highlighting.js` + `app.js`.

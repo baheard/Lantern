@@ -6,7 +6,7 @@
  */
 
 import { state } from '../core/state.js';
-import { stopNarration } from './tts-player.js';
+import { stopNarration, stopKeepAlive } from './tts-player.js';
 import { updateTextHighlight, removeHighlight } from './highlighting.js';
 import { updateStatus } from '../utils/status.js';
 import { scrollToBottom } from '../utils/scroll.js';
@@ -187,6 +187,9 @@ export function skipToEnd() {
   }
 
   state.isNarrating = false;
+
+  // Stop keep-alive audio (avoid unnecessary battery drain after skip-to-end)
+  stopKeepAlive();
 
   // Jump past end (no highlighting)
   state.currentChunkIndex = state.narrationChunks.length;

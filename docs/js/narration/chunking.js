@@ -182,23 +182,16 @@ export function insertRealMarkersAtIDs(container, markerIDs, chunkOffset = 0, sk
         // Detect parent Glk style class for variable speech rate
         let glkClass = null;
 
-        // First check previous sibling (marker might be right after a styled span)
-        let prevSibling = textNode.previousSibling;
-        while (prevSibling) {
-          if (prevSibling.nodeType === Node.ELEMENT_NODE && prevSibling.classList) {
-            if (prevSibling.classList.contains('glk-header')) {
-              glkClass = 'header';
-              break;
-            } else if (prevSibling.classList.contains('glk-subheader')) {
-              glkClass = 'subheader';
-              break;
-            } else if (prevSibling.classList.contains('glk-note')) {
-              glkClass = 'note';
-              break;
-            }
+        // Check immediate previous sibling (marker might be right after a styled span)
+        const prevSibling = textNode.previousSibling;
+        if (prevSibling && prevSibling.nodeType === Node.ELEMENT_NODE && prevSibling.classList) {
+          if (prevSibling.classList.contains('glk-header')) {
+            glkClass = 'header';
+          } else if (prevSibling.classList.contains('glk-subheader')) {
+            glkClass = 'subheader';
+          } else if (prevSibling.classList.contains('glk-note')) {
+            glkClass = 'note';
           }
-          // Only check immediate previous sibling
-          break;
         }
 
         // If not found in sibling, check ancestors
@@ -255,7 +248,7 @@ export function insertRealMarkersAtIDs(container, markerIDs, chunkOffset = 0, sk
         text = beforeNode.textContent;
 
       } catch (e) {
-        // Failed to insert marker
+        // DOM manipulation can fail for malformed or detached nodes; narration continues without this marker
       }
     }
   }

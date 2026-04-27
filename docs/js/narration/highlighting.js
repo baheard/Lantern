@@ -8,14 +8,6 @@
 import { state } from '../core/state.js';
 
 /**
- * Initialize scroll detection (no-op, kept for API compatibility)
- * Narration highlighting always controls scrolling now.
- */
-export function initScrollDetection() {
-  // No longer needed - narration always controls scrolling
-}
-
-/**
  * Highlight text using marker elements
  * Searches in status line, upper window, and main content elements
  * @param {number} chunkIndex - Index of chunk to highlight

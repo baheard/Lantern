@@ -27,7 +27,6 @@ import { processVoiceKeywords } from './voice/voice-commands.js';
 // Narration modules
 import { speakTextChunked, stopNarration } from './narration/tts-player.js';
 import { skipToChunk, skipToStart, skipToEnd } from './narration/navigation.js';
-import { initScrollDetection } from './narration/highlighting.js';
 
 // UI modules
 import { updateNavButtons } from './ui/nav-buttons.js';
@@ -292,8 +291,6 @@ function initUIComponents() {
   initScrollDownButton();
   initSaveHandlers();
   initDialogInterceptor();
-  initScrollDetection();
-
   // Initialize Google Drive sync (optional, non-blocking)
   import('./utils/gdrive/index.js').then(({ initGDriveSync }) => {
     return initGDriveSync();
