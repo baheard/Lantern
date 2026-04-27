@@ -335,7 +335,47 @@ _Status: complete (2026-04-27)_
 5. **Cap `populateVoiceDropdown` retry loop** — Low value, ~5 min. Add `if (attempts > 50) return;`.
 
 ### Batch 6: Map system (`features/map-*`, `auto-mapper.js`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Four focused modules with a clear division of concerns — data tracking (`auto-mapper.js`), input handling (`map-handlers.js`), sheet UI (`map-sheet.js`), and orchestration (`map-canvas.js`). The callback-injection pattern in `map-handlers.js` and `map-sheet.js` is a clean cycle-break, confirmed in Pass 6. One XSS finding: unescaped node names in the connections list's `innerHTML`. Two duplication problems: a direction-offset table appears twice in `map-canvas.js`, and the edge-transfer logic is copy-pasted between both merge functions in `map-sheet.js`. `map-canvas.js` at 1963 lines is the largest module reviewed so far — the toast system (~200 lines) and `syncMapFromAutoMapper` (~105 lines) are natural extraction candidates.
+
+#### Findings
+
+- `[ ]` **Medium** — `docs/js/features/map-sheet.js:344` — `populateConnectionsList()` builds the connections list via `innerHTML` with `${c.node.name}` unescaped. Node names originate from Z-machine status bar text, which is game-controlled. A crafted `.z5`/`.z8` game file (user-loadable via the custom-game feature) could produce a room name like `<img src=x onerror=…>` that executes when the connections panel is opened. Same class as the save-name XSS fixed in Pass 1. Fix: wrap with `escapeHtml(c.node.name)` (already in `utils/text-processing.js`).
+- `[ ]` **Medium** — `docs/js/features/map-canvas.js:1553-1569` — `syncFromAutoMapper()` defines an inline `directionOffsets` table that duplicates (and partially diverges from) `DIRECTION_OFFSETS` imported from `map-config.js`. The inline version adds lowercase aliased keys (`'n'`/`'north'` etc.); it also omits portal commands (`in`/`out`/`enter`/`exit`) that appear in `COMMAND_DIRECTIONS`. Any extension to `DIRECTION_OFFSETS` in map-config won't be reflected here. Import and use `DIRECTION_OFFSETS` directly, supplementing only keys genuinely absent from the canonical set.
+- `[ ]` **Medium** — `docs/js/features/map-sheet.js:544-569, 704-729` — `handleNodeMerge()` and `performManualMerge()` contain byte-for-byte identical edge-transfer logic: iterate `mapState.edges`, partition into `edgesToAdd`/`edgesToDelete`, apply changes, and re-protect edges. The only differences are the node IDs and the closing `showHint` message. Extract a private `transferEdges(sourceId, targetId)` helper and call it from both. Same class as the `respondAsGame()` duplication in Batch 4.
+- `[ ]` **Medium** — `docs/js/features/map-canvas.js:1870` — `syncMapFromAutoMapper()` calls `JSON.parse(existing)` without a try/catch. All other JSON-from-storage reads in the codebase use `getJSON` from `storage-api.js` (which catches and returns `null` on error). A partial write or encoding corruption throws uncaught and unwinds silently. Wrap with try/catch or switch to `getJSON`.
+- `[ ]` **Low** — `docs/js/features/map-canvas.js:546` — `toggleAutoMap()` guards on `window.getCurrentLocation ?` before calling it, but `getCurrentLocation` is already a static import from `auto-mapper.js` at line 18. The window-global check is redundant (the module export is always available). Replace with direct `getCurrentLocation(statusText)`.
+- `[ ]` **Low** — `docs/js/features/map-handlers.js:250` — `hideFab()` is defined, exported, and never called anywhere. The comment at line 49 of the same file explicitly notes "no hideFab() call" was intentional. Dead export; delete it.
+- `[ ]` **Low** — `docs/js/features/map-canvas.js:1153` — `cancelOnboarding(currentToast)` parameter name shadows the module-level `currentToast` variable (line 1033). The function's `currentToast` and the module's `currentToast` are different objects. Rename the parameter to `toastEl` to eliminate confusion.
+- `[ ]` **Low** — `docs/js/features/map-canvas.js:1031` — `TOAST_STORAGE_KEY = 'iftalk_map_toasts_dismissed'` is a localStorage key constant defined mid-file. `FIRST_USE_KEY` (same category of map-related storage key) lives in `map-config.js` and is imported. Move `TOAST_STORAGE_KEY` to `map-config.js` for consistent key management.
+- `[ ]` **Low** — `docs/js/features/auto-mapper.js:68-138` — 70-line commented-out block for the v5 VM-memory reading approach. The comment says "kept for reference", but Batch 4 removed an identical class of stale blocks from `voxglk-renderer.js` for the same reason: git history is the reference. Delete it.
+- `[ ]` **Low** — `docs/js/features/map-sheet.js:149` — `openNodeSheet()` always sets the badge to `'Auto-mapped'` for non-duplicate nodes regardless of `node.isManual`. A freshly-created user location (`isManual: true`) opens with an "Auto-mapped" badge until the user starts typing, at which point `handleNodeNameChange` corrects it to "Your edit". Set badge to `'Your location'` (class `sheet-node-badge user`) upfront when `node.isManual` is true.
+
+#### Verified safe / not concerns
+- The callback-injection pattern in `map-handlers.js` and `map-sheet.js` is clean and intentional — confirmed as the correct cycle-break in Pass 6.
+- `findAvailablePosition()` spiral search is bounded at 72 candidate checks (6 rings × 12 angles); the documented fallback-to-overlap for very dense maps is correct.
+- `setupResizeHandle()` uses `AbortController` for clean listener cleanup — returned via `resizeState` and called in `hideMap()`. No leak.
+- Duplicate-node ID generation (`while (mapState.nodes.has(duplicateId) || mapState.deletedNodes.has(duplicateId))`) correctly handles collisions, including re-use of previously-deleted IDs.
+- `transitionend` listener in `hideMap()` is paired with a 500ms fallback timeout that cleans up if the transition never fires.
+- `startCheckTimeout` in `auto-mapper.js` is cancelled at the top of every `initAutoMapper()` call — no accumulation on game restarts.
+- `toastQueue`, `currentToast`, and `toastContainer` are module-level singletons appropriate for a single-instance UI.
+- `performUndo()` `switch/case` uses `const` without per-case block scopes — valid in strict-mode ES6 modules since adjacent cases are never simultaneously live.
+- `populateConnectionsList` re-attaches connection-type and delete listeners on every `openNodeSheet` call, but it also replaces the entire list via `innerHTML`, so there is no listener accumulation.
+
+#### Top 5 longest functions in batch
+1. `setupEventListeners()` — `map-canvas.js:200-393` (194 lines)
+2. `syncFromAutoMapper()` — `map-canvas.js:1541-1702` (162 lines)
+3. `handleLocationChange()` — `map-canvas.js:629-771` (143 lines)
+4. `syncMapFromAutoMapper()` — `map-canvas.js:1852-1956` (105 lines)
+5. `createMapUI()` — `map-canvas.js:108-194` (87 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Fix `populateConnectionsList` XSS** — Medium value, ~10 min. One `escapeHtml()` call on `c.node.name`.
+2. **Extract `transferEdges()` from merge functions** — Medium value, ~20 min. Eliminates ~50-line duplication between `handleNodeMerge` and `performManualMerge`.
+3. **Replace inline `directionOffsets` with `DIRECTION_OFFSETS` import** — Medium value, ~15 min. Removes the diverging duplicate table in `syncFromAutoMapper`.
+4. **Wrap `JSON.parse` in `syncMapFromAutoMapper`** — Low value, ~5 min. Switch to `getJSON` from `storage-api.js`.
+5. **Delete `hideFab()` + fix `window.getCurrentLocation` in `toggleAutoMap`** — Low value, ~10 min combined.
 
 ### Batch 7: Narration (`narration/`)
 _Status: pending_
@@ -402,6 +442,16 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `gdrive-ui.js:131` | `iftalk_gdrive_folder_id` stores `'path:...'` string — key name implies an ID, not a path |
 | Low | `voice-selection.js:276` | `loadBrowserVoiceConfig()` marked async but awaits nothing |
 | Low | `voice-selection.js:206` | `★` iOS-preferred marker shown on all platforms, not just iOS |
+| Medium | `map-sheet.js:344` | `c.node.name` unescaped in `innerHTML` — game-controlled location names are an XSS vector |
+| Medium | `map-canvas.js:1553-1569` | Inline `directionOffsets` table duplicates and diverges from `DIRECTION_OFFSETS` in map-config.js |
+| Medium | `map-sheet.js:544-569, 704-729` | `handleNodeMerge` / `performManualMerge` share ~50-line identical edge-transfer logic — extract `transferEdges()` |
+| Medium | `map-canvas.js:1870` | `syncMapFromAutoMapper` calls `JSON.parse` without try/catch — use `getJSON` |
+| Low | `map-canvas.js:546` | `window.getCurrentLocation` used in `toggleAutoMap` — static import already available |
+| Low | `map-handlers.js:250` | `hideFab()` defined, exported, and never called — dead export |
+| Low | `map-canvas.js:1153` | `cancelOnboarding(currentToast)` parameter shadows module-level `currentToast` variable |
+| Low | `map-canvas.js:1031` | `TOAST_STORAGE_KEY` inline constant — should live in `map-config.js` alongside `FIRST_USE_KEY` |
+| Low | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block — git history is the reference; delete it |
+| Low | `map-sheet.js:149` | `openNodeSheet` badges manual nodes (`isManual: true`) as `'Auto-mapped'` initially |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).

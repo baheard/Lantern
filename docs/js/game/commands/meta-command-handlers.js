@@ -175,7 +175,7 @@ export async function handleMetaResponse(input) {
       }, 0);
     } else if (mode === 'repair') {
       // For repair cancellation, reset the repair flag and show helpful message
-      const { resetRepairFlag } = await import('../voxglk.js');
+      const { resetRepairFlag } = await import('../voxglk-watchdog.js');
       resetRepairFlag();
       respondAsGame('<div class="system-message">Repair cancelled. You can type REPAIR later if needed, or restart from Settings.</div>');
     } else {
@@ -359,7 +359,7 @@ async function handleDeleteResponse(input, saves) {
  */
 async function handleRepairResponse(input) {
   if (input.toLowerCase() !== 'confirm') {
-    const { resetRepairFlag } = await import('../voxglk.js');
+    const { resetRepairFlag } = await import('../voxglk-watchdog.js');
     resetRepairFlag();
     respondAsGame('<div class="system-message">Repair cancelled. Type REPAIR to try again, or restart from Settings.</div>');
     return true;
@@ -368,7 +368,7 @@ async function handleRepairResponse(input) {
   // User confirmed - trigger repair
   respondAsGame('<div class="system-message">Repairing game state...</div>');
 
-  const { performRepair } = await import('../voxglk.js');
+  const { performRepair } = await import('../voxglk-watchdog.js');
   await performRepair();
 
   return true;

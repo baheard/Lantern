@@ -8,17 +8,18 @@ aliases: [watchdog, repair command, vm hang, broken state]
 
 # VM Watchdog & REPAIR Flow
 
-The Z-machine occasionally enters a stuck state where it stops responding to input. IFTalk has a watchdog that detects this and offers in-game recovery via a manual `REPAIR` command. The flow is split between `voxglk.js` (detection + state) and `commands/meta-command-handlers.js` (the REPAIR command itself).
+The Z-machine occasionally enters a stuck state where it stops responding to input. IFTalk has a watchdog that detects this and offers in-game recovery via a manual `REPAIR` command. The flow lives in `docs/js/game/voxglk-watchdog.js` (detection + state + repair execution) with two trigger points in `voxglk.js` (call `startWatchdog` from `sendInput`, `clearWatchdog` from `update`) and the user-facing REPAIR command in `commands/meta-command-handlers.js`.
 
 ## Detection
 
-Defined in `docs/js/game/voxglk.js`:
+Defined in `docs/js/game/voxglk-watchdog.js`:
 
 - **`WATCHDOG_TIMEOUT_MS = 5000`** — how long to wait after sending input before assuming the VM is hung.
 - **`REPAIR_RETRY_WINDOW_MS = 15000`** — minimum gap between repair attempts (prevents repair-loops).
-- **`startWatchdog()`** — called from `sendInput()` after every input dispatch (~line 1020). Schedules a check at +5s.
-- **`clearWatchdog()`** — called when the VM responds (next `update()` event clears it at ~line 425).
-- **State variables:** `watchdogTimer`, `lastInputGeneration`, `isAutoRepairInProgress`, `currentRepairFlagKey` (lines 38-41).
+- **`startWatchdog(currentGeneration, getCurrentGeneration, isBootstrapping)`** — called from `voxglk.sendInput()` after every input dispatch. Schedules a check at +5s. The two function/flag parameters are injected by voxglk.js to avoid a `voxglk-watchdog` ↔ `voxglk` import cycle (the timer needs to read the live `generation` and the bootstrap-suppress flag, both owned by voxglk.js).
+- **`clearWatchdog()`** — called when the VM responds (next `update()` event in voxglk.js clears it on the gen-advance branch).
+- **`resetWatchdogState()`** — called from `voxglk.init()` for a new game; clears any stale timer + the repair-in-progress flag in one call.
+- **State variables (module-scoped, single instance):** `watchdogTimer`, `lastInputGeneration`, `isAutoRepairInProgress`, `currentRepairFlagKey`.
 
 ## Recovery flow
 
