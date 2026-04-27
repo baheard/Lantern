@@ -1,6 +1,7 @@
 # Save/Restore Research: ifvms.js and GlkOte Implementation
 
 **Date:** December 17, 2024
+**⚠️ Historical research doc** — architecture conclusions are still valid; code snippets reference old `commands.js` / `voxglk.js` monoliths that have since been modularized. The `ignoreNextVoxGlkUpdate` flag documented here was replaced by `skipNextUpdateAfterBootstrap` in `game/voxglk-bootstrap.js`.
 **Purpose:** Research how ifvms.js and GlkOte handle save/restore to inform IFTalk's implementation
 
 ---

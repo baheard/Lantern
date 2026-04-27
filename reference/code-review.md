@@ -259,12 +259,13 @@ _Status: complete (2026-04-26)_
 ### Batch 4: Commands (`game/commands/`)
 _Status: complete (2026-04-27)_
 
-**Headline:** Well-factored batch — 4 small modules (command-router.js, meta-command-handlers.js, save-list-formatter.js, index.js) with clear single responsibilities. No bloat comparable to prior batches. Two medium concerns: `respondAsGame()` duplicated verbatim across the module boundary, and save-name validation logic (~60 lines) duplicated between user-initiated and game-initiated save flows. Low-severity cleanup items: unsafe `JSON.parse` in save-list-formatter, two dead functions, and `window.state` used instead of the imported `state` in one handler.
+**Headline:** Well-factored batch — 4 small modules (command-router.js, meta-command-handlers.js, save-list-formatter.js, index.js) with clear single responsibilities. No bloat comparable to prior batches. Three medium concerns: `respondAsGame()` duplicated verbatim across the module boundary; save-name validation logic (~60 lines) duplicated between user-initiated and game-initiated save flows; and `MAX_SAVES = 5` custom-save limit silently dropped during the `commands.js` → `game/commands/` modularization refactor. Low-severity cleanup items: unsafe `JSON.parse` in save-list-formatter, two dead functions, and `window.state` used instead of the imported `state` in one handler.
 
 #### Findings
 
 - `[ ]` **Medium** — `docs/js/game/commands/command-router.js:339` and `docs/js/game/commands/meta-command-handlers.js:21` — `respondAsGame()` defined identically in both files (14 lines, byte-for-byte identical: `addGameText` call, `tempDiv` innerHTML, `window.handleGameOutput` dispatch). One module should import it from the other, or extract to a shared `ui/respond-as-game.js`.
 - `[ ]` **Medium** — `docs/js/game/commands/meta-command-handlers.js:224-273` vs `meta-command-handlers.js:380-458` — `handleSaveResponse()` and `handleGameSaveResponse()` share ~60 lines of duplicated validation: number-to-save lookup, quicksave/autosave overwrite protection, name format regex, reserved-name check. Difference is only the final action (call `customSave()` vs set `window._customSaveFilename` + invoke `gameDialogCallback`). Extract a `validateSaveName(input, allSaves)` helper returning `{valid, targetSaveName, errorMessage}`.
+- `[ ]` **Medium** — `docs/js/game/commands/meta-command-handlers.js:handleSaveResponse,handleGameSaveResponse` — `MAX_SAVES = 5` custom-save limit was silently dropped during the `commands.js` → `game/commands/` modularization refactor (commit `107a47b`). Old code blocked new saves when `saves.length >= MAX_SAVES` (same check in both user-typed and game-dialog flows) with a clear message directing the user to delete or overwrite. Now unlimited custom saves are possible, risking localStorage bloat and unwieldy save lists. Fix: restore `const MAX_SAVES = 5` and the two `existingSave || saves.length < MAX_SAVES` guards in both response handlers.
 - `[ ]` **Low** — `docs/js/game/commands/save-list-formatter.js:21,55,73` — `JSON.parse` called directly on localStorage reads in `getCustomSaves()`, `getQuicksave()`, `getAutosave()`. A corrupted or partially-written save entry throws uncaught. Rest of codebase uses `getJSON` from `storage-api.js` which wraps and catches. Should use `getJSON` here for consistency.
 - `[ ]` **Low** — `docs/js/game/commands/meta-command-handlers.js:300,301,307,313,314` — `handleRestoreResponse()` uses `window.state.currentGameName` (5 sites) despite `state` being statically imported at the module top. `handleGameRestoreResponse()` (line 506) correctly uses imported `state`. Inconsistency; should use imported `state` throughout.
 - `[ ]` **Low** — `docs/js/game/commands/command-router.js:493-510` — `waitForInputAndContinue()` is defined, unexported, and never called from anywhere in the module (only its own recursive self-call). Dead function; safe to delete.
@@ -288,10 +289,11 @@ _Status: complete (2026-04-27)_
 5. `handleMetaResponse()` — `meta-command-handlers.js:157-219` (62 lines)
 
 #### Recommended refactor order (value/effort)
-1. **Extract `respondAsGame()` to shared module** — Low value, ~15 min. Import in both callers. Clear DRY violation.
-2. **Extract `validateSaveName()` helper** — Medium value, ~30 min. Eliminates ~60 lines of duplicated validation with divergence risk.
-3. **Use `getJSON` in save-list-formatter** — Low value, ~15 min. Consistency and crash protection on corrupt saves.
-4. **Delete dead code** (`waitForInputAndContinue`, `sendCommand`) — Low value, ~5 min. Clean-up only.
+1. **Restore `MAX_SAVES` limit** — Medium value, ~15 min. Re-add `const MAX_SAVES = 5` and both enforcement checks (user-typed save + game-dialog save). Restores intentional UX guard and prevents localStorage bloat.
+2. **Extract `respondAsGame()` to shared module** — Low value, ~15 min. Import in both callers. Clear DRY violation.
+3. **Extract `validateSaveName()` helper** — Medium value, ~30 min. Eliminates ~60 lines of duplicated validation with divergence risk.
+4. **Use `getJSON` in save-list-formatter** — Low value, ~15 min. Consistency and crash protection on corrupt saves.
+5. **Delete dead code** (`waitForInputAndContinue`, `sendCommand`) — Low value, ~5 min. Clean-up only.
 
 ### Batch 5: Settings UI (`ui/settings/`)
 _Status: pending_
@@ -351,6 +353,7 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `save-manager.js:82-84` | `limitHTMLHistory` silently drops text before first tag at truncation boundary |
 | Medium | `command-router.js:339`, `meta-command-handlers.js:21` | `respondAsGame()` defined identically in both files — extract to shared module |
 | Medium | `meta-command-handlers.js:224-273` vs `380-458` | `handleSaveResponse` / `handleGameSaveResponse` duplicate ~60 lines of save-name validation |
+| Medium | `meta-command-handlers.js` (both save handlers) | `MAX_SAVES = 5` limit silently dropped in `107a47b` modularization — unlimited custom saves now possible |
 | Low | `save-list-formatter.js:21,55,73` | Direct `JSON.parse` without try/catch — use `getJSON` from storage-api |
 | Low | `meta-command-handlers.js:300-314` | `handleRestoreResponse` uses `window.state.currentGameName` — use imported `state` |
 | Low | `command-router.js:493-510` | `waitForInputAndContinue()` unexported, never called — dead function |

@@ -33,6 +33,14 @@ Two independent save mechanisms; users frequently confuse them.
 - `iftalk_quicksave_<gameName>` — current quicksave
 - `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — backup chain; `_exempt` means it skips the count limit
 
+## Custom save limit (regression note)
+
+`MAX_SAVES = 5` was enforced in the original `commands.js` — both for user-typed `SAVE` and for in-game dialog saves. It was silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`). The current `handleSaveResponse` and `handleGameSaveResponse` in `meta-command-handlers.js` do not limit the number of custom saves. Restoring the limit requires adding `const MAX_SAVES = 5` and the `!existingSave && saves.length >= MAX_SAVES` guard in both handlers.
+
+## Known open bugs
+
+- **Bootstrap echo leaks** (TODO: "Hide transition error messages"): After autorestore the VM responds to the dummy "bootstrap wake" input with "I didn't understand that sentence." `checkSuppressUpdate()` in `voxglk-bootstrap.js` is supposed to swallow the next update after bootstrap, but the suppression fails in some cases (timing, multi-part updates, or games where the error appears on a second update call). Char-mode games are explicitly exempt from suppression — by design, char-mode transitions don't output an error message so no suppression is needed.
+
 ## Game-dialog bridge: `window._customSaveFilename`
 
 When the Z-machine engine triggers a native save dialog (game's own SAVE command, not the IFTalk meta-command), `dialog-stub.js` fires an `iftalk-dialog-open` event handled by `meta-command-handlers.js:initDialogInterceptor()`. The user enters a name via the IFTalk UI. To pass that name through the Dialog callback (which has no parameter for it), the handler sets `window._customSaveFilename = targetSaveName` immediately before calling `gameDialogCallback(gameDialogRef)`. `Dialog.file_write()` reads this global to know which custom save slot to write. The global is intentional — the Dialog API doesn't support extra parameters.

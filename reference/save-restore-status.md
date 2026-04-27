@@ -1,8 +1,9 @@
 # Save/Restore Implementation Status
 
 **Last Updated:** December 21, 2024
+**⚠️ Partially stale** — Code was modularized in early 2026. File references to `commands.js` should read `game/commands/meta-command-handlers.js`; references to `voxglk.js` bootstrap logic should read `game/voxglk-bootstrap.js`. Core architecture and page-reload rationale remain accurate. See `.tome/save-system.md` and `.tome/bootstrap-restore-flow.md` for current state.
 
-## Current Status: ✅ FULLY WORKING
+## Current Status: Mostly working (some edge-case bugs)
 
 All save/restore mechanisms are fully functional with clean transitions.
 
