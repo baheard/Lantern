@@ -33,5 +33,13 @@ Two independent save mechanisms; users frequently confuse them.
 - `iftalk_quicksave_<gameName>` — current quicksave
 - `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — backup chain; `_exempt` means it skips the count limit
 
+## Game-dialog bridge: `window._customSaveFilename`
+
+When the Z-machine engine triggers a native save dialog (game's own SAVE command, not the IFTalk meta-command), `dialog-stub.js` fires an `iftalk-dialog-open` event handled by `meta-command-handlers.js:initDialogInterceptor()`. The user enters a name via the IFTalk UI. To pass that name through the Dialog callback (which has no parameter for it), the handler sets `window._customSaveFilename = targetSaveName` immediately before calling `gameDialogCallback(gameDialogRef)`. `Dialog.file_write()` reads this global to know which custom save slot to write. The global is intentional — the Dialog API doesn't support extra parameters.
+
+## Restore always reloads the page
+
+All restore paths (`handleRestoreResponse`, `handleGameRestoreResponse`, Quick Load) use `window.location.reload()` instead of in-place restore. Reason: `glkapi.js` state (window layout, input callbacks) cannot be cleanly reset without a full page reload. The pending restore target is written to `sessionStorage` before reload and picked up by the auto-restore sequence on startup (`voxglk-bootstrap.js`).
+
 ## Security note (v1.5.222)
 Save files contain HTML for status/upper/lower windows. On restore, that HTML is sanitized via `sanitizeRestoredHTML()` in `utils/text-processing.js` — strips `<script>`, `<iframe>`, `on*` handlers, `javascript:` URLs. The realistic XSS vector is a malicious save file imported from disk or shared via someone's Drive folder.

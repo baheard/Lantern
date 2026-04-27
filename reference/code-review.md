@@ -257,7 +257,41 @@ _Status: complete (2026-04-26)_
 2. **Move `initSaveHandlers()` wiring to UI layer** — Low value, ~30 min. Minor separation improvement; unblocks removal of the `closeSettings` import from save-manager.
 
 ### Batch 4: Commands (`game/commands/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Well-factored batch — 4 small modules (command-router.js, meta-command-handlers.js, save-list-formatter.js, index.js) with clear single responsibilities. No bloat comparable to prior batches. Two medium concerns: `respondAsGame()` duplicated verbatim across the module boundary, and save-name validation logic (~60 lines) duplicated between user-initiated and game-initiated save flows. Low-severity cleanup items: unsafe `JSON.parse` in save-list-formatter, two dead functions, and `window.state` used instead of the imported `state` in one handler.
+
+#### Findings
+
+- `[ ]` **Medium** — `docs/js/game/commands/command-router.js:339` and `docs/js/game/commands/meta-command-handlers.js:21` — `respondAsGame()` defined identically in both files (14 lines, byte-for-byte identical: `addGameText` call, `tempDiv` innerHTML, `window.handleGameOutput` dispatch). One module should import it from the other, or extract to a shared `ui/respond-as-game.js`.
+- `[ ]` **Medium** — `docs/js/game/commands/meta-command-handlers.js:224-273` vs `meta-command-handlers.js:380-458` — `handleSaveResponse()` and `handleGameSaveResponse()` share ~60 lines of duplicated validation: number-to-save lookup, quicksave/autosave overwrite protection, name format regex, reserved-name check. Difference is only the final action (call `customSave()` vs set `window._customSaveFilename` + invoke `gameDialogCallback`). Extract a `validateSaveName(input, allSaves)` helper returning `{valid, targetSaveName, errorMessage}`.
+- `[ ]` **Low** — `docs/js/game/commands/save-list-formatter.js:21,55,73` — `JSON.parse` called directly on localStorage reads in `getCustomSaves()`, `getQuicksave()`, `getAutosave()`. A corrupted or partially-written save entry throws uncaught. Rest of codebase uses `getJSON` from `storage-api.js` which wraps and catches. Should use `getJSON` here for consistency.
+- `[ ]` **Low** — `docs/js/game/commands/meta-command-handlers.js:300,301,307,313,314` — `handleRestoreResponse()` uses `window.state.currentGameName` (5 sites) despite `state` being statically imported at the module top. `handleGameRestoreResponse()` (line 506) correctly uses imported `state`. Inconsistency; should use imported `state` throughout.
+- `[ ]` **Low** — `docs/js/game/commands/command-router.js:493-510` — `waitForInputAndContinue()` is defined, unexported, and never called from anywhere in the module (only its own recursive self-call). Dead function; safe to delete.
+- `[ ]` **Low** — `docs/js/game/commands/command-router.js:484-487` — `sendCommand()` is an empty no-op exported "for compatibility." app.js imports it (line 43) but never calls it (`window._sendCommand` uses `sendCommandDirect`). Delete from command-router.js, index.js, and the app.js import list.
+
+#### Verified safe / not concerns
+- Entry-point cycle from command-router.js is fixed (v1.5.226): confirmed static import of `voiceCommandHandlers` from `voice/command-handlers.js` at line 29.
+- `interceptMetaCommand()` at 283 lines looks large but is 95% a command dispatch table — legitimate for this type of code; switch case bodies average 2-3 lines.
+- `formatSaveEntry()` injects `save.name` directly into HTML without `escapeHtml`, but names are validated to `/^[a-zA-Z0-9_ -]+$/` at save time — no angle brackets possible. Brittle trust but not a current XSS vector.
+- `getCustomSaves()` iterates entire localStorage O(n) — not a performance concern; user-invoked, never in a hot loop.
+- `awaitingMetaInput` module-level mutable state is appropriate for single-session interactive dialog. `setAwaitingMetaInput` external setter is the intended cross-module write path.
+- `Dialog.file_construct_ref()` bare global (lines 555, 578): same pattern as rest of codebase; consistent with dialog-stub.js load expectations.
+- Re-prompting in `handleGameSaveResponse`/`handleGameRestoreResponse` (restore `awaitingMetaInput`, re-enter system mode) is correct behavior for in-game dialogs that must stay open on bad input.
+- `handleSaveResponse`/`handleRestoreResponse`/`handleDeleteResponse` in command-router.js receive a `saves` parameter that's ignored — the actual list is re-fetched inside `handleMetaResponse`. Minor but harmless.
+
+#### Top 5 longest functions in batch
+1. `interceptMetaCommand()` — `command-router.js:50-333` (283 lines) — command dispatch table; acceptable
+2. `sendCommandDirect()` — `command-router.js:379-479` (100 lines) — mute check + display + history + dispatch + send
+3. `handleGameSaveResponse()` — `meta-command-handlers.js:380-458` (78 lines)
+4. `initDialogInterceptor()` — `meta-command-handlers.js:524-593` (69 lines)
+5. `handleMetaResponse()` — `meta-command-handlers.js:157-219` (62 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Extract `respondAsGame()` to shared module** — Low value, ~15 min. Import in both callers. Clear DRY violation.
+2. **Extract `validateSaveName()` helper** — Medium value, ~30 min. Eliminates ~60 lines of duplicated validation with divergence risk.
+3. **Use `getJSON` in save-list-formatter** — Low value, ~15 min. Consistency and crash protection on corrupt saves.
+4. **Delete dead code** (`waitForInputAndContinue`, `sendCommand`) — Low value, ~5 min. Clean-up only.
 
 ### Batch 5: Settings UI (`ui/settings/`)
 _Status: pending_
@@ -315,6 +349,12 @@ _Pending until Tiers 1 & 2 complete._
 | Medium | `save-manager.js:1008-1079` | `initSaveHandlers()` mixes UI event wiring + settings coupling into save module |
 | Low | `save-manager.js:626` | `performRestore()` mutates `state.skipNarrationAfterLoad` — couples save to narration state |
 | Low | `save-manager.js:82-84` | `limitHTMLHistory` silently drops text before first tag at truncation boundary |
+| Medium | `command-router.js:339`, `meta-command-handlers.js:21` | `respondAsGame()` defined identically in both files — extract to shared module |
+| Medium | `meta-command-handlers.js:224-273` vs `380-458` | `handleSaveResponse` / `handleGameSaveResponse` duplicate ~60 lines of save-name validation |
+| Low | `save-list-formatter.js:21,55,73` | Direct `JSON.parse` without try/catch — use `getJSON` from storage-api |
+| Low | `meta-command-handlers.js:300-314` | `handleRestoreResponse` uses `window.state.currentGameName` — use imported `state` |
+| Low | `command-router.js:493-510` | `waitForInputAndContinue()` unexported, never called — dead function |
+| Low | `command-router.js:484-487` | `sendCommand()` empty no-op, re-exported, app.js imports but never calls — delete |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
