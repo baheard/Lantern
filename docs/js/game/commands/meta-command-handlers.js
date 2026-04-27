@@ -9,6 +9,8 @@ import { addGameText } from '../../ui/game-output.js';
 import { enterSystemEntryMode, exitSystemEntryMode } from '../../input/keyboard/index.js';
 import { getCustomSaves, getUnifiedSavesList, formatSavesList } from './save-list-formatter.js';
 
+const MAX_SAVES = 5;
+
 // State tracking for interactive meta-commands
 let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
@@ -260,6 +262,13 @@ async function handleSaveResponse(input, saves) {
     return true;
   }
 
+  // Enforce save limit — only block net-new saves, not overwrites
+  const existingSave = getCustomSaves().find(s => s.name === targetSaveName);
+  if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
+    respondAsGame(`<div class="system-message">Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.</div>`);
+    return true;
+  }
+
   // Perform the save using our comprehensive save system
   const { customSave } = await import('../save-manager.js');
   const success = await customSave(targetSaveName);
@@ -435,6 +444,19 @@ async function handleGameSaveResponse(input, saves) {
 
     // Re-prompt
     // IMPORTANT: Restore awaitingMetaInput flag so ESC/Enter cancellation works
+    awaitingMetaInput = 'game-save';
+    setTimeout(() => {
+      enterSystemEntryMode('Enter save name');
+    }, 100);
+    return true;
+  }
+
+  // Enforce save limit — only block net-new saves, not overwrites
+  const existingSave = getCustomSaves().find(s => s.name === targetSaveName);
+  if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
+    respondAsGame(`<div class="system-message">Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.</div>`);
+
+    // Re-prompt
     awaitingMetaInput = 'game-save';
     setTimeout(() => {
       enterSystemEntryMode('Enter save name');

@@ -7,6 +7,7 @@ import {
   NODE_ICONS, CONNECTION_TYPES
 } from './map-config.js';
 import { render } from './map-render.js';
+import { escapeHtml } from '../utils/text-processing.js';
 
 // Callbacks (set by map-canvas.js to avoid circular deps)
 let callbacks = {
@@ -345,7 +346,7 @@ function populateConnectionsList(node) {
     const currentType = c.edge.connectionType || 'cardinal';
     return `
       <div class="connection-item ${c.edge.isManual || c.edge.isEdited ? 'user' : 'auto'}">
-        <span class="connection-name">${c.node.name}</span>
+        <span class="connection-name">${escapeHtml(c.node.name)}</span>
         <select class="connection-type-picker" data-edge="${c.key}" title="Connection type">
           ${Object.keys(CONNECTION_TYPES).map(t =>
             `<option value="${t}" ${currentType === t ? 'selected' : ''}>${typeLabels[t]}</option>`
