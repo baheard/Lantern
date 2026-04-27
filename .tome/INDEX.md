@@ -6,6 +6,8 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 ## Entries
 
+- [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26
+
 - [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26
 - [bootstrap-restore-flow](bootstrap-restore-flow.md) — Dummy-input + skip-next-update trick; now in voxglk-bootstrap.js (v1.5.231) (zvm, save-restore, voxglk) — updated 2026-04-26
 - [watchdog-repair-flow](watchdog-repair-flow.md) — 5s VM-hang detection + manual REPAIR recovery flow (zvm, watchdog, recovery) — updated 2026-04-26

@@ -276,7 +276,8 @@ export function createVoxGlk(textOutputCallback) {
 
 
           // Track status bar changes for TTS (but don't auto-clear screen)
-          const statusBarChanged = statusBarHTML !== lastStatusLine;
+          // Compare plain text so whitespace/attribute changes don't trigger false re-narration
+          const statusBarChanged = statusBarText !== lastStatusLine;
 
           // Only clear screen when game explicitly requests it
           const shouldClearScreen = arg.content.some(c => c.clear);
@@ -294,7 +295,7 @@ export function createVoxGlk(textOutputCallback) {
               // Store reference for chunking
               window.currentStatusBarElement = statusBarEl;
             }
-            lastStatusLine = statusBarHTML;
+            lastStatusLine = statusBarText;
           }
           // NOTE: Don't clear status bar if not in update - preserve it
           // The game doesn't send status bar on every update
@@ -706,6 +707,7 @@ export function sendInput(text, type = 'line') {
   }
 
   // Send the input event to Glk
+  if (!acceptCallback) return;
   acceptCallback(inputEvent);
 
   // Only disable input if the game hasn't already responded synchronously
@@ -772,5 +774,7 @@ export function getVoxGlk() {
  * @param {string} statusHTML - The restored status bar HTML
  */
 export function updateLastStatusLine(statusHTML) {
-  lastStatusLine = statusHTML;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = statusHTML;
+  lastStatusLine = tmp.textContent;
 }

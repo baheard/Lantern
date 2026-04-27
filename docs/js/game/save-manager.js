@@ -78,10 +78,12 @@ function limitHTMLHistory(html, maxTurns = 100) {
     // Keep only the most recent maxChars, but don't cut in the middle of an HTML tag
     let truncated = html.substring(html.length - maxChars);
 
-    // Find the first complete opening tag to avoid partial tags at the start
+    // Avoid starting mid-tag: if truncation landed inside a tag (a '>' appears before the first '<'),
+    // skip past the closing '>'. If we're in a text node, keep the text.
     const firstTagStart = truncated.indexOf('<');
-    if (firstTagStart > 0) {
-        truncated = truncated.substring(firstTagStart);
+    const firstTagEnd = truncated.indexOf('>');
+    if (firstTagEnd >= 0 && (firstTagStart < 0 || firstTagEnd < firstTagStart)) {
+        truncated = truncated.substring(firstTagEnd + 1);
     }
 
     return truncated;
