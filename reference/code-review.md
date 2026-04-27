@@ -296,7 +296,43 @@ _Status: complete (2026-04-27)_
 5. **Delete dead code** (`waitForInputAndContinue`, `sendCommand`) — Low value, ~5 min. Clean-up only.
 
 ### Batch 5: Settings UI (`ui/settings/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Five focused modules with clear ownership, but two cross-module duplication problems and a modal-builder that's overstayed its welcome in the settings orchestrator. `data-management-ui.js` silently re-defines two functions verbatim from `settings-panel.js` instead of importing them, and nearly duplicates its own clear-all handler in two places. `showBackupSavesDialog()` (110 lines of inline DOM construction) belongs in a separate file. Low-severity UI concerns: `alert()` for post-deletion feedback and indefinite `populateVoiceDropdown` polling.
+
+#### Findings
+
+- `[ ]` **Medium** — `docs/js/ui/settings/data-management-ui.js:18-53` — `isOnWelcomeScreen()` and `getGameDisplayName()` defined identically to `settings-panel.js:60-95`. Both functions are exported from `settings-panel.js`; `data-management-ui.js` should import them instead of redefining them locally. Exact copy — any future change to either needs to be made in two places.
+- `[ ]` **Medium** — `docs/js/ui/settings/settings-panel.js:171-281` — `showBackupSavesDialog()` is 111 lines of inline modal DOM construction (overlay, dialog, HTML content, event listeners, restore button wiring) embedded in the settings orchestrator. Same concern as `renderRecentlyPlayedSection()` in game-loader (Batch 2). Move to `docs/js/ui/backup-saves-dialog.js` with a single `showBackupSavesDialog()` export.
+- `[ ]` **Medium** — `docs/js/ui/settings/data-management-ui.js:62-144` vs `149-190` — The welcome-screen path of `clearAllDataBtn` (clear all data + Drive deletion + alert + closeSettings) is ~45 lines that duplicate `deleteAllAppDataBtn`'s handler almost exactly. Extract a shared `async function handleDeleteAllAppData()` and call it from both.
+- `[ ]` **Low** — `docs/js/ui/settings/data-management-ui.js:112,130` — `alert()` used for post-deletion confirmation. Native `alert` is synchronous, blocks the event loop, and looks out-of-place in a PWA. Replace with `confirmDialog(..., { okOnly: true })` which is already imported and used in the same file.
+- `[ ]` **Low** — `docs/js/ui/settings/voice-selection.js:217-219` — `populateVoiceDropdown()` retries indefinitely if `speechSynthesis.getVoices()` returns empty (`setTimeout(populateVoiceDropdown, 100)`). On browsers where voices never load, this leaks a perpetual timer. Add a max retry count (e.g., 50 attempts = 5 seconds).
+- `[ ]` **Low** — `docs/js/ui/settings/gdrive-ui.js:131` — `iftalk_gdrive_folder_id` sometimes stores `'path:' + folderPath` (a path string, not a Drive folder ID). The key name implies an ID. The `'path:'` prefix is handled correctly in `gdrive-api.js:127`, but the naming makes the contract non-obvious to future readers.
+- `[ ]` **Low** — `docs/js/ui/settings/voice-selection.js:276` — `loadBrowserVoiceConfig()` is declared `async` but contains no `await`. The `async` keyword is unnecessary and implies async work to callers. Change to a synchronous function.
+- `[ ]` **Low** — `docs/js/ui/settings/voice-selection.js:206` — `getVoiceDisplayName()` prefixes voices with `★` based on `getIOSPreferredIndex()` on all platforms. On Windows/Android the iOS-preferred voices (Karen, Tessa, etc.) don't exist, so the `★` never appears — but the intent of the marker is platform-specific and should be gated on `isIOS`.
+
+#### Verified safe / not concerns
+- `closeSettings()` import in `data-management-ui.js` and `meta-command-handlers.js` — appropriate; settings-panel owns panel open/close state.
+- `restoreBackup()` try/catch (settings-panel.js:288) wraps the full operation including the `localStorage.setItem` for the restore copy — errors surface to user.
+- `getDriveFolderId()` / `'path:'` prefix: consumed at `gdrive-api.js:127` with an explicit `startsWith('path:')` check — convention is documented and handled correctly.
+- Accordion wiring in `initSettings()` — `querySelectorAll` runs once during init, no listener accumulation.
+- `populateVoiceDropdown` on `speechSynthesis.onvoiceschanged` — correct Web Speech API pattern; `onvoiceschanged` fires asynchronously on first voice availability.
+- `voice-selection.js.backup` — dead backup file in tree (same class as the `.bak` files removed in Batch 4; safe to delete).
+- Boolean persistence inconsistency (`keepAwakeToggle` uses `=== 'true'`, others use `!== 'false'`) — intentional: keep-awake defaults to off while others default to on. Not a bug.
+
+#### Top 5 longest functions in batch
+1. `initSettings()` — `settings-panel.js:340-551` (212 lines) — settings wiring + accordion + all slider/toggle init
+2. `initDataManagementUI()` — `data-management-ui.js:58-191` (134 lines)
+3. `openFolderPicker()` — `gdrive-ui.js:37-156` (120 lines) — inline modal constructor
+4. `showBackupSavesDialog()` — `settings-panel.js:171-281` (111 lines) — inline modal constructor
+5. `populateVoiceDropdown()` — `voice-selection.js:214-270` (57 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Import `isOnWelcomeScreen` and `getGameDisplayName` in `data-management-ui.js`** — Medium value, ~10 min. Delete the two local copies; already exported from `settings-panel.js`.
+2. **Move `showBackupSavesDialog` to `ui/backup-saves-dialog.js`** — Medium value, ~45 min. Self-contained modal; trivially extractable.
+3. **Extract shared `handleDeleteAllAppData()` helper** — Low value, ~20 min. Eliminates 45-line duplication in `data-management-ui.js`.
+4. **Replace `alert()` with `confirmDialog({okOnly: true})`** — Low value, ~10 min. Better PWA UX, already imported.
+5. **Cap `populateVoiceDropdown` retry loop** — Low value, ~5 min. Add `if (attempts > 50) return;`.
 
 ### Batch 6: Map system (`features/map-*`, `auto-mapper.js`)
 _Status: pending_
@@ -358,6 +394,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `meta-command-handlers.js:300-314` | `handleRestoreResponse` uses `window.state.currentGameName` — use imported `state` |
 | Low | `command-router.js:493-510` | `waitForInputAndContinue()` unexported, never called — dead function |
 | Low | `command-router.js:484-487` | `sendCommand()` empty no-op, re-exported, app.js imports but never calls — delete |
+| Medium | `data-management-ui.js:18-53` | `isOnWelcomeScreen()` + `getGameDisplayName()` exact-copy from settings-panel.js — import instead |
+| Medium | `settings-panel.js:171-281` | `showBackupSavesDialog()` 111-line inline modal — move to `ui/backup-saves-dialog.js` |
+| Medium | `data-management-ui.js:62-190` | Delete-all-data logic ~45-line duplicate between two button handlers |
+| Low | `data-management-ui.js:112,130` | `alert()` for post-deletion feedback — use `confirmDialog({okOnly:true})` |
+| Low | `voice-selection.js:217-219` | `populateVoiceDropdown()` retries indefinitely if voices never load |
+| Low | `gdrive-ui.js:131` | `iftalk_gdrive_folder_id` stores `'path:...'` string — key name implies an ID, not a path |
+| Low | `voice-selection.js:276` | `loadBrowserVoiceConfig()` marked async but awaits nothing |
+| Low | `voice-selection.js:206` | `★` iOS-preferred marker shown on all platforms, not just iOS |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).

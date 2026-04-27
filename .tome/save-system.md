@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-27
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -32,6 +32,15 @@ Two independent save mechanisms; users frequently confuse them.
 - `iftalk_autosave_<gameName>` — current autosave
 - `iftalk_quicksave_<gameName>` — current quicksave
 - `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — backup chain; `_exempt` means it skips the count limit
+
+## Planned work: Save/restore deep dive
+
+**Plan (2026-04-27):** Do a full deep dive on the save/restore bug surface after the Tier 2 code review cursory passes (Batches 5-11) are done. The priority drivers:
+- Bootstrap echo leak ("I didn't understand that sentence" after autorestore) — TODO.md open item
+- Any other edge-case save/restore failures the user has observed
+- The MAX_SAVES regression (re-implement the limit, not remove docs)
+
+This was deferred deliberately to avoid context-switching mid-review. Pick it up after the cursory passes are committed.
 
 ## Custom save limit (regression note)
 
