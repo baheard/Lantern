@@ -494,13 +494,13 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block — git history is the reference; delete it |
 | Low | `map-sheet.js:149` | `openNodeSheet` badges manual nodes (`isManual: true`) as `'Auto-mapped'` initially |
 | ~~High~~ DONE | `tts-player.js:55` | MediaSession `play` fixed in v1.5.235 — now calls `speakTextChunked` directly |
-| Medium | `chunking.js:183-223` | ~40-line Glk-class detection block in `insertRealMarkersAtIDs` — extract to `getGlkClass()` helper |
+| ~~Medium~~ DONE | `chunking.js:183-223` | `getGlkClass()` helper extracted in v1.5.236 |
 | ~~Low~~ DONE | `navigation.js:178-193` | `skipToEnd` `stopKeepAlive` added in v1.5.235 |
 | ~~Low~~ DONE | `chunking.js:257` | Intent comment added to empty catch in v1.5.235 |
 | ~~Low~~ DONE | `chunking.js:186-202` | `while/break` rewritten as `if` in v1.5.235 |
-| Low | `tts-player.js:223` | `text` param to `speakTextChunked` is unused; all callers pass `null` — remove or rename `_text` |
-| Low | `highlighting.js:156-168` | `chunkHighlighted` debug event fired on every chunk (hot path) — gate behind debug flag or remove |
-| Low | `highlighting.js:127` | `removeHighlight` uses raw `getElementById('gameOutput')` — use `dom.gameOutput` from core/dom.js |
+| ~~Low~~ DONE | `tts-player.js:223` | `text` param renamed to `_text` in v1.5.236 |
+| ~~Low~~ DONE | `highlighting.js:156-168` | `chunkHighlighted` debug event removed in v1.5.236 |
+| ~~Low~~ DONE | `highlighting.js:127` | `removeHighlight` + `scrollToHighlightedText` now use `dom.gameOutput` (v1.5.236) |
 | ~~Low~~ DONE | `highlighting.js:14-16` | `initScrollDetection()` deleted from highlighting.js and app.js in v1.5.235 |
 
 ### Fixed
@@ -512,3 +512,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.233 (commit deb2998)** — Batch 6 review doc (4 Medium, 6 Low findings). Import path fixes: `resetRepairFlag`/`performRepair` now imported from `voxglk-watchdog.js`.
 - **v1.5.234** — 1 Medium security (XSS in `map-sheet.js:344` — `escapeHtml(c.node.name)` in connections list); 1 Medium regression (`MAX_SAVES = 5` restored in both save handlers in `meta-command-handlers.js`). Batch 7 review doc (1 High, 1 Medium, 8 Low findings).
 - **v1.5.235** — 1 High fix (MediaSession `play` action: replaced broken `nav.resumeNarration()` dynamic import with direct `speakTextChunked` call — lock screen play now works); 4 Low: `stopKeepAlive()` added to `skipToEnd`, intent comment on empty catch in `insertRealMarkersAtIDs`, `while/break` → `if` in sibling Glk-class check, deleted `initScrollDetection` no-op from `highlighting.js` + `app.js`.
+- **v1.5.236** — 1 Medium: extracted `getGlkClass(textNode, container)` helper from `insertRealMarkersAtIDs` — removes 26-line inline detection block; 3 Low: renamed `text` → `_text` in `speakTextChunked`, removed `chunkHighlighted` debug event from hot narration path, `removeHighlight`/`scrollToHighlightedText` now use `dom.gameOutput` instead of raw `getElementById`.

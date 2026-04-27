@@ -6,6 +6,7 @@
  */
 
 import { state } from '../core/state.js';
+import { dom } from '../core/dom.js';
 
 /**
  * Highlight text using marker elements
@@ -116,11 +117,10 @@ export function removeHighlight() {
     CSS.highlights.delete('speaking');
 
     // Force synchronous repaint on iOS WebKit
-    const gameOutput = document.getElementById('gameOutput');
-    if (gameOutput) {
-      gameOutput.classList.add('highlight-refresh');
-      void gameOutput.offsetHeight;
-      gameOutput.classList.remove('highlight-refresh');
+    if (dom.gameOutput) {
+      dom.gameOutput.classList.add('highlight-refresh');
+      void dom.gameOutput.offsetHeight;
+      dom.gameOutput.classList.remove('highlight-refresh');
     }
   }
 }
@@ -145,18 +145,6 @@ export function updateTextHighlight(chunkIndex) {
     scrollToHighlightedText(chunkIndex);
   }
 
-  // Dispatch custom event for debugging/testing
-  const chunk = state.narrationChunks[chunkIndex];
-  const chunkText = typeof chunk === 'string' ? chunk : chunk?.text || '';
-  const event = new CustomEvent('chunkHighlighted', {
-    detail: {
-      chunkIndex,
-      chunkText,
-      totalChunks: state.narrationChunks.length,
-      success
-    }
-  });
-  window.dispatchEvent(event);
 }
 
 /**
@@ -165,7 +153,7 @@ export function updateTextHighlight(chunkIndex) {
  * @param {number} chunkIndex - Chunk index to scroll to
  */
 function scrollToHighlightedText(chunkIndex) {
-  const gameOutput = document.getElementById('gameOutput');
+  const gameOutput = dom.gameOutput;
   if (!gameOutput) return;
 
   // Find the marker for this chunk

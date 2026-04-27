@@ -126,6 +126,33 @@ export function createNarrationChunks(html) {
 }
 
 /**
+ * Detect the Glk style class of a text node by checking its immediate previous
+ * sibling and then walking ancestors up to container.
+ * @param {Text} textNode
+ * @param {HTMLElement} container - Stop ancestor walk at this element
+ * @returns {'header'|'subheader'|'note'|null}
+ */
+function getGlkClass(textNode, container) {
+  const prevSibling = textNode.previousSibling;
+  if (prevSibling && prevSibling.nodeType === Node.ELEMENT_NODE && prevSibling.classList) {
+    if (prevSibling.classList.contains('glk-header')) return 'header';
+    if (prevSibling.classList.contains('glk-subheader')) return 'subheader';
+    if (prevSibling.classList.contains('glk-note')) return 'note';
+  }
+  let ancestor = textNode.parentNode;
+  while (ancestor) {
+    if (ancestor.classList) {
+      if (ancestor.classList.contains('glk-header')) return 'header';
+      if (ancestor.classList.contains('glk-subheader')) return 'subheader';
+      if (ancestor.classList.contains('glk-note')) return 'note';
+    }
+    if (ancestor === container) break;
+    ancestor = ancestor.parentNode;
+  }
+  return null;
+}
+
+/**
  * Insert real <span> markers at positions marked by temp markers
  * @param {HTMLElement} container - Container element
  * @param {number[]} markerIDs - Array of marker IDs that survived chunking
@@ -179,41 +206,8 @@ export function insertRealMarkersAtIDs(container, markerIDs, chunkOffset = 0, sk
         const beforeNode = document.createTextNode(beforeText);
         const afterNode = document.createTextNode(afterText);
 
-        // Detect parent Glk style class for variable speech rate
-        let glkClass = null;
-
-        // Check immediate previous sibling (marker might be right after a styled span)
-        const prevSibling = textNode.previousSibling;
-        if (prevSibling && prevSibling.nodeType === Node.ELEMENT_NODE && prevSibling.classList) {
-          if (prevSibling.classList.contains('glk-header')) {
-            glkClass = 'header';
-          } else if (prevSibling.classList.contains('glk-subheader')) {
-            glkClass = 'subheader';
-          } else if (prevSibling.classList.contains('glk-note')) {
-            glkClass = 'note';
-          }
-        }
-
-        // If not found in sibling, check ancestors
-        if (!glkClass) {
-          let ancestor = textNode.parentNode;
-          while (ancestor) {
-            if (ancestor.classList) {
-              if (ancestor.classList.contains('glk-header')) {
-                glkClass = 'header';
-                break;
-              } else if (ancestor.classList.contains('glk-subheader')) {
-                glkClass = 'subheader';
-                break;
-              } else if (ancestor.classList.contains('glk-note')) {
-                glkClass = 'note';
-                break;
-              }
-            }
-            if (ancestor === container) break;
-            ancestor = ancestor.parentNode;
-          }
-        }
+        // Detect Glk style class for variable speech rate
+        const glkClass = getGlkClass(textNode, container);
 
         // Create real marker spans
         const endMarker = document.createElement('span');

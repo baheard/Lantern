@@ -220,7 +220,7 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
  * @param {string|null} text - Unused (chunks come from state.narrationChunks)
  * @param {number} startFromIndex - Chunk index to start from
  */
-export async function speakTextChunked(text, startFromIndex = 0) {
+export async function speakTextChunked(_text, startFromIndex = 0) {
   // Import ensureChunksReady dynamically to avoid circular dependency
   const { ensureChunksReady } = await import('../ui/game-output.js');
 
