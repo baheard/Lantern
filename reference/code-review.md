@@ -422,7 +422,48 @@ _Status: complete (2026-04-27)_
 5. **Gate `chunkHighlighted` event / use `dom.gameOutput` / delete `initScrollDetection`** — Low value, ~15 min combined.
 
 ### Batch 8: Voice (`voice/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Five focused modules with clear separation — `command-handlers.js` (bound voice actions), `echo-detection.js` (TTS echo suppression), `recognition.js` (Web Speech API lifecycle), `voice-commands.js` (transcript normalization and routing), `voice-meter.js` (audio visualization). The biggest structural concern is `recognition.onresult` at ~408 lines: the process-and-dispatch pattern (processVoiceKeywords → showConfirmedTranscript → sendCommandDirect) appears three times across parallel execution paths that could share a helper. Two definition-duplication problems: `navigationCommands` + `skipNPattern`/`backNPattern` are defined byte-for-byte identically in both `recognition.js` and `voice-commands.js`; and the `gronk`→`grunk` correction appears in both a regex pass and a PRONUNCIATION_DICT entry. Low-severity housekeeping: missing double-call guard in voice-meter, three intent-comment gaps on silent catches, `dom.userInput` bypassed in mute/unmute handlers, a `setTimeout(fn, 0)` dispatch inconsistency, and four separate dynamic imports of the same module.
+
+#### Findings
+
+- `[ ]` **Medium** — `recognition.js:395-431, 462-495, 764-790` — The process-and-dispatch pattern appears copy-pasted across three execution paths in `onresult`/`onend`: `processVoiceKeywords()` → `showConfirmedTranscript()` → `playCommandSent()`/`playAppCommand()` → `sendCommandDirect()`. The logic in each block is ~15 lines and structurally identical. Extract a private `async function dispatchRecognized(text, confidence)` and call it from all three paths; shrinks `onresult` by ~45 lines.
+- `[ ]` **Medium** — `recognition.js:581-584` + `voice-commands.js:170-175` — `navigationCommands` (array) and `skipNPattern`/`backNPattern` (regexes) are defined byte-for-byte identically in both files. They serve the same semantic purpose: identifying commands that bypass narration blocking or echo detection. Any future extension (e.g., adding `'freeze'`) must be made in two places. Export from `voice-commands.js` and import in `recognition.js`.
+- `[ ]` **Low** — `recognition.js:217` — Empty `catch (err) {}` in `displayInterimAsLowConfidence` (around the `addGameText` dynamic import) lacks an intent comment. Same pattern fixed in Batch 7 (`chunking.js:257`). Add a brief note that display failures are non-fatal and recognition continues.
+- `[ ]` **Low** — `recognition.js:699-712` — Normal-confidence final command dispatch wraps `sendCommandDirect` in `setTimeout(fn, 0)`, while the INSTANT_NO_WAIT path (line 416) and the delayed-instant path (line 480) call `sendCommandDirect` directly. A 0ms setTimeout does not produce a visible repaint, yet makes this path async in a way inconsistent with the other two. Document the intent or switch to direct dispatch.
+- `[ ]` **Low** — `command-handlers.js:170,225` — Both `unmute` and `mute` handlers call `document.getElementById('messageInput')` directly. The element is pre-cached in `core/dom.js:63` as `dom.userInput`. Consistent with the pattern fixed in Batch 7 (`highlighting.js:127`).
+- `[ ]` **Low** — `command-handlers.js:162,186` — `unmute` handler queries `dom.muteBtn?.querySelector('.material-icons')` twice: stored as `icon` at the start of the function (line 162) and re-queried as `icon2` in the recognition-failure revert path (line 186). Since `icon` is still in scope at line 186, the re-query is redundant. Replace `icon2` with `icon`.
+- `[ ]` **Low** — `voice-commands.js:33,55` — `gronk`→`grunk` correction is applied by both a regex at line 55 (applies to all transcripts) and `PRONUNCIATION_DICT['gronk']` (applies only to single-word transcripts). Because the regex runs first, the PRONUNCIATION_DICT entry for `gronk` is never reached — it's dead code. Remove it.
+- `[ ]` **Low** — `voice-commands.js:191,194,214,218` — `voxglk.js` is dynamically imported four times inside `processVoiceKeywords`: for `getInputType` at lines 191 and 214, and for `sendInput` at lines 196 and 218. Runtime module caching makes this functionally equivalent to one import, but the four separate destructuring lines obscure the dependency. Consolidate to a single `const { getInputType, sendInput } = await import('../game/voxglk.js')` near the char-mode block.
+- `[ ]` **Low** — `voice-meter.js:15` — `startVoiceMeter()` has no guard against double-calls. If invoked while a session is already running (e.g., rapid unmute taps), it overwrites `state.microphoneStream`, `state.audioContext`, etc., orphaning the previous stream's tracks. Add `if (state.voiceMeterInterval) return;` at the top of the function.
+- `[ ]` **Low** — `voice-meter.js:63` — Silent `catch (error) {}` on `getUserMedia` failure lacks an intent comment. The most common failure (`NotAllowedError`) is already surfaced to the user by `startRecognitionSafely()` upstream, so this catch is correctly silent — but that reasoning isn't visible here. Add an intent comment.
+- `[ ]` **Low** — `voice-meter.js:78-84` — `stopVoiceMeter()` clears `state.soundPauseTimeout`, resets `state.soundDetected`, and resets `state.pausedForSound`. The interval callback no longer sets any of these (comment at line 60: "no longer pauses narration"). These three cleanup lines are vestiges of when the meter triggered narration pauses. Remove them; `pausedForSound` is always `false` since nothing sets it `true` anymore.
+
+#### Verified safe
+- `echo-detection.js` — pure string comparison; no DOM access, no timers; `state.recentlySpokenChunks` correctly bounded at 30 with TTL filter in `isEchoOfSpokenText`.
+- `isEchoOfSpokenText` mutates `state.recentlySpokenChunks` inline (TTL cleanup) — side-effectful in a query function but always correct behavior.
+- `voice-meter.js` resource cleanup — `stopVoiceMeter()` properly releases all Web Audio API resources: stream tracks stopped, microphone node disconnected, analyser disconnected, AudioContext closed if not already closed.
+- `state.hasProcessedResult` guard in `onresult` and `onend` — correctly prevents duplicate command dispatch across the three processing paths.
+- `recognition.onerror` silently ignoring `network`/`aborted`/`no-speech` — all three are expected Web Speech API lifecycle events; correct behavior.
+- PRONUNCIATION_DICT single-word-only restriction (`words.length === 1`) — intentional and correct; prevents phrase-level false-positive corrections.
+- `onend` push-to-talk revert path (`wasPushToTalkRelease`) — correctly waits until after result processing to set `state.isMuted = true`, ensuring pending commands from PTT button release are dispatched first.
+- `voice-commands.js` char-mode special keys (arrow keys, space, backspace) — correctly bypass voice command routing and send raw key codes via `sendInput`.
+- `recordSpokenChunk` minimum length guard (`text.length < 3`) — prevents spurious echo matching on short TTS artifacts.
+
+#### Top 5 longest functions in batch
+1. `recognition.onresult` handler — `recognition.js:313-721` (~408 lines) — the elephant
+2. `processVoiceKeywords()` — `voice-commands.js:44-259` (~216 lines)
+3. `recognition.onend` handler — `recognition.js:746-842` (~96 lines)
+4. `showConfirmedTranscript()` — `recognition.js:128-190` (~62 lines)
+5. `unmute` handler — `command-handlers.js:157-206` (~50 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Export `navigationCommands` + `skipNPattern`/`backNPattern` from `voice-commands.js`** — Medium value, ~20 min. Eliminates the highest-risk duplication (navigation command list that both files must stay in sync on).
+2. **Extract `dispatchRecognized()` helper** — Medium value, ~30 min. Removes 3× copy-pasted process-and-dispatch blocks; shrinks `onresult` by ~45 lines.
+3. **Add double-call guard to `startVoiceMeter()`** — Low value, ~5 min. Prevents orphaned media streams on rapid unmute.
+4. **Consolidate voxglk.js imports in `processVoiceKeywords`** — Low value, ~10 min. Clarifies dependency with a single destructuring import.
+5. **Dead code cleanup** (PRONUNCIATION_DICT `gronk` entry, voiceMeter state resets, `icon2` re-query, `dom.userInput` bypass) — Low value, ~20 min combined.
 
 ### Batch 9: Input (`input/`)
 _Status: pending_
@@ -502,6 +543,17 @@ _Pending until Tiers 1 & 2 complete._
 | ~~Low~~ DONE | `highlighting.js:156-168` | `chunkHighlighted` debug event removed in v1.5.236 |
 | ~~Low~~ DONE | `highlighting.js:127` | `removeHighlight` + `scrollToHighlightedText` now use `dom.gameOutput` (v1.5.236) |
 | ~~Low~~ DONE | `highlighting.js:14-16` | `initScrollDetection()` deleted from highlighting.js and app.js in v1.5.235 |
+| Medium | `recognition.js:395-431,462-495,764-790` | Process-and-dispatch pattern repeated 3× in onresult/onend — extract `dispatchRecognized()` |
+| Medium | `recognition.js:581-584`, `voice-commands.js:170-175` | `navigationCommands` + skipN/backN patterns defined identically in both files — export from voice-commands.js |
+| Low | `recognition.js:217` | Empty catch in `displayInterimAsLowConfidence` lacks intent comment |
+| Low | `recognition.js:699-712` | `setTimeout(fn,0)` final dispatch inconsistent with direct-call paths — document or remove |
+| Low | `command-handlers.js:170,225` | `document.getElementById('messageInput')` direct query — use `dom.userInput` |
+| Low | `command-handlers.js:162,186` | `icon2` re-queries `dom.muteBtn` icon in unmute error path — reuse `icon` already in scope |
+| Low | `voice-commands.js:33,55` | `gronk→grunk` in both regex and PRONUNCIATION_DICT — dict entry is dead; remove it |
+| Low | `voice-commands.js:191,194,214,218` | voxglk.js imported 4× in `processVoiceKeywords` — consolidate to one import |
+| Low | `voice-meter.js:15` | `startVoiceMeter()` lacks double-call guard — rapid calls orphan MediaStream tracks |
+| Low | `voice-meter.js:63` | Silent catch on getUserMedia failure lacks intent comment |
+| Low | `voice-meter.js:78-84` | `stopVoiceMeter` resets soundPauseTimeout/soundDetected/pausedForSound — vestigial; nothing sets them anymore |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -513,3 +565,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.234** — 1 Medium security (XSS in `map-sheet.js:344` — `escapeHtml(c.node.name)` in connections list); 1 Medium regression (`MAX_SAVES = 5` restored in both save handlers in `meta-command-handlers.js`). Batch 7 review doc (1 High, 1 Medium, 8 Low findings).
 - **v1.5.235** — 1 High fix (MediaSession `play` action: replaced broken `nav.resumeNarration()` dynamic import with direct `speakTextChunked` call — lock screen play now works); 4 Low: `stopKeepAlive()` added to `skipToEnd`, intent comment on empty catch in `insertRealMarkersAtIDs`, `while/break` → `if` in sibling Glk-class check, deleted `initScrollDetection` no-op from `highlighting.js` + `app.js`.
 - **v1.5.236** — 1 Medium: extracted `getGlkClass(textNode, container)` helper from `insertRealMarkersAtIDs` — removes 26-line inline detection block; 3 Low: renamed `text` → `_text` in `speakTextChunked`, removed `chunkHighlighted` debug event from hot narration path, `removeHighlight`/`scrollToHighlightedText` now use `dom.gameOutput` instead of raw `getElementById`.
+- **v1.5.237** — Batch 8 review doc: `voice/` (2 Medium, 9 Low findings). No code changes this pass.
