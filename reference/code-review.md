@@ -587,8 +587,29 @@ Note: `storage-api.js`, `remote-console.js`, and `offline-debug.js` were already
 4. **Add `isKeepAwakeEnabled` to static import in `lock-screen.js`; remove 2 dynamic imports** — Low value, ~5 min.
 5. **Audit and remove lock-screen.js no-op shims + their callers** — Low value, ~15 min. Same class as prior removals.
 
-### Batch 11: CSS pass
-_Status: pending_
+### Batch 12: CSS pass (`styles/`)
+_Status: complete (2026-04-27)_
+
+**Headline:** Thirteen CSS files (7051 lines) with a clear modular structure: `variables.css` → `base.css` → components → `mobile.css`. No dead `@keyframes` accumulation, no TODO/FIXME comments, no user-supplied data injected into styles. The main structural concern is z-index architecture: the map-canvas file (`map-canvas.css:8-21`) defines both map-specific AND global z-index variables (`--z-controls: 980`) that are consumed by other files; these should be in `variables.css`. The non-map components (`lock-screen.css`, `base.css`, `modals.css`, `sync-preview.css`) use ~20 hardcoded z-index magic numbers instead of named variables, while the map system has a clean named-variable system. Low-severity housekeeping: one commented-out alternative color in `variables.css`; `base.css:62` uses `!important` on the body rule with a comment but the intent could be clearer.
+
+#### Findings
+
+- `[ ]` **Low** — `docs/styles/map-canvas.css:8-21` — The `--z-*` CSS custom properties block is defined inside `map-canvas.css`, but `--z-controls: 980` is consumed by `controls.css:14`. This creates a cross-component dependency: `controls.css` implicitly requires `map-canvas.css` to be loaded first or `--z-controls` resolves to the CSS initial value. Move all `--z-*` variables to `variables.css` where they establish the global stacking-context contract for the whole app.
+- `[ ]` **Low** — `lock-screen.css:13,48,103,129,135,143,162,188,208`, `base.css:78,155,472`, `modals.css:14,142,251`, `sync-preview.css:16`, `welcome.css:299,427`, `settings.css:34,61` — ~20 hardcoded z-index integers across non-map files (5000, 5001, 5100, 5200, 10000, 10001, 10002, 9999, 999, 1000) while the map system uses named `--z-*` variables. Extend the named-variable system in `variables.css` to cover all layers: `--z-settings: 1000`, `--z-modal: 10000`, `--z-lock-screen: 5000`, `--z-lock-overlay: 5100`, `--z-loading: 9999`, `--z-above-modal: 10001`, etc.
+- `[ ]` **Low** — `docs/styles/variables.css:10` — Commented-out alternative `--accent-primary: #aec8ff;` value. Stale dead comment; delete it.
+
+#### Verified safe / not concerns
+- `mobile.css` (28 `!important`) and `game-output.css` (16 `!important`) — all instances are in `@media` or `body.force-mobile` responsive override selectors. Defensible; this is the correct use of `!important` for overriding specificity-heavy base rules in a targeted context.
+- `base.css:62` — `padding-bottom: 0 !important` on `body` with comment "Override browser safe area on body" — intentional; safe-area insets are applied per-section instead.
+- 20 `@keyframes` definitions across 7 files — no duplicates found; all named distinctly by component.
+- No TODO, FIXME, HACK, or TEMP comments in any CSS file.
+- `--z-controls` value (980) correctly places the control panel above the map overlay (950) but below modals (1000+) — the stacking order is correct, just not fully named.
+- No user-supplied data reaches CSS properties (no `style` attribute injection, no CSS `attr()` with user data); all dynamic styling via class toggling or `setProperty` with controlled values.
+
+#### Recommended refactor order (value/effort)
+1. **Move `--z-*` variables to `variables.css`** — Low value, ~15 min. Eliminates the hidden cross-file dependency.
+2. **Replace hardcoded z-index integers with named variables** — Low value, ~30 min. Makes the stacking-context contract explicit and prevents future layering bugs.
+3. **Delete commented-out `--accent-primary`** — ~30 seconds.
 
 ---
 
@@ -694,6 +715,9 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `lock-screen.js:83-88,154-158` | `isKeepAwakeEnabled` accessed via dynamic import despite `wake-lock.js` being statically imported |
 | Low | `lock-screen.js:459-489` | 8 no-op compatibility shims still exported and called from callers — remove |
 | Low | `pwa-updater.js:189,196,201,206,210,241` | `alert()` calls in update check/iOS install flow — use `confirmDialog` |
+| Low | `map-canvas.css:8-21` | `--z-controls` and other `--z-*` vars defined in component file; should live in `variables.css` |
+| Low | `lock-screen.css`, `base.css`, `modals.css`, `sync-preview.css`, `settings.css`, `welcome.css` | ~20 hardcoded z-index integers — extend named `--z-*` variable system to cover all layers |
+| Low | `variables.css:10` | Commented-out `--accent-primary: #aec8ff;` — stale dead comment; delete |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -709,3 +733,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.238** — Batch 9 review doc: `input/` (1 Medium, 7 Low findings). No code changes this pass.
 - **v1.5.239** — Batch 10 review doc: `ui/` (1 High, 2 Medium, 6 Low findings). 1 High fix: `escapeHtml` on `currentItem.name`/`currentItem.statusText` in `sync-preview-modal.updateProgress` (`insertAdjacentHTML` XSS — same class as Batch 1 fix).
 - **v1.5.240** — Batch 11 review doc: `utils/` (2 Medium, 7 Low findings). No code changes this pass.
+- **v1.5.241** — Batch 12 review doc: CSS pass (0 Medium, 3 Low findings). No code changes this pass. All Tier 2 module-by-module review complete.
