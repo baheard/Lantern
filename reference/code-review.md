@@ -504,7 +504,47 @@ _Status: complete (2026-04-27)_
 4. **Decide on disabled scroll calls** — Low value, ~5 min. Delete or restore the two commented `scrollToBottom()` blocks.
 5. **Fix `voice-ui.js` dual DOM cache + remove `initVoiceUI`** — Low value, ~15 min. Import `dom` and use `dom.voiceListeningIndicator`/`dom.voiceTranscript`; remove the no-longer-needed init function.
 
-### Batch 10: UI components & utils (`ui/`, `utils/`)
+### Batch 10: UI components (`ui/`, excluding `settings/`)
+_Status: complete (2026-04-27)_
+
+**Headline:** Seven focused modules covering game output, scroll button, sync modal, mobile menu, history, nav buttons, and confirm dialog. One High XSS gap: `sync-preview-modal.js` fixed `item.name` injection in the preview list (Batch 1) but missed the same pattern in `updateProgress`'s `insertAdjacentHTML` call. One Medium security: `window.lastSentCommand` used unescaped in `new RegExp()` — commands with regex metacharacters throw `SyntaxError`. One Medium duplication: `scroll-down-button.js` repeats a 4-line "release pressed state" sequence 6× and a 6-line timer teardown 4×. Low housekeeping: `alert()` for history popups, dead empty blocks, a dead function, and re-queried DOM refs in `mobile-menu.js`.
+
+#### Findings
+
+- `[x]` **High** — `docs/js/ui/sync-preview-modal.js:407-413` — `updateProgress()` builds `itemHtml` via template literal injecting `${currentItem.name}` (save filename from Drive API) into `insertAdjacentHTML('beforeend', itemHtml)` without `escapeHtml`. Same class as the `item.name` XSS fixed in Batch 1 (`sync-preview-modal.js:116`); that fix covered the preview list but missed the progress log. `currentItem.statusText` also includes `error.message` from a caught exception, which could contain attacker-controlled text if the Drive API returns a crafted error string. Wrap both with `escapeHtml`. **Fixed in v1.5.239.**
+- `[ ]` **Medium** — `docs/js/ui/game-output.js:242-243` — `window.lastSentCommand` is used directly in `new RegExp(...)` without escaping regex metacharacters. A user command containing unmatched `[`, `(`, or a leading `*` (e.g., `get [all]`, `(enter)`, `*score`) throws `SyntaxError`, silently failing to strip the echo. Escape before use: `lastCmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`.
+- `[ ]` **Medium** — `docs/js/ui/scroll-down-button.js:initScrollDownButton` — The "release pressed state" 4-line sequence (`button.style.transition = 'none'; button.classList.remove('pressed'); void button.offsetHeight; button.style.transition = ''`) appears 6× across `touchmove`, `touchend`, `touchcancel`, `mousemove`, `mouseup`, `mouseleave`. The timer teardown (`clearTimeout(scrollTimer); clearTimeout(holdTimer); scrollTimer = null; holdTimer = null; isDragging = false; touchTracker.reset()`) appears 4× in `touchend`, `touchcancel`, `mouseup`, `mouseleave`. Extract two private helpers — `releasePressedState(button)` and `cancelInteractions()` — to eliminate ~50 lines of duplication.
+- `[ ]` **Low** — `docs/js/ui/history.js:28,37,43,63` — `showVoiceHistory()` and `showCommandHistory()` display output via `alert()`. Same pattern flagged in Batch 5 for `data-management-ui.js` — synchronous, blocks event loop, mismatched with PWA UX. Replace with a non-blocking display (e.g., `confirmDialog` with `okOnly: true`).
+- `[ ]` **Low** — `docs/js/ui/nav-buttons.js:51-53` — Empty `if (state.narrationChunks.length > 0) {}` block with `// Log position for debugging` comment. Dead code; remove it.
+- `[ ]` **Low** — `docs/js/ui/mobile-menu.js:135-158` — `toggleMenu()` and `closeMenu()` both call `document.getElementById` for `mobileMenu`, `mobileMenuBtn`, and `charMenuBtn` on every invocation. These are the same elements queried by `initMobileMenu()`. Promote to module-level variables (`let menuEl`, `let menuBtnEl`, `let charMenuBtnEl`) populated during init.
+- `[ ]` **Low** — `docs/js/ui/sync-preview-modal.js:237-261` — `formatTimestamp()` is defined but never called; only `formatTimestampCompact()` is used throughout the file. Dead function; delete it.
+- `[ ]` **Low** — `docs/js/ui/game-output.js:125-126` — Empty `else if (hasStatus && statusEl && !shouldIncludeStatus) {}` block in `ensureChunksReady`. Dead code; remove it.
+- `[ ]` **Low** — `docs/js/ui/game-output.js:315` — Empty `.catch(err => {})` on the auto-narration of system messages lacks an intent comment. Same pattern fixed in Batches 7 and 8. Add a brief note that narration failure is non-fatal.
+
+#### Verified safe
+- `addGameText` command path — `displayText = escapeHtml(text)` before `div.innerHTML` (line 269). Safe.
+- `displayBlockedCommand` — `escapeHtml(command)` before HTML injection (line 412). Safe.
+- `addGameText` non-command path — `div.innerHTML = text` where `text` is ZVM renderer output (structured HTML from game engine, not user-controlled data). Threat model: crafted Z-code games. Realistic risk is low given Z-code binary format constraints; addressed for cross-user data paths (save files) in Pass 1.
+- `renderSyncItems` / `getStatusDetails` — `escapeHtml` applied to all user-origin data (`item.id`, `item.name`, `statusClass`, `statusLabel`) since Batch 1. The `syncDirection === 'export'` string comparisons produce only literal strings, not user data.
+- `confirmDialog` fallback to `window.confirm` (line 67) — acceptable defensive fallback when modal DOM is missing.
+- `scroll-down-button.js` timer management — `holdTimer` and `scrollTimer` are always both cleared together; no scenario where one leaks while the other is cancelled.
+- `mobile-menu.js` quick-access toggles — `getQuickAccessPrefs` wraps `JSON.parse` in try/catch (line 269-271); `saveQuickAccessPrefs` wraps `localStorage.setItem` in try/catch (line 285-287). Both correct.
+
+#### Top 5 longest functions in batch
+1. `ensureChunksReady()` — `game-output.js:44-221` (~177 lines)
+2. `addGameText()` — `game-output.js:232-361` (~130 lines)
+3. `initScrollDownButton()` — `scroll-down-button.js:27-250` (~224 lines; heavily repeated)
+4. `renderSyncItems()` — `sync-preview-modal.js:91-137` (~47 lines)
+5. `updateInputVisibility()` / `initMobileMenu()` — ~130 / ~107 lines
+
+#### Recommended refactor order (value/effort)
+1. **Fix `updateProgress` XSS** — `escapeHtml(currentItem.name)` and `escapeHtml(currentItem.statusText)` — High value, ~5 min.
+2. **Escape `lastSentCommand` before `new RegExp`** — Medium value, ~5 min. Prevents SyntaxError on commands with brackets/parens.
+3. **Extract `releasePressedState`/`cancelInteractions` in scroll-down-button** — Medium value, ~20 min. Removes ~50 lines of repetition.
+4. **Promote mobile-menu element refs to module level** — Low value, ~10 min.
+5. **Delete dead code** (`formatTimestamp`, empty blocks, debug empty if) — Low value, ~5 min combined.
+
+### Batch 11: Utils (`utils/`)
 _Status: pending_
 
 ### Batch 11: CSS pass
@@ -597,6 +637,15 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `keyboard-core.js:900-901` | `if (cmd \|\| cmd === '')` always true for `.trim()` result — remove dead condition |
 | Low | `keyboard-core.js:466` | `currentHighlightedWord` written but never read — dead variable |
 | Low | `voice-ui.js:8-9` | `voiceListeningIndicatorEl`/`voiceTranscriptEl` duplicate `dom.voiceListeningIndicator`/`dom.voiceTranscript` — use `dom.*` refs; `initVoiceUI` becomes removable |
+| ~~High~~ DONE | `sync-preview-modal.js:413` | `updateProgress` XSS — `currentItem.name`/`statusText` unescaped in `insertAdjacentHTML` — fixed v1.5.239 |
+| Medium | `game-output.js:242-243` | `window.lastSentCommand` used unescaped in `new RegExp()` — metacharacters throw SyntaxError |
+| Medium | `scroll-down-button.js:initScrollDownButton` | 4-line pressed-state teardown 6× + 6-line timer teardown 4× — extract helpers |
+| Low | `history.js:28,37,43,63` | `alert()` for history display — same pattern as Batch 5 |
+| Low | `nav-buttons.js:51-53` | Empty `if (narrationChunks.length > 0) {}` debug block — dead code |
+| Low | `mobile-menu.js:135-158` | `toggleMenu`/`closeMenu` re-query 3 DOM elements on every call — promote to module-level |
+| Low | `sync-preview-modal.js:237-261` | `formatTimestamp()` defined but never called — dead function |
+| Low | `game-output.js:125-126` | Empty `else if (!shouldIncludeStatus) {}` block — dead code |
+| Low | `game-output.js:315` | Empty catch on auto-narration of system messages — add intent comment |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -610,3 +659,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.236** — 1 Medium: extracted `getGlkClass(textNode, container)` helper from `insertRealMarkersAtIDs` — removes 26-line inline detection block; 3 Low: renamed `text` → `_text` in `speakTextChunked`, removed `chunkHighlighted` debug event from hot narration path, `removeHighlight`/`scrollToHighlightedText` now use `dom.gameOutput` instead of raw `getElementById`.
 - **v1.5.237** — Batch 8 review doc: `voice/` (2 Medium, 9 Low findings). No code changes this pass.
 - **v1.5.238** — Batch 9 review doc: `input/` (1 Medium, 7 Low findings). No code changes this pass.
+- **v1.5.239** — Batch 10 review doc: `ui/` (1 High, 2 Medium, 6 Low findings). 1 High fix: `escapeHtml` on `currentItem.name`/`currentItem.statusText` in `sync-preview-modal.updateProgress` (`insertAdjacentHTML` XSS — same class as Batch 1 fix).

@@ -407,7 +407,7 @@ function updateProgress(completed, total, currentItem) {
     const itemHtml = `
       <div class="sync-progress-item ${currentItem.status}">
         <span class="material-icons">${getProgressIcon(currentItem.status)}</span>
-        <span>${currentItem.name} - ${currentItem.statusText}</span>
+        <span>${escapeHtml(currentItem.name)} - ${escapeHtml(currentItem.statusText)}</span>
       </div>
     `;
     progressItems.insertAdjacentHTML('beforeend', itemHtml);
