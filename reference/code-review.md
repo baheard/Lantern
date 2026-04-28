@@ -466,7 +466,43 @@ _Status: complete (2026-04-27)_
 5. **Dead code cleanup** (PRONUNCIATION_DICT `gronk` entry, voiceMeter state resets, `icon2` re-query, `dom.userInput` bypass) — Low value, ~20 min combined.
 
 ### Batch 9: Input (`input/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Five focused modules — `keyboard-core.js` (input wiring + tap-to-examine), `voice-ui.js` (voice indicator DOM), `system-entry.js` (meta-command prompt), `word-extractor.js` (tap-to-examine word extraction), `index.js` (barrel). `word-extractor.js` and `system-entry.js` are clean with no findings. The main concern is `initKeyboardInput()` at 610 lines: three large closures (`populateInputWithWord`, `handleGameClick`, `handleGameMouseMove`) and their captured state live inside the init function when they could be module-level. Low-severity housekeeping: hot-path event handlers re-read localStorage on every mousemove/click instead of using the body class already maintained by `updateTapExamineCursor`; two disabled scroll calls with "testing" comments; a no-op `updateClearButtonVisibility`; a dead variable; an always-true condition; and `voice-ui.js` locally caching DOM elements already in `core/dom.js`.
+
+#### Findings
+
+- `[ ]` **Medium** — `keyboard-core.js:52-662` — `initKeyboardInput()` is 610 lines because three substantial closures (`populateInputWithWord`, lines 295-372, 77 lines; `handleGameClick`, lines 379-463, 85 lines; `handleGameMouseMove`, lines 511-583, 73 lines) and their shared state (`directions`, `commonVerbs`, `highlightOverlay`, `currentHighlightedWord`) are all scoped inside the init function. None of these closures need to capture init-local state that couldn't be module-level. Extract as named module-level functions; promote `directions` and `commonVerbs` to module-level `const`s. Init function would shrink to ~150 lines of pure wiring.
+- `[ ]` **Low** — `keyboard-core.js:398,532` — `localStorage.getItem('iftalk_tap_to_examine')` is read directly inside `handleGameClick` and `handleGameMouseMove`. The latter fires on every pixel of mouse movement. `updateTapExamineCursor()` (line 599) already maintains `document.body.classList.has('tap-to-examine-enabled')` as a live flag (updated on init and on `storage` events). Replace the direct localStorage reads with `document.body.classList.contains('tap-to-examine-enabled')` to eliminate hot-path storage access.
+- `[ ]` **Low** — `keyboard-core.js:756-757, 767-768` — Two `// DISABLED: Testing if we need this scroll` comment blocks around disabled `scrollToBottom()` calls. Same pattern removed in Batch 1 (`if (false &&)`) and Batch 7. If the scroll is not needed, delete the commented lines; if the behavior is desirable, re-enable with a clear condition.
+- `[ ]` **Low** — `keyboard-core.js:789-792` — `updateClearButtonVisibility()` is a module-private no-op ("Button is always visible now — no action needed. Kept as no-op to avoid breaking existing calls"). It is called from 3 internal sites (lines 112, 120, 898) and has no callers outside the module. Delete the function and its 3 call sites.
+- `[ ]` **Low** — `keyboard-core.js:900-901` — `if (cmd || cmd === '')` is always true: `cmd` is the result of `messageInputEl.value.trim()`, which always returns a string; `'' || '' === ''` evaluates to `false || true` = `true`. The condition is dead. Remove it, or if the intent was to block `null`/`undefined`, note that `.trim()` already guarantees a string.
+- `[ ]` **Low** — `keyboard-core.js:466` — `currentHighlightedWord` is assigned at lines 576 and 582 but never read anywhere. Remove the dead variable.
+- `[ ]` **Low** — `voice-ui.js:8-9` — `voiceListeningIndicatorEl` and `voiceTranscriptEl` are module-local caches of the same elements already cached in `core/dom.js` as `dom.voiceListeningIndicator` (line 82) and `dom.voiceTranscript` (line 81). Dual caches diverge if the DOM is updated. `recognition.js` already uses `dom.voiceTranscript` directly (line 155); `voice-ui.js` uses its own local reference. Import `dom` from `core/dom.js` and use `dom.voiceListeningIndicator`/`dom.voiceTranscript` instead; `initVoiceUI()` then becomes a no-op and can be removed from `index.js`.
+
+#### Verified safe
+- `word-extractor.js` — zero findings; pure utility with no state, no DOM writes, and no injection risk. `extractWordAtPoint` returns `null` on any error. `isWordChar` correctly permits hyphens and apostrophes for compound IF object names.
+- `system-entry.js` — clean; `enterSystemEntryMode` accepts `showMessageInputFn` and `hasPhysicalKeyboardFn` as injected dependencies — correct cycle-break; no imports needed.
+- `sendBtnKeyboardCapture`/`clearBtnKeyboardCapture` mousedown-capture pattern — correct approach for preserving keyboard open/close state before click fires (after blur) on mobile.
+- `hiddenKeyInputEl` (lines 69-78) — created once, positioned off-screen (`left: -9999px`, `opacity: 0`), `aria-hidden: true`, `maxLength: 1`; correct mobile arbitrary-key-capture approach.
+- `visualViewport` baseline tracking — `baselineViewportHeight` updates when keyboard fully closes (line 657), correctly adapting to orientation changes.
+- `hasPhysicalKeyboard()` — `mqCoarse` and `mqHover` `MediaQueryList` objects cached at module scope (lines 46-47); no new instances created on each call.
+- `handleKeyPress` char-mode capture — correctly excludes bare modifier keys (line 679) and events targeting the message input itself (line 683).
+- `showVoiceIndicator`/`hideVoiceIndicator` in `voice-ui.js` — not re-exported from `index.js` barrel, but are directly imported and used by `keyboard-core.js`. Not dead exports.
+
+#### Top 5 longest functions in batch
+1. `initKeyboardInput()` — `keyboard-core.js:52-662` (~610 lines) — the elephant
+2. `handleKeyPress()` — `keyboard-core.js:667-769` (~102 lines)
+3. `updateInputVisibility()` — `keyboard-core.js:797-888` (~91 lines)
+4. `handleGameClick` (closure) — `keyboard-core.js:379-463` (~85 lines)
+5. `populateInputWithWord` (closure) — `keyboard-core.js:295-372` (~77 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Extract `populateInputWithWord`, `handleGameClick`, `handleGameMouseMove` as module-level functions** — Medium value, ~45 min. Move `directions`, `commonVerbs` to module-level consts; `highlightOverlay` and `currentHighlightedWord` to module-level lets. `initKeyboardInput()` becomes pure wiring.
+2. **Replace hot-path localStorage reads with body class check** — Low value, ~10 min. Use `document.body.classList.contains('tap-to-examine-enabled')` in both event handlers.
+3. **Delete `updateClearButtonVisibility` no-op + 3 call sites** — Low value, ~5 min. Obvious cleanup.
+4. **Decide on disabled scroll calls** — Low value, ~5 min. Delete or restore the two commented `scrollToBottom()` blocks.
+5. **Fix `voice-ui.js` dual DOM cache + remove `initVoiceUI`** — Low value, ~15 min. Import `dom` and use `dom.voiceListeningIndicator`/`dom.voiceTranscript`; remove the no-longer-needed init function.
 
 ### Batch 10: UI components & utils (`ui/`, `utils/`)
 _Status: pending_
@@ -554,6 +590,13 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `voice-meter.js:15` | `startVoiceMeter()` lacks double-call guard — rapid calls orphan MediaStream tracks |
 | Low | `voice-meter.js:63` | Silent catch on getUserMedia failure lacks intent comment |
 | Low | `voice-meter.js:78-84` | `stopVoiceMeter` resets soundPauseTimeout/soundDetected/pausedForSound — vestigial; nothing sets them anymore |
+| Medium | `keyboard-core.js:52-662` | `initKeyboardInput()` 610 lines — 3 large closures + shared state should be module-level |
+| Low | `keyboard-core.js:398,532` | `localStorage.getItem('iftalk_tap_to_examine')` in hot-path handlers — use body class `tap-to-examine-enabled` instead |
+| Low | `keyboard-core.js:756-757,767-768` | Two disabled `scrollToBottom()` calls with "testing" comments — decide and delete |
+| Low | `keyboard-core.js:789-792` | `updateClearButtonVisibility()` no-op with 3 internal call sites — delete all |
+| Low | `keyboard-core.js:900-901` | `if (cmd \|\| cmd === '')` always true for `.trim()` result — remove dead condition |
+| Low | `keyboard-core.js:466` | `currentHighlightedWord` written but never read — dead variable |
+| Low | `voice-ui.js:8-9` | `voiceListeningIndicatorEl`/`voiceTranscriptEl` duplicate `dom.voiceListeningIndicator`/`dom.voiceTranscript` — use `dom.*` refs; `initVoiceUI` becomes removable |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -566,3 +609,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.235** — 1 High fix (MediaSession `play` action: replaced broken `nav.resumeNarration()` dynamic import with direct `speakTextChunked` call — lock screen play now works); 4 Low: `stopKeepAlive()` added to `skipToEnd`, intent comment on empty catch in `insertRealMarkersAtIDs`, `while/break` → `if` in sibling Glk-class check, deleted `initScrollDetection` no-op from `highlighting.js` + `app.js`.
 - **v1.5.236** — 1 Medium: extracted `getGlkClass(textNode, container)` helper from `insertRealMarkersAtIDs` — removes 26-line inline detection block; 3 Low: renamed `text` → `_text` in `speakTextChunked`, removed `chunkHighlighted` debug event from hot narration path, `removeHighlight`/`scrollToHighlightedText` now use `dom.gameOutput` instead of raw `getElementById`.
 - **v1.5.237** — Batch 8 review doc: `voice/` (2 Medium, 9 Low findings). No code changes this pass.
+- **v1.5.238** — Batch 9 review doc: `input/` (1 Medium, 7 Low findings). No code changes this pass.
