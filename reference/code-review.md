@@ -545,7 +545,47 @@ _Status: complete (2026-04-27)_
 5. **Delete dead code** (`formatTimestamp`, empty blocks, debug empty if) — Low value, ~5 min combined.
 
 ### Batch 11: Utils (`utils/`)
-_Status: pending_
+_Status: complete (2026-04-27)_
+
+**Headline:** Nineteen utility modules. Most are clean thin helpers (`status.js`, `touch-detection.js`, `scroll.js`, `game-settings.js`, `wake-lock.js`, `gdrive-device.js`, `gdrive/index.js`). Two medium-severity concerns: `processAndSplitText` in `text-processing.js` re-implements `processTextForTTS`'s 15-line normalization body verbatim instead of calling it; and user-entered pronunciation keys are used directly in `new RegExp()` without metacharacter escaping. The gdrive cluster has 6 bare `JSON.parse(localStorage.getItem(...))` calls without try/catch across three files — same class as the Batch 4 finding in `save-list-formatter.js`. Low housekeeping: `lock-screen.js` exports 8 no-op compatibility shims and uses redundant dynamic imports of an already-statically-imported module; `playSystemBeep` uses the `new Promise(async executor)` anti-pattern; folder names are interpolated unescaped into Drive API query strings.
+
+Note: `storage-api.js`, `remote-console.js`, and `offline-debug.js` were already reviewed in Tier 1 Passes 3, 5, and 2 respectively. `gdrive-auth.js` OAuth token concern documented in Pass 1. Modules verified safe there are not re-flagged here.
+
+#### Findings
+
+- `[ ]` **Medium** — `docs/js/utils/text-processing.js:102-115` — `processAndSplitText()` re-implements the full normalization body of `processTextForTTS()` verbatim (4 regex passes + title-case replacement, lines 103-115). The only difference is that `processAndSplitText` continues to split + filter; `processTextForTTS` just returns the normalized string. Replace the duplicated opening of `processAndSplitText` with `const processed = processTextForTTS(text)` and remove the duplicate lines.
+- `[ ]` **Medium** — `docs/js/utils/pronunciation.js:51-54` — `fixPronunciation()` builds `new RegExp(\`\\\\b${word}\\\\b\`, 'gi')` where `word` is a key from the user-editable pronunciation map stored in localStorage. A user-entered word containing regex metacharacters (`[`, `(`, `+`, `*`, `.`, etc.) throws `SyntaxError`, breaking the entire pronunciation pass. Same class as the `game-output.js:242` finding in Batch 10. Escape before use: `word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`.
+- `[ ]` **Low** — `docs/js/utils/gdrive/gdrive-auth.js:45`, `docs/js/utils/gdrive/gdrive-sync.js:82,159,175`, `docs/js/utils/gdrive/gdrive-sync-preview.js:85,249` — Six bare `JSON.parse(localStorage.getItem(...))` calls without try/catch. A corrupt entry throws `SyntaxError`, which in `gdrive-sync`/`gdrive-sync-preview` breaks the entire sync loop. Same class as `save-list-formatter.js:21,55,73` (Batch 4 finding). Use `getJSON` from `storage-api.js` (already imported by callers' dependency chain) for consistency and crash protection.
+- `[ ]` **Low** — `docs/js/utils/audio-feedback.js:256` — `playSystemBeep` uses `new Promise(async (resolve) => {...})` — the explicit-promise-with-async-executor anti-pattern. Errors thrown from the async function are silently dropped as unhandled rejections rather than rejecting the outer promise. Rewrite as a top-level `async function` using `await new Promise(r => setTimeout(r, 80))` after starting the oscillator.
+- `[ ]` **Low** — `docs/js/utils/gdrive/gdrive-api.js:69` — `findOrCreateFolder` interpolates `folderName` directly into the Drive API query string: `name='${folderName}'`. A folder path segment containing `'` (e.g., `O'Brien`) produces a malformed query and a 400 error from the Drive API. Escape before use: `folderName.replace(/'/g, "\\'")`.
+- `[ ]` **Low** — `docs/js/utils/lock-screen.js:83-88, 154-158` — `lockScreen()` and `unlockScreen()` use `import('./wake-lock.js').then(...)` to access `isKeepAwakeEnabled()`, despite `wake-lock.js` being statically imported at line 17 for `enableKeepAwake`/`disableKeepAwake`. Add `isKeepAwakeEnabled` to the static import at line 17; replace the two dynamic imports with direct calls to the static import.
+- `[ ]` **Low** — `docs/js/utils/lock-screen.js:459-489` — Eight no-op functions (`showLockListeningIndicator`, `hideLockListeningIndicator`, `updateLockTranscript`, `clearLockTranscript`, `showLockMutedIndicator`, `hideLockMutedIndicator`, `showLockMicLockedIndicator`, `hideLockMicLockedIndicator`) are exported as compatibility shims with "No-op: indicators removed from new design" comment. Same class as `initScrollDetection` (removed v1.5.235) and `updateClearButtonVisibility` (Batch 9 finding). Find callers and remove call sites + exports.
+- `[ ]` **Low** — `docs/js/utils/pwa-updater.js:189,196,201,206,210,241` — Six `alert()` calls in `initUpdateButton` and `detectStandalone` for update check feedback and iOS install instructions. `confirmDialog` is available in the codebase; `alert()` blocks the event loop and is inconsistent with PWA UX. Replace with non-blocking feedback.
+
+#### Verified safe
+- `status.js`, `touch-detection.js`, `scroll.js`, `game-settings.js`, `wake-lock.js`, `gdrive-device.js` — clean with no findings; correctly scoped, no unsafe patterns.
+- `text-processing.js:escapeHtml` — correct HTML entity escaping including quotes for attribute contexts (documented at lines 7-10).
+- `text-processing.js:sanitizeRestoredHTML` — correctly uses `<template>` (inert context), `TreeWalker`, tag blocklist, event-handler attribute stripping, and URL scheme blocklist. Reviewed in depth and confirmed safe.
+- `gdrive-auth.js:ensureAuthenticated` polling loop — capped at 300 attempts (30 seconds); resolves `false` on timeout. Correct.
+- `gdrive-sync.js` auto-sync queue — `pendingSyncQueue` as a `Set` prevents duplicate queue entries; `syncTimer` is a single global debounce timer — both correct.
+- `gdrive-api.js` multipart upload boundary — `'-------314159265358979323846'` is a valid fixed boundary; `JSON.stringify(data)` serializes the save data safely.
+- `offline-debug.js` module-level side effect (`DOMContentLoaded` listener) — intentional self-installing debug module; only imported where needed; no security concern since it only reads localStorage debug logs.
+- `lock-screen.js` hold-to-unlock — `holdTimer`/`holdUpdateInterval` both cleared in `clearHoldTimer()` called from both `unlockScreen()` and `handleUnlockHoldEnd()`. No leak.
+- `audio-feedback.js` oscillator nodes — each playback function creates a new oscillator, connects it to the shared `audioCtx.destination`, and calls `.stop(time)` with an explicit end time; Web Audio GC handles cleanup of finished nodes. No accumulation.
+
+#### Top 5 longest functions in batch
+1. `scrollToNewContent()` — `scroll.js:46-114` (~68 lines)
+2. `clearAllAppData()` / `listAllGames()` — `game-settings.js:283-321` (~38 lines each)
+3. `handleAuthCallback()` — `gdrive-auth.js:178-215` (~37 lines)
+4. `showUpdateNotification()` — `pwa-updater.js:38-114` (~76 lines)
+5. `lockScreen()` / `unlockScreen()` — `lock-screen.js:74-141, 146-212` (~68 / ~66 lines)
+
+#### Recommended refactor order (value/effort)
+1. **Fix `processAndSplitText` to call `processTextForTTS`** — Medium value, ~10 min. Delete 15 duplicate lines; reduces divergence risk.
+2. **Escape pronunciation keys before `new RegExp`** — Medium value, ~5 min. Prevents SyntaxError on user-entered patterns.
+3. **Replace 6 bare `JSON.parse(localStorage.getItem(...))` with `getJSON`** — Low value, ~15 min. Consistent error handling across gdrive cluster.
+4. **Add `isKeepAwakeEnabled` to static import in `lock-screen.js`; remove 2 dynamic imports** — Low value, ~5 min.
+5. **Audit and remove lock-screen.js no-op shims + their callers** — Low value, ~15 min. Same class as prior removals.
 
 ### Batch 11: CSS pass
 _Status: pending_
@@ -646,6 +686,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `sync-preview-modal.js:237-261` | `formatTimestamp()` defined but never called — dead function |
 | Low | `game-output.js:125-126` | Empty `else if (!shouldIncludeStatus) {}` block — dead code |
 | Low | `game-output.js:315` | Empty catch on auto-narration of system messages — add intent comment |
+| Medium | `text-processing.js:102-115` | `processAndSplitText` reimplements `processTextForTTS` normalization verbatim — call the existing function |
+| Medium | `pronunciation.js:51-54` | User-entered pronunciation keys in `new RegExp()` without escaping — metacharacters throw SyntaxError |
+| Low | `gdrive-auth.js:45`, `gdrive-sync.js:82,159,175`, `gdrive-sync-preview.js:85,249` | 6× bare `JSON.parse(localStorage.getItem(...))` without try/catch — use `getJSON` |
+| Low | `audio-feedback.js:256` | `new Promise(async executor)` anti-pattern in `playSystemBeep` — rewrite as `async function` |
+| Low | `gdrive-api.js:69` | `folderName` interpolated into Drive API query string — unescaped `'` breaks query syntax |
+| Low | `lock-screen.js:83-88,154-158` | `isKeepAwakeEnabled` accessed via dynamic import despite `wake-lock.js` being statically imported |
+| Low | `lock-screen.js:459-489` | 8 no-op compatibility shims still exported and called from callers — remove |
+| Low | `pwa-updater.js:189,196,201,206,210,241` | `alert()` calls in update check/iOS install flow — use `confirmDialog` |
 
 ### Fixed
 - **v1.5.222 (commit 4b73a06)** — 3 High security (XSS via save HTML and save names), 2 Medium quota errors (silent failures on import/backup), 3 Medium dead-code (`.bak` files, orphan temp, dead debug branch).
@@ -660,3 +708,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.237** — Batch 8 review doc: `voice/` (2 Medium, 9 Low findings). No code changes this pass.
 - **v1.5.238** — Batch 9 review doc: `input/` (1 Medium, 7 Low findings). No code changes this pass.
 - **v1.5.239** — Batch 10 review doc: `ui/` (1 High, 2 Medium, 6 Low findings). 1 High fix: `escapeHtml` on `currentItem.name`/`currentItem.statusText` in `sync-preview-modal.updateProgress` (`insertAdjacentHTML` XSS — same class as Batch 1 fix).
+- **v1.5.240** — Batch 11 review doc: `utils/` (2 Medium, 7 Low findings). No code changes this pass.
