@@ -1765,6 +1765,105 @@ export function flushMapSave() {
   }
 }
 
+/**
+ * Export map canvas state in an optimized save format.
+ * Flushes any pending debounced save before reading so the snapshot is current.
+ * Returns null when no map data exists for this game (map was never opened).
+ * @param {string} gameName
+ * @returns {Object|null} Optimized map data ready for embedding in a save file
+ */
+export function exportMapState(gameName) {
+  if (!gameName) return null;
+
+  // Flush pending debounced save so the read reflects the latest move
+  flushMapSave();
+
+  const raw = localStorage.getItem(`iftalk_map_${gameName}`);
+  if (!raw) return null;
+
+  let mapData;
+  try { mapData = JSON.parse(raw); } catch { return null; }
+
+  const nodes = (mapData.nodes || []).map(node => {
+    const opt = { id: node.id, name: node.name, x: node.x, y: node.y };
+    if (node.type && node.type !== 'room') opt.type = node.type;
+    if (node.notes && node.notes !== '') opt.notes = node.notes;
+    if (node.isManual === true) opt.isManual = true;
+    if (node.isEdited === true) opt.isEdited = true;
+    if (node.isSmall === true) opt.isSmall = true;
+    return opt;
+  });
+
+  const edges = (mapData.edges || []).map(edge => {
+    const opt = { from: edge.from, to: edge.to, cmd: edge.command || edge.cmd };
+    if (edge.connectionType && edge.connectionType !== 'cardinal') opt.connectionType = edge.connectionType;
+    if (edge.isManual === true) opt.isManual = true;
+    if (edge.isEdited === true) opt.isEdited = true;
+    return opt;
+  });
+
+  const result = {
+    nodes,
+    edges,
+    protectedNodes: mapData.protectedNodes || [],
+    protectedEdges: mapData.protectedEdges || []
+  };
+
+  if (mapData.deletedEdges?.length > 0) result.deletedEdges = mapData.deletedEdges;
+  if (mapData.deletedNodes?.length > 0) result.deletedNodes = mapData.deletedNodes;
+  if (mapData.viewport) result.viewport = mapData.viewport;
+  if (mapData.currentNodeId) result.currentNodeId = mapData.currentNodeId;
+  if (typeof mapData.autoMapEnabled === 'boolean') result.autoMapEnabled = mapData.autoMapEnabled;
+
+  return result;
+}
+
+/**
+ * Restore map canvas state from an optimized save format.
+ * Expands stripped defaults and writes to the map's localStorage key.
+ * Does not update in-memory mapState — the next loadMapForGame() call picks it up.
+ * @param {Object} optimizedData - Data produced by exportMapState
+ * @param {string} gameName
+ */
+export function importMapState(optimizedData, gameName) {
+  if (!optimizedData || !gameName) return;
+
+  const nodes = (optimizedData.nodes || []).map(node => ({
+    id: node.id,
+    name: node.name,
+    x: node.x,
+    y: node.y,
+    type: node.type || 'room',
+    notes: node.notes || '',
+    isManual: node.isManual || false,
+    isEdited: node.isEdited || false,
+    isSmall: node.isSmall || false
+  }));
+
+  const edges = (optimizedData.edges || []).map(edge => ({
+    from: edge.from,
+    to: edge.to,
+    command: edge.cmd || edge.command,
+    connectionType: edge.connectionType || 'cardinal',
+    isManual: edge.isManual || false,
+    isEdited: edge.isEdited || false
+  }));
+
+  const mapData = {
+    nodes,
+    edges,
+    protectedNodes: optimizedData.protectedNodes || [],
+    protectedEdges: optimizedData.protectedEdges || [],
+    deletedEdges: optimizedData.deletedEdges || [],
+    deletedNodes: optimizedData.deletedNodes || [],
+    viewport: optimizedData.viewport || { x: 0, y: 0, scale: 1 },
+    currentNodeId: optimizedData.currentNodeId || null,
+    autoMapEnabled: optimizedData.autoMapEnabled !== undefined ? optimizedData.autoMapEnabled : true
+  };
+
+  localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify(mapData));
+}
+
 function resetMap() {
   mapState.nodes = new Map(); mapState.edges = new Map();
   mapState.protectedNodes = new Set(); mapState.protectedEdges = new Set();

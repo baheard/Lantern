@@ -104,122 +104,27 @@ function limitHTMLHistory(html, maxTurns = 100) {
 async function getOptimizedMapData(gameName) {
     if (!gameName) return null;
 
-    // Flush any pending debounced map save before reading
-    // (avoids race: map save debounces 500ms, autosave fires at 100ms)
+    // exportMapState handles flush + read + optimize; returns null if map never opened
+    let mapCanvas = null;
     try {
-        const { flushMapSave } = await import('../features/map-canvas.js');
-        flushMapSave();
+        const { exportMapState } = await import('../features/map-canvas.js');
+        mapCanvas = exportMapState(gameName);
     } catch (e) { /* map-canvas not loaded yet — no pending save */ }
 
-    // Check for map canvas data first (user opened the map)
-    const mapKey = `iftalk_map_${gameName}`;
-    const mapDataStr = localStorage.getItem(mapKey);
+    const { getMapData } = await import('../features/auto-mapper.js');
+    const autoMapperData = getMapData();
 
-    // If map canvas exists, save both map canvas AND auto-mapper
-    // Map canvas may be stale (user closed map and continued playing)
-    // Auto-mapper has current state in memory
-    // They'll merge when map opens
-    if (mapDataStr) {
-        try {
-            const mapData = JSON.parse(mapDataStr);
-
-            // Optimize nodes: remove default values
-            const optimizedNodes = (mapData.nodes || []).map(node => {
-                const optimized = {
-                    id: node.id,
-                    name: node.name,
-                    x: node.x,
-                    y: node.y
-                };
-
-                // Only include non-default values
-                if (node.type && node.type !== 'room') optimized.type = node.type;
-                if (node.notes && node.notes !== '') optimized.notes = node.notes;
-                if (node.isManual === true) optimized.isManual = true;
-                if (node.isEdited === true) optimized.isEdited = true;
-                if (node.isSmall === true) optimized.isSmall = true;
-
-                return optimized;
-            });
-
-            // Optimize edges: remove default values, use shorter key 'cmd' instead of 'command'
-            const optimizedEdges = (mapData.edges || []).map(edge => {
-                const optimized = {
-                    from: edge.from,
-                    to: edge.to,
-                    cmd: edge.command || edge.cmd
-                };
-
-                // Only include non-default values
-                if (edge.connectionType && edge.connectionType !== 'cardinal') {
-                    optimized.connectionType = edge.connectionType;
-                }
-                if (edge.isManual === true) optimized.isManual = true;
-                if (edge.isEdited === true) optimized.isEdited = true;
-
-                return optimized;
-            });
-
-            // Build optimized map canvas data object
-            const optimized = {
-                nodes: optimizedNodes,
-                edges: optimizedEdges,
-                protectedNodes: mapData.protectedNodes || [],
-                protectedEdges: mapData.protectedEdges || []
-            };
-
-            // Include optional fields only if present
-            if (mapData.deletedEdges && mapData.deletedEdges.length > 0) {
-                optimized.deletedEdges = mapData.deletedEdges;
-            }
-            if (mapData.deletedNodes && mapData.deletedNodes.length > 0) {
-                optimized.deletedNodes = mapData.deletedNodes;
-            }
-            if (mapData.viewport) optimized.viewport = mapData.viewport;
-            if (mapData.currentNodeId) optimized.currentNodeId = mapData.currentNodeId;
-            if (typeof mapData.autoMapEnabled === 'boolean') {
-                optimized.autoMapEnabled = mapData.autoMapEnabled;
-            }
-
-            // Get auto-mapper data to save alongside map canvas
-            const { getMapData, getLastLocationName } = await import('../features/auto-mapper.js');
-            const autoMapperData = getMapData();
-
-            // Return BOTH map canvas and auto-mapper
-            // Map canvas: positions, notes, edits (may be stale on nodes/edges)
-            // Auto-mapper: journey only (new moves since last map open)
-            // Journey will be cleared when map is opened, keeping saves small
-            return {
-                mapCanvas: optimized,
-                autoMapper: {
-                    journey: autoMapperData.journey
-                }
-            };
-
-        } catch (error) {
-            console.error('Failed to optimize map data:', error);
-            // Fall through to try auto-mapper only
-        }
+    if (mapCanvas) {
+        // Save both: map canvas (positions/notes/edits) + auto-mapper journey
+        // (new moves since last map open; cleared when map is opened next)
+        return { mapCanvas, autoMapper: { journey: autoMapperData.journey } };
     }
 
-    // Map canvas doesn't exist - try auto-mapper data only
-    try {
-        const { getMapData } = await import('../features/auto-mapper.js');
-        const autoMapperData = getMapData();
-        if (autoMapperData && autoMapperData.journey && autoMapperData.journey.length > 0) {
-            // Return ONLY auto-mapper (map never opened)
-            // Save journey only - will be parsed on first map open
-            return {
-                autoMapper: {
-                    journey: autoMapperData.journey
-                }
-            };
-        }
-    } catch (error) {
-        // Auto-mapper not available
+    if (autoMapperData?.journey?.length > 0) {
+        // Map never opened — save journey only; parsed on first map open
+        return { autoMapper: { journey: autoMapperData.journey } };
     }
 
-    // No map data at all
     return null;
 }
 
@@ -232,80 +137,30 @@ async function getOptimizedMapData(gameName) {
 async function restoreMapData(optimizedMapData, gameName) {
     if (!optimizedMapData || !gameName) return;
 
-    // Restore auto-mapper data if present
     if (optimizedMapData.autoMapper) {
         try {
             const { initAutoMapper } = await import('../features/auto-mapper.js');
-            // Store the data temporarily in a special key
-            const autoMapperKey = `iftalk_automapper_restore_${gameName}`;
-            localStorage.setItem(autoMapperKey, JSON.stringify(optimizedMapData.autoMapper));
-
-            // Immediately restore auto-mapper state to memory
-            // (gameLoaded event doesn't fire on quickload/restore, only on initial game load)
+            // Store temporarily so initAutoMapper can pick it up on game load
+            localStorage.setItem(`iftalk_automapper_restore_${gameName}`, JSON.stringify(optimizedMapData.autoMapper));
+            // Immediately restore to memory (gameLoaded event doesn't fire on quickload/restore)
             initAutoMapper(gameName);
         } catch (error) {
             console.error('Failed to restore auto-mapper data:', error);
         }
     }
 
-    // Restore map canvas data if present
     if (optimizedMapData.mapCanvas) {
         try {
-            const mapCanvasData = optimizedMapData.mapCanvas;
+            const { importMapState } = await import('../features/map-canvas.js');
+            importMapState(optimizedMapData.mapCanvas, gameName);
 
-            // Restore nodes with default values
-            const nodes = (mapCanvasData.nodes || []).map(node => ({
-                id: node.id,
-                name: node.name,
-                x: node.x,
-                y: node.y,
-                type: node.type || 'room',
-                notes: node.notes || '',
-                isManual: node.isManual || false,
-                isEdited: node.isEdited || false,
-                isSmall: node.isSmall || false
-            }));
-
-            // Restore edges with default values, convert 'cmd' back to 'command'
-            const edges = (mapCanvasData.edges || []).map(edge => ({
-                from: edge.from,
-                to: edge.to,
-                command: edge.cmd || edge.command,
-                connectionType: edge.connectionType || 'cardinal',
-                isManual: edge.isManual || false,
-                isEdited: edge.isEdited || false
-            }));
-
-            // Build full map canvas data object
-            const mapData = {
-                nodes: nodes,
-                edges: edges,
-                protectedNodes: mapCanvasData.protectedNodes || [],
-                protectedEdges: mapCanvasData.protectedEdges || [],
-                deletedEdges: mapCanvasData.deletedEdges || [],
-                deletedNodes: mapCanvasData.deletedNodes || [],
-                viewport: mapCanvasData.viewport || { x: 0, y: 0, scale: 1 },
-                currentNodeId: mapCanvasData.currentNodeId || null,
-                autoMapEnabled: mapCanvasData.autoMapEnabled !== undefined
-                    ? mapCanvasData.autoMapEnabled
-                    : true
-            };
-
-            // Save to localStorage
-            const mapKey = `iftalk_map_${gameName}`;
-            localStorage.setItem(mapKey, JSON.stringify(mapData));
-
-            // Set auto-mapper current location so it can track from here
-            // Then clear journey since map canvas now has everything
-            // Use journey's last entry if available — it's more recent than canvas
-            // currentNodeId (which may be stale if autosave ran before map save flushed)
+            // Sync auto-mapper location to match the restored canvas position.
+            // Prefer journey's last entry (more recent than currentNodeId, which
+            // may be stale if autosave ran before the map save flushed).
             const { setCurrentLocation, clearJourney } = await import('../features/auto-mapper.js');
-            const lastJourneyLocation = optimizedMapData.autoMapper?.journey?.length > 0
-                ? optimizedMapData.autoMapper.journey[optimizedMapData.autoMapper.journey.length - 1].locationName
-                : null;
-            setCurrentLocation(lastJourneyLocation || mapData.currentNodeId, gameName);
+            const lastJourneyLocation = optimizedMapData.autoMapper?.journey?.at(-1)?.locationName ?? null;
+            setCurrentLocation(lastJourneyLocation || optimizedMapData.mapCanvas.currentNodeId, gameName);
             clearJourney();
-
         } catch (error) {
             console.error('Failed to restore map canvas data:', error);
         }
