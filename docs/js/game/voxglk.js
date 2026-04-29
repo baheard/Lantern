@@ -167,6 +167,9 @@ export function createVoxGlk(textOutputCallback) {
       inputType = 'line';
       inputWindowId = null;
       autosaveCounter = 0; // Reset counter for new game session
+      lastCharModePlainText = '';
+      previousInputType = null;
+      justExitedCharMode = false;
       resetBootstrapState(); // Clear bootstrap flags for new game session
       resetWatchdogState(); // Clear any stale watchdog timer + repair flag
 
