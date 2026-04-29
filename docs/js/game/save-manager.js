@@ -10,8 +10,7 @@ import { updateStatus } from '../utils/status.js';
 import { showMessageInput } from '../input/keyboard/index.js';
 import { scrollToBottom } from '../utils/scroll.js';
 import { addGameText } from '../ui/game-output.js';
-import { getItem, setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
-import { closeSettings } from '../ui/settings/settings-panel.js';
+import { setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
 import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
 
 // ============================================================================
@@ -859,78 +858,3 @@ export function stopAutosaveBackupTimer() {
     }
 }
 
-/**
- * Initialize save handlers and keyboard shortcuts
- */
-export function initSaveHandlers() {
-
-    // Quick Save button (in both toolbar and settings)
-    const quickSaveBtn = document.getElementById('quickSaveBtn');
-    if (quickSaveBtn) {
-        quickSaveBtn.addEventListener('click', () => {
-            quickSave();
-            // Close settings panel if open
-            closeSettings();
-        });
-    }
-
-    // Quick Restore button (in settings)
-    const quickRestoreBtn = document.getElementById('quickRestoreBtn');
-    if (quickRestoreBtn) {
-        quickRestoreBtn.addEventListener('click', () => {
-            // Manual restore requires page reload to reset glkapi.js state
-            if (!state.currentGameName) {
-                updateStatus('Error: No game loaded', 'error');
-                return;
-            }
-            const key = `iftalk_quicksave_${state.currentGameName}`;
-            if (!getItem(key)) {
-                updateStatus('No quick save found - Use Quick Save button first', 'error');
-                return;
-            }
-            // Set flag for autorestore to pick up after reload
-            sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
-                type: 'quicksave',
-                key: state.currentGameName,
-                gameName: state.currentGameName
-            }));
-            window.location.reload();
-        });
-    }
-
-    // Quick Load button (in toolbar)
-    const quickLoadBtn = document.getElementById('quickLoadBtn');
-    if (quickLoadBtn) {
-        quickLoadBtn.addEventListener('click', () => {
-            // Manual restore requires page reload to reset glkapi.js state
-            if (!state.currentGameName) {
-                updateStatus('Error: No game loaded', 'error');
-                return;
-            }
-            const key = `iftalk_quicksave_${state.currentGameName}`;
-            if (!getItem(key)) {
-                updateStatus('No quick save found - Use Quick Save button first', 'error');
-                return;
-            }
-            // Set flag for autorestore to pick up after reload
-            sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
-                type: 'quicksave',
-                key: state.currentGameName,
-                gameName: state.currentGameName
-            }));
-            window.location.reload();
-        });
-    }
-
-    // Export Save button (in settings)
-    const exportSaveBtn = document.getElementById('exportSaveBtn');
-    if (exportSaveBtn) {
-        exportSaveBtn.addEventListener('click', exportSaveToFile);
-    }
-
-    // Import Save button (in settings)
-    const importSaveBtn = document.getElementById('importSaveBtn');
-    if (importSaveBtn) {
-        importSaveBtn.addEventListener('click', importSaveFromFile);
-    }
-}

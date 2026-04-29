@@ -7,6 +7,8 @@
 import { state } from '../../core/state.js';
 import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
+import { getItem } from '../../utils/storage/storage-api.js';
+import { quickSave, exportSaveToFile, importSaveFromFile } from '../../game/save-manager.js';
 
 // Element to return focus to when the panel closes (typically the trigger button)
 let lastFocusedBeforeOpen = null;
@@ -547,5 +549,71 @@ export function initSettings() {
       // Close settings panel
       closeSettings();
     });
+  }
+}
+
+/**
+ * Wire save/restore button event listeners (toolbar + settings).
+ * Lives here rather than in save-manager so that module stays UI-free.
+ */
+export function initSaveHandlers() {
+  const quickSaveBtn = document.getElementById('quickSaveBtn');
+  if (quickSaveBtn) {
+    quickSaveBtn.addEventListener('click', () => {
+      quickSave();
+      closeSettings();
+    });
+  }
+
+  const quickRestoreBtn = document.getElementById('quickRestoreBtn');
+  if (quickRestoreBtn) {
+    quickRestoreBtn.addEventListener('click', () => {
+      if (!state.currentGameName) {
+        updateStatus('Error: No game loaded', 'error');
+        return;
+      }
+      const key = `iftalk_quicksave_${state.currentGameName}`;
+      if (!getItem(key)) {
+        updateStatus('No quick save found - Use Quick Save button first', 'error');
+        return;
+      }
+      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+        type: 'quicksave',
+        key: state.currentGameName,
+        gameName: state.currentGameName
+      }));
+      window.location.reload();
+    });
+  }
+
+  const quickLoadBtn = document.getElementById('quickLoadBtn');
+  if (quickLoadBtn) {
+    quickLoadBtn.addEventListener('click', () => {
+      if (!state.currentGameName) {
+        updateStatus('Error: No game loaded', 'error');
+        return;
+      }
+      const key = `iftalk_quicksave_${state.currentGameName}`;
+      if (!getItem(key)) {
+        updateStatus('No quick save found - Use Quick Save button first', 'error');
+        return;
+      }
+      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+        type: 'quicksave',
+        key: state.currentGameName,
+        gameName: state.currentGameName
+      }));
+      window.location.reload();
+    });
+  }
+
+  const exportSaveBtn = document.getElementById('exportSaveBtn');
+  if (exportSaveBtn) {
+    exportSaveBtn.addEventListener('click', exportSaveToFile);
+  }
+
+  const importSaveBtn = document.getElementById('importSaveBtn');
+  if (importSaveBtn) {
+    importSaveBtn.addEventListener('click', importSaveFromFile);
   }
 }

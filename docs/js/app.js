@@ -32,7 +32,7 @@ import { skipToChunk, skipToStart, skipToEnd } from './narration/navigation.js';
 import { updateNavButtons } from './ui/nav-buttons.js';
 import { addGameText } from './ui/game-output.js';
 import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from './ui/settings/index.js';
-import { toggleSettings, closeSettings } from './ui/settings/settings-panel.js';
+import { toggleSettings, closeSettings, initSaveHandlers } from './ui/settings/settings-panel.js';
 import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
 import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
@@ -40,7 +40,7 @@ import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-b
 
 // Game modules
 import { sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
-import { initSaveHandlers, quickSave, quickLoad } from './game/save-manager.js';
+import { quickSave, quickLoad } from './game/save-manager.js';
 import { initGameSelection } from './game/game-loader.js';
 
 // Features
