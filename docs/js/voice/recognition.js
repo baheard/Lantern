@@ -12,7 +12,7 @@ import { isEchoOfSpokenText } from './echo-detection.js';
 import { updateVoiceTranscript } from '../input/keyboard/index.js';
 import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand, LOW_CONFIDENCE_THRESHOLD } from '../utils/audio-feedback.js';
 import { scrollToBottom } from '../utils/scroll.js';
-import { PRONUNCIATION_DICT } from './voice-commands.js';
+import { PRONUNCIATION_DICT, NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN } from './voice-commands.js';
 
 /**
  * Commands that process INSTANTLY with NO delay (whitelist)
@@ -578,14 +578,9 @@ export function initVoiceRecognition(processVoiceKeywords) {
       try {
         // Check if this is a navigation command first
         const finalLower = finalTranscript.toLowerCase().trim();
-        const navigationCommands = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
-                                    'end', 'skip all', 'skip to end', 'skip to the end'];
-        const skipNPattern = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
-        const backNPattern = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
-
-        const isNavigationCommand = navigationCommands.includes(finalLower) ||
-                                     skipNPattern.test(finalLower) ||
-                                     backNPattern.test(finalLower);
+        const isNavigationCommand = NAVIGATION_COMMANDS.includes(finalLower) ||
+                                     SKIP_N_PATTERN.test(finalLower) ||
+                                     BACK_N_PATTERN.test(finalLower);
 
         // Only check for echo if NOT a navigation command
         if (!isNavigationCommand && isEchoOfSpokenText(finalTranscript)) {

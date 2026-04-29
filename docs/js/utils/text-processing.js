@@ -102,21 +102,7 @@ export function splitIntoSentences(processedText) {
 export function processAndSplitText(text) {
   if (!text) return [];
 
-  // Process for TTS - normalize formatting and apply transformations
-  let processed = text
-    // Collapse spaced capitals: "A N C H O R H E A D" → "ANCHORHEAD"
-    .replace(/\b([A-Z])\s+(?=[A-Z](?:\s+[A-Z]|\s*\b))/g, '$1')
-    // Normalize initials: "H.P." → "H P"
-    .replace(/\b([A-Z])\.\s*/g, '$1 ')
-    .replace(/\b([A-Z])\s+([A-Z])\s+/g, '$1$2 ')
-    // Collapse whitespace
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Title case for all-caps words (4+ letters): "ANCHORHEAD" → "Anchorhead"
-  processed = processed.replace(/\b([A-Z]{4,})\b/g, (match) => {
-    return match.charAt(0) + match.slice(1).toLowerCase();
-  });
+  const processed = processTextForTTS(text);
 
   // Split into sentences
   // Pattern 1: Split after marker (with or without space) → keeps marker in chunk

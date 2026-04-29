@@ -517,6 +517,35 @@ export function deleteEdge(key) {
 // MERGE DUPLICATES
 // ============================================================================
 
+function transferEdges(sourceId, targetId) {
+  const edgesToAdd = [];
+  const edgesToDelete = [];
+
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === sourceId) {
+      const newKey = `${targetId}-${edge.to}`;
+      if (!mapState.edges.has(newKey) && edge.to !== targetId) {
+        edgesToAdd.push([newKey, { ...edge, from: targetId }]);
+      }
+      edgesToDelete.push(key);
+    } else if (edge.to === sourceId) {
+      const newKey = `${edge.from}-${targetId}`;
+      if (!mapState.edges.has(newKey) && edge.from !== targetId) {
+        edgesToAdd.push([newKey, { ...edge, to: targetId }]);
+      }
+      edgesToDelete.push(key);
+    }
+  }
+
+  for (const key of edgesToDelete) {
+    mapState.edges.delete(key);
+  }
+  for (const [key, edge] of edgesToAdd) {
+    mapState.edges.set(key, edge);
+    mapState.protectedEdges.add(key);
+  }
+}
+
 /**
  * Merge a duplicate node with its original
  * Transfers all connections from duplicate to original, then deletes duplicate
@@ -539,35 +568,7 @@ export function handleNodeMerge() {
   }
 
   // Transfer all connections from duplicate to original
-  const edgesToAdd = [];
-  const edgesToDelete = [];
-
-  for (const [key, edge] of mapState.edges) {
-    if (edge.from === nodeId) {
-      // Outgoing edge from duplicate -> redirect to original
-      const newKey = `${originalId}-${edge.to}`;
-      if (!mapState.edges.has(newKey) && edge.to !== originalId) {
-        edgesToAdd.push([newKey, { ...edge, from: originalId }]);
-      }
-      edgesToDelete.push(key);
-    } else if (edge.to === nodeId) {
-      // Incoming edge to duplicate -> redirect to original
-      const newKey = `${edge.from}-${originalId}`;
-      if (!mapState.edges.has(newKey) && edge.from !== originalId) {
-        edgesToAdd.push([newKey, { ...edge, to: originalId }]);
-      }
-      edgesToDelete.push(key);
-    }
-  }
-
-  // Apply edge changes
-  for (const key of edgesToDelete) {
-    mapState.edges.delete(key);
-  }
-  for (const [key, edge] of edgesToAdd) {
-    mapState.edges.set(key, edge);
-    mapState.protectedEdges.add(key);
-  }
+  transferEdges(nodeId, originalId);
 
   // Delete the duplicate node
   mapState.nodes.delete(nodeId);
@@ -699,35 +700,7 @@ export function performManualMerge(sourceId, targetId) {
   }
 
   // Transfer all connections from source to target
-  const edgesToAdd = [];
-  const edgesToDelete = [];
-
-  for (const [key, edge] of mapState.edges) {
-    if (edge.from === sourceId) {
-      // Outgoing edge from source -> redirect to target
-      const newKey = `${targetId}-${edge.to}`;
-      if (!mapState.edges.has(newKey) && edge.to !== targetId) {
-        edgesToAdd.push([newKey, { ...edge, from: targetId }]);
-      }
-      edgesToDelete.push(key);
-    } else if (edge.to === sourceId) {
-      // Incoming edge to source -> redirect to target
-      const newKey = `${edge.from}-${targetId}`;
-      if (!mapState.edges.has(newKey) && edge.from !== targetId) {
-        edgesToAdd.push([newKey, { ...edge, to: targetId }]);
-      }
-      edgesToDelete.push(key);
-    }
-  }
-
-  // Apply edge changes
-  for (const key of edgesToDelete) {
-    mapState.edges.delete(key);
-  }
-  for (const [key, edge] of edgesToAdd) {
-    mapState.edges.set(key, edge);
-    mapState.protectedEdges.add(key);
-  }
+  transferEdges(sourceId, targetId);
 
   // Delete the source node
   mapState.nodes.delete(sourceId);

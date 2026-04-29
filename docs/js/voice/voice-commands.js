@@ -16,6 +16,12 @@ import { speakAppMessage } from '../narration/tts-player.js';
 import { displayBlockedCommand } from '../ui/game-output.js';
 import { playBlockedCommand } from '../utils/audio-feedback.js';
 
+/** Navigation commands that are always allowed, even during narration or echo suppression. */
+export const NAVIGATION_COMMANDS = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
+                                    'end', 'skip all', 'skip to end', 'skip to the end'];
+export const SKIP_N_PATTERN = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+export const BACK_N_PATTERN = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+
 /**
  * Pronunciation dictionary for common misrecognitions.
  * Only applies to single-word commands to avoid false positives.
@@ -166,15 +172,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
 
   // During narration, allow navigation commands but block game commands
   if (state.isNarrating && !state.pausedForSound) {
-    // Allow these navigation commands to interrupt narration
-    const navigationCommands = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
-                                'end', 'skip all', 'skip to end', 'skip to the end'];
-
-    // Also allow "skip N" and "back N" patterns
-    const skipNPattern = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
-    const backNPattern = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
-
-    if (navigationCommands.includes(lower) || skipNPattern.test(lower) || backNPattern.test(lower)) {
+    if (NAVIGATION_COMMANDS.includes(lower) || SKIP_N_PATTERN.test(lower) || BACK_N_PATTERN.test(lower)) {
       // Let navigation commands pass through
       return transcript;
     }

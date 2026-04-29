@@ -21,6 +21,22 @@ const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom anim
 const DEBOUNCE_DELAY = 100; // ms - debounce delay for viewport resize updates
 const touchTracker = createTouchTracker(10); // 10px threshold (same as tap-to-examine)
 
+function releasePressedState(button) {
+  button.style.transition = 'none';
+  button.classList.remove('pressed');
+  void button.offsetHeight; // Force reflow to flush transition removal
+  button.style.transition = '';
+}
+
+function cancelInteractions() {
+  clearTimeout(scrollTimer);
+  clearTimeout(holdTimer);
+  scrollTimer = null;
+  holdTimer = null;
+  isDragging = false;
+  touchTracker.reset();
+}
+
 /**
  * Initialize the scroll down button
  */
@@ -74,11 +90,7 @@ export function initScrollDownButton() {
         holdTimer = null;
       }
 
-      // Remove pressed state
-      button.style.transition = 'none';
-      button.classList.remove('pressed');
-      void button.offsetHeight; // Force reflow
-      button.style.transition = '';
+      releasePressedState(button);
     }
   }, { passive: true });
 
@@ -89,40 +101,16 @@ export function initScrollDownButton() {
     // Remove focus to prevent hover state from sticking
     button.blur();
 
-    // Remove pressed state instantly (no transition)
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
+    releasePressedState(button);
+    cancelInteractions();
   });
 
   button.addEventListener('touchcancel', () => {
     // Remove focus to prevent hover state from sticking
     button.blur();
 
-    // Remove pressed state instantly (no transition)
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
+    releasePressedState(button);
+    cancelInteractions();
   });
 
   // Mouse events for desktop testing
@@ -169,11 +157,7 @@ export function initScrollDownButton() {
         holdTimer = null;
       }
 
-      // Remove pressed state
-      button.style.transition = 'none';
-      button.classList.remove('pressed');
-      void button.offsetHeight; // Force reflow
-      button.style.transition = '';
+      releasePressedState(button);
     }
   });
 
@@ -187,40 +171,16 @@ export function initScrollDownButton() {
     // Remove focus to prevent hover state from sticking
     button.blur();
 
-    // Remove pressed state instantly (no transition)
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
+    releasePressedState(button);
+    cancelInteractions();
   });
 
   button.addEventListener('mouseleave', () => {
     // Remove focus to prevent hover state from sticking
     button.blur();
 
-    // Remove pressed state instantly if mouse leaves while pressed
-    button.style.transition = 'none';
-    button.classList.remove('pressed');
-    void button.offsetHeight; // Force reflow
-    button.style.transition = '';
-
-    // Cancel all timers
-    clearTimeout(scrollTimer);
-    clearTimeout(holdTimer);
-    scrollTimer = null;
-    holdTimer = null;
-    isDragging = false;
-
-    touchTracker.reset();
+    releasePressedState(button);
+    cancelInteractions();
   });
 
   // Update fade state on scroll

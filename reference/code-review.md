@@ -663,7 +663,7 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `voice-selection.js:206` | `â˜…` iOS-preferred marker shown on all platforms, not just iOS |
 | ~~Medium~~ DONE | `map-sheet.js:344` | XSS via node names fixed in v1.5.234 â€” `escapeHtml(c.node.name)` |
 | Medium | `map-canvas.js:1553-1569` | Inline `directionOffsets` table duplicates and diverges from `DIRECTION_OFFSETS` in map-config.js |
-| Medium | `map-sheet.js:544-569, 704-729` | `handleNodeMerge` / `performManualMerge` share ~50-line identical edge-transfer logic â€” extract `transferEdges()` |
+| ~~Medium~~ DONE | `map-sheet.js:544-569, 704-729` | `transferEdges(sourceId, targetId)` extracted; both merge functions call it â€” v1.5.246 |
 | Medium | `map-canvas.js:1870` | `syncMapFromAutoMapper` calls `JSON.parse` without try/catch â€” use `getJSON` |
 | ~~Low~~ DONE | `map-canvas.js:546` | `window.getCurrentLocation` used in `toggleAutoMap` â€” replaced with direct import v1.5.243 |
 | ~~Low~~ DONE | `map-handlers.js:250` | `hideFab()` defined, exported, and never called â€” deleted v1.5.243 |
@@ -681,7 +681,7 @@ _Pending until Tiers 1 & 2 complete._
 | ~~Low~~ DONE | `highlighting.js:127` | `removeHighlight` + `scrollToHighlightedText` now use `dom.gameOutput` (v1.5.236) |
 | ~~Low~~ DONE | `highlighting.js:14-16` | `initScrollDetection()` deleted from highlighting.js and app.js in v1.5.235 |
 | Medium | `recognition.js:395-431,462-495,764-790` | Process-and-dispatch pattern repeated 3Ã— in onresult/onend â€” extract `dispatchRecognized()` |
-| Medium | `recognition.js:581-584`, `voice-commands.js:170-175` | `navigationCommands` + skipN/backN patterns defined identically in both files â€” export from voice-commands.js |
+| ~~Medium~~ DONE | `recognition.js:581-584`, `voice-commands.js:170-175` | `NAVIGATION_COMMANDS`/`SKIP_N_PATTERN`/`BACK_N_PATTERN` exported from voice-commands.js; recognition.js imports them â€” v1.5.246 |
 | Low | `recognition.js:217` | Empty catch in `displayInterimAsLowConfidence` lacks intent comment |
 | Low | `recognition.js:699-712` | `setTimeout(fn,0)` final dispatch inconsistent with direct-call paths â€” document or remove |
 | Low | `command-handlers.js:170,225` | `document.getElementById('messageInput')` direct query â€” use `dom.userInput` |
@@ -700,14 +700,14 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `voice-ui.js:8-9` | `voiceListeningIndicatorEl`/`voiceTranscriptEl` duplicate `dom.voiceListeningIndicator`/`dom.voiceTranscript` â€” use `dom.*` refs; `initVoiceUI` becomes removable |
 | ~~High~~ DONE | `sync-preview-modal.js:413` | `updateProgress` XSS â€” `currentItem.name`/`statusText` unescaped in `insertAdjacentHTML` â€” fixed v1.5.239 |
 | ~~Medium~~ DONE | `game-output.js:242-243` | `lastSentCommand` RegExp injection fixed v1.5.242 â€” `escapeRegExp()` added to text-processing.js |
-| Medium | `scroll-down-button.js:initScrollDownButton` | 4-line pressed-state teardown 6Ã— + 6-line timer teardown 4Ã— â€” extract helpers |
+| ~~Medium~~ DONE | `scroll-down-button.js:initScrollDownButton` | `releasePressedState(button)` + `cancelInteractions()` extracted â€” v1.5.246 |
 | Low | `history.js:28,37,43,63` | `alert()` for history display â€” same pattern as Batch 5 |
 | ~~Low~~ DONE | `nav-buttons.js:51-53` | Empty `if (narrationChunks.length > 0) {}` debug block â€” deleted v1.5.243 |
 | Low | `mobile-menu.js:135-158` | `toggleMenu`/`closeMenu` re-query 3 DOM elements on every call â€” promote to module-level |
 | Low | `sync-preview-modal.js:237-261` | `formatTimestamp()` defined but never called â€” dead function |
 | ~~Low~~ DONE | `game-output.js:125-126` | Empty `else if (!shouldIncludeStatus) {}` block â€” deleted v1.5.243 |
 | Low | `game-output.js:315` | Empty catch on auto-narration of system messages â€” add intent comment |
-| Medium | `text-processing.js:102-115` | `processAndSplitText` reimplements `processTextForTTS` normalization verbatim â€” call the existing function |
+| ~~Medium~~ DONE | `text-processing.js:102-115` | `processAndSplitText` reimplements `processTextForTTS` normalization verbatim â€” replaced with `processTextForTTS(text)` call v1.5.246 |
 | ~~Medium~~ DONE | `pronunciation.js:51-54` | Pronunciation key RegExp injection fixed v1.5.242 â€” `escapeRegExp()` from text-processing.js |
 | Low | `gdrive-auth.js:45`, `gdrive-sync.js:82,159,175`, `gdrive-sync-preview.js:85,249` | 6Ã— bare `JSON.parse(localStorage.getItem(...))` without try/catch â€” use `getJSON` |
 | Low | `audio-feedback.js:256` | `new Promise(async executor)` anti-pattern in `playSystemBeep` â€” rewrite as `async function` |
@@ -735,4 +735,5 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.240** â€” Batch 11 review doc: `utils/` (2 Medium, 7 Low findings). No code changes this pass.
 - **v1.5.241** â€” Batch 12 review doc: CSS pass (0 Medium, 3 Low findings). No code changes this pass. All Tier 2 module-by-module review complete.
 - **v1.5.242** â€” 2 Medium runtime bugs: added `escapeRegExp()` to `utils/text-processing.js`; escaped `lastSentCommand` before `new RegExp` in `game-output.js` (commands with `[`, `(`, `*` no longer throw SyntaxError); escaped pronunciation map keys in `pronunciation.js` (user-entered words with metacharacters no longer break the entire pronunciation pass).
+- **v1.5.246** â€” 4 Medium deduplication fixes: (1) `processAndSplitText` normalized by calling `processTextForTTS()` â€” deleted 15-line duplicate block; (2) `NAVIGATION_COMMANDS`/`SKIP_N_PATTERN`/`BACK_N_PATTERN` promoted to module-level exports in `voice-commands.js` â€” `recognition.js` now imports them instead of redefining; (3) `releasePressedState(button)` + `cancelInteractions()` extracted in `scroll-down-button.js` â€” removes ~50 lines of repetition; (4) `transferEdges(sourceId, targetId)` extracted in `map-sheet.js` â€” `handleNodeMerge` and `performManualMerge` each call it instead of having identical 30-line edge-transfer blocks.
 - **v1.5.243** â€” Dead code sweep: 10 Low + 2 Medium findings. 10 Low: deleted `waitForInputAndContinue()` and `sendCommand()` (+ index.js export + app.js import); removed empty debug block in `nav-buttons.js`; removed empty `else if` in `game-output.js`; removed always-true `if (cmd || cmd === '')` guard in `keyboard-core.js`; deleted dead `currentHighlightedWord` variable and assignments; removed vestigial `soundPauseTimeout`/`soundDetected`/`pausedForSound` resets from `stopVoiceMeter`; deleted commented-out `--accent-primary` in `variables.css`; deleted `hideFab()` dead export from `map-handlers.js`; replaced `window.getCurrentLocation ?` guard with direct import call in `map-canvas.js`. 2 Medium: `meta-command-handlers.js` now imports `respondAsGame` from `ui/respond-as-game.js` (deleted local copy); `validateSaveName()` helper extracted from `handleSaveResponse`; `data-management-ui.js` now imports `isOnWelcomeScreen`/`getGameDisplayName` from `settings-panel.js` (deleted local copies).
