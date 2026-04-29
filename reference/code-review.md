@@ -691,7 +691,7 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `voice-meter.js:15` | `startVoiceMeter()` lacks double-call guard â€” rapid calls orphan MediaStream tracks |
 | Low | `voice-meter.js:63` | Silent catch on getUserMedia failure lacks intent comment |
 | ~~Low~~ DONE | `voice-meter.js:78-84` | `stopVoiceMeter` resets soundPauseTimeout/soundDetected/pausedForSound â€” vestigial; deleted v1.5.243 |
-| Medium | `keyboard-core.js:52-662` | `initKeyboardInput()` 610 lines â€” 3 large closures + shared state should be module-level |
+| ~~Medium~~ DONE | `keyboard-core.js:52-662` | `populateInputWithWord`, `handleTouchStart`, `handleGameClick`, `handleGameMouseMove` extracted to module level; `DIRECTIONS`, `COMMON_VERBS`, `highlightOverlay`, `tapExamineTouchTracker`, `lowerWindowEl`, `gameOutputEl` promoted to module scope â€” v1.5.250 |
 | Low | `keyboard-core.js:398,532` | `localStorage.getItem('iftalk_tap_to_examine')` in hot-path handlers â€” use body class `tap-to-examine-enabled` instead |
 | Low | `keyboard-core.js:756-757,767-768` | Two disabled `scrollToBottom()` calls with "testing" comments â€” decide and delete |
 | Low | `keyboard-core.js:789-792` | `updateClearButtonVisibility()` no-op with 3 internal call sites â€” delete all |
@@ -735,6 +735,7 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.240** â€” Batch 11 review doc: `utils/` (2 Medium, 7 Low findings). No code changes this pass.
 - **v1.5.241** â€” Batch 12 review doc: CSS pass (0 Medium, 3 Low findings). No code changes this pass. All Tier 2 module-by-module review complete.
 - **v1.5.242** â€” 2 Medium runtime bugs: added `escapeRegExp()` to `utils/text-processing.js`; escaped `lastSentCommand` before `new RegExp` in `game-output.js` (commands with `[`, `(`, `*` no longer throw SyntaxError); escaped pronunciation map keys in `pronunciation.js` (user-entered words with metacharacters no longer break the entire pronunciation pass).
+- **v1.5.250** â€” 1 Medium: `keyboard-core.js` tap-to-examine closures extracted to module level — `populateInputWithWord`, `handleTouchStart`, `handleGameClick`, `handleGameMouseMove` are now named functions; `DIRECTIONS`, `COMMON_VERBS`, `highlightOverlay`, `tapExamineTouchTracker`, `lowerWindowEl`, `gameOutputEl` promoted to module scope. `initKeyboardInput()` is now pure event-listener wiring.
 - **v1.5.249** â€” 1 Medium: `dispatchRecognized(transcript, confidence, stopAfter)` extracted as closure inside `initVoiceRecognition` — replaces 3 identical 15-line process-and-dispatch blocks across the INSTANT_NO_WAIT path, the delayed-instant timeout, and the `onend` handler.
 - **v1.5.248** â€” 1 Medium: `initSaveHandlers()` moved from `save-manager.js` to `settings-panel.js` — UI event wiring now lives in the UI layer. `closeSettings` import removed from save-manager (no longer imports from settings layer at all). `getItem` import removed from save-manager (was only used by the moved function). app.js import updated.
 - **v1.5.247** â€” 1 Medium: `exportMapState(gameName)` + `importMapState(optimizedData, gameName)` added to `map-canvas.js` — map canvas key name (`iftalk_map_${gameName}`) and node/edge optimization logic now live in the map module. `getOptimizedMapData` in save-manager shrinks from 90 to 24 lines; `restoreMapData` from 80 to 28 lines.

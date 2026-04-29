@@ -46,6 +46,230 @@ let baselineViewportHeight = null;
 const mqCoarse = window.matchMedia('(pointer: coarse)');
 const mqHover = window.matchMedia('(hover: hover)');
 
+// Game area element refs (populated in initKeyboardInput)
+let lowerWindowEl = null;
+let gameOutputEl = null;
+
+// Word hover highlight overlay (created on demand, persists across events)
+let highlightOverlay = null;
+
+// Touch tracker for tap-to-examine (no DOM dependency — safe at module level)
+const tapExamineTouchTracker = createTouchTracker(10);
+
+// Direction words that use "go" prefix in tap-to-examine
+const DIRECTIONS = [
+  'north', 'south', 'east', 'west',
+  'northeast', 'northwest', 'southeast', 'southwest',
+  'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw',
+  'up', 'down', 'u', 'd',
+  'in', 'out'
+];
+
+// Common IF verbs that receive no prefix in tap-to-examine
+const COMMON_VERBS = [
+  'look', 'l',
+  'examine', 'x',
+  'take', 'get',
+  'drop', 'put',
+  'insert',
+  'inventory', 'i',
+  'open', 'close',
+  'lock', 'unlock',
+  'push', 'pull',
+  'turn', 'switch',
+  'move',
+  'climb', 'enter', 'exit',
+  'read',
+  'listen', 'smell', 'taste',
+  'eat', 'drink',
+  'wear', 'remove',
+  'give',
+  'talk', 'ask', 'tell', 'say',
+  'wait', 'z',
+  'search',
+  'light', 'extinguish',
+  'save', 'restore',
+  'quit', 'q',
+  'help',
+  'yes', 'y', 'no',
+  'repair', 'confirm'
+];
+
+/**
+ * Populate input with a tapped/clicked word.
+ * First word gets a verb prefix (examine/go) unless it is a common verb.
+ * Additional words are appended; the prefix stays selected for easy replacement.
+ */
+function populateInputWithWord(word) {
+  if (!messageInputEl) return;
+
+  const wordLower = word.toLowerCase();
+  const currentValue = messageInputEl.value.trim();
+
+  if (currentValue === '') {
+    const isVerb = COMMON_VERBS.includes(wordLower);
+    const isDirection = DIRECTIONS.includes(wordLower);
+
+    if (isVerb) {
+      messageInputEl.value = `${word} `;
+      if (hasPhysicalKeyboard() || document.activeElement === messageInputEl) {
+        messageInputEl.setSelectionRange(messageInputEl.value.length, messageInputEl.value.length);
+      }
+      wordJustPopulated = true;
+      populatedWordLength = word.length;
+    } else {
+      const prefix = isDirection ? 'go' : 'examine';
+      messageInputEl.value = `${prefix} ${word}`;
+      if (hasPhysicalKeyboard() || document.activeElement === messageInputEl) {
+        messageInputEl.setSelectionRange(0, prefix.length);
+      }
+      wordJustPopulated = true;
+      populatedWordLength = word.length;
+    }
+  } else {
+    const words = currentValue.split(/\s+/);
+    const lastWord = words[words.length - 1];
+
+    if (lastWord.toLowerCase() === wordLower) {
+      if (hasPhysicalKeyboard()) {
+        messageInputEl.focus();
+      }
+      return;
+    }
+
+    let prefixLength = 0;
+    if (currentValue.startsWith('go ')) prefixLength = 2;
+    else if (currentValue.startsWith('x ')) prefixLength = 1;
+
+    messageInputEl.value = `${currentValue} ${word} `;
+
+    if (prefixLength > 0 && (hasPhysicalKeyboard() || document.activeElement === messageInputEl)) {
+      messageInputEl.setSelectionRange(0, prefixLength);
+    }
+
+    wordJustPopulated = true;
+    populatedWordLength = word.length;
+  }
+
+  if (hasPhysicalKeyboard()) {
+    messageInputEl.focus();
+  } else {
+    messageInputEl.scrollLeft = messageInputEl.scrollWidth;
+  }
+}
+
+function handleTouchStart(e) {
+  tapExamineTouchTracker.track(e);
+}
+
+function handleGameClick(e) {
+  if (e.type === 'mouseup' && e.button !== 0) return;
+
+  const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+  const inputType = getInputType();
+  if (inputType !== 'line' || !messageInputEl) {
+    tapExamineTouchTracker.reset();
+    return;
+  }
+
+  const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+  if (!isTapExamineEnabled) {
+    if (hasPhysicalKeyboard()) messageInputEl.focus();
+    tapExamineTouchTracker.reset();
+    return;
+  }
+
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+    tapExamineTouchTracker.reset();
+    return;
+  }
+
+  if (!tapExamineTouchTracker.isTap(e)) {
+    e.preventDefault();
+    e.stopPropagation();
+    tapExamineTouchTracker.reset();
+    return;
+  }
+
+  const selection = window.getSelection();
+  const selectedText = selection ? selection.toString() : '';
+
+  if (selectedText.length > 0) {
+    const anchorNode = selection.anchorNode;
+    const isGameTextSelection = anchorNode && (
+      lowerWindowEl?.contains(anchorNode) ||
+      gameOutputEl?.contains(anchorNode)
+    );
+    if (isGameTextSelection) {
+      if (hasPhysicalKeyboard()) messageInputEl.focus();
+      return;
+    }
+  }
+
+  const wordData = extractWordAtPoint(clientX, clientY);
+  tapExamineTouchTracker.reset();
+
+  if (wordData && wordData.word) {
+    e.preventDefault();
+    e.stopPropagation();
+    populateInputWithWord(wordData.word);
+  } else {
+    if (hasPhysicalKeyboard()) messageInputEl.focus();
+  }
+}
+
+function handleGameMouseMove(e) {
+  const isTouchDevice = mqCoarse.matches && !mqHover.matches;
+  if (isTouchDevice) {
+    if (highlightOverlay) highlightOverlay.style.display = 'none';
+    return;
+  }
+
+  const inputType = getInputType();
+  if (inputType !== 'line') {
+    if (highlightOverlay) highlightOverlay.style.display = 'none';
+    return;
+  }
+
+  const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+  if (!isTapExamineEnabled) {
+    if (highlightOverlay) highlightOverlay.style.display = 'none';
+    return;
+  }
+
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+    if (highlightOverlay) highlightOverlay.style.display = 'none';
+    return;
+  }
+
+  const wordData = extractWordAtPoint(e.clientX, e.clientY);
+
+  if (wordData && wordData.word && wordData.range) {
+    if (!highlightOverlay) {
+      highlightOverlay = document.createElement('div');
+      highlightOverlay.style.position = 'fixed';
+      highlightOverlay.style.backgroundColor = 'rgba(0, 170, 255, 0.12)';
+      highlightOverlay.style.borderRadius = '2px';
+      highlightOverlay.style.pointerEvents = 'none';
+      highlightOverlay.style.zIndex = '1000';
+      document.body.appendChild(highlightOverlay);
+    }
+
+    const rect = wordData.range.getBoundingClientRect();
+    highlightOverlay.style.left = rect.left + 'px';
+    highlightOverlay.style.top = rect.top + 'px';
+    highlightOverlay.style.width = rect.width + 'px';
+    highlightOverlay.style.height = rect.height + 'px';
+    highlightOverlay.style.display = 'block';
+  } else {
+    if (highlightOverlay) highlightOverlay.style.display = 'none';
+  }
+}
+
 /**
  * Initialize keyboard input handling
  */
@@ -282,314 +506,20 @@ export function initKeyboardInput() {
     }
   });
 
-  // Click on game area - different behavior based on mode
-  const lowerWindow = document.getElementById('lowerWindow');
-  const gameOutput = document.getElementById('gameOutput');
-
-  /**
-   * Populate input with word (tap-to-examine feature)
-   * First word gets prefix (unless it's a common verb)
-   * Additional words are appended, prefix stays selected
-   * @param {string} word - The word to insert
-   */
-  const populateInputWithWord = (word) => {
-    if (!messageInputEl) return;
-
-    const wordLower = word.toLowerCase();
-    const currentValue = messageInputEl.value.trim();
-
-    if (currentValue === '') {
-      // Empty input - determine what to add
-      const isVerb = commonVerbs.includes(wordLower);
-      const isDirection = directions.includes(wordLower);
-
-      if (isVerb) {
-        // Common verb - no prefix, add space after for objects
-        messageInputEl.value = `${word} `;
-        // Cursor at end, ready for objects (only if input will be/is focused)
-        if (hasPhysicalKeyboard() || document.activeElement === messageInputEl) {
-          messageInputEl.setSelectionRange(messageInputEl.value.length, messageInputEl.value.length);
-        }
-        // Track populated word for mobile focus selection
-        wordJustPopulated = true;
-        populatedWordLength = word.length;
-      } else {
-        // Regular word or direction - add prefix
-        const prefix = isDirection ? 'go' : 'examine';
-        messageInputEl.value = `${prefix} ${word}`;
-        // Select the prefix so user can type to replace it (only if input will be/is focused)
-        if (hasPhysicalKeyboard() || document.activeElement === messageInputEl) {
-          messageInputEl.setSelectionRange(0, prefix.length);
-        }
-        // Track populated word for mobile focus selection
-        wordJustPopulated = true;
-        populatedWordLength = word.length;
-      }
-    } else {
-      // Input has content - check if word is already the last word
-      const words = currentValue.split(/\s+/);
-      const lastWord = words[words.length - 1];
-
-      if (lastWord.toLowerCase() === wordLower) {
-        // Focus on desktop only (mobile keyboard stays closed)
-        if (hasPhysicalKeyboard()) {
-          messageInputEl.focus();
-        }
-        return; // Don't add duplicate
-      }
-
-      // Input has content - append word and keep prefix selected
-      // First, determine what the current prefix is
-      let prefixLength = 0;
-
-      if (currentValue.startsWith('go ')) {
-        prefixLength = 2;
-      } else if (currentValue.startsWith('x ')) {
-        prefixLength = 1;
-      }
-
-      // Append the new word with trailing space for easier continuation
-      messageInputEl.value = `${currentValue} ${word} `;
-
-      // Re-select the prefix if it exists (only if input will be/is focused)
-      if (prefixLength > 0 && (hasPhysicalKeyboard() || document.activeElement === messageInputEl)) {
-        messageInputEl.setSelectionRange(0, prefixLength);
-      }
-
-      // Track populated word for mobile focus selection
-      wordJustPopulated = true;
-      populatedWordLength = word.length;
-    }
-
-    // Focus on desktop, scroll input horizontally on mobile (no vertical scroll)
-    if (hasPhysicalKeyboard()) {
-      messageInputEl.focus();
-    } else {
-      // Mobile: scroll input to end horizontally (keep page position unchanged)
-      messageInputEl.scrollLeft = messageInputEl.scrollWidth;
-      // Don't scroll game output - keep user's current scroll position
-    }
-  };
-
-  const handleTouchStart = (e) => {
-    // Track touch/mouse start position for scroll detection
-    tapExamineTouchTracker.track(e);
-  };
-
-  const handleGameClick = (e) => {
-    // Only process left-click (button 0) for mouse events - allow right-click default behavior
-    if (e.type === 'mouseup' && e.button !== 0) {
-      return; // Not left click - allow default behavior (context menu, etc.)
-    }
-
-    // Get coordinates (different for touch vs mouse)
-    // For touchend, use changedTouches since touches array is empty
-    const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-
-    // Only process in line input mode
-    const inputType = getInputType();
-    if (inputType !== 'line' || !messageInputEl) {
-      tapExamineTouchTracker.reset();
-      return; // Not in line mode - allow normal behavior
-    }
-
-    // Check if tap-to-examine is enabled (default: on; only disabled if explicitly set to 'false')
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
-    if (!isTapExamineEnabled) {
-      // Tap-to-examine disabled - on PC, just focus the input for easy typing
-      if (hasPhysicalKeyboard()) {
-        messageInputEl.focus();
-      }
-      tapExamineTouchTracker.reset();
-      return; // Feature disabled by user
-    }
-
-    // Check if mobile menu is open - if so, allow the click-outside handler to close it
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-      // Menu is open - don't trigger tap-to-examine, let menu close naturally
-      tapExamineTouchTracker.reset();
-      return;
-    }
-
-    // Detect scrolling/dragging - if finger moved more than 10px, user was scrolling
-    if (!tapExamineTouchTracker.isTap(e)) {
-      // User was scrolling, not tapping
-      e.preventDefault();
-      e.stopPropagation(); // Prevent bubbling to parent gameOutput listener
-      tapExamineTouchTracker.reset();
-      return;
-    }
-
-    // If user has selected text, don't process word click (allows text selection/copying)
-    const selection = window.getSelection();
-    const selectedText = selection ? selection.toString() : '';
-
-    if (selectedText.length > 0) {
-      const anchorNode = selection.anchorNode;
-      const isGameTextSelection = anchorNode && (
-        lowerWindow?.contains(anchorNode) ||
-        gameOutput?.contains(anchorNode)
-      );
-
-      if (isGameTextSelection) {
-        // User was selecting text - on PC, still focus input for easy typing after
-        if (hasPhysicalKeyboard()) {
-          messageInputEl.focus();
-        }
-        return; // User was selecting text - don't process
-      }
-    }
-
-    // Try to extract word at click point
-    const wordData = extractWordAtPoint(clientX, clientY);
-
-    // Reset tracking
-    tapExamineTouchTracker.reset();
-
-    if (wordData && wordData.word) {
-      // Word found - populate input
-      e.preventDefault();
-      e.stopPropagation();
-      populateInputWithWord(wordData.word);
-    } else {
-      // No word found (whitespace) - just focus on desktop
-      // Don't clear input to allow intentional blank clicks without losing work
-      if (hasPhysicalKeyboard()) {
-        messageInputEl.focus();
-      }
-    }
-  };
-
-  // Word hover highlighting (tap-to-examine feature)
-  let highlightOverlay = null;
-
-  // Track touch/mouse position to detect scrolling vs tapping
-  const tapExamineTouchTracker = createTouchTracker(10); // 10px threshold
-
-  // Direction words that should use "go" prefix
-  const directions = [
-    'north', 'south', 'east', 'west',
-    'northeast', 'northwest', 'southeast', 'southwest',
-    'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw',
-    'up', 'down', 'u', 'd',
-    'in', 'out'
-  ];
-
-  // Common IF verbs that should not get a prefix
-  const commonVerbs = [
-    'look', 'l',
-    'examine', 'x',
-    'take', 'get',
-    'drop', 'put',
-    'insert',
-    'inventory', 'i',
-    'open', 'close',
-    'lock', 'unlock',
-    'push', 'pull',
-    'turn', 'switch',
-    'move',
-    'climb', 'enter', 'exit',
-    'read',
-    'listen', 'smell', 'taste',
-    'eat', 'drink',
-    'wear', 'remove',
-    'give',
-    'talk', 'ask', 'tell', 'say',
-    'wait', 'z',
-    'search',
-    'light', 'extinguish',
-    'save', 'restore',
-    'quit', 'q',
-    'help',
-    'yes', 'y', 'no',
-    'repair', 'confirm'
-  ];
-
-  const handleGameMouseMove = (e) => {
-    // Disable hover highlighting on touch devices (prevents artifacts on mobile)
-    const isTouchDevice = mqCoarse.matches && !mqHover.matches;
-    if (isTouchDevice) {
-      if (highlightOverlay) {
-        highlightOverlay.style.display = 'none';
-      }
-      return;
-    }
-
-    // Check if we're in line mode
-    const inputType = getInputType();
-    if (inputType !== 'line') {
-      // Not in line mode - hide highlight
-      if (highlightOverlay) {
-        highlightOverlay.style.display = 'none';
-      }
-      return;
-    }
-
-    // Check if tap-to-examine is enabled (default: on; only disabled if explicitly set to 'false')
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
-    if (!isTapExamineEnabled) {
-      if (highlightOverlay) {
-        highlightOverlay.style.display = 'none';
-      }
-      return;
-    }
-
-    // Check if mobile menu is open - don't highlight words while menu is open
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-      if (highlightOverlay) {
-        highlightOverlay.style.display = 'none';
-      }
-      return;
-    }
-
-    // Extract word at current mouse position (returns exact position)
-    const wordData = extractWordAtPoint(e.clientX, e.clientY);
-
-    if (wordData && wordData.word && wordData.range) {
-      // Word found - show highlight (no cursor change)
-      // Create highlight overlay if it doesn't exist
-      if (!highlightOverlay) {
-        highlightOverlay = document.createElement('div');
-        highlightOverlay.style.position = 'fixed';
-        highlightOverlay.style.backgroundColor = 'rgba(0, 170, 255, 0.12)'; // Blue background (subtle but visible)
-        highlightOverlay.style.borderRadius = '2px';
-        highlightOverlay.style.pointerEvents = 'none';
-        highlightOverlay.style.zIndex = '1000';
-        // No transition - instant positioning to avoid flying effect
-        document.body.appendChild(highlightOverlay);
-      }
-
-      // Get the bounding rect from the range
-      const rect = wordData.range.getBoundingClientRect();
-
-      // Position highlight overlay over the word
-      highlightOverlay.style.left = rect.left + 'px';
-      highlightOverlay.style.top = rect.top + 'px';
-      highlightOverlay.style.width = rect.width + 'px';
-      highlightOverlay.style.height = rect.height + 'px';
-      highlightOverlay.style.display = 'block';
-
-    } else {
-      // No word - hide highlight
-      if (highlightOverlay) {
-        highlightOverlay.style.display = 'none';
-      }
-    }
-  };
+  // Cache game area elements used by tap-to-examine handlers
+  lowerWindowEl = document.getElementById('lowerWindow');
+  gameOutputEl = document.getElementById('gameOutput');
 
   // Only listen on lowerWindow (main game text), not gameOutput container
-  if (lowerWindow) {
+  if (lowerWindowEl) {
     // Mouse events (desktop)
-    lowerWindow.addEventListener('mousemove', handleGameMouseMove); // Hover highlighting
-    lowerWindow.addEventListener('mousedown', handleTouchStart); // Track start position
-    lowerWindow.addEventListener('mouseup', handleGameClick); // Word click
+    lowerWindowEl.addEventListener('mousemove', handleGameMouseMove);
+    lowerWindowEl.addEventListener('mousedown', handleTouchStart);
+    lowerWindowEl.addEventListener('mouseup', handleGameClick);
 
     // Touch events (mobile)
-    lowerWindow.addEventListener('touchstart', handleTouchStart, { passive: true }); // Track start position
-    lowerWindow.addEventListener('touchend', handleGameClick); // Word tap
+    lowerWindowEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+    lowerWindowEl.addEventListener('touchend', handleGameClick);
   }
 
   // Function to update cursor based on tap-to-examine setting
