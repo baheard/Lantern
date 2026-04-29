@@ -29,21 +29,34 @@ import {
 /**
  * State
  */
-let generation = 0;
-let windows = new Map();
-let onTextOutput = null; // Callback for TTS
-let acceptCallback = null; // Callback to send input back to Glk
-let inputEnabled = false; // Is input currently enabled?
-let inputType = null; // Type of input requested: 'line' or 'char' (null until game requests)
-let inputWindowId = null; // Window ID for the current input request
-let lastStatusLine = ''; // Track status line for scene change detection
-let lastContentGeneration = -1; // Track generation when content was last rendered (prevents clearing on resize)
-let lastCharModePlainText = ''; // Track previous plain text in char mode for diffing
-let resizeTimeout = null; // Debounce resize events
-let skipFirstAutosave = false; // Skip first autosave if we're about to restore
-let autosaveCounter = 0; // Count autosaves to skip the first N
-let previousInputType = null; // Track previous input type to detect transitions
-let justExitedCharMode = false; // True when we just transitioned from char to line (VM state needs to settle)
+const s = {
+  // Glk protocol — reset in init()
+  generation: 0,
+  windows: new Map(),
+  acceptCallback: null,
+
+  // TTS callback — set once by createVoxGlk(), NOT reset in init()
+  onTextOutput: null,
+
+  // Input state — reset in init(), change per-turn
+  inputEnabled: false,
+  inputType: null,
+  inputWindowId: null,
+  previousInputType: null,
+  justExitedCharMode: false,
+
+  // Display state — reset in init(), updated per-turn
+  lastStatusLine: '',
+  lastContentGeneration: -1,
+  lastCharModePlainText: '',
+
+  // Autosave counters — reset in init()
+  autosaveCounter: 0,
+  skipFirstAutosave: false,
+
+  // Browser infrastructure — NOT reset in init() (browser-level debounce)
+  resizeTimeout: null,
+};
 
 /**
  * Calculate metrics based on actual window dimensions
@@ -124,19 +137,19 @@ function calculateMetrics() {
  * Handle window resize - send arrange event to Glk
  */
 function handleResize() {
-  if (!acceptCallback) return;
+  if (!s.acceptCallback) return;
 
   // Debounce resize events
-  if (resizeTimeout) {
-    clearTimeout(resizeTimeout);
+  if (s.resizeTimeout) {
+    clearTimeout(s.resizeTimeout);
   }
 
-  resizeTimeout = setTimeout(() => {
+  s.resizeTimeout = setTimeout(() => {
     const metrics = calculateMetrics();
 
-    acceptCallback({
+    s.acceptCallback({
       type: 'arrange',
-      gen: generation,
+      gen: s.generation,
       metrics: metrics
     });
   }, 250); // Wait 250ms after resize stops
@@ -150,7 +163,7 @@ function handleResize() {
  * @returns {Object} - VoxGlk interface with init(), update(), error() methods
  */
 export function createVoxGlk(textOutputCallback) {
-  onTextOutput = textOutputCallback;
+  s.onTextOutput = textOutputCallback;
 
   const voxglk = {
     /**
@@ -158,18 +171,18 @@ export function createVoxGlk(textOutputCallback) {
      * Setup display, then call options.accept({type: 'init'}) to start the game
      */
     init: function(options) {
-      generation = 0;
-      windows.clear();
+      s.generation = 0;
+      s.windows.clear();
       resetGridState(); // Clear grid states for new game
-      lastStatusLine = '';
-      lastContentGeneration = -1; // Reset content generation tracker
-      inputEnabled = false;
-      inputType = 'line';
-      inputWindowId = null;
-      autosaveCounter = 0; // Reset counter for new game session
-      lastCharModePlainText = '';
-      previousInputType = null;
-      justExitedCharMode = false;
+      s.lastStatusLine = '';
+      s.lastContentGeneration = -1; // Reset content generation tracker
+      s.inputEnabled = false;
+      s.inputType = 'line';
+      s.inputWindowId = null;
+      s.autosaveCounter = 0; // Reset counter for new game session
+      s.lastCharModePlainText = '';
+      s.previousInputType = null;
+      s.justExitedCharMode = false;
       resetBootstrapState(); // Clear bootstrap flags for new game session
       resetWatchdogState(); // Clear any stale watchdog timer + repair flag
 
@@ -177,7 +190,7 @@ export function createVoxGlk(textOutputCallback) {
       updateInputVisibility();
 
       // Store the accept callback - we'll use it to send input later
-      acceptCallback = options.accept;
+      s.acceptCallback = options.accept;
 
       // Clear display and hide windows initially
       const statusBar = document.getElementById('statusBar');
@@ -209,12 +222,12 @@ export function createVoxGlk(textOutputCallback) {
       window.addEventListener('resize', handleResize);
 
       // Tell Glk we're ready - this will trigger VM.start()
-      if (acceptCallback) {
+      if (s.acceptCallback) {
         const metricsObj = calculateMetrics();
 
-        acceptCallback({
+        s.acceptCallback({
           type: 'init',
-          gen: generation,
+          gen: s.generation,
           metrics: metricsObj
         });
       }
@@ -229,10 +242,10 @@ export function createVoxGlk(textOutputCallback) {
         // Track generation (Glk uses this to prevent old input)
         // Always update generation from Glk - this is the current turn number
         if (arg.gen !== undefined) {
-          generation = arg.gen;
+          s.generation = arg.gen;
           // CRITICAL: Update lastContentGeneration IMMEDIATELY to prevent clearing on rapid updates (resize)
           // This must happen BEFORE the clearing check below, not after rendering
-          lastContentGeneration = generation;
+          s.lastContentGeneration = s.generation;
           // Clear watchdog since VM responded with a new generation
           clearWatchdog();
 
@@ -242,10 +255,10 @@ export function createVoxGlk(textOutputCallback) {
         // Determine input mode early (needed for grid state processing)
         if (arg.input) {
           const inputTypes = arg.input.map(i => i.type);
-          inputType = inputTypes.includes('char') ? 'char' : 'line';
-          inputEnabled = true;
+          s.inputType = inputTypes.includes('char') ? 'char' : 'line';
+          s.inputEnabled = true;
           if (arg.input.length > 0 && arg.input[0].id !== undefined) {
-            inputWindowId = arg.input[0].id;
+            s.inputWindowId = arg.input[0].id;
           }
 
           // Update input UI immediately (don't wait for 500ms interval)
@@ -253,34 +266,34 @@ export function createVoxGlk(textOutputCallback) {
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
-        if (checkSuppressUpdate(inputType)) return;
+        if (checkSuppressUpdate(s.inputType)) return;
 
         // Process window definitions
         if (arg.windows) {
           arg.windows.forEach(win => {
-            windows.set(win.id, win);
+            s.windows.set(win.id, win);
           });
         }
 
         // Auto-restore AFTER first update completes (VM is fully running)
-        await handleAutoRestore(generation, () => acceptCallback);
+        await handleAutoRestore(s.generation, () => s.acceptCallback);
 
         // Use VoxGlk renderer to convert to frotz HTML
         if (arg.content) {
-          processGridUpdates(arg.content, windows, inputType, isJustRestored());
+          processGridUpdates(arg.content, s.windows, s.inputType, isJustRestored());
 
-          const { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText } = renderUpdate(arg, windows);
+          const { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText } = renderUpdate(arg, s.windows);
 
           // Check if upper window was explicitly mentioned in this update
           const hasUpperWindowContent = arg.content.some(c => {
-            const win = windows.get(c.id);
+            const win = s.windows.get(c.id);
             return win && win.type === 'grid' && c.lines && c.lines.length > 1;
           });
 
 
           // Track status bar changes for TTS (but don't auto-clear screen)
           // Compare plain text so whitespace/attribute changes don't trigger false re-narration
-          const statusBarChanged = statusBarText !== lastStatusLine;
+          const statusBarChanged = statusBarText !== s.lastStatusLine;
 
           // Only clear screen when game explicitly requests it
           const shouldClearScreen = arg.content.some(c => c.clear);
@@ -298,7 +311,7 @@ export function createVoxGlk(textOutputCallback) {
               // Store reference for chunking
               window.currentStatusBarElement = statusBarEl;
             }
-            lastStatusLine = statusBarText;
+            s.lastStatusLine = statusBarText;
           }
           // NOTE: Don't clear status bar if not in update - preserve it
           // The game doesn't send status bar on every update
@@ -318,7 +331,7 @@ export function createVoxGlk(textOutputCallback) {
 
           // Check if grid window specifically requested a clear
           const upperWindowClear = arg.content.some(c => {
-            const win = windows.get(c.id);
+            const win = s.windows.get(c.id);
             return win && win.type === 'grid' && c.lines && c.lines.length > 1 && c.clear;
           });
 
@@ -359,7 +372,7 @@ export function createVoxGlk(textOutputCallback) {
           // Clear stale lower window content when upper window updates without main content
           // This prevents old transcript from being re-narrated when switching to upper-window-only scenes
           // IMPORTANT: Only clear if generation changed (new turn) - prevents clearing during resize/arrange
-          const generationChanged = generation !== lastContentGeneration;
+          const generationChanged = s.generation !== s.lastContentGeneration;
 
           if (hasUpperWindowContent && !hasMainContent && generationChanged) {
             const lowerWindowEl = document.getElementById('lowerWindow');
@@ -406,15 +419,15 @@ export function createVoxGlk(textOutputCallback) {
           }
 
 
-          if (textForTTS.trim() && onTextOutput) {
+          if (textForTTS.trim() && s.onTextOutput) {
             // In char mode (press any key screens), only narrate changed content
             // This prevents re-reading entire menus/pages when only a small part changes
             let finalTextForTTS = textForTTS;
 
-            if (inputType === 'char') {
+            if (s.inputType === 'char') {
               // Diff against previous text to find what changed
               const newLines = textForTTS.split('\n');
-              const oldLines = lastCharModePlainText.split('\n');
+              const oldLines = s.lastCharModePlainText.split('\n');
 
               // Find the first line that differs
               let firstDiff = 0;
@@ -442,15 +455,15 @@ export function createVoxGlk(textOutputCallback) {
               }
 
               // Store current text for next comparison
-              lastCharModePlainText = textForTTS;
+              s.lastCharModePlainText = textForTTS;
             } else {
               // Line mode - reset tracking
               // Also clear when transitioning away from char mode to prevent stale diffs
-              lastCharModePlainText = '';
+              s.lastCharModePlainText = '';
             }
 
             if (finalTextForTTS.trim()) {
-              onTextOutput(finalTextForTTS);
+              s.onTextOutput(finalTextForTTS);
             }
           }
 
@@ -465,7 +478,7 @@ export function createVoxGlk(textOutputCallback) {
           // Check for location change (for auto-mapping)
           // Pass status bar text for name-based location tracking
           // Pass current turn's input type (not previous turn's)
-          checkLocationChange(statusBarText, generation, currentTurnInputType);
+          checkLocationChange(statusBarText, s.generation, currentTurnInputType);
         }
 
         // Handle special input requests (file dialogs for save/restore)
@@ -483,10 +496,10 @@ export function createVoxGlk(textOutputCallback) {
 
             Dialog.open(writable, arg.specialinput.filetype, gameid, (fileref) => {
               // Send response back to Glk
-              if (acceptCallback) {
-                acceptCallback({
+              if (s.acceptCallback) {
+                s.acceptCallback({
                   type: 'specialresponse',
-                  gen: generation,
+                  gen: s.generation,
                   response: 'fileref_prompt',
                   value: fileref
                 });
@@ -502,35 +515,35 @@ export function createVoxGlk(textOutputCallback) {
         if (arg.input) {
           // Detect transition from char to line mode (exiting menus/press-any-key screens)
           // VM state needs to settle - one line command must be processed before saving
-          if (previousInputType === 'char' && inputType === 'line') {
-            justExitedCharMode = true;
-          } else if (inputType === 'line' && justExitedCharMode) {
+          if (s.previousInputType === 'char' && s.inputType === 'line') {
+            s.justExitedCharMode = true;
+          } else if (s.inputType === 'line' && s.justExitedCharMode) {
             // Clear flag after one line input is processed
-            justExitedCharMode = false;
+            s.justExitedCharMode = false;
           }
-          previousInputType = inputType;
+          s.previousInputType = s.inputType;
 
           // Capture the intro input type (first request at gen 1) for bootstrap after restore
-          captureIntroInputType(generation, inputType);
+          captureIntroInputType(s.generation, s.inputType);
 
 
           // Note: Command line visibility is handled automatically by keyboard.js polling
 
           // Only autosave on line input (not char input)
-          const shouldAutosaveThisTurn = inputType === 'line';
+          const shouldAutosaveThisTurn = s.inputType === 'line';
 
           // Skip first 3 autosaves (title screen interactions)
           // This counter resets on every page load (including restore)
-          const shouldSkipFirstN = autosaveCounter < 3;
+          const shouldSkipFirstN = s.autosaveCounter < 3;
           if (shouldSkipFirstN && shouldAutosaveThisTurn) {
-            autosaveCounter++;
+            s.autosaveCounter++;
           }
 
           // Auto-save after each turn (only on line input, skip first 3)
           // Skip autosave if we just exited char mode (VM state needs to settle)
           // Check global auto-save setting
           const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
-          if (autosaveEnabled && !skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !justExitedCharMode) {
+          if (autosaveEnabled && !s.skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !s.justExitedCharMode) {
             setTimeout(async () => {
               try {
                 const { autoSave } = await import('./save-manager.js');
@@ -539,8 +552,8 @@ export function createVoxGlk(textOutputCallback) {
                 // Auto-save failed silently
               }
             }, 100);
-          } else if (skipFirstAutosave) {
-            skipFirstAutosave = false; // Only skip once
+          } else if (s.skipFirstAutosave) {
+            s.skipFirstAutosave = false; // Only skip once
           }
         } else {
         }
@@ -587,8 +600,8 @@ export function createVoxGlk(textOutputCallback) {
       const lowerWindowEl = document.getElementById('lowerWindow');
 
       return {
-        generation: generation,
-        inputWindowId: inputWindowId,
+        generation: s.generation,
+        inputWindowId: s.inputWindowId,
         displayState: {
           statusBarHTML: statusBarEl?.innerHTML || '',
           upperWindowHTML: upperWindowEl?.innerHTML || '',
@@ -601,10 +614,10 @@ export function createVoxGlk(textOutputCallback) {
      * Restore VoxGlk state after VM restore
      */
     restore_state: function(savedGeneration, savedInputWindowId) {
-      generation = savedGeneration;
-      inputWindowId = savedInputWindowId;
-      inputEnabled = true;
-      inputType = 'line';
+      s.generation = savedGeneration;
+      s.inputWindowId = savedInputWindowId;
+      s.inputEnabled = true;
+      s.inputType = 'line';
 
       // Update input UI immediately
       updateInputVisibility();
@@ -639,7 +652,7 @@ export function createVoxGlk(textOutputCallback) {
  * @param {string} type - Input type ('line' or 'char')
  */
 export function sendInput(text, type = 'line') {
-  if (!acceptCallback) {
+  if (!s.acceptCallback) {
     return;
   }
 
@@ -663,16 +676,16 @@ export function sendInput(text, type = 'line') {
     }
     inputEvent = {
       type: 'char',
-      gen: generation,
-      window: inputWindowId,
+      gen: s.generation,
+      window: s.inputWindowId,
       value: charValue
     };
   } else {
     // Line input: send text string
     inputEvent = {
       type: 'line',
-      gen: generation,
-      window: inputWindowId,
+      gen: s.generation,
+      window: s.inputWindowId,
       value: text,
       terminator: 'enter'
     };
@@ -680,11 +693,11 @@ export function sendInput(text, type = 'line') {
 
 
   // Store generation before sending (to detect synchronous game response)
-  const beforeGeneration = generation;
+  const beforeGeneration = s.generation;
 
   // Start watchdog BEFORE sending input (Glk may call update synchronously)
   // Don't await - we want the watchdog to start immediately without blocking
-  startWatchdog(generation, () => generation, isBootstrapping()).catch(err => {
+  startWatchdog(s.generation, () => s.generation, isBootstrapping()).catch(err => {
     // Watchdog start failed silently
   });
 
@@ -710,13 +723,13 @@ export function sendInput(text, type = 'line') {
   }
 
   // Send the input event to Glk
-  if (!acceptCallback) return;
-  acceptCallback(inputEvent);
+  if (!s.acceptCallback) return;
+  s.acceptCallback(inputEvent);
 
   // Only disable input if the game hasn't already responded synchronously
   // If generation advanced, the game already re-enabled input in update()
-  if (generation === beforeGeneration) {
-    inputEnabled = false;
+  if (s.generation === beforeGeneration) {
+    s.inputEnabled = false;
   }
 }
 
@@ -725,28 +738,28 @@ export function sendInput(text, type = 'line') {
  * Get current generation (for debugging)
  */
 export function getGeneration() {
-  return generation;
+  return s.generation;
 }
 
 /**
  * Check if input is currently enabled
  */
 export function isInputEnabled() {
-  return inputEnabled;
+  return s.inputEnabled;
 }
 
 /**
  * Get current input type ('line' or 'char')
  */
 export function getInputType() {
-  return inputType;
+  return s.inputType;
 }
 
 /**
  * Get current input window ID
  */
 export function getInputWindowId() {
-  return inputWindowId;
+  return s.inputWindowId;
 }
 
 /**
@@ -754,14 +767,14 @@ export function getInputWindowId() {
  * Returns false if we just exited char mode and VM needs one command to settle
  */
 export function isSafeToSave() {
-  return !justExitedCharMode;
+  return !s.justExitedCharMode;
 }
 
 /**
  * Set flag to skip first autosave (when restoring from saved state)
  */
 export function setSkipFirstAutosave(skip) {
-  skipFirstAutosave = skip;
+  s.skipFirstAutosave = skip;
 }
 
 /**
@@ -779,5 +792,5 @@ export function getVoxGlk() {
 export function updateLastStatusLine(statusHTML) {
   const tmp = document.createElement('div');
   tmp.innerHTML = statusHTML;
-  lastStatusLine = tmp.textContent;
+  s.lastStatusLine = tmp.textContent;
 }
