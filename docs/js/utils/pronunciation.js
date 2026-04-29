@@ -6,6 +6,7 @@
  */
 
 import { getJSON, setJSON } from './storage/storage-api.js';
+import { escapeRegExp } from './text-processing.js';
 
 /**
  * Get the pronunciation map from localStorage
@@ -49,7 +50,7 @@ export function fixPronunciation(text) {
   // Apply word-specific pronunciation fixes
   for (const [word, pronunciation] of Object.entries(pronunciationMap)) {
     // Use word boundaries to avoid partial matches
-    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    const regex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'gi');
     fixed = fixed.replace(regex, pronunciation);
   }
 

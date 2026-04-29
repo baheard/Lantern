@@ -699,7 +699,7 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `keyboard-core.js:466` | `currentHighlightedWord` written but never read — dead variable |
 | Low | `voice-ui.js:8-9` | `voiceListeningIndicatorEl`/`voiceTranscriptEl` duplicate `dom.voiceListeningIndicator`/`dom.voiceTranscript` — use `dom.*` refs; `initVoiceUI` becomes removable |
 | ~~High~~ DONE | `sync-preview-modal.js:413` | `updateProgress` XSS — `currentItem.name`/`statusText` unescaped in `insertAdjacentHTML` — fixed v1.5.239 |
-| Medium | `game-output.js:242-243` | `window.lastSentCommand` used unescaped in `new RegExp()` — metacharacters throw SyntaxError |
+| ~~Medium~~ DONE | `game-output.js:242-243` | `lastSentCommand` RegExp injection fixed v1.5.242 — `escapeRegExp()` added to text-processing.js |
 | Medium | `scroll-down-button.js:initScrollDownButton` | 4-line pressed-state teardown 6× + 6-line timer teardown 4× — extract helpers |
 | Low | `history.js:28,37,43,63` | `alert()` for history display — same pattern as Batch 5 |
 | Low | `nav-buttons.js:51-53` | Empty `if (narrationChunks.length > 0) {}` debug block — dead code |
@@ -708,7 +708,7 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `game-output.js:125-126` | Empty `else if (!shouldIncludeStatus) {}` block — dead code |
 | Low | `game-output.js:315` | Empty catch on auto-narration of system messages — add intent comment |
 | Medium | `text-processing.js:102-115` | `processAndSplitText` reimplements `processTextForTTS` normalization verbatim — call the existing function |
-| Medium | `pronunciation.js:51-54` | User-entered pronunciation keys in `new RegExp()` without escaping — metacharacters throw SyntaxError |
+| ~~Medium~~ DONE | `pronunciation.js:51-54` | Pronunciation key RegExp injection fixed v1.5.242 — `escapeRegExp()` from text-processing.js |
 | Low | `gdrive-auth.js:45`, `gdrive-sync.js:82,159,175`, `gdrive-sync-preview.js:85,249` | 6× bare `JSON.parse(localStorage.getItem(...))` without try/catch — use `getJSON` |
 | Low | `audio-feedback.js:256` | `new Promise(async executor)` anti-pattern in `playSystemBeep` — rewrite as `async function` |
 | Low | `gdrive-api.js:69` | `folderName` interpolated into Drive API query string — unescaped `'` breaks query syntax |
@@ -734,3 +734,4 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.239** — Batch 10 review doc: `ui/` (1 High, 2 Medium, 6 Low findings). 1 High fix: `escapeHtml` on `currentItem.name`/`currentItem.statusText` in `sync-preview-modal.updateProgress` (`insertAdjacentHTML` XSS — same class as Batch 1 fix).
 - **v1.5.240** — Batch 11 review doc: `utils/` (2 Medium, 7 Low findings). No code changes this pass.
 - **v1.5.241** — Batch 12 review doc: CSS pass (0 Medium, 3 Low findings). No code changes this pass. All Tier 2 module-by-module review complete.
+- **v1.5.242** — 2 Medium runtime bugs: added `escapeRegExp()` to `utils/text-processing.js`; escaped `lastSentCommand` before `new RegExp` in `game-output.js` (commands with `[`, `(`, `*` no longer throw SyntaxError); escaped pronunciation map keys in `pronunciation.js` (user-entered words with metacharacters no longer break the entire pronunciation pass).

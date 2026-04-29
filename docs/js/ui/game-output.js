@@ -7,7 +7,7 @@
 
 import { state, resetNarrationState } from '../core/state.js';
 import { dom } from '../core/dom.js';
-import { escapeHtml } from '../utils/text-processing.js';
+import { escapeHtml, escapeRegExp } from '../utils/text-processing.js';
 import { insertTemporaryMarkers, createNarrationChunks, insertRealMarkersAtIDs, removeTemporaryMarkers } from '../narration/chunking.js';
 import { stopNarration } from '../narration/tts-player.js';
 import { scrollToTop, scrollToNewContent, scrollToBottom } from '../utils/scroll.js';
@@ -239,8 +239,9 @@ export function addGameText(text, isCommand = false, isVoiceCommand = false, isA
     if (window.lastSentCommand) {
       const lastCmd = window.lastSentCommand.trim();
       // Remove patterns like ">look\n" or "> look\n" at the start
-      text = text.replace(new RegExp(`^\\s*&gt;\\s*${lastCmd}\\s*(<br\\s*/?>|\\n)?`, 'i'), '');
-      text = text.replace(new RegExp(`^\\s*>\\s*${lastCmd}\\s*(<br\\s*/?>|\\n)?`, 'i'), '');
+      const escapedCmd = escapeRegExp(lastCmd);
+      text = text.replace(new RegExp(`^\\s*&gt;\\s*${escapedCmd}\\s*(<br\\s*/?>|\\n)?`, 'i'), '');
+      text = text.replace(new RegExp(`^\\s*>\\s*${escapedCmd}\\s*(<br\\s*/?>|\\n)?`, 'i'), '');
       window.lastSentCommand = null; // Clear after use
     }
 
