@@ -291,6 +291,23 @@ export function initVoiceRecognition(processVoiceKeywords) {
   recognition.interimResults = true;
   recognition.lang = 'en-US';
 
+  // Process, display, and dispatch a recognized transcript.
+  // stopAfter=true stops recognition after dispatch (used by instant-command paths).
+  async function dispatchRecognized(transcript, confidence, stopAfter = false) {
+    const processed = await processVoiceKeywords(transcript, confidence);
+    showConfirmedTranscript(transcript, processed === false, confidence);
+    if (processed !== false) {
+      playCommandSent();
+      const { sendCommandDirect } = await import('../game/commands/command-router.js');
+      sendCommandDirect(processed, true, confidence);
+    } else if (state.pendingCommandProcessed) {
+      playAppCommand();
+    }
+    if (stopAfter && state.recognition) {
+      state.recognition.stop();
+    }
+  }
+
   recognition.onstart = () => {
     state.isListening = true;
     state.isRecognitionActive = true;
@@ -404,29 +421,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
         state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
         // Process and send immediately with high confidence (0.95 = instant interim command)
-        const processed = await processVoiceKeywords(interimTranscript, 0.95);
-        const isNavCommand = (processed === false);
-
-        // Show as confirmed with confidence
-        showConfirmedTranscript(interimTranscript, isNavCommand, 0.95);
-
-        if (processed !== false) {
-          // Game command - send immediately
-          playCommandSent();
-          import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
-            sendCommandDirect(processed, true, 0.95);
-          });
-        } else {
-          // Navigation command
-          if (state.pendingCommandProcessed) {
-            playAppCommand();
-          }
-        }
-
-        // Stop recognition after instant command (will restart automatically)
-        if (state.recognition) {
-          state.recognition.stop();
-        }
+        await dispatchRecognized(interimTranscript, 0.95, true);
         return;
       }
 
@@ -468,29 +463,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
             state.currentInterimTranscript = ''; // Clear so it doesn't get sent again
 
             // Process and send with high confidence (0.95 = instant interim command)
-            const processed = await processVoiceKeywords(capturedTranscript, 0.95);
-            const isNavCommand = (processed === false);
-
-            // Show as confirmed with mic indicator and confidence
-            showConfirmedTranscript(capturedTranscript, isNavCommand, 0.95);
-
-            if (processed !== false) {
-              // Game command - send immediately
-              playCommandSent();
-              import('../game/commands/command-router.js').then(({ sendCommandDirect }) => {
-                sendCommandDirect(processed, true, 0.95);
-              });
-            } else {
-              // Navigation command
-              if (state.pendingCommandProcessed) {
-                playAppCommand();
-              }
-            }
-
-            // Stop recognition after instant command (will restart automatically)
-            if (state.recognition) {
-              state.recognition.stop();
-            }
+            await dispatchRecognized(capturedTranscript, 0.95, true);
           }
         }, delay);
 
@@ -766,21 +739,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
       const confidence = wasPushToTalkRelease ? 0.90 : 0.95;
 
       // Process and send with appropriate confidence
-      const processed = await processVoiceKeywords(interimText, confidence);
-      const isNavCommand = (processed === false);
-
-      // Show as confirmed with confidence
-      showConfirmedTranscript(interimText, isNavCommand, confidence);
-
-      if (processed !== false) {
-        playCommandSent();
-        const { sendCommandDirect } = await import('../game/commands/command-router.js');
-        sendCommandDirect(processed, true, confidence);
-      } else {
-        if (state.pendingCommandProcessed) {
-          playAppCommand();
-        }
-      }
+      await dispatchRecognized(interimText, confidence);
     } else if (!wasPushToTalkRelease && !state.hasProcessedResult) {
       // No pending instant command - display any remaining interim text as low confidence
       // BUT: Skip this in push-to-talk mode when button was released (already processed above)
