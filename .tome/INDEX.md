@@ -6,7 +6,8 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 ## Entries
 
-- [xss-vectors](xss-vectors.md) — Known XSS vectors: 3 fixed (saves), 1 open (map node names in connections list) (security, xss, map) — updated 2026-04-27
+- [narration-module-quirks](narration-module-quirks.md) — MediaSession play must call speakTextChunked directly; skipToEnd bypasses stopNarration (narration, tts, cycles) — updated 2026-04-27
+- [xss-vectors](xss-vectors.md) — Known XSS vectors: all 4 now fixed (saves + map node names) (security, xss, map) — updated 2026-04-27
 - [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26
 
 - [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26

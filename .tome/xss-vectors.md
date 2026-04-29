@@ -19,10 +19,11 @@ aliases: [xss, injection, escaping, sanitization]
 ### Sync preview modal — **Fixed v1.5.222 (4b73a06)**
 `item.name` (save filename from local or remote) was interpolated raw into `innerHTML`. Fixed with `escapeHtml()` on `item.id`, `item.name`, `statusClass`, `statusLabel`.
 
-### Map connections list — **Open (`map-sheet.js:344`)**
-`populateConnectionsList()` builds the connections list via `innerHTML` with `${c.node.name}` unescaped. Node names come from Z-machine status bar text — game-controlled. A crafted `.z5`/`.z8` game file (user-loadable via custom-game feature) can produce a room name like `<img src=x onerror=…>` that executes when the connections panel opens.
+### Map connections list — **Fixed v1.5.234**
+`populateConnectionsList()` was building the connections list via `innerHTML` with `${c.node.name}` unescaped. Node names come from Z-machine status bar text — game-controlled. Fixed with `escapeHtml(c.node.name)` (`utils/text-processing.js`).
 
-**Fix:** `escapeHtml(c.node.name)` — function already available in `utils/text-processing.js`.
+### Sync preview progress log — **Fixed v1.5.239**
+`updateProgress()` in `sync-preview-modal.js` injected `currentItem.name` (Drive filename) and `currentItem.statusText` (which includes `error.message` from caught exceptions) directly into `insertAdjacentHTML('beforeend', itemHtml)`. Missed when the preview list XSS was fixed in v1.5.222. Fixed with `escapeHtml()` on both values.
 
 ## Attack surface context
 - Save files cross user boundaries (Google Drive sync, file import) → High severity
