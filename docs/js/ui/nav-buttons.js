@@ -48,7 +48,4 @@ export function updateNavButtons() {
     }
   }
 
-  // Log position for debugging
-  if (state.narrationChunks.length > 0) {
-  }
 }

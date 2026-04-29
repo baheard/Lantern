@@ -122,8 +122,6 @@ export function ensureChunksReady() {
 
     allChunks = allChunks.concat(statusChunks);
     chunkOffset = statusChunks.length;
-  } else if (hasStatus && statusEl && !shouldIncludeStatus) {
-  }
 
   // Process upper window second (if exists) - for quotes, formatted text, etc.
   if (hasUpper && upperEl) {

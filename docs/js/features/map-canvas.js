@@ -543,7 +543,7 @@ function toggleAutoMap() {
 
     // If we have status bar text, try to extract the current location from it
     if (statusText && statusText.length > 0) {
-      const location = window.getCurrentLocation ? window.getCurrentLocation(statusText) : null;
+      const location = getCurrentLocation(statusText);
       if (location?.name) {
         currentLocationName = location.name;
       }

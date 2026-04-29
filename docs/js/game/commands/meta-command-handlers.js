@@ -5,7 +5,7 @@
  */
 
 import { state } from '../../core/state.js';
-import { addGameText } from '../../ui/game-output.js';
+import { respondAsGame } from '../../ui/respond-as-game.js';
 import { enterSystemEntryMode, exitSystemEntryMode } from '../../input/keyboard/index.js';
 import { getCustomSaves, getUnifiedSavesList, formatSavesList } from './save-list-formatter.js';
 
@@ -15,25 +15,6 @@ const MAX_SAVES = 5;
 let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
 let gameDialogRef = null; // File reference for in-game dialogs
-
-/**
- * Respond as if the game sent output
- * @param {string} html - HTML content to display
- */
-function respondAsGame(html) {
-  // Add game text with isCommand=false (this is game output, not user command)
-  addGameText(html, false);
-
-  // Trigger TTS narration if enabled
-  // Extract plain text from HTML for TTS
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  const plainText = tempDiv.textContent.trim();
-
-  if (state.autoplayEnabled && window.handleGameOutput) {
-    window.handleGameOutput(plainText);
-  }
-}
 
 /**
  * Handle SAVE command
@@ -221,58 +202,53 @@ export async function handleMetaResponse(input) {
 }
 
 /**
- * Handle save name input
+ * Validate a save name and resolve number references to actual save names.
+ * Returns {valid: true, targetSaveName} or {valid: false, errorMessage}.
  */
-async function handleSaveResponse(input, saves) {
-  // Check if input is a number referring to an existing save
+function validateSaveName(input) {
   const num = parseInt(input);
   let targetSaveName = input;
-
-  // Get the unified list to match restore/delete behavior
   const allSaves = getUnifiedSavesList();
 
   if (!isNaN(num) && num >= 1 && num <= allSaves.length) {
-    // User specified a number - overwrite that numbered save
     const save = allSaves[num - 1];
-
-    // Can't overwrite quicksave or autosave with numbered save command
     if (save.type === 'quicksave') {
-      respondAsGame('<div class="system-message">Cannot overwrite quicksave. Use Quick Save button or choose a different name.</div>');
-      return true;
+      return { valid: false, errorMessage: 'Cannot overwrite quicksave. Use Quick Save button or choose a different name.' };
     }
     if (save.type === 'autosave') {
-      respondAsGame('<div class="system-message">Cannot overwrite autosave. Choose a different name.</div>');
-      return true;
+      return { valid: false, errorMessage: 'Cannot overwrite autosave. Choose a different name.' };
     }
-
-    // Use the existing save's name to overwrite it
     targetSaveName = save.name;
   }
 
-  // Check if name is valid (no special characters that could break localStorage)
   if (!/^[a-zA-Z0-9_ -]+$/.test(targetSaveName)) {
-    respondAsGame('<div class="system-message">Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.</div>');
-    return true;
+    return { valid: false, errorMessage: 'Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.' };
   }
 
-  // Check for reserved names
-  const reservedNames = ['quicksave', 'autosave'];
-  if (reservedNames.includes(targetSaveName.toLowerCase())) {
-    respondAsGame('<div class="system-message">That name is reserved. Please choose a different name.</div>');
-    return true;
+  if (['quicksave', 'autosave'].includes(targetSaveName.toLowerCase())) {
+    return { valid: false, errorMessage: 'That name is reserved. Please choose a different name.' };
   }
 
-  // Enforce save limit — only block net-new saves, not overwrites
   const existingSave = getCustomSaves().find(s => s.name === targetSaveName);
   if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
-    respondAsGame(`<div class="system-message">Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.</div>`);
+    return { valid: false, errorMessage: `Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.` };
+  }
+
+  return { valid: true, targetSaveName };
+}
+
+/**
+ * Handle save name input
+ */
+async function handleSaveResponse(input, saves) {
+  const result = validateSaveName(input);
+  if (!result.valid) {
+    respondAsGame(`<div class="system-message">${result.errorMessage}</div>`);
     return true;
   }
 
-  // Perform the save using our comprehensive save system
   const { customSave } = await import('../save-manager.js');
-  const success = await customSave(targetSaveName);
-
+  const success = await customSave(result.targetSaveName);
   if (!success) {
     respondAsGame('<div class="system-message">Save failed. Please try again.</div>');
   }
@@ -387,85 +363,17 @@ async function handleRepairResponse(input) {
  * Handle game-initiated save dialog (when game asks to save)
  */
 async function handleGameSaveResponse(input, saves) {
-  // Check if input is a number referring to an existing save
-  const num = parseInt(input);
-  let targetSaveName = input;
-
-  // Get the unified list to match restore/delete behavior
-  const allSaves = getUnifiedSavesList();
-
-  if (!isNaN(num) && num >= 1 && num <= allSaves.length) {
-    // User specified a number - overwrite that numbered save
-    const save = allSaves[num - 1];
-
-    // Can't overwrite quicksave or autosave with numbered save command
-    if (save.type === 'quicksave') {
-      respondAsGame('<div class="system-message">Cannot overwrite quicksave. Use Quick Save button or choose a different name.</div>');
-
-      // Re-prompt
-      awaitingMetaInput = 'game-save';
-      setTimeout(() => {
-        enterSystemEntryMode('Enter save name');
-      }, 100);
-      return true;
-    }
-    if (save.type === 'autosave') {
-      respondAsGame('<div class="system-message">Cannot overwrite autosave. Choose a different name.</div>');
-
-      // Re-prompt
-      awaitingMetaInput = 'game-save';
-      setTimeout(() => {
-        enterSystemEntryMode('Enter save name');
-      }, 100);
-      return true;
-    }
-
-    // Use the existing save's name to overwrite it
-    targetSaveName = save.name;
-  }
-
-  // Check if name is valid (no special characters that could break localStorage)
-  if (!/^[a-zA-Z0-9_ -]+$/.test(targetSaveName)) {
-    respondAsGame('<div class="system-message">Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.</div>');
-
-    // Re-prompt by re-entering system entry mode
+  const result = validateSaveName(input);
+  if (!result.valid) {
+    respondAsGame(`<div class="system-message">${result.errorMessage}</div>`);
     // IMPORTANT: Restore awaitingMetaInput flag so ESC/Enter cancellation works
     awaitingMetaInput = 'game-save';
-    setTimeout(() => {
-      enterSystemEntryMode('Enter save name');
-    }, 100);
-    return true;
-  }
-
-  // Check for reserved names
-  const reservedNames = ['quicksave', 'autosave'];
-  if (reservedNames.includes(targetSaveName.toLowerCase())) {
-    respondAsGame('<div class="system-message">That name is reserved. Please choose a different name.</div>');
-
-    // Re-prompt
-    // IMPORTANT: Restore awaitingMetaInput flag so ESC/Enter cancellation works
-    awaitingMetaInput = 'game-save';
-    setTimeout(() => {
-      enterSystemEntryMode('Enter save name');
-    }, 100);
-    return true;
-  }
-
-  // Enforce save limit — only block net-new saves, not overwrites
-  const existingSave = getCustomSaves().find(s => s.name === targetSaveName);
-  if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
-    respondAsGame(`<div class="system-message">Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.</div>`);
-
-    // Re-prompt
-    awaitingMetaInput = 'game-save';
-    setTimeout(() => {
-      enterSystemEntryMode('Enter save name');
-    }, 100);
+    setTimeout(() => enterSystemEntryMode('Enter save name'), 100);
     return true;
   }
 
   // Set flag so Dialog.file_write() knows to use custom save format
-  window._customSaveFilename = targetSaveName;
+  window._customSaveFilename = result.targetSaveName;
 
   // Return file reference to callback - VM will save through Dialog.file_write()
   // Dialog.file_write() will show "Game saved - {name}" message

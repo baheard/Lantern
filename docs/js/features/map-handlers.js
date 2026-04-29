@@ -247,7 +247,6 @@ export function handleKeyDown(e) {
 // ============================================================================
 
 export function showFab() { if (!timers.fabVisible) { timers.fabVisible = true; domRefs.fabContainer?.classList.remove('fab-hidden'); } clearTimeout(timers.fabHideTimer); }
-export function hideFab() { if (timers.fabVisible && timers.isInteracting) { timers.fabVisible = false; domRefs.fabContainer?.classList.add('fab-hidden'); } }
 export function scheduleFabShow() { clearTimeout(timers.fabHideTimer); timers.fabHideTimer = setTimeout(() => { timers.isInteracting = false; showFab(); }, 300); }
 
 // ============================================================================

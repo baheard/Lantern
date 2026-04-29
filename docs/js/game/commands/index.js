@@ -6,8 +6,7 @@
 
 // Command Router (main exports)
 export {
-  sendCommandDirect,
-  sendCommand
+  sendCommandDirect
 } from './command-router.js';
 
 // Meta-Command Handlers

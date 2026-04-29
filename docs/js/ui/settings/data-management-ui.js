@@ -9,48 +9,7 @@ import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 import { clearAllGameData, clearAllAppData } from '../../utils/game-settings.js';
 import { confirmDialog } from '../confirm-dialog.js';
-import { closeSettings } from './settings-panel.js';
-
-/**
- * Check if we're on the welcome screen (no game loaded)
- * @returns {boolean} True if on welcome screen
- */
-function isOnWelcomeScreen() {
-  return !state.currentGameName;
-}
-
-/**
- * Get display name for a game (looks up proper title from game card, with fallback)
- * @param {string} gameName - Game filename (with or without extension)
- * @returns {string} Formatted display name
- */
-function getGameDisplayName(gameName) {
-  if (!gameName) return '';
-
-  // Try to find the proper display name from game card
-  const gameCard = document.querySelector(`.game-card[data-game="${gameName}"]`) ||
-                   document.querySelector(`.game-card[data-game$="/${gameName}"]`);
-
-  if (gameCard) {
-    const titleEl = gameCard.querySelector('.game-title');
-    if (titleEl) {
-      // Get text without the meta span (year, length)
-      const metaSpan = titleEl.querySelector('.game-meta');
-      return metaSpan
-        ? titleEl.textContent.replace(metaSpan.textContent, '').trim()
-        : titleEl.textContent.trim();
-    }
-  }
-
-  // Fallback: format filename nicely
-  return gameName
-    .replace(/\.[^.]+$/, '') // Remove extension
-    .replace(/([A-Z])/g, ' $1') // Add space before capitals
-    .trim()
-    .split(/[\s_-]+/) // Split on spaces, underscores, hyphens
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-}
+import { closeSettings, isOnWelcomeScreen, getGameDisplayName } from './settings-panel.js';
 
 /**
  * Initialize data management UI

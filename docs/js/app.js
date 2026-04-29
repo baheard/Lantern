@@ -39,7 +39,7 @@ import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.j
 import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-button.js';
 
 // Game modules
-import { sendCommand, sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
+import { sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
 import { initSaveHandlers, quickSave, quickLoad } from './game/save-manager.js';
 import { initGameSelection } from './game/game-loader.js';
 

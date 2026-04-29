@@ -463,7 +463,6 @@ export function initKeyboardInput() {
   };
 
   // Word hover highlighting (tap-to-examine feature)
-  let currentHighlightedWord = null;
   let highlightOverlay = null;
 
   // Track touch/mouse position to detect scrolling vs tapping
@@ -573,13 +572,11 @@ export function initKeyboardInput() {
       highlightOverlay.style.height = rect.height + 'px';
       highlightOverlay.style.display = 'block';
 
-      currentHighlightedWord = wordData.word;
     } else {
       // No word - hide highlight
       if (highlightOverlay) {
         highlightOverlay.style.display = 'none';
       }
-      currentHighlightedWord = null;
     }
   };
 
@@ -898,19 +895,17 @@ function sendCommand() {
     updateClearButtonVisibility(); // Hide inline clear button after clearing
   }
 
-  if (cmd || cmd === '') {
-    // Store last command for echo detection
-    window.lastSentCommand = cmd;
+  // Store last command for echo detection
+  window.lastSentCommand = cmd;
 
-    // Play feedback tone
-    playCommandSent();
+  // Play feedback tone
+  playCommandSent();
 
-    sendCommandDirect(cmd, false); // false = not a voice command
+  sendCommandDirect(cmd, false); // false = not a voice command
 
-    // DISABLED: Testing if we need this scroll
-    // Scroll to bottom after sending command
-    // scrollToBottom();
-  }
+  // DISABLED: Testing if we need this scroll
+  // Scroll to bottom after sending command
+  // scrollToBottom();
 }
 
 /**

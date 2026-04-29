@@ -74,15 +74,6 @@ export function stopVoiceMeter() {
     state.voiceMeterInterval = null;
   }
 
-  if (state.soundPauseTimeout) {
-    clearTimeout(state.soundPauseTimeout);
-    state.soundPauseTimeout = null;
-  }
-
-  // Reset sound detection state
-  state.soundDetected = false;
-  state.pausedForSound = false;
-
   // IMPORTANT: Stop all media stream tracks to release the microphone
   if (state.microphoneStream) {
     state.microphoneStream.getTracks().forEach(track => track.stop());

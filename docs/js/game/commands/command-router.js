@@ -9,6 +9,7 @@ import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 import { addToCommandHistory } from '../../ui/history.js';
 import { addGameText } from '../../ui/game-output.js';
+import { respondAsGame } from '../../ui/respond-as-game.js';
 import { sendCommandToGame } from '../game-loader.js';
 import { isSystemEntryMode } from '../../input/keyboard/index.js';
 import { getInputType, sendInput, isInputEnabled } from '../voxglk.js';
@@ -332,25 +333,6 @@ See Settings → Voice Commands for complete reference.
   }
 }
 
-/**
- * Respond as if the game sent output
- * @param {string} html - HTML content to display
- */
-function respondAsGame(html) {
-  // Add game text with isCommand=false (this is game output, not user command)
-  addGameText(html, false);
-
-  // Trigger TTS narration if enabled
-  // Extract plain text from HTML for TTS
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  const plainText = tempDiv.textContent.trim();
-
-  if (state.autoplayEnabled && window.handleGameOutput) {
-    window.handleGameOutput(plainText);
-  }
-}
-
 // Response handlers for save/restore/delete with arguments (e.g., "restore mysave")
 async function handleSaveResponse(saveName, saves) {
   // Simulate entering save mode and immediately providing the name
@@ -478,33 +460,3 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
   }, 100);
 }
 
-/**
- * Send command (legacy function - no longer used with inline keyboard input)
- */
-export async function sendCommand() {
-  // This function is kept for compatibility but is no longer used
-  // Commands are now sent directly from keyboard.js via sendCommandDirect
-}
-
-/**
- * Wait for game to enable input, then send Enter to continue
- * Polls every 50ms for up to 1 second
- */
-function waitForInputAndContinue(attempts = 0) {
-  const maxAttempts = 20; // 20 * 50ms = 1 second max wait
-
-  if (attempts >= maxAttempts) {
-    return;
-  }
-
-  const inputReady = isInputEnabled();
-  const currentType = getInputType();
-
-  if (inputReady && currentType === 'char') {
-    sendInput('return', 'char');
-  } else if (!inputReady) {
-    // Keep waiting
-    setTimeout(() => waitForInputAndContinue(attempts + 1), 50);
-  }
-  // If inputReady but type is 'line', don't send anything - user can type
-}
