@@ -649,28 +649,28 @@ _Pending until Tiers 1 & 2 complete._
 | ~~Medium~~ DONE | `command-router.js:339`, `meta-command-handlers.js:21` | `respondAsGame()` defined identically in both files â€” `meta-command-handlers.js` now imports from `respond-as-game.js` v1.5.243 |
 | ~~Medium~~ DONE | `meta-command-handlers.js:224-273` vs `380-458` | `validateSaveName()` helper extracted in v1.5.243; both handlers ~10 lines each |
 | ~~Medium~~ DONE | `meta-command-handlers.js` (both save handlers) | `MAX_SAVES = 5` limit restored in v1.5.234 |
-| Low | `save-list-formatter.js:21,55,73` | Direct `JSON.parse` without try/catch â€” use `getJSON` from storage-api |
-| Low | `meta-command-handlers.js:300-314` | `handleRestoreResponse` uses `window.state.currentGameName` â€” use imported `state` |
+| ~~Low~~ DONE | `save-list-formatter.js:21,55,73` | Bare `JSON.parse` replaced with `getJSON` from storage-api â€” v1.5.255 |
+| ~~Low~~ DONE | `meta-command-handlers.js:300-314` | `window.state.currentGameName` â†' `state.currentGameName` (5 sites) â€” v1.5.255 |
 | ~~Low~~ DONE | `command-router.js:493-510` | `waitForInputAndContinue()` unexported, never called â€” deleted v1.5.243 |
 | ~~Low~~ DONE | `command-router.js:484-487` | `sendCommand()` empty no-op, re-exported, app.js imports but never calls â€” deleted v1.5.243 |
 | ~~Medium~~ DONE | `data-management-ui.js:18-53` | `isOnWelcomeScreen()` + `getGameDisplayName()` exact-copy from settings-panel.js â€” deleted local copies, imports from settings-panel.js v1.5.243 |
 | ~~Medium~~ DONE | `settings-panel.js:171-281` | `showBackupSavesDialog()` + `restoreBackup()` moved to `ui/backup-saves-dialog.js` â€” v1.5.253 |
 | ~~Medium~~ DONE | `data-management-ui.js:62-190` | `handleDeleteAllAppData()` extracted; both button handlers call it â€” v1.5.254 |
 | ~~Low~~ DONE | `data-management-ui.js:112,130` | `alert()` replaced with `confirmDialog({okOnly:true})` (all 4 sites) â€” v1.5.254 |
-| Low | `voice-selection.js:217-219` | `populateVoiceDropdown()` retries indefinitely if voices never load |
+| ~~Low~~ DONE | `voice-selection.js:217-219` | Retry loop capped at 50 attempts (~5s) â€” v1.5.255 |
 | Low | `gdrive-ui.js:131` | `iftalk_gdrive_folder_id` stores `'path:...'` string â€” key name implies an ID, not a path |
-| Low | `voice-selection.js:276` | `loadBrowserVoiceConfig()` marked async but awaits nothing |
-| Low | `voice-selection.js:206` | `â˜…` iOS-preferred marker shown on all platforms, not just iOS |
+| ~~Low~~ DONE | `voice-selection.js:276` | `async` removed from `loadBrowserVoiceConfig()` â€” v1.5.255 |
+| ~~Low~~ DONE | `voice-selection.js:206` | `â˜…` marker now gated on `isIOS` â€” v1.5.255 |
 | ~~Medium~~ DONE | `map-sheet.js:344` | XSS via node names fixed in v1.5.234 â€” `escapeHtml(c.node.name)` |
 | ~~Medium~~ DONE | `map-canvas.js:1553-1569` | Inline `directionOffsets` table replaced with `COMMAND_DIRECTIONS`/`DIRECTION_OFFSETS` from map-config.js â€" v1.5.252 |
 | ~~Medium~~ DONE | `map-sheet.js:544-569, 704-729` | `transferEdges(sourceId, targetId)` extracted; both merge functions call it â€” v1.5.246 |
 | Medium | `map-canvas.js:1870` | `syncMapFromAutoMapper` calls `JSON.parse` without try/catch â€” use `getJSON` |
 | ~~Low~~ DONE | `map-canvas.js:546` | `window.getCurrentLocation` used in `toggleAutoMap` â€” replaced with direct import v1.5.243 |
 | ~~Low~~ DONE | `map-handlers.js:250` | `hideFab()` defined, exported, and never called â€” deleted v1.5.243 |
-| Low | `map-canvas.js:1153` | `cancelOnboarding(currentToast)` parameter shadows module-level `currentToast` variable |
+| ~~Low~~ DONE | `map-canvas.js:1153` | `cancelOnboarding` parameter renamed from `currentToast` to `toastEl` â€” v1.5.255 |
 | Low | `map-canvas.js:1031` | `TOAST_STORAGE_KEY` inline constant â€” should live in `map-config.js` alongside `FIRST_USE_KEY` |
-| Low | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block â€” git history is the reference; delete it |
-| Low | `map-sheet.js:149` | `openNodeSheet` badges manual nodes (`isManual: true`) as `'Auto-mapped'` initially |
+| ~~Low~~ DONE | `auto-mapper.js:68-138` | 70-line commented-out v5 VM-memory block deleted â€” v1.5.255 |
+| ~~Low~~ DONE | `map-sheet.js:149` | Manual nodes (`isManual: true`) now badge as `'Your location'` (class `user`) â€” v1.5.255 |
 | ~~High~~ DONE | `tts-player.js:55` | MediaSession `play` fixed in v1.5.235 â€” now calls `speakTextChunked` directly |
 | ~~Medium~~ DONE | `chunking.js:183-223` | `getGlkClass()` helper extracted in v1.5.236 |
 | ~~Low~~ DONE | `navigation.js:178-193` | `skipToEnd` `stopKeepAlive` added in v1.5.235 |
@@ -682,31 +682,31 @@ _Pending until Tiers 1 & 2 complete._
 | ~~Low~~ DONE | `highlighting.js:14-16` | `initScrollDetection()` deleted from highlighting.js and app.js in v1.5.235 |
 | ~~Medium~~ DONE | `recognition.js:395-431,462-495,764-790` | `dispatchRecognized(transcript, confidence, stopAfter)` extracted as closure in `initVoiceRecognition` â€” v1.5.249 |
 | ~~Medium~~ DONE | `recognition.js:581-584`, `voice-commands.js:170-175` | `NAVIGATION_COMMANDS`/`SKIP_N_PATTERN`/`BACK_N_PATTERN` exported from voice-commands.js; recognition.js imports them â€” v1.5.246 |
-| Low | `recognition.js:217` | Empty catch in `displayInterimAsLowConfidence` lacks intent comment |
+| ~~Low~~ DONE | `recognition.js:217` | Intent comment already present â€” no change needed |
 | Low | `recognition.js:699-712` | `setTimeout(fn,0)` final dispatch inconsistent with direct-call paths â€” document or remove |
-| Low | `command-handlers.js:170,225` | `document.getElementById('messageInput')` direct query â€” use `dom.userInput` |
-| Low | `command-handlers.js:162,186` | `icon2` re-queries `dom.muteBtn` icon in unmute error path â€” reuse `icon` already in scope |
-| Low | `voice-commands.js:33,55` | `gronkâ†’grunk` in both regex and PRONUNCIATION_DICT â€” dict entry is dead; remove it |
-| Low | `voice-commands.js:191,194,214,218` | voxglk.js imported 4Ã— in `processVoiceKeywords` â€” consolidate to one import |
-| Low | `voice-meter.js:15` | `startVoiceMeter()` lacks double-call guard â€” rapid calls orphan MediaStream tracks |
-| Low | `voice-meter.js:63` | Silent catch on getUserMedia failure lacks intent comment |
+| ~~Low~~ DONE | `command-handlers.js:170,225` | `document.getElementById(‘messageInput’)` â€” replaced with `dom.userInput` â€” v1.5.255 |
+| ~~Low~~ DONE | `command-handlers.js:162,186` | `icon2` re-query replaced with reuse of `icon` â€” v1.5.255 |
+| ~~Low~~ DONE | `voice-commands.js:33,55` | Dead `gronk` PRONUNCIATION_DICT entry removed â€” v1.5.255 |
+| ~~Low~~ DONE | `voice-commands.js:191,194,214,218` | 4Ã— voxglk.js imports consolidated to one `const { getInputType, sendInput }` â€” v1.5.255 |
+| ~~Low~~ DONE | `voice-meter.js:15` | Double-call guard `if (state.voiceMeterInterval) return` added â€” v1.5.255 |
+| ~~Low~~ DONE | `voice-meter.js:63` | Intent comment added to silent getUserMedia catch â€” v1.5.255 |
 | ~~Low~~ DONE | `voice-meter.js:78-84` | `stopVoiceMeter` resets soundPauseTimeout/soundDetected/pausedForSound â€” vestigial; deleted v1.5.243 |
 | ~~Medium~~ DONE | `keyboard-core.js:52-662` | `populateInputWithWord`, `handleTouchStart`, `handleGameClick`, `handleGameMouseMove` extracted to module level; `DIRECTIONS`, `COMMON_VERBS`, `highlightOverlay`, `tapExamineTouchTracker`, `lowerWindowEl`, `gameOutputEl` promoted to module scope â€” v1.5.250 |
-| Low | `keyboard-core.js:398,532` | `localStorage.getItem('iftalk_tap_to_examine')` in hot-path handlers â€” use body class `tap-to-examine-enabled` instead |
-| Low | `keyboard-core.js:756-757,767-768` | Two disabled `scrollToBottom()` calls with "testing" comments â€” decide and delete |
-| Low | `keyboard-core.js:789-792` | `updateClearButtonVisibility()` no-op with 3 internal call sites â€” delete all |
+| ~~Low~~ DONE | `keyboard-core.js:398,532` | Hot-path localStorage reads replaced with `document.body.classList.contains('tap-to-examine-enabled')` â€” v1.5.255 |
+| ~~Low~~ DONE | `keyboard-core.js:756-757,767-768` | Three disabled `scrollToBottom()` comment blocks deleted; unused import removed â€” v1.5.255 |
+| ~~Low~~ DONE | `keyboard-core.js:789-792` | `updateClearButtonVisibility()` no-op deleted with all 3 call sites â€” v1.5.255 |
 | ~~Low~~ DONE | `keyboard-core.js:900-901` | `if (cmd \|\| cmd === '')` always true for `.trim()` result â€” removed, body unconditional v1.5.243 |
 | ~~Low~~ DONE | `keyboard-core.js:466` | `currentHighlightedWord` written but never read â€” deleted v1.5.243 |
-| Low | `voice-ui.js:8-9` | `voiceListeningIndicatorEl`/`voiceTranscriptEl` duplicate `dom.voiceListeningIndicator`/`dom.voiceTranscript` â€” use `dom.*` refs; `initVoiceUI` becomes removable |
+| ~~Low~~ DONE | `voice-ui.js:8-9` | Local element cache replaced with `dom.voiceListeningIndicator`/`dom.voiceTranscript`; `initVoiceUI` deleted â€” v1.5.255 |
 | ~~High~~ DONE | `sync-preview-modal.js:413` | `updateProgress` XSS â€” `currentItem.name`/`statusText` unescaped in `insertAdjacentHTML` â€” fixed v1.5.239 |
 | ~~Medium~~ DONE | `game-output.js:242-243` | `lastSentCommand` RegExp injection fixed v1.5.242 â€” `escapeRegExp()` added to text-processing.js |
 | ~~Medium~~ DONE | `scroll-down-button.js:initScrollDownButton` | `releasePressedState(button)` + `cancelInteractions()` extracted â€” v1.5.246 |
 | Low | `history.js:28,37,43,63` | `alert()` for history display â€” same pattern as Batch 5 |
 | ~~Low~~ DONE | `nav-buttons.js:51-53` | Empty `if (narrationChunks.length > 0) {}` debug block â€” deleted v1.5.243 |
-| Low | `mobile-menu.js:135-158` | `toggleMenu`/`closeMenu` re-query 3 DOM elements on every call â€” promote to module-level |
-| Low | `sync-preview-modal.js:237-261` | `formatTimestamp()` defined but never called â€” dead function |
+| ~~Low~~ DONE | `mobile-menu.js:135-158` | `menuEl`/`menuBtnEl`/`charMenuBtnEl` promoted to module-level; `toggleMenu`/`closeMenu` use them â€” v1.5.255 |
+| ~~Low~~ DONE | `sync-preview-modal.js:237-261` | Dead `formatTimestamp()` function deleted â€” v1.5.255 |
 | ~~Low~~ DONE | `game-output.js:125-126` | Empty `else if (!shouldIncludeStatus) {}` block â€” deleted v1.5.243 |
-| Low | `game-output.js:315` | Empty catch on auto-narration of system messages â€” add intent comment |
+| ~~Low~~ DONE | `game-output.js:315` | Intent comment already present â€” no change needed |
 | ~~Medium~~ DONE | `text-processing.js:102-115` | `processAndSplitText` reimplements `processTextForTTS` normalization verbatim â€” replaced with `processTextForTTS(text)` call v1.5.246 |
 | ~~Medium~~ DONE | `pronunciation.js:51-54` | Pronunciation key RegExp injection fixed v1.5.242 â€” `escapeRegExp()` from text-processing.js |
 | Low | `gdrive-auth.js:45`, `gdrive-sync.js:82,159,175`, `gdrive-sync-preview.js:85,249` | 6Ã— bare `JSON.parse(localStorage.getItem(...))` without try/catch â€” use `getJSON` |
@@ -740,6 +740,7 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.248** â€” 1 Medium: `initSaveHandlers()` moved from `save-manager.js` to `settings-panel.js` — UI event wiring now lives in the UI layer. `closeSettings` import removed from save-manager (no longer imports from settings layer at all). `getItem` import removed from save-manager (was only used by the moved function). app.js import updated.
 - **v1.5.247** â€” 1 Medium: `exportMapState(gameName)` + `importMapState(optimizedData, gameName)` added to `map-canvas.js` — map canvas key name (`iftalk_map_${gameName}`) and node/edge optimization logic now live in the map module. `getOptimizedMapData` in save-manager shrinks from 90 to 24 lines; `restoreMapData` from 80 to 28 lines.
 - **v1.5.246** â€” 4 Medium deduplication fixes: (1) `processAndSplitText` normalized by calling `processTextForTTS()` â€” deleted 15-line duplicate block; (2) `NAVIGATION_COMMANDS`/`SKIP_N_PATTERN`/`BACK_N_PATTERN` promoted to module-level exports in `voice-commands.js` â€” `recognition.js` now imports them instead of redefining; (3) `releasePressedState(button)` + `cancelInteractions()` extracted in `scroll-down-button.js` â€” removes ~50 lines of repetition; (4) `transferEdges(sourceId, targetId)` extracted in `map-sheet.js` â€” `handleNodeMerge` and `performManualMerge` each call it instead of having identical 30-line edge-transfer blocks.
+- **v1.5.255** â€” 17 Low (batch sweep): dead `gronk` PRONUNCIATION_DICT entry removed; 4Ã— voxglk.js imports in `processVoiceKeywords` consolidated; `startVoiceMeter` double-call guard added; getUserMedia intent comment; 3 disabled `scrollToBottom` comment blocks deleted + unused import; `updateClearButtonVisibility` no-op + 3 call sites deleted; hot-path localStorage reads replaced with body-class check; `formatTimestamp()` dead function deleted; 70-line commented-out auto-mapper v5 block deleted; `icon2` re-query fixed; `dom.userInput` in command-handlers; `voice-ui.js` local element cache → `dom.*` refs + `initVoiceUI` deleted; `save-list-formatter.js` bare `JSON.parse` → `getJSON`; `window.state` → `state` in meta-command-handlers; mobile-menu DOM refs promoted to module level; `voice-selection.js` async removed, retry capped at 50, star gated on `isIOS`; `cancelOnboarding` param shadow renamed; manual-node badge fixed.
 - **v1.5.254** â€” 1 Medium + 1 Low: `handleDeleteAllAppData()` extracted in `data-management-ui.js` — eliminates ~45-line duplicate between the context-sensitive “Clear Data” button (welcome-screen path) and the standalone “Delete All App Data” button. All 4 `alert()` post-deletion feedback calls replaced with `confirmDialog({okOnly:true})`.
 - **v1.5.253** â€” 1 Medium: `showBackupSavesDialog()` + `restoreBackup()` extracted from `settings-panel.js` to `ui/backup-saves-dialog.js`. settings-panel.js imports the single `showBackupSavesDialog` export; `restoreBackup` is now private to the new module.
 - **v1.5.252** â€” 1 Medium: inline `directionOffsets` table in `syncFromAutoMapper` replaced with `COMMAND_DIRECTIONS[cmd]`â†'`DIRECTION_OFFSETS[canonical]` lookups. Deleted the 16-key duplicate table and the redundant `directionalCommands` array. `recentDirections` now stores canonical names.

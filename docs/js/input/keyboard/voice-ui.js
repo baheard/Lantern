@@ -2,32 +2,17 @@
  * Voice UI Module
  *
  * Handles voice indicator and transcript display.
+ * Uses pre-cached DOM refs from core/dom.js instead of local element caches.
  */
 
-// Voice UI elements
-let voiceListeningIndicatorEl = null;
-let voiceTranscriptEl = null;
-
-/**
- * Initialize voice UI elements
- */
-export function initVoiceUI() {
-  voiceListeningIndicatorEl = document.getElementById('voiceListeningIndicator');
-  voiceTranscriptEl = document.getElementById('voiceTranscript');
-}
+import { dom } from '../../core/dom.js';
 
 /**
  * Update voice indicator state (for speaking animation)
  * @param {boolean} isSpeaking - Whether user is currently speaking
  */
 export function setVoiceSpeaking(isSpeaking) {
-  if (voiceListeningIndicatorEl) {
-    if (isSpeaking) {
-      voiceListeningIndicatorEl.classList.add('speaking');
-    } else {
-      voiceListeningIndicatorEl.classList.remove('speaking');
-    }
-  }
+  dom.voiceListeningIndicator?.classList.toggle('speaking', isSpeaking);
 }
 
 /**
@@ -36,34 +21,24 @@ export function setVoiceSpeaking(isSpeaking) {
  * @param {string} mode - 'listening', 'interim', 'confirmed', or 'nav'
  */
 export function updateVoiceTranscript(text, mode = 'listening') {
-  if (voiceTranscriptEl) {
-    voiceTranscriptEl.textContent = text;
-    voiceTranscriptEl.classList.remove('interim', 'confirmed', 'nav-command');
-
-    if (mode === 'interim') {
-      voiceTranscriptEl.classList.add('interim');
-    } else if (mode === 'confirmed') {
-      voiceTranscriptEl.classList.add('confirmed');
-    } else if (mode === 'nav') {
-      voiceTranscriptEl.classList.add('nav-command');
-    }
-  }
+  if (!dom.voiceTranscript) return;
+  dom.voiceTranscript.textContent = text;
+  dom.voiceTranscript.classList.remove('interim', 'confirmed', 'nav-command');
+  if (mode === 'interim') dom.voiceTranscript.classList.add('interim');
+  else if (mode === 'confirmed') dom.voiceTranscript.classList.add('confirmed');
+  else if (mode === 'nav') dom.voiceTranscript.classList.add('nav-command');
 }
 
 /**
  * Show voice listening indicator
  */
 export function showVoiceIndicator() {
-  if (voiceListeningIndicatorEl) {
-    voiceListeningIndicatorEl.classList.remove('hidden');
-  }
+  dom.voiceListeningIndicator?.classList.remove('hidden');
 }
 
 /**
  * Hide voice listening indicator
  */
 export function hideVoiceIndicator() {
-  if (voiceListeningIndicatorEl) {
-    voiceListeningIndicatorEl.classList.add('hidden');
-  }
+  dom.voiceListeningIndicator?.classList.add('hidden');
 }

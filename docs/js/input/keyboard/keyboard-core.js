@@ -8,7 +8,6 @@
 import { state } from '../../core/state.js';
 import { sendCommandDirect } from '../../game/commands/index.js';
 import { getInputType, sendInput } from '../../game/voxglk.js';
-import { scrollToBottom } from '../../utils/scroll.js';
 import { playCommandSent } from '../../utils/audio-feedback.js';
 import { extractWordAtPoint } from '../word-extractor.js';
 import { setVoiceSpeaking, updateVoiceTranscript, showVoiceIndicator, hideVoiceIndicator } from './voice-ui.js';
@@ -174,7 +173,7 @@ function handleGameClick(e) {
     return;
   }
 
-  const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+  const isTapExamineEnabled = document.body.classList.contains('tap-to-examine-enabled');
   if (!isTapExamineEnabled) {
     if (hasPhysicalKeyboard()) messageInputEl.focus();
     tapExamineTouchTracker.reset();
@@ -234,7 +233,7 @@ function handleGameMouseMove(e) {
     return;
   }
 
-  const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+  const isTapExamineEnabled = document.body.classList.contains('tap-to-examine-enabled');
   if (!isTapExamineEnabled) {
     if (highlightOverlay) highlightOverlay.style.display = 'none';
     return;
@@ -331,17 +330,14 @@ export function initKeyboardInput() {
       messageInputEl.scrollLeft = scrollStartLeft + deltaX;
     }, { passive: true });
 
-    // Show/hide inline clear button based on input content
+    // Clear flag when user types (manual editing)
     messageInputEl.addEventListener('input', () => {
-      updateClearButtonVisibility();
-      // Clear flag when user types (manual editing)
       wordJustPopulated = false;
     });
 
     // On focus, select populated word for easy replacement (mobile only)
     messageInputEl.addEventListener('focus', () => {
       inputWasFocused = true; // Track focus state
-      updateClearButtonVisibility();
 
       // If word was just populated and we're on mobile, select it
       if (wordJustPopulated && !hasPhysicalKeyboard()) {
@@ -524,12 +520,8 @@ export function initKeyboardInput() {
 
   // Function to update cursor based on tap-to-examine setting
   function updateTapExamineCursor() {
-    const isTapExamineEnabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
-    if (isTapExamineEnabled) {
-      document.body.classList.add('tap-to-examine-enabled');
-    } else {
-      document.body.classList.remove('tap-to-examine-enabled');
-    }
+    const enabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+    document.body.classList.toggle('tap-to-examine-enabled', enabled);
   }
 
   // Set initial cursor based on setting
@@ -680,8 +672,6 @@ function handleKeyPress(e) {
       messageInputEl.focus();
       messageInputEl.value += e.key;
       state.hasManualTyping = true;
-      // DISABLED: Testing if we need this scroll
-      // scrollToBottom(); // Scroll now that they're typing
       e.preventDefault(); // Prevent double-typing and button default behavior
     }
     return;
@@ -690,8 +680,6 @@ function handleKeyPress(e) {
   // When typing in message input, mark as manual and scroll to show input
   if (e.target === messageInputEl && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
     state.hasManualTyping = true;
-    // DISABLED: Testing if we need this scroll
-    // scrollToBottom();
   }
 }
 
@@ -707,15 +695,6 @@ export function hasPhysicalKeyboard() {
   // If primary pointer is coarse AND can't hover = touch-only device (no physical keyboard)
   // If can hover OR pointer is fine = has physical keyboard/mouse
   return canHover || !hasCoarsePointer;
-}
-
-/**
- * Update inline clear button visibility based on input content
- * NOTE: Clear button is now always visible (for cancel system mode + clear input)
- */
-function updateClearButtonVisibility() {
-  // Button is always visible now - no action needed
-  // Kept as no-op to avoid breaking existing calls
 }
 
 /**
@@ -822,7 +801,6 @@ function sendCommand() {
 
   if (messageInputEl) {
     messageInputEl.value = '';
-    updateClearButtonVisibility(); // Hide inline clear button after clearing
   }
 
   // Store last command for echo detection
@@ -832,10 +810,6 @@ function sendCommand() {
   playCommandSent();
 
   sendCommandDirect(cmd, false); // false = not a voice command
-
-  // DISABLED: Testing if we need this scroll
-  // Scroll to bottom after sending command
-  // scrollToBottom();
 }
 
 /**

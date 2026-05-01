@@ -6,7 +6,6 @@
 
 // Import voice UI functions
 import {
-  initVoiceUI,
   setVoiceSpeaking,
   updateVoiceTranscript
 } from './voice-ui.js';
@@ -31,7 +30,6 @@ import {
  * Initialize all keyboard input modules
  */
 export function initKeyboardInput() {
-  initVoiceUI();
   initSystemEntry();
   initKeyboardCore();
 }

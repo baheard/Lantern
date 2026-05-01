@@ -13,6 +13,8 @@ import { setVoiceSpeaking, updateVoiceTranscript } from '../input/keyboard/index
  * Start voice meter (audio visualization and sound detection)
  */
 export async function startVoiceMeter() {
+  if (state.voiceMeterInterval) return; // Already running — guard against rapid double-calls
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -61,7 +63,8 @@ export async function startVoiceMeter() {
     }, 50);
 
   } catch (error) {
-    // Voice meter error
+    // getUserMedia failure (NotAllowedError, etc.) is already surfaced to the user
+    // by startRecognitionSafely() upstream — safe to swallow here.
   }
 }
 

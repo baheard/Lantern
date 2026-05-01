@@ -282,21 +282,21 @@ async function handleRestoreResponse(input, saves) {
   if (save.type === 'quicksave') {
     sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
       type: 'quicksave',
-      key: save.gameSignature || window.state.currentGameName,
-      gameName: window.state.currentGameName
+      key: save.gameSignature || state.currentGameName,
+      gameName: state.currentGameName
     }));
   } else if (save.type === 'customsave') {
     sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
       type: 'customsave',
       key: save.name,  // Just the save name
-      gameName: window.state.currentGameName
+      gameName: state.currentGameName
     }));
   } else {
     // Autosave - shouldn't normally be selected via RESTORE command, but handle it
     sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
       type: 'autosave',
-      key: window.state.currentGameName,
-      gameName: window.state.currentGameName
+      key: state.currentGameName,
+      gameName: state.currentGameName
     }));
   }
 

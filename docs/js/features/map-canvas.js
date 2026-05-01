@@ -1150,7 +1150,7 @@ function showNextToast() {
  * Cancel the onboarding tutorial sequence
  * Clears remaining toasts and shows the "don't show again" dialog
  */
-function cancelOnboarding(currentToast) {
+function cancelOnboarding(toastEl) {
   // Clear the queue
   toastQueue = [];
 
@@ -1165,7 +1165,7 @@ function cancelOnboarding(currentToast) {
   localStorage.setItem(TOAST_STORAGE_KEY, JSON.stringify(dismissed));
 
   // Hide current toast
-  hideToast(currentToast);
+  hideToast(toastEl);
 
   // Show "don't show again" dialog after a short delay
   setTimeout(() => showDontShowAgainToast(), 500);

@@ -11,6 +11,11 @@
 // Local storage keys for quick access preferences
 const QA_PREFS_KEY = 'iftalk_quick_access_prefs';
 
+// DOM refs populated during initMobileMenu
+let menuEl = null;
+let menuBtnEl = null;
+let charMenuBtnEl = null;
+
 // Default preferences (all enabled except Settings which is always shown)
 const DEFAULT_QA_PREFS = {
   map: true,
@@ -22,26 +27,26 @@ const DEFAULT_QA_PREFS = {
  * Initialize the mobile menu
  */
 export function initMobileMenu() {
-  const menuBtn = document.getElementById('mobileMenuBtn');
-  const charMenuBtn = document.getElementById('charMenuBtn');
-  const menu = document.getElementById('mobileMenu');
+  menuEl = document.getElementById('mobileMenu');
+  menuBtnEl = document.getElementById('mobileMenuBtn');
+  charMenuBtnEl = document.getElementById('charMenuBtn');
 
-  if (!menu) return;
+  if (!menuEl) return;
 
   // Initialize quick access toggles
   initQuickAccessToggles();
 
   // Toggle menu on button click (main menu button)
-  if (menuBtn) {
-    menuBtn.addEventListener('click', (e) => {
+  if (menuBtnEl) {
+    menuBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleMenu();
     });
   }
 
   // Toggle menu on char panel menu button click
-  if (charMenuBtn) {
-    charMenuBtn.addEventListener('click', (e) => {
+  if (charMenuBtnEl) {
+    charMenuBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleMenu();
     });
@@ -133,13 +138,10 @@ export function initMobileMenu() {
  * Toggle menu open/closed
  */
 function toggleMenu() {
-  const menu = document.getElementById('mobileMenu');
-  const menuBtn = document.getElementById('mobileMenuBtn');
-  const charMenuBtn = document.getElementById('charMenuBtn');
-  if (menu) {
-    const isOpen = menu.classList.toggle('hidden');
-    if (menuBtn) menuBtn.setAttribute('aria-expanded', !isOpen);
-    if (charMenuBtn) charMenuBtn.setAttribute('aria-expanded', !isOpen);
+  if (menuEl) {
+    const isOpen = menuEl.classList.toggle('hidden');
+    menuBtnEl?.setAttribute('aria-expanded', !isOpen);
+    charMenuBtnEl?.setAttribute('aria-expanded', !isOpen);
   }
 }
 
@@ -147,13 +149,10 @@ function toggleMenu() {
  * Close menu
  */
 function closeMenu() {
-  const menu = document.getElementById('mobileMenu');
-  const menuBtn = document.getElementById('mobileMenuBtn');
-  const charMenuBtn = document.getElementById('charMenuBtn');
-  if (menu) {
-    menu.classList.add('hidden');
-    if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
-    if (charMenuBtn) charMenuBtn.setAttribute('aria-expanded', 'false');
+  if (menuEl) {
+    menuEl.classList.add('hidden');
+    menuBtnEl?.setAttribute('aria-expanded', 'false');
+    charMenuBtnEl?.setAttribute('aria-expanded', 'false');
   }
 }
 

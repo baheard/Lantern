@@ -5,6 +5,7 @@
  */
 
 import { state } from '../../core/state.js';
+import { getJSON } from '../../utils/storage/storage-api.js';
 
 /**
  * Get all custom saves for current game
@@ -18,7 +19,8 @@ export function getCustomSaves() {
     const key = localStorage.key(i);
     if (key && key.startsWith(prefix)) {
       const saveName = key.substring(prefix.length);
-      const saveData = JSON.parse(localStorage.getItem(key));
+      const saveData = getJSON(key);
+      if (!saveData) continue;
       saves.push({
         name: saveName,
         timestamp: saveData.timestamp,
@@ -51,7 +53,8 @@ export function getQuicksave() {
 
   if (!saved) return null;
 
-  const saveData = JSON.parse(saved);
+  const saveData = getJSON(key);
+  if (!saveData) return null;
   return {
     name: 'quicksave',
     timestamp: saveData.timestamp,
@@ -70,7 +73,8 @@ export function getAutosave() {
 
   if (!saved) return null;
 
-  const saveData = JSON.parse(saved);
+  const saveData = getJSON(key);
+  if (!saveData) return null;
   return {
     name: 'autosave',
     timestamp: saveData.timestamp,

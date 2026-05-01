@@ -37,7 +37,6 @@ export const PRONUNCIATION_DICT = {
   'murphy': 'northeast',
   'artist': 'northeast',
   'luck': 'look',
-  'gronk': 'grunk',
 };
 
 /**
@@ -184,23 +183,6 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // VOICE-SPECIFIC: "Enter" - Send enter key in char mode, empty command in line mode
-  if (lower === 'enter') {
-    const { getInputType } = await import('../game/voxglk.js');
-    const inputType = getInputType();
-
-    if (inputType === 'char') {
-      // Char mode (press any key screen) - send enter key
-      const { sendInput } = await import('../game/voxglk.js');
-      sendInput('return', 'char');
-      return false;
-    } else {
-      // Line mode - send empty command (for "press any key" prompts in line mode)
-      handlers.sendCommandDirect('');
-      return false;
-    }
-  }
-
   // VOICE-SPECIFIC: "Escape" - Send escape key
   if (lower === 'escape') {
     handlers.sendCommandDirect('\x1b');  // ESC character
@@ -208,12 +190,21 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   }
 
   // VOICE-SPECIFIC: Char mode key commands - Send special keys
-  // Check if we're in char mode first
-  const { getInputType } = await import('../game/voxglk.js');
+  // Single destructuring import; runtime caches the module so repeated calls are free.
+  const { getInputType, sendInput } = await import('../game/voxglk.js');
   const inputType = getInputType();
 
+  // VOICE-SPECIFIC: "Enter" - Send enter key in char mode, empty command in line mode
+  if (lower === 'enter') {
+    if (inputType === 'char') {
+      sendInput('return', 'char');
+    } else {
+      handlers.sendCommandDirect('');
+    }
+    return false;
+  }
+
   if (inputType === 'char') {
-    const { sendInput } = await import('../game/voxglk.js');
 
     // Arrow keys
     if (lower === 'up') {

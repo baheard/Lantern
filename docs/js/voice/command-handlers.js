@@ -167,10 +167,7 @@ export const voiceCommandHandlers = {
     updateLockScreenMicStatus();
     updateLockButtonVisibility();
 
-    const messageInput = document.getElementById('messageInput');
-    if (messageInput) {
-      messageInput.placeholder = 'Say command...';
-    }
+    if (dom.userInput) dom.userInput.placeholder = 'Say command...';
 
     if (state.recognition && !state.isRecognitionActive) {
       const { startRecognitionSafely } = await import('./recognition.js');
@@ -183,8 +180,7 @@ export const voiceCommandHandlers = {
         // Revert UI to muted state (error buzz already played by startRecognitionSafely)
         state.isMuted = true;
         state.listeningEnabled = false;
-        const icon2 = dom.muteBtn?.querySelector('.material-icons');
-        if (icon2) icon2.textContent = 'mic_off';
+        if (icon) icon.textContent = 'mic_off';
         if (dom.muteBtn) {
           dom.muteBtn.classList.add('muted');
           dom.muteBtn.classList.remove('listening');
@@ -195,8 +191,7 @@ export const voiceCommandHandlers = {
         updateLockScreenMicStatus();
         updateLockButtonVisibility();
 
-        const mi = document.getElementById('messageInput');
-        if (mi) mi.placeholder = 'Type a command...';
+        if (dom.userInput) dom.userInput.placeholder = 'Type a command...';
       }
     } else {
       // Recognition not available or already active
@@ -222,10 +217,7 @@ export const voiceCommandHandlers = {
     updateLockScreenMicStatus();
     updateLockButtonVisibility();
 
-    const messageInput = document.getElementById('messageInput');
-    if (messageInput) {
-      messageInput.placeholder = 'Type a command...';
-    }
+    if (dom.userInput) dom.userInput.placeholder = 'Type a command...';
 
     if (state.recognition && state.isRecognitionActive) {
       try {

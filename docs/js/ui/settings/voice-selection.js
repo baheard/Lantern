@@ -203,21 +203,22 @@ function filterAndSortVoices(voices) {
  * @returns {string} Display name with optional star
  */
 function getVoiceDisplayName(voice) {
-  const isPreferred = getIOSPreferredIndex(voice) !== -1;
-  const star = isPreferred ? '★ ' : '';
+  const star = isIOS && getIOSPreferredIndex(voice) !== -1 ? '★ ' : '';
   return `${star}${voice.name} (${voice.lang})`;
 }
 
 /**
  * Populate voice dropdown
  */
+let _voiceRetries = 0;
 export function populateVoiceDropdown() {
   const voices = speechSynthesis.getVoices();
 
   if (voices.length === 0) {
-    setTimeout(populateVoiceDropdown, 100);
+    if (_voiceRetries++ < 50) setTimeout(populateVoiceDropdown, 100); // give up after ~5s
     return;
   }
+  _voiceRetries = 0;
 
   // Filter to English voices only (deduped, sorted, iOS-restricted if on iOS)
   const filteredVoices = filterAndSortVoices(voices);
@@ -273,7 +274,7 @@ export function populateVoiceDropdown() {
  * Load browser voice config from localStorage
  * (No server-side config - fully client-side app)
  */
-export async function loadBrowserVoiceConfig() {
+export function loadBrowserVoiceConfig() {
   // Initialize config object if needed
   if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
 

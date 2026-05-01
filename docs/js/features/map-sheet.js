@@ -146,6 +146,9 @@ export function openNodeSheet(node) {
   if (isDuplicate) {
     badge.textContent = 'Possible duplicate';
     badge.className = 'sheet-node-badge duplicate';
+  } else if (node.isManual) {
+    badge.textContent = 'Your location';
+    badge.className = 'sheet-node-badge user';
   } else {
     badge.textContent = 'Auto-mapped';
     badge.className = 'sheet-node-badge auto';
