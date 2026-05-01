@@ -12,6 +12,32 @@ import { confirmDialog } from '../confirm-dialog.js';
 import { closeSettings, isOnWelcomeScreen, getGameDisplayName } from './settings-panel.js';
 
 /**
+ * Clear all app data (local + Drive if signed in), show result, and close settings.
+ */
+async function handleDeleteAllAppData() {
+  clearAllAppData();
+
+  if (state.gdriveSignedIn) {
+    try {
+      const { deleteAllDataFromDrive } = await import('../../utils/gdrive/index.js');
+      await deleteAllDataFromDrive();
+      updateStatus('✓ Cleared all app data (local + Drive)');
+    } catch {
+      updateStatus('✓ Cleared local data (Drive deletion failed)');
+    }
+  } else {
+    updateStatus('✓ Cleared all app data');
+  }
+
+  await confirmDialog(
+    'Successfully deleted all app data.\n\nAll saves, progress, and settings have been cleared.',
+    { title: 'Done', okOnly: true }
+  );
+
+  closeSettings();
+}
+
+/**
  * Initialize data management UI
  */
 export function initDataManagementUI() {
@@ -22,10 +48,8 @@ export function initDataManagementUI() {
       const onWelcome = isOnWelcomeScreen();
       const gameName = state.currentGameName;
 
-      // Different confirmation based on context
       let confirmed;
       if (onWelcome) {
-        // Welcome screen: clear ALL app data
         confirmed = await confirmDialog(
           'This will permanently delete ALL data for ALL games.\n\n' +
           'This includes:\n' +
@@ -37,7 +61,6 @@ export function initDataManagementUI() {
           { title: 'Delete All Data?' }
         );
       } else {
-        // In-game: clear only this game's data
         const displayName = getGameDisplayName(gameName);
         confirmed = await confirmDialog(
           'This includes:\n' +
@@ -49,55 +72,39 @@ export function initDataManagementUI() {
         );
       }
 
-      if (confirmed) {
-        try {
-          if (onWelcome) {
-            // Clear everything (localStorage + Google Drive)
-            const count = clearAllAppData();
+      if (!confirmed) {
+        updateStatus('Clear data cancelled');
+        return;
+      }
 
-            // Also delete from Drive if signed in
-            if (state.gdriveSignedIn) {
-              try {
-                const { deleteAllDataFromDrive } = await import('../../utils/gdrive/index.js');
-                await deleteAllDataFromDrive();
-                updateStatus(`✓ Cleared all app data (local + Drive)`);
-              } catch (driveError) {
-                updateStatus(`✓ Cleared local data (Drive deletion failed)`);
-              }
-            } else {
-              updateStatus(`✓ Cleared all app data`);
+      try {
+        if (onWelcome) {
+          await handleDeleteAllAppData();
+        } else {
+          clearAllGameData(gameName);
+
+          if (state.gdriveSignedIn) {
+            try {
+              const { deleteGameDataFromDrive } = await import('../../utils/gdrive/index.js');
+              const deleteCount = await deleteGameDataFromDrive(gameName);
+              updateStatus(`✓ Cleared data for ${gameName} (${deleteCount} files from Drive)`);
+            } catch {
+              updateStatus(`✓ Cleared local data for ${gameName} (Drive deletion failed)`);
             }
-
-            alert('Successfully deleted all app data.\n\nAll saves, progress, and settings have been cleared.');
           } else {
-            // Clear only current game (localStorage + Google Drive)
-            clearAllGameData(gameName);
-
-            // Also delete from Drive if signed in
-            if (state.gdriveSignedIn) {
-              try {
-                const { deleteGameDataFromDrive } = await import('../../utils/gdrive/index.js');
-                const deleteCount = await deleteGameDataFromDrive(gameName);
-                updateStatus(`✓ Cleared data for ${gameName} (${deleteCount} files from Drive)`);
-              } catch (driveError) {
-                updateStatus(`✓ Cleared local data for ${gameName} (Drive deletion failed)`);
-              }
-            } else {
-              updateStatus(`✓ Cleared data for ${gameName}`);
-            }
-
-            alert(`Successfully deleted data for "${gameName}".\n\nThis game will use app defaults on next load.`);
+            updateStatus(`✓ Cleared data for ${gameName}`);
           }
 
-          // Close settings panel
-          closeSettings();
+          await confirmDialog(
+            `Successfully deleted data for "${gameName}".\n\nThis game will use app defaults on next load.`,
+            { title: 'Done', okOnly: true }
+          );
 
-        } catch (error) {
-          updateStatus('Error clearing data');
-          alert('Failed to clear data: ' + error.message);
+          closeSettings();
         }
-      } else {
-        updateStatus('Clear data cancelled');
+      } catch (error) {
+        updateStatus('Error clearing data');
+        await confirmDialog('Failed to clear data: ' + error.message, { title: 'Error', okOnly: true });
       }
     });
   }
@@ -117,33 +124,16 @@ export function initDataManagementUI() {
         { title: 'Delete All Data?' }
       );
 
-      if (confirmed) {
-        try {
-          clearAllAppData();
-
-          // Also delete from Drive if signed in
-          if (state.gdriveSignedIn) {
-            try {
-              const { deleteAllDataFromDrive } = await import('../../utils/gdrive/index.js');
-              await deleteAllDataFromDrive();
-              updateStatus('✓ Cleared all app data (local + Drive)');
-            } catch (driveError) {
-              updateStatus('✓ Cleared local data (Drive deletion failed)');
-            }
-          } else {
-            updateStatus('✓ Cleared all app data');
-          }
-
-          alert('Successfully deleted all app data.\n\nAll saves, progress, and settings have been cleared.');
-
-          // Close settings panel
-          closeSettings();
-        } catch (error) {
-          updateStatus('Error clearing data');
-          alert('Failed to clear data: ' + error.message);
-        }
-      } else {
+      if (!confirmed) {
         updateStatus('Clear data cancelled');
+        return;
+      }
+
+      try {
+        await handleDeleteAllAppData();
+      } catch (error) {
+        updateStatus('Error clearing data');
+        await confirmDialog('Failed to clear data: ' + error.message, { title: 'Error', okOnly: true });
       }
     });
   }
