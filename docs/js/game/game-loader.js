@@ -15,6 +15,13 @@ import { closeSettings } from '../ui/settings/settings-panel.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
+import {
+  trackCustomGame,
+  removeCustomGame,
+  showLoadingOverlay,
+  showResumeDialog,
+  renderRecentlyPlayedSection,
+} from '../ui/recently-played.js';
 
 /**
  * Start a game using browser-based ZVM
@@ -317,220 +324,6 @@ export function unloadGame() {
   updateStatus('Select a game to start');
 }
 
-// List of predefined game files (to exclude from "recently played" section)
-const PREDEFINED_GAMES = [
-  'lostpig', 'dreamhold', 'photopia', '905',
-  'spiderweb', 'anchorhead', 'trinity', 'curses',
-  'planetfall', 'violet', 'wizardsniffer', 'bronze'
-];
-
-/**
- * Track a custom game (played via URL input)
- * @param {string} url - Full URL to the game
- * @param {string} gameName - Normalized game name
- */
-function trackCustomGame(url, gameName) {
-  // Don't track predefined games
-  if (PREDEFINED_GAMES.includes(gameName.toLowerCase())) return;
-
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
-  customGames[gameName] = {
-    url: url,
-    name: gameName,
-    displayName: gameName.replace(/([A-Z])/g, ' $1').trim().replace(/^\w/, c => c.toUpperCase()),
-    lastPlayed: Date.now()
-  };
-  localStorage.setItem('iftalk_custom_games', JSON.stringify(customGames));
-}
-
-/**
- * Remove a custom game from tracking
- * @param {string} gameName - Normalized game name
- */
-function removeCustomGame(gameName) {
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
-  delete customGames[gameName];
-  localStorage.setItem('iftalk_custom_games', JSON.stringify(customGames));
-}
-
-/**
- * Get custom games that have autosaves
- * @returns {Array} Array of custom game objects with autosaves
- */
-function getCustomGamesWithAutosaves() {
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
-  const gamesWithSaves = [];
-
-  for (const [gameName, gameData] of Object.entries(customGames)) {
-    const autosaveKey = `iftalk_autosave_${gameName}`;
-    if (localStorage.getItem(autosaveKey) !== null) {
-      gamesWithSaves.push(gameData);
-    }
-  }
-
-  // Sort by last played (most recent first)
-  gamesWithSaves.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
-
-  return gamesWithSaves;
-}
-
-/**
- * Render the "Recently Played" section on the welcome screen
- * @param {Function} onOutput - Callback for game output
- */
-function renderRecentlyPlayedSection(onOutput) {
-  const customGames = getCustomGamesWithAutosaves();
-
-  // Remove existing section if present
-  const existingSection = document.getElementById('recentlyPlayedSection');
-  if (existingSection) {
-    existingSection.remove();
-  }
-
-  // Don't show section if no custom games with autosaves
-  if (customGames.length === 0) return;
-
-  // Find the game list container
-  const gameList = document.querySelector('.game-list');
-  if (!gameList) return;
-
-  // Find the if-database-section to insert before it
-  const ifDbSection = document.querySelector('.if-database-section');
-
-  // Create the section
-  const section = document.createElement('div');
-  section.className = 'game-category';
-  section.id = 'recentlyPlayedSection';
-
-  section.innerHTML = `
-    <h3 class="category-title">🕐 Recently Played</h3>
-    <p class="category-desc">Games you've started from URLs</p>
-    <div class="game-category-grid">
-      ${customGames.map(game => `
-        <button class="game-card custom-game-card" data-game="${game.url}" data-game-name="${game.name}">
-          <span class="save-badge has-save" data-save-indicator title="Game in progress"></span>
-          <div class="game-title">${game.displayName}</div>
-          <div class="game-desc">Custom game from URL</div>
-        </button>
-      `).join('')}
-    </div>
-  `;
-
-  // Insert before the if-database-section
-  if (ifDbSection) {
-    gameList.insertBefore(section, ifDbSection);
-  } else {
-    gameList.appendChild(section);
-  }
-
-  // Add click handlers for the new cards
-  section.querySelectorAll('.custom-game-card').forEach(card => {
-    card.addEventListener('click', async () => {
-      const gameUrl = card.dataset.game;
-      const gameName = card.dataset.gameName;
-      const autosaveKey = `iftalk_autosave_${gameName}`;
-
-      const choice = await showResumeDialog(gameUrl, gameName);
-      if (choice === 'resume') {
-        showLoadingOverlay();
-        startGame(gameUrl, onOutput);
-      } else if (choice === 'restart') {
-        // Autosave already deleted by showResumeDialog
-        showLoadingOverlay();
-        startGame(gameUrl, onOutput);
-      }
-    });
-  });
-}
-
-/**
- * Show loading overlay for transition effect
- */
-function showLoadingOverlay() {
-  // Remove any existing overlay first
-  const existing = document.getElementById('loadingOverlay');
-  if (existing) {
-    existing.remove();
-  }
-
-  // Create new overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'loading-overlay';
-  overlay.id = 'loadingOverlay';
-  document.body.appendChild(overlay);
-
-  // Force reflow to ensure the overlay is visible before any transition
-  overlay.offsetHeight;
-}
-
-/**
- * Show resume/restart dialog for games with autosave
- * @param {string} gamePath - Path to game file
- * @param {string} gameName - Normalized game name
- * @returns {Promise<string|null>} 'resume', 'restart', 'delete', or null if cancelled
- */
-function showResumeDialog(gamePath, gameName) {
-  return new Promise((resolve) => {
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'resume-dialog-overlay';
-
-    // Get display name from game path (capitalize first letter of each word)
-    const displayName = gamePath.split('/').pop().replace(/\.[^.]+$/, '')
-      .replace(/([A-Z])/g, ' $1').trim()
-      .replace(/^\w/, c => c.toUpperCase());
-
-    overlay.innerHTML = `
-      <div class="resume-dialog">
-        <h3>Resume ${displayName}?</h3>
-        <p>You have a saved game in progress.</p>
-        <div class="resume-dialog-buttons">
-          <button class="btn btn-primary resume-btn btn-compact-dialog" data-action="resume">
-            <span class="material-icons">play_arrow</span>
-            Resume Game
-          </button>
-          <button class="btn btn-secondary restart-btn btn-compact-dialog" data-action="restart">
-            <span class="material-icons">replay</span>
-            Start Over
-          </button>
-        </div>
-        <button class="resume-dialog-cancel" data-action="cancel">&times;</button>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    // Handle button clicks
-    const handleClick = (e) => {
-      const action = e.target.closest('[data-action]')?.dataset.action;
-      if (!action) return;
-
-      if (action === 'restart') {
-        // Delete autosave and map data before starting over
-        const autosaveKey = `iftalk_autosave_${gameName}`;
-        localStorage.removeItem(autosaveKey);
-        localStorage.removeItem(`iftalk_map_${gameName}`);
-      }
-
-      overlay.remove();
-      resolve(action === 'cancel' ? null : action);
-    };
-
-    overlay.addEventListener('click', (e) => {
-      // Close if clicking overlay background
-      if (e.target === overlay) {
-        overlay.remove();
-        resolve(null);
-      } else {
-        handleClick(e);
-      }
-    });
-
-    // Focus resume button
-    setTimeout(() => overlay.querySelector('.resume-btn')?.focus(), 50);
-  });
-}
-
 /**
  * Initialize game selection handlers
  * @param {Function} onOutput - Callback for game output (for TTS)
@@ -679,7 +472,7 @@ export function initGameSelection(onOutput) {
           // Delete autosave and remove from custom games
           localStorage.removeItem(autosaveKey);
           removeCustomGame(gameName);
-          renderRecentlyPlayedSection(onOutput);
+          renderRecentlyPlayedSection(onOutput, startGame);
         }
       } else {
         showLoadingOverlay();
@@ -778,11 +571,11 @@ export function initGameSelection(onOutput) {
 
           // Render recently played section AFTER overlay has faded
           // This prevents DOM modifications from causing a visible flash during fade
-          renderRecentlyPlayedSection(onOutput);
+          renderRecentlyPlayedSection(onOutput, startGame);
         }, { once: true });
       } else {
         // No overlay present - render immediately
-        renderRecentlyPlayedSection(onOutput);
+        renderRecentlyPlayedSection(onOutput, startGame);
       }
     }, 100);
   }
