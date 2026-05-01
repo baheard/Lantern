@@ -1549,32 +1549,9 @@ function syncFromAutoMapper() {
     return;
   }
 
-  // Direction offsets for spatial positioning (120px grid)
-  const directionOffsets = {
-    // Cardinal
-    'n': { x: 0, y: -120 }, 'north': { x: 0, y: -120 },
-    's': { x: 0, y: 120 }, 'south': { x: 0, y: 120 },
-    'e': { x: 120, y: 0 }, 'east': { x: 120, y: 0 },
-    'w': { x: -120, y: 0 }, 'west': { x: -120, y: 0 },
-    // Diagonals
-    'ne': { x: 120, y: -120 }, 'northeast': { x: 120, y: -120 },
-    'nw': { x: -120, y: -120 }, 'northwest': { x: -120, y: -120 },
-    'se': { x: 120, y: 120 }, 'southeast': { x: 120, y: 120 },
-    'sw': { x: -120, y: 120 }, 'southwest': { x: -120, y: 120 },
-    // Vertical (1.5x N/S distance = 180px, offset by half E/W = 60px for clarity)
-    'u': { x: 60, y: -180 }, 'up': { x: 60, y: -180 },
-    'd': { x: -60, y: 180 }, 'down': { x: -60, y: 180 }
-    // Portal commands (in, out, enter, exit) use recent directional command or 'up' fallback
-  };
-
   // Replay journey to create nodes/edges with proper positions
   let previousNode = null;
   const recentDirections = []; // Track last 10 directional commands (excluding portals)
-
-  // Directional commands that have spatial meaning
-  const directionalCommands = ['n', 'north', 's', 'south', 'e', 'east', 'w', 'west',
-    'ne', 'northeast', 'nw', 'northwest', 'se', 'southeast', 'sw', 'southwest',
-    'u', 'up', 'd', 'down'];
 
   // Portal commands that use recent direction for placement
   const portalCommands = ['in', 'out', 'enter', 'exit'];
@@ -1598,41 +1575,38 @@ function syncFromAutoMapper() {
       if (previousNode && visit.command) {
         const cmd = visit.command.toLowerCase();
 
+        const canonicalDir = COMMAND_DIRECTIONS[cmd];
+        const offset = canonicalDir ? DIRECTION_OFFSETS[canonicalDir] : null;
+
         // Portal commands use most recent directional command
         if (portalCommands.includes(cmd)) {
-          const fallbackDirection = recentDirections.length > 0
-            ? recentDirections[recentDirections.length - 1]  // Most recent from last 10
-            : 'up';  // Default to "up" if no recent directions
-          const fallbackOffset = directionOffsets[fallbackDirection];
+          const fallbackDir = recentDirections.length > 0
+            ? recentDirections[recentDirections.length - 1]
+            : 'up';
+          const fallbackOffset = DIRECTION_OFFSETS[fallbackDir];
           x = previousNode.x + fallbackOffset.x;
           y = previousNode.y + fallbackOffset.y;
+        } else if (offset) {
+          // Known directional command - use it
+          x = previousNode.x + offset.x;
+          y = previousNode.y + offset.y;
+
+          // Track canonical direction for portal fallback
+          recentDirections.push(canonicalDir);
+          if (recentDirections.length > 10) recentDirections.shift();
         } else {
-          const offset = directionOffsets[cmd];
-
-          if (offset) {
-            // Known directional command - use it
-            x = previousNode.x + offset.x;
-            y = previousNode.y + offset.y;
-
-            // Track directional commands (not portals) for fallback
-            if (directionalCommands.includes(cmd)) {
-              recentDirections.push(cmd);
-              if (recentDirections.length > 10) recentDirections.shift();
-            }
-          } else {
-            // Unknown command - use most recent direction from last 10, or "up" as fallback
-            const fallbackDirection = recentDirections.length > 0
-              ? recentDirections[recentDirections.length - 1]  // Most recent
-              : 'up';
-            const fallbackOffset = directionOffsets[fallbackDirection];
-            x = previousNode.x + fallbackOffset.x;
-            y = previousNode.y + fallbackOffset.y;
-          }
+          // Unknown command - use most recent direction or "up" as fallback
+          const fallbackDir = recentDirections.length > 0
+            ? recentDirections[recentDirections.length - 1]
+            : 'up';
+          const fallbackOffset = DIRECTION_OFFSETS[fallbackDir];
+          x = previousNode.x + fallbackOffset.x;
+          y = previousNode.y + fallbackOffset.y;
         }
       } else if (previousNode) {
         // No command - use "up" as default
-        x = previousNode.x + directionOffsets['up'].x;
-        y = previousNode.y + directionOffsets['up'].y;
+        x = previousNode.x + DIRECTION_OFFSETS['up'].x;
+        y = previousNode.y + DIRECTION_OFFSETS['up'].y;
       }
       // else: first node stays at (0, 0)
 
