@@ -239,10 +239,12 @@ function initDOMandValidation() {
 }
 
 function initVoice() {
-  // Load voice configuration (with timeout, non-blocking)
-  loadBrowserVoiceConfig().catch(() => {
+  // Load voice configuration (synchronous, non-blocking)
+  try {
+    loadBrowserVoiceConfig();
+  } catch (e) {
     // Voice config failed (expected offline)
-  });
+  }
 
   // Initialize voice recognition in background (non-blocking)
   // This allows it to work offline if device supports it, but doesn't delay app load
@@ -968,9 +970,12 @@ function initHelpTooltips() {
 
 // Initialize when DOM is ready
 async function startApp() {
+  window.__startAppCalled = true;
   try {
     await initApp();
+    window.__initAppDone = true;
   } catch (error) {
+    window.__initAppError = error.message;
     console.error('ERROR in initApp():', error);
   }
 }

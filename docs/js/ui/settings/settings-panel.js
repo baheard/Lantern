@@ -8,7 +8,8 @@ import { state } from '../../core/state.js';
 import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 import { getItem } from '../../utils/storage/storage-api.js';
-import { quickSave, exportSaveToFile, importSaveFromFile } from '../../game/save-manager.js';
+// save-manager imported dynamically in initSaveHandlers to break the circular dep:
+// settings-panel → save-manager → game-output → tts-player → settings/index → settings-panel
 import { showBackupSavesDialog } from '../backup-saves-dialog.js';
 
 // Element to return focus to when the panel closes (typically the trigger button)
@@ -404,7 +405,7 @@ export function initSaveHandlers() {
   const quickSaveBtn = document.getElementById('quickSaveBtn');
   if (quickSaveBtn) {
     quickSaveBtn.addEventListener('click', () => {
-      quickSave();
+      import('../../game/save-manager.js').then(({ quickSave }) => { quickSave(); });
       closeSettings();
     });
   }
@@ -453,11 +454,15 @@ export function initSaveHandlers() {
 
   const exportSaveBtn = document.getElementById('exportSaveBtn');
   if (exportSaveBtn) {
-    exportSaveBtn.addEventListener('click', exportSaveToFile);
+    exportSaveBtn.addEventListener('click', () => {
+      import('../../game/save-manager.js').then(({ exportSaveToFile }) => exportSaveToFile());
+    });
   }
 
   const importSaveBtn = document.getElementById('importSaveBtn');
   if (importSaveBtn) {
-    importSaveBtn.addEventListener('click', importSaveFromFile);
+    importSaveBtn.addEventListener('click', () => {
+      import('../../game/save-manager.js').then(({ importSaveFromFile }) => importSaveFromFile());
+    });
   }
 }
