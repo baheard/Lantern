@@ -1940,7 +1940,8 @@ export async function syncMapFromAutoMapper(gameName) {
     return; // No map canvas to update
   }
 
-  const mapData = JSON.parse(existing);
+  let mapData;
+  try { mapData = JSON.parse(existing); } catch { return; }
   const existingNodes = new Map(mapData.nodes.map(n => [n.id, n]));
   const existingEdges = new Map(mapData.edges.map(e => [e.from + '-' + e.to, e]));
 

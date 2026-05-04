@@ -56,7 +56,7 @@ const STYLE_TO_CLASS = {
  * @param {Map} persistentWindows - Persistent windows map from voxglk.js
  * @returns {Object} - { statusBarHTML, statusBarText, upperWindowHTML, upperWindowText, mainWindowHTML, plainText }
  */
-export function renderUpdate(updateObj, persistentWindows = null) {
+export function renderUpdate(updateObj, persistentWindows) {
   let statusBarHTML = '';
   let statusBarText = '';
   let upperWindowHTML = '';
@@ -64,14 +64,7 @@ export function renderUpdate(updateObj, persistentWindows = null) {
   let mainWindowHTML = '';
   let plainText = '';
 
-  // Use persistent windows if provided, otherwise build from updateObj
-  let windows = persistentWindows;
-  if (!windows) {
-    windows = new Map();
-    if (updateObj.windows) {
-      updateObj.windows.forEach(w => windows.set(w.id, w));
-    }
-  }
+  const windows = persistentWindows;
 
   // Process content for each window
   if (updateObj.content) {

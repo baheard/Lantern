@@ -636,9 +636,9 @@ _Pending until Tiers 1 & 2 complete._
 | Low | `core/dom.js:103-118` | `validateDOM()` couples to HTML structure (acceptable; awareness) |
 | ~~High~~ DONE | `voxglk.js` | `createVoxGlk()` closure split: watchdog (v1.5.228), grid (v1.5.229), bootstrap (v1.5.231) |
 | ~~High~~ DONE | `voxglk.js:14-45` | 22 module-level `let` decls wrapped in `const s = {...}` state object â€" v1.5.245 |
-| Medium | `voxglk.js:612` | Status-bar change detection compares HTML strings â€” use plain text |
+| ~~Medium~~ DONE | `voxglk.js:612` | Status-bar comparison already uses `statusBarText` (plain text) â€” already fixed before this pass |
 | ~~Medium~~ DONE | `game-loader.js:381-444` | Recently-played UI rendering moved to `ui/recently-played.js` â€" v1.5.251 |
-| Medium | `voxglk-renderer.js:59-74` | Dead fallback for missing `persistentWindows` â€” tighten signature |
+| ~~Medium~~ DONE | `voxglk-renderer.js:59-74` | Dead `persistentWindows` fallback removed; parameter now required â€” v1.5.256 |
 | ~~Medium~~ DONE | `voxglk.js:552-599` | Char-mode grid reconstruction â€” extracted to `voxglk-grid.js` (v1.5.229) |
 | Low | `voxglk.js:1088-1090` | `isSafeToSave()` misleading name for charâ†’line transition guard |
 | Low | `voxglk.js:974-1053` | `sendInput()` lacks defensive re-check on `acceptCallback` |
@@ -664,7 +664,7 @@ _Pending until Tiers 1 & 2 complete._
 | ~~Medium~~ DONE | `map-sheet.js:344` | XSS via node names fixed in v1.5.234 â€” `escapeHtml(c.node.name)` |
 | ~~Medium~~ DONE | `map-canvas.js:1553-1569` | Inline `directionOffsets` table replaced with `COMMAND_DIRECTIONS`/`DIRECTION_OFFSETS` from map-config.js â€" v1.5.252 |
 | ~~Medium~~ DONE | `map-sheet.js:544-569, 704-729` | `transferEdges(sourceId, targetId)` extracted; both merge functions call it â€” v1.5.246 |
-| Medium | `map-canvas.js:1870` | `syncMapFromAutoMapper` calls `JSON.parse` without try/catch â€” use `getJSON` |
+| ~~Medium~~ DONE | `map-canvas.js:1870` | `syncMapFromAutoMapper` `JSON.parse` wrapped in try/catch â€” v1.5.256 |
 | ~~Low~~ DONE | `map-canvas.js:546` | `window.getCurrentLocation` used in `toggleAutoMap` â€” replaced with direct import v1.5.243 |
 | ~~Low~~ DONE | `map-handlers.js:250` | `hideFab()` defined, exported, and never called â€” deleted v1.5.243 |
 | ~~Low~~ DONE | `map-canvas.js:1153` | `cancelOnboarding` parameter renamed from `currentToast` to `toastEl` â€” v1.5.255 |
@@ -740,6 +740,7 @@ _Pending until Tiers 1 & 2 complete._
 - **v1.5.248** â€” 1 Medium: `initSaveHandlers()` moved from `save-manager.js` to `settings-panel.js` — UI event wiring now lives in the UI layer. `closeSettings` import removed from save-manager (no longer imports from settings layer at all). `getItem` import removed from save-manager (was only used by the moved function). app.js import updated.
 - **v1.5.247** â€” 1 Medium: `exportMapState(gameName)` + `importMapState(optimizedData, gameName)` added to `map-canvas.js` — map canvas key name (`iftalk_map_${gameName}`) and node/edge optimization logic now live in the map module. `getOptimizedMapData` in save-manager shrinks from 90 to 24 lines; `restoreMapData` from 80 to 28 lines.
 - **v1.5.246** â€” 4 Medium deduplication fixes: (1) `processAndSplitText` normalized by calling `processTextForTTS()` â€” deleted 15-line duplicate block; (2) `NAVIGATION_COMMANDS`/`SKIP_N_PATTERN`/`BACK_N_PATTERN` promoted to module-level exports in `voice-commands.js` â€” `recognition.js` now imports them instead of redefining; (3) `releasePressedState(button)` + `cancelInteractions()` extracted in `scroll-down-button.js` â€” removes ~50 lines of repetition; (4) `transferEdges(sourceId, targetId)` extracted in `map-sheet.js` â€” `handleNodeMerge` and `performManualMerge` each call it instead of having identical 30-line edge-transfer blocks.
+- **v1.5.256** â€” 2 Medium + 1 already-fixed: wrapped `JSON.parse` in `syncMapFromAutoMapper` in `map-canvas.js` in try/catch (consistent with rest of file); removed dead `persistentWindows` fallback from `renderUpdate` in `voxglk-renderer.js` (only caller always passes it; dead code confirmed); verified `voxglk.js:612` status-bar comparison was already plain-text (`statusBarText`) before this pass.
 - **v1.5.255** â€” 17 Low (batch sweep): dead `gronk` PRONUNCIATION_DICT entry removed; 4Ã— voxglk.js imports in `processVoiceKeywords` consolidated; `startVoiceMeter` double-call guard added; getUserMedia intent comment; 3 disabled `scrollToBottom` comment blocks deleted + unused import; `updateClearButtonVisibility` no-op + 3 call sites deleted; hot-path localStorage reads replaced with body-class check; `formatTimestamp()` dead function deleted; 70-line commented-out auto-mapper v5 block deleted; `icon2` re-query fixed; `dom.userInput` in command-handlers; `voice-ui.js` local element cache → `dom.*` refs + `initVoiceUI` deleted; `save-list-formatter.js` bare `JSON.parse` → `getJSON`; `window.state` → `state` in meta-command-handlers; mobile-menu DOM refs promoted to module level; `voice-selection.js` async removed, retry capped at 50, star gated on `isIOS`; `cancelOnboarding` param shadow renamed; manual-node badge fixed.
 - **v1.5.254** â€” 1 Medium + 1 Low: `handleDeleteAllAppData()` extracted in `data-management-ui.js` — eliminates ~45-line duplicate between the context-sensitive “Clear Data” button (welcome-screen path) and the standalone “Delete All App Data” button. All 4 `alert()` post-deletion feedback calls replaced with `confirmDialog({okOnly:true})`.
 - **v1.5.253** â€” 1 Medium: `showBackupSavesDialog()` + `restoreBackup()` extracted from `settings-panel.js` to `ui/backup-saves-dialog.js`. settings-panel.js imports the single `showBackupSavesDialog` export; `restoreBackup` is now private to the new module.
