@@ -21,6 +21,7 @@ let mapData = {
 let lastLocationName = null;
 let lastCommand = null;
 let startCheckTimeout = null;
+let pendingSceneBreak = false; // Set when a screen clear happens — next location change gets no edge
 
 /**
  * Get current location from status bar text
@@ -95,10 +96,15 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
     const previousLocationName = lastLocationName;
     lastLocationName = location.name;
 
+    // If a screen clear happened since the last location, this is a scene transition —
+    // not directional travel. Record with null command so no edge is drawn.
+    const effectiveCommand = pendingSceneBreak ? null : lastCommand;
+    pendingSceneBreak = false;
+
     // Add to journey (that's all we need!)
     mapData.journey.push({
       locationName: location.name,
-      command: lastCommand
+      command: effectiveCommand
     });
 
     // Dispatch event for other modules to listen
@@ -122,6 +128,15 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
  */
 export function setLastCommand(command) {
   lastCommand = command;
+}
+
+/**
+ * Signal that a screen clear just happened.
+ * The next location change is a scene transition, not directional travel —
+ * so no map edge should be drawn for it.
+ */
+export function setSceneBreak() {
+  pendingSceneBreak = true;
 }
 
 /**

@@ -8,7 +8,7 @@
 import { renderUpdate } from './voxglk-renderer.js';
 import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
-import { checkLocationChange } from '../features/auto-mapper.js';
+import { checkLocationChange, setSceneBreak } from '../features/auto-mapper.js';
 // Imported dynamically to break the cycle:
 // voxglk → keyboard-core → commands/index → command-router → game-loader → voxglk
 const updateInputVisibility = () => import('../input/keyboard/keyboard-core.js').then(m => m.updateInputVisibility());
@@ -302,6 +302,7 @@ export function createVoxGlk(textOutputCallback) {
 
           if (shouldClearScreen) {
             clearGameOutput();
+            setSceneBreak(); // Next location change is a scene transition, not directional travel
           }
 
           // Render status bar (1 line only)
