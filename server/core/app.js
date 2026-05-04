@@ -55,8 +55,14 @@ export function createApp() {
   // Parse JSON bodies
   app.use(express.json());
 
-  // Serve static files
-  app.use(express.static('docs'));
+  // Serve static files — no-cache for JS/CSS so browsers always get fresh code
+  app.use(express.static('docs', {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  }));
 
   // Remote console logging endpoint (for iOS debugging)
   app.post('/api/log', (req, res) => {

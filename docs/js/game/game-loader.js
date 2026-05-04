@@ -214,13 +214,13 @@ export async function startGame(gamePath, onOutput) {
     if (loadingOverlay) {
       setTimeout(() => {
         loadingOverlay.classList.add('fade-out');
-        // Remove from DOM after animation completes
-        loadingOverlay.addEventListener('transitionend', () => {
+        const finish = () => {
           loadingOverlay.remove();
-
-          // Dispatch event so save-manager knows fade is complete
           window.dispatchEvent(new CustomEvent('loadingFadeComplete'));
-        }, { once: true });
+        };
+        // Fallback in case transitionend doesn't fire (background tab, reduced-motion, etc.)
+        const fallback = setTimeout(finish, 300);
+        loadingOverlay.addEventListener('transitionend', () => { clearTimeout(fallback); finish(); }, { once: true });
       }, 100);
     }
 
@@ -565,14 +565,13 @@ export function initGameSelection(onOutput) {
       const loadingOverlay = document.getElementById('loadingOverlay');
       if (loadingOverlay) {
         loadingOverlay.classList.add('fade-out');
-        // Remove from DOM after animation completes
-        loadingOverlay.addEventListener('transitionend', () => {
+        const finish = () => {
           loadingOverlay.remove();
-
-          // Render recently played section AFTER overlay has faded
-          // This prevents DOM modifications from causing a visible flash during fade
           renderRecentlyPlayedSection(onOutput, startGame);
-        }, { once: true });
+        };
+        // Fallback in case transitionend doesn't fire (background tab, reduced-motion, etc.)
+        const fallback = setTimeout(finish, 300);
+        loadingOverlay.addEventListener('transitionend', () => { clearTimeout(fallback); finish(); }, { once: true });
       } else {
         // No overlay present - render immediately
         renderRecentlyPlayedSection(onOutput, startGame);
