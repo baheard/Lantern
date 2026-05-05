@@ -101,6 +101,11 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
     const effectiveCommand = pendingSceneBreak ? null : lastCommand;
     pendingSceneBreak = false;
 
+    // Scene break — discard the old journey so syncFromAutoMapper sees a clean slate
+    if (effectiveCommand === null) {
+      mapData.journey = [];
+    }
+
     // Add to journey (that's all we need!)
     mapData.journey.push({
       locationName: location.name,

@@ -635,6 +635,12 @@ function handleLocationChange(e) {
     return;
   }
 
+  // Scene break — wipe the canvas and start fresh for the new scene
+  if (command === null && mapState.nodes.size > 0) {
+    resetMap();
+    saveMapForGame(true);
+  }
+
   // locationId is now the location NAME (name-based tracking)
   // Check if we already have a node with this name
   const existingNode = mapState.nodes.get(locationName);
@@ -651,6 +657,15 @@ function handleLocationChange(e) {
       !hasEdgeBetween(previousLocationId, locationName);
 
     if (hasNoDirectEdge) {
+      // Scene break (null command) — just select the node, no edge
+      if (command === null) {
+        mapState.selectedNode = locationName;
+        mapState.currentNodeId = locationName;
+        if (isVisible) centerOnCurrentLocation();
+        render();
+        saveMapForGame();
+        return;
+      }
       // For "go to" commands, just mark the existing location as current (no connection)
       if (isGoToCommand(command)) {
         mapState.selectedNode = locationName;
@@ -745,7 +760,8 @@ function handleLocationChange(e) {
   }
 
   // Add edge (and immediately protect it from future auto-mapper changes)
-  if (previousLocationId && previousLocationId !== locationName) {
+  // Skip if command is null — indicates a scene break/restart, not directional travel
+  if (previousLocationId && previousLocationId !== locationName && command !== null) {
     const edgeKey = `${previousLocationId}-${locationName}`;
     const shouldSkip = mapState.deletedEdges.has(edgeKey) || mapState.protectedEdges.has(edgeKey) || mapState.edges.has(edgeKey);
     if (!shouldSkip) {
@@ -1628,7 +1644,8 @@ function syncFromAutoMapper() {
     }
 
     // Create edge from previous to current
-    if (previousNode && previousNode.id !== locationName) {
+    // Skip if command is null — scene break/restart, not directional travel
+    if (previousNode && previousNode.id !== locationName && visit.command !== null) {
       const edgeKey = `${previousNode.id}-${locationName}`;
 
       // Skip if edge was deleted by user or already exists
