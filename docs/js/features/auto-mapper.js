@@ -116,7 +116,7 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
         previousLocationId: previousLocationName,
         previousLocationName,
         generation,
-        command: lastCommand
+        command: effectiveCommand
       }
     }));
   }
