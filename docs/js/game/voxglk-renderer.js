@@ -378,6 +378,33 @@ const StyleNamesToCode = {
 };
 
 /**
+ * Fallback status bar splitter for the adjacent-concatenation case.
+ * When a Z5/Z8 game writes room name and right-side info (day/score) with no
+ * space separator between them in the same glkapi property group, the 2+ space
+ * split in renderStatusBar produces only 1 part. This function scans from right
+ * to left looking for a known right-side keyword that starts a 2+ token phrase,
+ * returning [leftText, rightText] or null if no clean split is found.
+ */
+function findAdjacentStatusSplit(text) {
+  const rightKeywords = ['score', 'moves', 'move', 'turns', 'turn', 'day', 'night', 'morning', 'afternoon', 'evening', 'time'];
+  const pattern = new RegExp(`^(${rightKeywords.join('|')})[\\s:]`, 'i');
+
+  for (let i = text.length - 1; i >= 1; i--) {
+    const candidate = text.slice(i);
+    if (pattern.test(candidate)) {
+      const right = candidate.trimEnd();
+      // Require at least 2 whitespace-separated tokens so lone keywords at the
+      // end of a room name (e.g. "The Day Room") don't trigger a false split.
+      if (right.trim().split(/\s+/).length >= 2) {
+        const left = text.slice(0, i).trimEnd();
+        if (left) return [left, right];
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Render status bar - simple single line with left and right text
  *
  * @param {Object} content - Single-line grid window content
@@ -420,9 +447,19 @@ function renderStatusBar(content) {
   }
 
 
-  // Split into parts by 2+ spaces
-  // Z-machine status bars typically have lots of spaces between parts
-  const parts = fullText.split(/\s{2,}/).filter(p => p.trim()); // Filter out empty parts
+  // Split into parts by 2+ spaces (works when cleared-cell gaps are visible in fullText)
+  let parts = fullText.split(/\s{2,}/).filter(p => p.trim());
+
+  // Fallback: some Z5/Z8 games (e.g. Anchorhead) write room name and day/time
+  // adjacently with no space separator between them in the same property group.
+  // When that happens, the 2+ space split produces only 1 part. Scan from right
+  // to left for a known right-side status keyword at a position where it is NOT
+  // embedded inside a larger word (its left neighbor is a word char — no \b before
+  // the keyword — but we split there anyway since we know it's a status marker).
+  if (parts.length === 1 && parts[0]) {
+    const split = findAdjacentStatusSplit(parts[0].trimEnd());
+    if (split) parts = split;
+  }
 
 
   if (parts.length === 0) {

@@ -268,7 +268,8 @@ export function createVoxGlk(textOutputCallback) {
         }
 
         // Suppress output after bootstrap input (the "I beg your pardon" response)
-        if (checkSuppressUpdate(s.inputType)) return;
+        const hasInput = !!(arg.input && arg.input.length > 0);
+        if (checkSuppressUpdate(s.inputType, hasInput)) return;
 
         // Process window definitions
         if (arg.windows) {

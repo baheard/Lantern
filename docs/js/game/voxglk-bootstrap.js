@@ -39,15 +39,24 @@ export function captureIntroInputType(generation, currentInputType) {
 
 /**
  * Check whether the current update should be suppressed (bootstrap echo suppression).
- * Clears the flag as a side effect — call exactly once per update() invocation.
+ * Only clears the flag when suppressing an update that contains a new input request,
+ * which indicates the bootstrap echo is fully done. This handles the case where
+ * some games (e.g. Anchorhead Z8) fire a separate status-bar-only update before the
+ * text-response update — both need to be suppressed.
  * Returns false for char-mode updates even when flagged (char UI must stay in sync).
  *
  * @param {string} currentInputType - 'line' or 'char'
+ * @param {boolean} hasInput - true if this update includes a new input request
  * @returns {boolean} true if this update should be skipped
  */
-export function checkSuppressUpdate(currentInputType) {
+export function checkSuppressUpdate(currentInputType, hasInput) {
   if (!skipNextUpdateAfterBootstrap) return false;
-  skipNextUpdateAfterBootstrap = false;
+  // Clear the flag only when we suppress the update that requests new player input.
+  // Status-bar-only intermediate updates (no input request) leave the flag set so
+  // the following text-response update is also suppressed.
+  if (hasInput) {
+    skipNextUpdateAfterBootstrap = false;
+  }
   return currentInputType !== 'char';
 }
 
