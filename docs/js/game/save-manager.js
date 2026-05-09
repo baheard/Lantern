@@ -14,6 +14,70 @@ import { setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
 import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
 
 // ============================================================================
+// QUETZAL SCREEN WIDTH DECODER
+// ============================================================================
+
+/**
+ * Decode the screen_width (uint16 at header offset 0x22) from raw Quetzal bytes,
+ * before restore_file() applies the data and update_screen_size() overwrites it.
+ *
+ * Quetzal stores dynamic RAM as either UMem (raw) or CMem (XOR-diff vs origram).
+ * We need the value the save had at 0x22 so we can find and fix any game globals
+ * that cached a stale screen_width after restore.
+ *
+ * @param {Uint8Array} bytes   - Raw Quetzal bytes
+ * @param {Uint8Array} origram - Original ROM dynamic segment (zvmInstance.origram)
+ * @returns {number|null} Saved screen_width, or null if unreadable
+ */
+function decodeQuetzalScreenWidth(bytes, origram) {
+    if (!bytes || bytes.length < 12 || !origram) return null;
+
+    // Verify FORM/IFZS signature
+    if (bytes[0] !== 0x46 || bytes[1] !== 0x4F || bytes[2] !== 0x52 || bytes[3] !== 0x4D) return null;
+    if (bytes[8] !== 0x49 || bytes[9] !== 0x46 || bytes[10] !== 0x5A || bytes[11] !== 0x53) return null;
+
+    let offset = 12;
+    while (offset + 8 <= bytes.length) {
+        const chunkType = String.fromCharCode(bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]);
+        const chunkLen = (bytes[offset+4] << 24) | (bytes[offset+5] << 16) | (bytes[offset+6] << 8) | bytes[offset+7];
+        const dataStart = offset + 8;
+        const dataEnd = dataStart + chunkLen;
+
+        if (chunkType === 'UMem') {
+            if (chunkLen >= 0x24) {
+                return (bytes[dataStart + 0x22] << 8) | bytes[dataStart + 0x23];
+            }
+            return null;
+        }
+
+        if (chunkType === 'CMem') {
+            // Decode XOR-diff stream up to offset 0x23
+            // Non-zero byte: XOR with origram[j]; zero byte: skip next+1 positions
+            let i = dataStart, j = 0;
+            const hi = origram[0x22], lo = origram[0x23];
+            let savedHi = hi, savedLo = lo;
+            let foundHi = false, foundLo = false;
+
+            while (i < dataEnd && !(foundHi && foundLo)) {
+                const temp = bytes[i++];
+                if (temp === 0) {
+                    const skip = (bytes[i++] || 0) + 1;
+                    j += skip;
+                } else {
+                    if (j === 0x22) { savedHi = temp ^ hi; foundHi = true; }
+                    if (j === 0x23) { savedLo = temp ^ lo; foundLo = true; }
+                    j++;
+                }
+            }
+            return (savedHi << 8) | savedLo;
+        }
+
+        offset = dataEnd + (chunkLen % 2);
+    }
+    return null;
+}
+
+// ============================================================================
 // COMPRESSION HELPERS
 // ============================================================================
 
@@ -396,10 +460,35 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             bytes[i] = binaryString.charCodeAt(i);
         }
 
+        // Decode the screen_width stored in this save BEFORE restore_file() overwrites it.
+        // restore_file() calls update_screen_size() which writes the current correct width
+        // back to the header, but game globals that cached the old (wrong) width are left as-is.
+        const savedScreenWidth = decodeQuetzalScreenWidth(bytes, window.zvmInstance?.origram);
+
         // Restore using ZVM
         const result = window.zvmInstance.restore_file(bytes.buffer);
 
         if (result === 2) { // ZVM returns 2 on successful restore
+            // Fix stale screen_width in game globals.
+            // restore_file() correctly updates io.width and the Z-machine header via
+            // update_screen_size(), but any game global that cached an old wrong screen_width
+            // (e.g. from a save made before MIN_COLUMNS was enforced) is still wrong.
+            // Scan all globals: patch any that equal the save's screen_width to the current
+            // correct value. This breaks the perpetuation cycle where autosave re-captures
+            // the wrong cached value each session.
+            const correctWidth = window.zvmInstance?.io?.width;
+            const globalsBase = window.zvmInstance?.globals;
+            const mem = window.zvmInstance?.m;
+            if (savedScreenWidth != null && correctWidth > 0 && savedScreenWidth !== correctWidth
+                    && globalsBase && mem) {
+                for (let i = 0; i < 240; i++) {
+                    const addr = globalsBase + i * 2;
+                    if (mem.getUint16(addr) === savedScreenWidth) {
+                        mem.setUint16(addr, correctWidth);
+                    }
+                }
+            }
+
             // Clear stale text/parse buffers in VM memory.
             // After Quetzal restore, bootstrap resumes via CharInput (not LineInput),
             // so handle_line_input never runs to overwrite these buffers.
