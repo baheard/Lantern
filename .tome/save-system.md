@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-04-27
+updated: 2026-05-09
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -33,22 +33,18 @@ Two independent save mechanisms; users frequently confuse them.
 - `iftalk_quicksave_<gameName>` — current quicksave
 - `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — backup chain; `_exempt` means it skips the count limit
 
-## Planned work: Save/restore deep dive
-
-**Plan (2026-04-27):** Do a full deep dive on the save/restore bug surface after the Tier 2 code review cursory passes (Batches 5-11) are done. The priority drivers:
-- Bootstrap echo leak ("I didn't understand that sentence" after autorestore) — TODO.md open item
-- Any other edge-case save/restore failures the user has observed
-- The MAX_SAVES regression (re-implement the limit, not remove docs)
-
-This was deferred deliberately to avoid context-switching mid-review. Pick it up after the cursory passes are committed.
-
 ## Custom save limit (regression note)
 
 `MAX_SAVES = 5` was enforced in the original `commands.js` — both for user-typed `SAVE` and for in-game dialog saves. It was silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`). The current `handleSaveResponse` and `handleGameSaveResponse` in `meta-command-handlers.js` do not limit the number of custom saves. Restoring the limit requires adding `const MAX_SAVES = 5` and the `!existingSave && saves.length >= MAX_SAVES` guard in both handlers.
 
-## Known open bugs
+## Bootstrap restore (see separate entry)
 
-- **Bootstrap echo leaks** (TODO: "Hide transition error messages"): After autorestore the VM responds to the dummy "bootstrap wake" input with "I didn't understand that sentence." `checkSuppressUpdate()` in `voxglk-bootstrap.js` is supposed to swallow the next update after bootstrap, but the suppression fails in some cases (timing, multi-part updates, or games where the error appears on a second update call). Char-mode games are explicitly exempt from suppression — by design, char-mode transitions don't output an error message so no suppression is needed.
+The autorestore sequence (on page reload, if an autosave exists) runs a bootstrap dummy input to wake the VM. All known bugs in this area were fixed in v1.5.264–268:
+- **v1.5.264**: Bootstrap echo leak for Anchorhead's intermediate status-bar update
+- **v1.5.265–266**: Stale screen_width globals and status bar HTML after restore
+- **v1.5.268**: First player command after restore always failing (char-bootstrap disambiguation mode)
+
+Full details: [`bootstrap-restore-flow`](bootstrap-restore-flow.md), [`quetzal-restore-globals`](quetzal-restore-globals.md).
 
 ## Game-dialog bridge: `window._customSaveFilename`
 
