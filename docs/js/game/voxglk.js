@@ -267,7 +267,7 @@ export function createVoxGlk(textOutputCallback) {
           updateInputVisibility();
         }
 
-        // Suppress output after bootstrap input (the "I beg your pardon" response)
+        // Suppress output after bootstrap input (the "look" bootstrap response)
         const hasInput = !!(arg.input && arg.input.length > 0);
         if (checkSuppressUpdate(s.inputType, hasInput)) return;
 

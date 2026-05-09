@@ -154,7 +154,14 @@ export async function handleAutoRestore(generation, getAcceptCallback) {
                 type: 'char',
                 gen: 1,
                 window: 1,
-                value: ' '
+                // '\x01' (char code 1): glkapi stores this in gli_selectref.field[2],
+                // which the restored aread continuation reads as "1 char was entered."
+                // save-manager seeds linebuf[0]='l' (look) before the bootstrap fires,
+                // so the VM tokenizes "l" → executes "look" (safe, no state change).
+                // This avoids the empty-input path that triggers "I beg your pardon?"
+                // and puts some parsers (e.g. Anchorhead Z8) into disambiguation mode,
+                // which caused the first real player command to always fail.
+                value: '\x01'
               });
             } else {
               acceptCallback({

@@ -491,14 +491,20 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 }
             }
 
-            // Clear stale text/parse buffers in VM memory.
-            // After Quetzal restore, bootstrap resumes via CharInput (not LineInput),
-            // so handle_line_input never runs to overwrite these buffers.
-            // Games that read the parse buffer on resume (e.g. Theatre) would
-            // otherwise re-execute the previous command from stale tokens.
+            // Seed the text buffer with 'l' (look) for the char bootstrap.
+            // After Quetzal restore, the bootstrap fires a CharInput event whose char
+            // code (1 for '\x01') the Z-machine aread continuation reads as the line
+            // length.  With length=1 and linebuf[0]='l', the parser executes "look"
+            // (re-describe room) — a safe no-side-effect command.  This avoids the
+            // empty-input path ("I beg your pardon?") which puts some parsers
+            // (e.g. Anchorhead Z8) into a disambiguation mode that rejects the
+            // first real player command.
+            // Also zero the parse buffer so games that read stale tokens before
+            // calling aread (e.g. Theatre) don't re-execute the previous command.
             const { bufaddr, parseaddr } = saveData.voxglkState || {};
             if (bufaddr && window.zvmInstance?.m) {
-                window.zvmInstance.m.setUint8(bufaddr + 1, 0); // text buffer length = 0
+                window.zvmInstance.m.setUint8(bufaddr + 1, 1);   // text buffer length = 1
+                window.zvmInstance.m.setUint8(bufaddr + 2, 108); // 'l' (look)
             }
             if (parseaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0
