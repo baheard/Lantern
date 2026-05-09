@@ -504,7 +504,7 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             const { bufaddr, parseaddr } = saveData.voxglkState || {};
             if (bufaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(bufaddr + 1, 1);   // text buffer length = 1
-                window.zvmInstance.m.setUint8(bufaddr + 2, 108); // 'l' (look)
+                window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look
             }
             if (parseaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0
