@@ -224,6 +224,10 @@ export function closeNodeSheet() {
   sheet.classList.add('hidden');
   document.getElementById('nodeEditBackdrop').classList.add('hidden');
 
+  // Prevent viewport resize re-center while keyboard is dismissing from this sheet close
+  mapState.sheetClosing = true;
+  setTimeout(() => { mapState.sheetClosing = false; }, 500);
+
   // Reset sheet height to default when closing
   sheet.style.maxHeight = '';
   const sheetContent = sheet.querySelector('.sheet-content');

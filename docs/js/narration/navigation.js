@@ -9,7 +9,6 @@ import { state } from '../core/state.js';
 import { stopNarration, stopKeepAlive } from './tts-player.js';
 import { updateTextHighlight, removeHighlight } from './highlighting.js';
 import { updateStatus } from '../utils/status.js';
-import { scrollToBottom } from '../utils/scroll.js';
 import { ensureChunksReady } from '../ui/game-output.js';
 import { updateNavButtons } from '../ui/nav-buttons.js';
 
@@ -202,7 +201,4 @@ export function skipToEnd() {
 
   // Update nav button states
   updateNavButtons();
-
-  // Scroll to bottom
-  scrollToBottom();
 }

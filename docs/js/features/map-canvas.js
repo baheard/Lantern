@@ -334,7 +334,8 @@ function setupEventListeners() {
       updateUIVisibilityForKeyboard();
 
       // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
-      if (isVisible && Math.abs(currentHeight - lastHeight) > 100) {
+      // Skip re-center if the node sheet was just closed (the keyboard close is from the sheet, not user navigation)
+      if (isVisible && Math.abs(currentHeight - lastHeight) > 100 && !mapState.sheetClosing) {
         // Delay recentering to wait for keyboard animation and scroll settling (150-200ms)
         clearTimeout(recenterTimer);
         recenterTimer = setTimeout(() => {
@@ -582,6 +583,11 @@ function clearMapWithConfirm() {
     // Clear any visible toasts (without marking as dismissed)
     clearAllToasts();
     resetMap();
+    // Clear auto-mapper journey so it doesn't repopulate the map on next open
+    clearJourney();
+    if (mapState.gameName) {
+      localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
+    }
     saveMapForGame(true);  // Immediate save for critical operation
     render();
     showHint('Map cleared');

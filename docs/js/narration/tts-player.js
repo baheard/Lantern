@@ -299,6 +299,9 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     const chunkText = typeof chunk === 'string' ? chunk : chunk.text;
     const voiceType = typeof chunk === 'object' ? chunk.voice : 'narrator';
 
+    // Skip app-voice chunks (command echoes) — they were spoken when generated
+    if (voiceType === 'app') continue;
+
     // Look up speed and pitch modifiers based on marker's Glk class
     // Check the END marker of this chunk (not start), because glkClass is detected
     // when we process the marker that ENDS the chunk

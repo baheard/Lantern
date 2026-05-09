@@ -35,6 +35,10 @@ async function restoreBackup(backupKey) {
     // Restore the backup by writing it as the active save
     localStorage.setItem(`iftalk_${saveType}_${gameId}`, backupData);
 
+    // Also write to autosave slot so it's picked up by autoLoad() on reload
+    // (quicksave backups would otherwise only restore the quicksave slot, not load into game)
+    localStorage.setItem(`iftalk_autosave_${gameId}`, backupData);
+
     updateStatus(`Restoring ${saveType} from backup...`);
     window.location.reload();
 
