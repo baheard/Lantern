@@ -479,12 +479,14 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             const correctWidth = window.zvmInstance?.io?.width;
             const globalsBase = window.zvmInstance?.globals;
             const mem = window.zvmInstance?.m;
+            let screenWidthPatched = false;
             if (savedScreenWidth != null && correctWidth > 0 && savedScreenWidth !== correctWidth
                     && globalsBase && mem) {
                 for (let i = 0; i < 240; i++) {
                     const addr = globalsBase + i * 2;
                     if (mem.getUint16(addr) === savedScreenWidth) {
                         mem.setUint16(addr, correctWidth);
+                        screenWidthPatched = true;
                     }
                 }
             }
@@ -512,7 +514,10 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 const upperWindowEl = document.getElementById('upperWindow');
                 const lowerWindowEl = document.getElementById('lowerWindow');
 
-                if (statusBarEl && saveData.displayHTML.statusBar) {
+                if (statusBarEl && saveData.displayHTML.statusBar && !screenWidthPatched) {
+                    // Only restore the saved status bar HTML when the screen_width was correct
+                    // at save time. If we just patched stale globals, the saved HTML was also
+                    // rendered with the wrong width — skip it and let the game redraw on first move.
                     const safeStatusBar = sanitizeRestoredHTML(saveData.displayHTML.statusBar);
                     statusBarEl.innerHTML = safeStatusBar;
                     statusBarEl.style.display = '';
