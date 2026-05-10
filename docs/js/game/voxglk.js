@@ -414,10 +414,6 @@ export function createVoxGlk(textOutputCallback) {
             // Don't include status bar in chunks
             window.includeStatusBarInChunks = false;
           }
-          // Add upper window text if present
-          if (upperWindowText && upperWindowText.trim()) {
-            textForTTS += upperWindowText + '\n\n';
-          }
           if (plainText.trim()) {
             textForTTS += plainText;
           }
