@@ -454,19 +454,19 @@ export function initKeyboardInput() {
 
   // Add click handlers for char input buttons
   if (charUpBtnEl) {
-    charUpBtnEl.addEventListener('click', () => sendInput('up', 'char'));
+    charUpBtnEl.addEventListener('click', () => { if (getInputType() === 'char') sendInput('up', 'char'); });
   }
   if (charLeftBtnEl) {
-    charLeftBtnEl.addEventListener('click', () => sendInput('left', 'char'));
+    charLeftBtnEl.addEventListener('click', () => { if (getInputType() === 'char') sendInput('left', 'char'); });
   }
   if (charDownBtnEl) {
-    charDownBtnEl.addEventListener('click', () => sendInput('down', 'char'));
+    charDownBtnEl.addEventListener('click', () => { if (getInputType() === 'char') sendInput('down', 'char'); });
   }
   if (charRightBtnEl) {
-    charRightBtnEl.addEventListener('click', () => sendInput('right', 'char'));
+    charRightBtnEl.addEventListener('click', () => { if (getInputType() === 'char') sendInput('right', 'char'); });
   }
   if (charEnterBtnEl) {
-    charEnterBtnEl.addEventListener('click', () => sendInput('return', 'char'));
+    charEnterBtnEl.addEventListener('click', () => { if (getInputType() === 'char') sendInput('return', 'char'); });
   }
 
   // Keyboard button: Focus hidden input to open mobile keyboard
@@ -599,8 +599,8 @@ function handleKeyPress(e) {
       return;
     }
 
-    // Don't capture if user is typing in the message input
-    if (e.target === messageInputEl) {
+    // Don't capture if user is actively typing in the message input (not disabled)
+    if (e.target === messageInputEl && !messageInputEl.disabled) {
       return;
     }
 

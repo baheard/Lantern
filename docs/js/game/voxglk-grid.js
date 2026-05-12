@@ -33,8 +33,6 @@ export function resetGridState() {
  * @param {boolean} justRestored  - true immediately after a save restore
  */
 export function processGridUpdates(content, windows, inputType, justRestored) {
-  if (inputType !== 'char') return;
-
   content.forEach(c => {
     const win = windows.get(c.id);
     if (!win || win.type !== 'grid' || !c.lines) return;
@@ -51,11 +49,19 @@ export function processGridUpdates(content, windows, inputType, justRestored) {
       gridStates.set(c.id, gridState);
     }
 
-    // Apply line updates to grid state
+    // Always maintain gridState so it stays current with what the VM has sent.
+    // In line mode the VM sends complete status-bar rows, so gridState stays
+    // accurate. When char mode starts, the VM may send only a delta — having
+    // an up-to-date gridState lets us merge it correctly.
     c.lines.forEach(lineObj => {
       const lineNum = lineObj.line !== undefined ? lineObj.line : 0;
       gridState.set(lineNum, lineObj);
     });
+
+    // Only reconstruct c.lines in char mode. In line mode the VM always sends
+    // complete rows, so reconstruction is unnecessary and would incorrectly
+    // expand a single-row status-bar update into a full menu-sized grid.
+    if (inputType !== 'char') return;
 
     // Rebuild full content with all lines in order
     const maxLine = Math.max(...Array.from(gridState.keys()));
