@@ -14,6 +14,35 @@ import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand,
 import { scrollToBottom } from '../utils/scroll.js';
 import { PRONUNCIATION_DICT, NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN } from './voice-commands.js';
 
+// Stored at module scope so dispatchPTTFallback can reach it from outside initVoiceRecognition
+let _processVoiceKeywords = null;
+
+/**
+ * Dispatch whatever transcript is currently available (pending or interim).
+ * Called by the PTT stop timer in app.js so the command is sent BEFORE
+ * recognition.stop() discards the buffer — no dependency on onend firing correctly.
+ */
+export async function dispatchPTTFallback() {
+  const transcript = state.pttPendingTranscript ||
+                     (!state.hasProcessedResult ? state.currentInterimTranscript : '');
+  if (!transcript || !transcript.trim() || !_processVoiceKeywords) return;
+
+  state.hasProcessedResult = true;
+  state.currentInterimTranscript = '';
+  state.pttPendingTranscript = null;
+  state.pttPendingConfidence = null;
+
+  const processed = await _processVoiceKeywords(transcript, 0.90);
+  showConfirmedTranscript(transcript, processed === false, 0.90);
+  if (processed !== false) {
+    playCommandSent();
+    const { sendCommandDirect } = await import('../game/commands/command-router.js');
+    sendCommandDirect(processed, true, 0.90);
+  } else if (state.pendingCommandProcessed) {
+    playAppCommand();
+  }
+}
+
 /**
  * Commands that process INSTANTLY with NO delay (whitelist)
  * These are critical commands that need immediate response
@@ -277,6 +306,7 @@ export async function startRecognitionSafely() {
  * @returns {SpeechRecognition|null} Recognition instance
  */
 export function initVoiceRecognition(processVoiceKeywords) {
+  _processVoiceKeywords = processVoiceKeywords;
   let recognition = null;
 
   if ('webkitSpeechRecognition' in window) {
@@ -312,6 +342,29 @@ export function initVoiceRecognition(processVoiceKeywords) {
     state.isListening = true;
     state.isRecognitionActive = true;
     state.hasProcessedResult = false;
+
+    // Button was released before we got here — stop immediately so the browser
+    // processes whatever audio was captured and fires onresult (final) + onend.
+    // Don't mute yet; let the normal PTT-release path in onend handle dispatch.
+    if (state.pushToTalkMode && state.pttReleasePending) {
+      state.pttReleasePending = false;
+      state.recognition.stop();
+      return;
+    }
+
+    // Fresh PTT press (not a mid-hold restart): cancel any stale confirmed-transcript
+    // timer and reset the display so the user sees "Listening..." not the previous command.
+    if (state.pushToTalkMode && state.pushToTalkActive && !state.pttPendingTranscript) {
+      if (state.transcriptResetTimeout) {
+        clearTimeout(state.transcriptResetTimeout);
+        state.transcriptResetTimeout = null;
+      }
+      updateVoiceTranscript('Listening...', 'listening');
+      if (dom.voiceTranscript) {
+        dom.voiceTranscript.textContent = 'Listening...';
+        dom.voiceTranscript.classList.remove('confirmed', 'nav-command', 'interim');
+      }
+    }
 
     // Update status based on lock state
     if (state.isScreenLocked && !state.isMuted) {
@@ -409,7 +462,8 @@ export function initVoiceRecognition(processVoiceKeywords) {
       const interimLower = interimTranscript.toLowerCase().trim();
 
       // FIRST: Check for truly instant commands (no delay)
-      if (INSTANT_NO_WAIT.includes(interimLower) && !state.hasProcessedResult) {
+      // PTT hold: never fire mid-hold — release is the trigger
+      if (INSTANT_NO_WAIT.includes(interimLower) && !state.hasProcessedResult && !(state.pushToTalkMode && state.pushToTalkActive)) {
         state.hasProcessedResult = true; // Prevent duplicate processing
 
         // Cancel any pending interim command timeout
@@ -440,7 +494,8 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
       // If we have a potential instant command, wait briefly before processing
       // This prevents "south" from being sent when user is saying "southwest"
-      if (isInstantCommand && !state.hasProcessedResult) {
+      // PTT hold: never fire mid-hold — release is the trigger
+      if (isInstantCommand && !state.hasProcessedResult && !(state.pushToTalkMode && state.pushToTalkActive)) {
         // Cancel any existing interim timeout
         if (state.interimCommandTimeout) {
           clearTimeout(state.interimCommandTimeout);
@@ -526,6 +581,13 @@ export function initVoiceRecognition(processVoiceKeywords) {
         finalTranscript = state.spellingInterimTranscript;
         state.isSpellingLetters = false;
         state.spellingInterimTranscript = null;
+      }
+
+      // PTT hold: browser fired final before button release — save it, wait for release to dispatch
+      if (state.pushToTalkMode && state.pushToTalkActive) {
+        state.pttPendingTranscript = finalTranscript;
+        state.pttPendingConfidence = finalConfidence;
+        return;
       }
 
       // Send any pending interim text before clearing it
@@ -699,13 +761,18 @@ export function initVoiceRecognition(processVoiceKeywords) {
       state.interimCommandTimeout = null;
     }
 
-    // Send interim text before handling error
-    await displayInterimAsLowConfidence();
-
-    // Silently ignore common expected errors
+    // Silently ignore network/aborted errors BEFORE touching any transcript state.
+    // "aborted" fires when recognition.stop() is called (e.g. PTT button release).
+    // If we called displayInterimAsLowConfidence() here it would clear
+    // currentInterimTranscript and play a warble, so onend would have nothing to dispatch.
     if (event.error === 'network' || event.error === 'aborted') {
       return;
-    } else if (event.error === 'no-speech') {
+    }
+
+    // For real errors: show any pending interim as low-confidence before reporting
+    await displayInterimAsLowConfidence();
+
+    if (event.error === 'no-speech') {
       // Ignore no-speech errors
     } else {
       updateStatus('Voice error: ' + event.error);
@@ -722,33 +789,43 @@ export function initVoiceRecognition(processVoiceKeywords) {
       state.interimCommandTimeout = null;
     }
 
+    // Cancel the PTT fallback timer — recognition ended naturally, onend handles dispatch
+    if (state.pttStopTimeout) {
+      clearTimeout(state.pttStopTimeout);
+      state.pttStopTimeout = null;
+    }
+
     // If we already processed a result (instant command), clear any stale interim text
     // that came in after processing but before recognition stopped
     if (state.hasProcessedResult) {
       state.currentInterimTranscript = '';
     }
 
-    // Check if we're in push-to-talk mode and button was just released
-    // In this case, process interim text as a normal command (not low confidence)
     const wasPushToTalkRelease = state.pushToTalkMode && !state.pushToTalkActive;
 
-    // Process any pending instant command or interim transcript
-    if (!state.hasProcessedResult && state.currentInterimTranscript) {
-      const interimText = state.currentInterimTranscript;
-      state.hasProcessedResult = true;
+    if (wasPushToTalkRelease) {
+      // Button released — dispatch the best transcript captured during hold.
+      // pttPendingTranscript holds any final result that fired mid-hold;
+      // fall back to currentInterimTranscript if button was released before final arrived.
+      const transcript = state.pttPendingTranscript ||
+                         (!state.hasProcessedResult ? state.currentInterimTranscript : '');
+      const confidence = state.pttPendingTranscript ? (state.pttPendingConfidence || 0.90) : 0.90;
+      state.pttPendingTranscript = null;
+      state.pttPendingConfidence = null;
       state.currentInterimTranscript = '';
-
-      // In push-to-talk mode, treat interim text as final result when button is released
-      // Otherwise, process with instant command confidence
-      const confidence = wasPushToTalkRelease ? 0.90 : 0.95;
-
-      // Process and send with appropriate confidence
-      await dispatchRecognized(interimText, confidence);
-    } else if (!wasPushToTalkRelease && !state.hasProcessedResult) {
-      // No pending instant command - display any remaining interim text as low confidence
-      // BUT: Skip this in push-to-talk mode when button was released (already processed above)
-      // AND: Skip if we already processed a result (instant command) to avoid duplicate processing
-      await displayInterimAsLowConfidence();
+      if (transcript && transcript.trim()) {
+        state.hasProcessedResult = true;
+        await dispatchRecognized(transcript, confidence);
+      }
+    } else if (!state.hasProcessedResult) {
+      if (state.currentInterimTranscript) {
+        const interimText = state.currentInterimTranscript;
+        state.hasProcessedResult = true;
+        state.currentInterimTranscript = '';
+        await dispatchRecognized(interimText, 0.95);
+      } else {
+        await displayInterimAsLowConfidence();
+      }
     }
 
     state.isListening = false;
@@ -785,8 +862,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
           }
 
           try {
-            // Clear transcript display if not showing confirmed text
-            if (dom.voiceTranscript && !dom.voiceTranscript.classList.contains('confirmed')) {
+            // Clear transcript display if not showing confirmed text.
+            // Skip when pttPendingTranscript is set — leave the captured text visible
+            // while recognition cycles so the user sees what was heard.
+            if (dom.voiceTranscript && !dom.voiceTranscript.classList.contains('confirmed') && !state.pttPendingTranscript) {
               updateVoiceTranscript('Listening...', 'listening');
               dom.voiceTranscript.textContent = 'Listening...';
               dom.voiceTranscript.classList.remove('interim');

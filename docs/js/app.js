@@ -609,6 +609,16 @@ function wireEventListeners() {
       e.preventDefault();
       state.pushToTalkActive = true;
 
+      // Cancel any pending fallback timer from a previous release and clear
+      // stale transcript state so a new session starts clean.
+      if (state.pttStopTimeout) {
+        clearTimeout(state.pttStopTimeout);
+        state.pttStopTimeout = null;
+      }
+      state.pttPendingTranscript = null;
+      state.pttPendingConfidence = null;
+      state.currentInterimTranscript = '';
+
       dom.muteBtn.classList.add('push-to-talk-active');
       updateStatus('Starting microphone...');
 
@@ -684,18 +694,34 @@ function wireEventListeners() {
       updateLockScreenMicStatus();
 
       if (state.recognition && state.isRecognitionActive) {
-        try {
-          // Stop recognition - this will trigger onresult (final) then onend
-          state.recognition.stop();
-        } catch (err) {
-          // Recognition already stopped - set isMuted immediately
-          state.isMuted = true;
-          updateStatus('Hold mic button to speak');
-        }
+        // Don't call recognition.stop() — on iOS, stop() fires onerror("aborted")
+        // which discards the audio buffer before the final result is produced.
+        // Instead let recognition finish naturally: it fires onresult(final) once it
+        // detects end-of-speech (~300-700ms after the user stops talking), then onend
+        // which dispatches and mutes. This gives the proper final result, not raw interim.
+        //
+        // The 1000ms fallback only fires if onend never arrives (no audio captured, etc).
+        state.pttStopTimeout = setTimeout(async () => {
+          state.pttStopTimeout = null;
+          const { dispatchPTTFallback } = await import('./voice/recognition.js');
+          await dispatchPTTFallback();
+          if (state.recognition && state.isRecognitionActive) {
+            try {
+              state.recognition.stop();
+            } catch (err) {
+              state.isMuted = true;
+              updateStatus('Hold mic button to speak');
+            }
+          } else {
+            state.isMuted = true;
+            updateStatus('Hold mic button to speak');
+          }
+        }, 1000);
       } else {
-        // No active recognition - set isMuted immediately
-        state.isMuted = true;
-        updateStatus('Hold mic button to speak');
+        // Recognition is still starting (onstart hasn't fired yet).
+        // Don't mute immediately — that would cause onresult to discard the final.
+        // Flag it so onstart stops recognition cleanly and lets onend dispatch the result.
+        state.pttReleasePending = true;
       }
     };
 
