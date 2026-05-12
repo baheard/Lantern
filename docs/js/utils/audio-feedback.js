@@ -18,10 +18,11 @@ import { getItem } from './storage/storage-api.js';
 let audioCtx = null;
 
 async function getContext() {
-  if (!audioCtx) {
+  // Recreate if missing or closed (iOS closes AudioContext after extended background)
+  if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  // Resume if suspended (browser autoplay policy)
+  // Resume if suspended (browser autoplay policy or background)
   if (audioCtx.state === 'suspended') {
     await audioCtx.resume();
   }

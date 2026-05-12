@@ -510,6 +510,10 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
     // Process final result
     if (finalTranscript && !state.hasProcessedResult) {
+      // Mark processed immediately — prevents onend from racing and re-sending currentInterimTranscript
+      // while this async block is still awaiting (onend fires before displayInterimAsLowConfidence clears it)
+      state.hasProcessedResult = true;
+
       // Clear any pending interim command timeout
       if (state.interimCommandTimeout) {
         clearTimeout(state.interimCommandTimeout);
@@ -748,20 +752,26 @@ export function initVoiceRecognition(processVoiceKeywords) {
     }
 
     state.isListening = false;
-    state.isRecognitionActive = false;
+    // In PTT mode, don't clobber isRecognitionActive if the user already pressed the button
+    // again while this async onend was running (new session's onstart already set it true)
+    if (!(state.pushToTalkMode && state.pushToTalkActive)) {
+      state.isRecognitionActive = false;
+    }
 
     // Voice commands are now sent immediately in onresult handler
     // No need to check for input field or auto-send here
 
     // If push-to-talk was released, now we can safely mute
     // (results have been processed above)
-    if (wasPushToTalkRelease && !state.isMuted) {
+    // Extra guard: don't mute if user already started a new PTT session during the await above
+    if (wasPushToTalkRelease && !state.isMuted && !state.pushToTalkActive) {
       state.isMuted = true;
       updateStatus('Hold mic button to speak');
     }
 
-    // Don't restart if muted - mic should be fully off
-    if (state.isMuted) {
+    // Don't restart if muted, or if page is hidden — the visibilitychange handler will
+    // restart cleanly when the page becomes visible again, avoiding a background restart loop
+    if (state.isMuted || document.hidden) {
       return;
     }
 

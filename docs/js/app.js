@@ -851,12 +851,19 @@ function wireLifecycle() {
         }
       }
     } else {
-      // Page visible again: restart voice recognition if it should be running
-      if (state.listeningEnabled && state.recognition && !state.isRecognitionActive) {
-        // Use startRecognitionSafely for better error handling (detects permission loss)
+      // Page visible again: restart voice recognition if it should be running.
+      // Force-clear isRecognitionActive first — the background stop may have left it stale
+      // (e.g., onend fired a restart attempt in a hidden tab before our document.hidden guard).
+      if (state.listeningEnabled && state.recognition && !state.isMuted) {
+        state.isRecognitionActive = false;
         const { startRecognitionSafely } = await import('./voice/recognition.js');
         await startRecognitionSafely();
       }
+
+      // Proactively resume AudioContext — it may be suspended or closed after backgrounding
+      import('./utils/audio-feedback.js').then(({ initAudioContext }) => {
+        initAudioContext();
+      });
 
       // Auto-resume narration if it was paused by tab switch
       if (state.pausedByTabSwitch && state.isPaused) {
