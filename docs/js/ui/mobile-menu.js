@@ -65,10 +65,10 @@ export function initMobileMenu() {
 
   // Close menu when tapping outside
   document.addEventListener('click', (e) => {
-    if (!menu.classList.contains('hidden') &&
-        !menu.contains(e.target) &&
-        e.target !== menuBtn &&
-        e.target !== charMenuBtn) {
+    if (!menuEl.classList.contains('hidden') &&
+        !menuEl.contains(e.target) &&
+        e.target !== menuBtnEl &&
+        e.target !== charMenuBtnEl) {
       closeMenu();
     }
   });
@@ -76,16 +76,16 @@ export function initMobileMenu() {
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     // Only handle keyboard when menu is open
-    if (menu.classList.contains('hidden')) return;
+    if (menuEl.classList.contains('hidden')) return;
 
     if (e.key === 'Escape') {
       e.preventDefault();
       closeMenu();
       // Focus the appropriate menu button (whichever one is visible/available)
-      if (charMenuBtn && !charMenuBtn.classList.contains('hidden')) {
-        charMenuBtn.focus();
-      } else if (menuBtn) {
-        menuBtn.focus();
+      if (charMenuBtnEl && !charMenuBtnEl.classList.contains('hidden')) {
+        charMenuBtnEl.focus();
+      } else if (menuBtnEl) {
+        menuBtnEl.focus();
       }
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
