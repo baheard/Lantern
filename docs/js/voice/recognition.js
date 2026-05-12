@@ -752,11 +752,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
     }
 
     state.isListening = false;
-    // In PTT mode, don't clobber isRecognitionActive if the user already pressed the button
-    // again while this async onend was running (new session's onstart already set it true)
-    if (!(state.pushToTalkMode && state.pushToTalkActive)) {
-      state.isRecognitionActive = false;
-    }
+    state.isRecognitionActive = false;
 
     // Voice commands are now sent immediately in onresult handler
     // No need to check for input field or auto-send here
