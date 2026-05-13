@@ -89,6 +89,16 @@ export async function handleDeleteCommand() {
 }
 
 /**
+ * Handle FEEDBACK command
+ */
+export async function handleFeedbackCommand() {
+  respondAsGame('<div class="system-message"><b>What feedback would you like to leave?</b></div>');
+  awaitingMetaInput = 'feedback';
+  enterSystemEntryMode('Enter your feedback');
+  return true;
+}
+
+/**
  * Handle QUIT command - auto-save and return to game selection
  */
 export async function handleQuitCommand() {
@@ -195,6 +205,9 @@ export async function handleMetaResponse(input) {
 
     case 'repair':
       return await handleRepairResponse(input.trim());
+
+    case 'feedback':
+      return await handleFeedbackResponse(input.trim());
 
     default:
       return false;
@@ -356,6 +369,17 @@ async function handleRepairResponse(input) {
   const { performRepair } = await import('../voxglk-watchdog.js');
   await performRepair();
 
+  return true;
+}
+
+/**
+ * Handle feedback text submission (voice/typed command path)
+ */
+async function handleFeedbackResponse(notes) {
+  const { submitFeedback } = await import('../../features/feedback.js');
+  const gameName = state.currentGameName || 'None';
+  await submitFeedback(notes, gameName);
+  respondAsGame('<div class="system-message">Thanks for your feedback!</div>');
   return true;
 }
 

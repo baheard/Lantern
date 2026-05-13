@@ -35,6 +35,7 @@ import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from '
 import { toggleSettings, closeSettings, initSaveHandlers } from './ui/settings/settings-panel.js';
 import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
+import { initFeedbackModal } from './ui/feedback-modal.js';
 import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
 import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-button.js';
 
@@ -289,6 +290,7 @@ function initUIComponents() {
   initAllSettings();
   initHistoryButtons();
   initConfirmDialog();
+  initFeedbackModal();
   initMobileMenu();
   initScrollDownButton();
   initSaveHandlers();

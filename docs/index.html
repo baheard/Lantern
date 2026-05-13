@@ -8,6 +8,37 @@
     };
   </script>
 
+  <!-- Console buffer - must run before any other scripts to capture all output -->
+  <script>
+    (function() {
+      const MAX = 100;
+      const buf = window.__consoleBuffer = [];
+      const _log   = console.log.bind(console);
+      const _warn  = console.warn.bind(console);
+      const _error = console.error.bind(console);
+
+      function capture(level, args) {
+        const msg = args.map(a => {
+          try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+          catch { return String(a); }
+        }).join(' ');
+        buf.push('[' + level + '] ' + msg);
+        if (buf.length > MAX) buf.shift();
+      }
+
+      console.log   = function() { capture('log',   [...arguments]); _log(...arguments);   };
+      console.warn  = function() { capture('warn',  [...arguments]); _warn(...arguments);  };
+      console.error = function() { capture('error', [...arguments]); _error(...arguments); };
+
+      window.addEventListener('error', e => {
+        capture('error', [e.message + ' (' + e.filename + ':' + e.lineno + ')']);
+      });
+      window.addEventListener('unhandledrejection', e => {
+        capture('error', ['Unhandled promise rejection: ' + e.reason]);
+      });
+    })();
+  </script>
+
   <meta charset="UTF-8">
   <title>IF Talk - Voice-Powered Interactive Fiction</title>
   <link rel="icon" type="image/png" href="favicon.png">
@@ -726,8 +757,9 @@
     </div>
 
     <!-- Quick Actions Menu (vertical dropdown, appears above menu button) -->
+    <!-- Items render bottom→top due to flex-direction: column-reverse -->
     <div class="mobile-menu hidden" id="mobileMenu" role="menu" aria-labelledby="mobileMenuBtn">
-      <!-- Settings (top) -->
+      <!-- Settings (bottom of visual menu) -->
       <button class="mobile-menu-item" id="mobileSettingsIcon" data-action="settings" role="menuitem" title="Settings: Ctrl+X">
         <span class="material-icons">settings</span>
         <span class="menu-item-text">Settings</span>
@@ -746,6 +778,11 @@
       <button class="mobile-menu-item" id="mobileLoadIcon" data-action="quickload" role="menuitem" title="Quick Restore: Ctrl+R">
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
+      </button>
+      <!-- Feedback (top of visual menu — last in HTML due to column-reverse) -->
+      <button class="mobile-menu-item" id="mobileFeedbackIcon" data-action="feedback" role="menuitem" title="Leave Feedback">
+        <span class="material-icons">feedback</span>
+        <span class="menu-item-text">Feedback</span>
       </button>
     </div>
 
@@ -827,6 +864,28 @@
       <div class="confirm-dialog-buttons">
         <button class="btn-confirm-cancel" id="confirmCancelBtn">Cancel</button>
         <button class="btn-confirm-ok" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div class="confirm-dialog-overlay hidden" id="feedbackModalOverlay">
+    <div class="confirm-dialog feedback-modal">
+      <h3 class="confirm-dialog-title">Leave Feedback</h3>
+      <div class="feedback-modal-auto-fields">
+        <div class="feedback-auto-field">
+          <span class="feedback-auto-label">Game</span>
+          <span class="feedback-auto-value" id="feedbackModalGame"></span>
+        </div>
+        <div class="feedback-auto-field">
+          <span class="feedback-auto-label">Device</span>
+          <span class="feedback-auto-value" id="feedbackModalDevice"></span>
+        </div>
+      </div>
+      <textarea class="feedback-modal-textarea" id="feedbackModalText" placeholder="What's on your mind?" rows="5"></textarea>
+      <div class="confirm-dialog-buttons">
+        <button class="btn-confirm-cancel" id="feedbackModalCancelBtn">Cancel</button>
+        <button class="btn-confirm-ok" id="feedbackModalSubmitBtn">Submit</button>
       </div>
     </div>
   </div>

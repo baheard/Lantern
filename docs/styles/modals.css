@@ -329,3 +329,57 @@
 .btn-confirm-cancel:active {
   transform: translateY(0);
 }
+
+/* Feedback Modal extensions */
+.feedback-modal {
+  width: min(480px, 90vw);
+}
+
+.feedback-modal-auto-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+.feedback-auto-field {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.feedback-auto-label {
+  color: var(--text-secondary);
+  min-width: 48px;
+  font-weight: 500;
+}
+
+.feedback-auto-value {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.feedback-modal-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 12px;
+  background: var(--bg-input, rgba(255,255,255,0.07));
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.feedback-modal-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}

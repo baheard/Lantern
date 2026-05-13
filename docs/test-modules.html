@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Module Test</title></head>
+<body>
+<pre id="out">Loading...</pre>
+<script type="module">
+const out = document.getElementById('out');
+const results = {};
+
+// Test game-output deps individually first
+const deps = [
+  '/js/core/state.js',
+  '/js/core/dom.js',
+  '/js/utils/text-processing.js',
+  '/js/narration/chunking.js',
+  '/js/narration/tts-player.js',
+  '/js/utils/scroll.js',
+  '/js/utils/audio-feedback.js'
+];
+
+for (const m of deps) {
+  try { await import(m); results[m] = 'OK'; }
+  catch(e) { results[m] = 'FAIL: ' + e.message; }
+}
+
+// Now test game-output itself
+try { await import('/js/ui/game-output.js'); results['game-output'] = 'OK'; }
+catch(e) { results['game-output'] = 'FAIL: ' + e.message; }
+
+out.textContent = JSON.stringify(results, null, 2);
+</script>
+</body>
+</html>

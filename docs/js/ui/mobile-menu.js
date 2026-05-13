@@ -192,6 +192,11 @@ async function handleMenuAction(action) {
       }
       break;
 
+    case 'feedback':
+      const { openFeedbackModal } = await import('./feedback-modal.js');
+      openFeedbackModal();
+      break;
+
     default:
       console.warn('Unknown menu action:', action);
   }
@@ -204,7 +209,10 @@ async function handleMenuAction(action) {
 export function updateMobileMenuForGameState(inGame) {
   const prefs = getQuickAccessPrefs();
 
-  // Settings is always shown (no toggle)
+  // Feedback and Settings are always shown (no toggle)
+  const feedbackIcon = document.getElementById('mobileFeedbackIcon');
+  if (feedbackIcon) feedbackIcon.style.display = 'flex';
+
   const settingsIcon = document.getElementById('mobileSettingsIcon');
   if (settingsIcon) {
     settingsIcon.style.display = 'flex';

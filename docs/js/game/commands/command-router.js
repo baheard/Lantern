@@ -22,6 +22,7 @@ import {
   handleDeleteCommand,
   handleQuitCommand,
   handleRepairCommand,
+  handleFeedbackCommand,
   handleMetaResponse,
   isAwaitingMetaInput,
   setAwaitingMetaInput
@@ -318,6 +319,10 @@ See Settings → Voice Commands for complete reference.
 
     case 'repair':
       return await handleRepairCommand();
+
+    case 'feedback':
+      playAppCommand();
+      return await handleFeedbackCommand();
 
     default:
       // Check for "load slot X" or "restore slot X" pattern

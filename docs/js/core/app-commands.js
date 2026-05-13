@@ -44,7 +44,8 @@ export const APP_COMMANDS = {
   SAVE: ['save'],
   RESTORE_META: ['restore', 'load'],
   DELETE: ['delete save', 'delete'],
-  QUIT: ['quit']
+  QUIT: ['quit'],
+  FEEDBACK: ['feedback']
 };
 
 // Flatten all commands into a single array for easy checking
