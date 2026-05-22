@@ -34,7 +34,7 @@ function updateGDriveUI() {
 /**
  * Open folder path input dialog
  */
-async function openFolderPicker() {
+export async function openFolderPicker() {
   try {
     const { getAccessToken } = await import('../../utils/gdrive/gdrive-auth.js');
     const accessToken = getAccessToken();

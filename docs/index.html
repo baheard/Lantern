@@ -73,6 +73,7 @@
 
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/sync-preview.css">
+  <link rel="stylesheet" href="styles/manage-saves.css">
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content, viewport-fit=cover">
 
@@ -779,6 +780,11 @@
         <span class="material-icons">restore</span>
         <span class="menu-item-text">Quick Restore</span>
       </button>
+      <!-- Manage Saves -->
+      <button class="mobile-menu-item" id="mobileManageSavesIcon" data-action="managesaves" role="menuitem" title="Manage Saves">
+        <span class="material-icons">folder_open</span>
+        <span class="menu-item-text">Saves</span>
+      </button>
       <!-- Feedback (top of visual menu — last in HTML due to column-reverse) -->
       <button class="mobile-menu-item" id="mobileFeedbackIcon" data-action="feedback" role="menuitem" title="Leave Feedback">
         <span class="material-icons">feedback</span>
@@ -886,6 +892,27 @@
       <div class="confirm-dialog-buttons">
         <button class="btn-confirm-cancel" id="feedbackModalCancelBtn">Cancel</button>
         <button class="btn-confirm-ok" id="feedbackModalSubmitBtn">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Saves Modal -->
+  <div class="manage-saves-overlay hidden" id="manageSavesOverlay">
+    <div class="manage-saves-modal">
+      <div class="manage-saves-header">
+        <h3 id="manageSavesTitle">Manage Saves</h3>
+        <button class="manage-saves-close" id="manageSavesClose" aria-label="Close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="manage-saves-body" id="manageSavesList">
+        <!-- Populated by JS -->
+      </div>
+      <div class="manage-saves-footer">
+        <button class="manage-saves-import-btn" id="manageSavesImportBtn">
+          <span class="material-icons">download</span>
+          Import Save File
+        </button>
       </div>
     </div>
   </div>

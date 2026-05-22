@@ -6,6 +6,11 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 ## Entries
 
+- [manage-saves-modal](manage-saves-modal.md) — Manage Saves modal design: flat rows, portal dropdown, backup expand, Drive menu states (ui, saves, modal, gdrive) — updated 2026-05-14
+- [drive-sync-design](drive-sync-design.md) — Timestamp ≠ progress; two-column sync UI; conflict defaults to skip (gdrive, sync, design) — updated 2026-05-14
+- [dev-gotchas](dev-gotchas.md) — ES module cache busting, SW unregister hazard, async console gotcha (dev, debugging, cache) — updated 2026-05-14
+- [ui-conventions](ui-conventions.md) — Sentence case for labels; 44px min touch targets for all interactive elements (ui, design, accessibility, mobile) — updated 2026-05-13
+
 - [ptt-recognition-races](ptt-recognition-races.md) — PTT/recognition async race conditions: hasProcessedResult, mute lockout, background loop, AudioContext (voice, ptt, recognition, race-condition) — updated 2026-05-11
 - [narration-module-quirks](narration-module-quirks.md) — MediaSession play must call speakTextChunked directly; skipToEnd bypasses stopNarration (narration, tts, cycles) — updated 2026-04-27
 - [xss-vectors](xss-vectors.md) — Known XSS vectors: all 4 now fixed (saves + map node names) (security, xss, map) — updated 2026-04-27

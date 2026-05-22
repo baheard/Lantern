@@ -37,6 +37,7 @@ import { initHistoryButtons } from './ui/history.js';
 import { initConfirmDialog } from './ui/confirm-dialog.js';
 import { initFeedbackModal } from './ui/feedback-modal.js';
 import { initMobileMenu, updateMobileMenuForGameState } from './ui/mobile-menu.js';
+import { initManageSavesModal } from './ui/manage-saves-modal.js';
 import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-button.js';
 
 // Game modules
@@ -291,6 +292,7 @@ function initUIComponents() {
   initHistoryButtons();
   initConfirmDialog();
   initFeedbackModal();
+  initManageSavesModal();
   initMobileMenu();
   initScrollDownButton();
   initSaveHandlers();

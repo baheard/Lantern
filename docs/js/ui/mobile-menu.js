@@ -192,6 +192,11 @@ async function handleMenuAction(action) {
       }
       break;
 
+    case 'managesaves':
+      const { openManageSavesModal } = await import('./manage-saves-modal.js');
+      openManageSavesModal();
+      break;
+
     case 'feedback':
       const { openFeedbackModal } = await import('./feedback-modal.js');
       openFeedbackModal();
@@ -222,14 +227,16 @@ export function updateMobileMenuForGameState(inGame) {
   const menuItems = [
     { id: 'mobileMapIcon', pref: 'map', gameOnly: true },
     { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
-    { id: 'mobileLoadIcon', pref: 'load', gameOnly: true }
+    { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
+    { id: 'mobileManageSavesIcon', pref: null, gameOnly: true }
   ];
 
   menuItems.forEach(({ id, pref, gameOnly }) => {
     const icon = document.getElementById(id);
     if (icon) {
-      // Show if: (1) not game-only OR game is loaded, AND (2) user preference is enabled
-      const shouldShow = (!gameOnly || inGame) && prefs[pref];
+      // pref === null means no toggle — just respect gameOnly
+      const prefOk = pref === null ? true : prefs[pref];
+      const shouldShow = (!gameOnly || inGame) && prefOk;
       icon.style.display = shouldShow ? 'flex' : 'none';
     }
   });
