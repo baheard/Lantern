@@ -156,9 +156,10 @@ export async function ensureAppFolder() {
  * Upload file to Google Drive
  * @param {string} filename - File name
  * @param {object} data - File data
+ * @param {object} [appProperties] - Optional Drive appProperties key/value strings
  * @returns {Promise<object>} Upload result
  */
-export async function uploadFile(filename, data) {
+export async function uploadFile(filename, data, appProperties) {
   if (!isSignedIn()) {
     throw new Error('Not signed in to Google Drive');
   }
@@ -190,7 +191,8 @@ export async function uploadFile(filename, data) {
   const metadata = {
     name: filename,
     mimeType: 'application/json',
-    parents: fileExists ? undefined : [folderId]
+    parents: fileExists ? undefined : [folderId],
+    ...(appProperties ? { appProperties } : {})
   };
 
   const multipartRequestBody =
@@ -290,7 +292,7 @@ export async function listFiles() {
   const folderId = await ensureAppFolder();
 
   const query = `'${folderId}' in parents and trashed=false`;
-  const fields = 'files(id,name,modifiedTime)'; // Request specific fields including modifiedTime
+  const fields = 'files(id,name,modifiedTime,appProperties)';
   const response = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=${fields}`,
     {

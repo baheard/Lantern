@@ -129,7 +129,8 @@ export async function compareSaves(gameName, direction) {
         name: saveName,
         status: status,
         localTimestamp: localData.timestamp,
-        driveTimestamp: driveFile.modifiedTime,
+        driveTimestamp: driveFile.appProperties?.saveTimestamp || driveFile.modifiedTime,
+        driveMoveCount: driveFile.appProperties?.moveCount != null ? parseInt(driveFile.appProperties.moveCount) : null,
         key: key,
         driveFile: driveFile
       });
@@ -166,7 +167,8 @@ export async function compareSaves(gameName, direction) {
         name: saveName,
         status: 'New',
         localTimestamp: null,
-        driveTimestamp: file.modifiedTime,
+        driveTimestamp: file.appProperties?.saveTimestamp || file.modifiedTime,
+        driveMoveCount: file.appProperties?.moveCount != null ? parseInt(file.appProperties.moveCount) : null,
         key: localKey,
         driveFile: file
       });
@@ -252,8 +254,19 @@ export async function syncSaveFile(item, direction) {
       device: deviceInfo
     };
 
+    // Store save metadata as appProperties so it can be read without downloading the file
+    const moveCount = (() => {
+      try {
+        const html = saveData?.displayHTML?.statusBar || '';
+        const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
+        return m ? m[1] : null;
+      } catch { return null; }
+    })();
+    const appProperties = { saveTimestamp: saveData.timestamp || '' };
+    if (moveCount !== null) appProperties.moveCount = moveCount;
+
     const filename = localStorageKeyToFilename(item.key);
-    await uploadFile(filename, enrichedData);
+    await uploadFile(filename, enrichedData, appProperties);
   } else {
     // Download from Drive
     if (!item.driveFile) {

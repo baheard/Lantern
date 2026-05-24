@@ -54,17 +54,18 @@ function defaultArrow(item) {
 function arrowIcon(a)  { return a === 'upload' ? 'arrow_forward' : a === 'download' ? 'arrow_back' : 'do_not_disturb_on'; }
 function arrowColor(a) { return a === 'download' ? '#2196f3' : 'var(--accent-warm, #c4a35a)'; }
 
-function cellHtml(timestamp, name, side, localKey) {
+function cellHtml(timestamp, name, side, localKey, driveMoves) {
   if (!timestamp) {
     return `<div class="sm-cell sm-cell-empty" data-side="${side}">
       <div class="sm-cell-absent">${side === 'local' ? 'Not on device' : 'Not on Drive'}</div>
     </div>`;
   }
-  const moves = side === 'local' && localKey ? getMoveCount(localKey) : null;
-  const movesHtml = moves !== null ? ` <span class="sm-cell-moves">${moves} moves</span>` : '';
+  const moves = side === 'local' && localKey ? getMoveCount(localKey) : (side === 'drive' ? driveMoves : null);
+  const movesHtml = moves !== null ? `<div class="sm-cell-moves">${moves} moves</div>` : '';
   return `<div class="sm-cell" data-side="${side}">
     <div class="sm-cell-name">${name}</div>
-    <div class="sm-cell-time">${relTime(timestamp)}${movesHtml}</div>
+    <div class="sm-cell-time">${relTime(timestamp)}</div>
+    ${movesHtml}
   </div>`;
 }
 
@@ -73,9 +74,7 @@ function makeRow(item) {
   const isConflict = item.status === 'Conflict';
   const isSynced = item.status === 'Synced';
   const localMoves = item.localTimestamp ? (getMoveCount(item.key) ?? 0) : 0;
-  // Drive moves: we use local as proxy since we don't download Drive data
-  // When we have actual Drive move data this should be updated
-  const driveMoves = item.driveTimestamp && !item.localTimestamp ? 0 : localMoves;
+  const driveMoves = item.driveMoveCount ?? (item.driveTimestamp ? localMoves : 0);
 
   const hasLocal = !!item.localTimestamp;
   const hasDrive = !!item.driveTimestamp;
@@ -100,7 +99,7 @@ function makeRow(item) {
         <span class="material-icons" style="color:${arrowColor(arrow)}">${arrowIcon(arrow)}</span>
       </button>
     </div>
-    ${cellHtml(item.driveTimestamp, item.name, 'drive', item.localTimestamp ? item.key : null)}
+    ${cellHtml(item.driveTimestamp, item.name, 'drive', null, item.driveMoveCount ?? null)}
   `;
 
   const btn = row.querySelector('.sm-arrow-btn');
@@ -134,6 +133,21 @@ function isOverwrite(row, state) {
   return false;
 }
 
+function updateSelectAllIcon() {
+  if (!selectAllBtn || selectAllBtn.classList.contains('hidden')) return;
+  const rows = [...document.querySelectorAll('#smBody .sm-row[data-key]')];
+  if (!rows.length) return;
+  const allSame = rows.every(r => r.dataset.arrow === rows[0].dataset.arrow);
+  const icon = selectAllBtn.querySelector('.sm-all-icon');
+  if (allSame) {
+    selectAllState = rows[0].dataset.arrow;
+    icon.textContent = arrowIcon(selectAllState);
+    icon.style.color = arrowColor(selectAllState);
+  } else {
+    icon.textContent = '';
+  }
+}
+
 function setArrow(row, state) {
   row.dataset.arrow = state;
   const btn = row.querySelector('.sm-arrow-btn');
@@ -154,6 +168,7 @@ function setArrow(row, state) {
     icon.style.color = arrowColor(state);
     warn?.remove();
   }
+  updateSelectAllIcon();
 }
 
 function buildOverlay() {
@@ -181,9 +196,6 @@ function buildOverlay() {
   selectAllBtn = overlayEl.querySelector('.sm-select-all-btn');
   selectAllBtn.addEventListener('click', () => {
     selectAllState = ARROW_CYCLE[(ARROW_CYCLE.indexOf(selectAllState) + 1) % ARROW_CYCLE.length];
-    const icon = selectAllBtn.querySelector('.sm-all-icon');
-    icon.textContent = arrowIcon(selectAllState);
-    icon.style.color = arrowColor(selectAllState);
     document.querySelectorAll('#smBody .sm-row[data-key]').forEach(r => setArrow(r, selectAllState));
   });
 
@@ -281,11 +293,9 @@ export async function showSyncModal(gameName, filterKey = null) {
     selectAllBtn.classList.toggle('hidden', items.length <= 1);
 
     selectAllState = 'skip';
-    const saIcon = selectAllBtn.querySelector('.sm-all-icon');
-    saIcon.textContent = arrowIcon(selectAllState);
-    saIcon.style.color = arrowColor(selectAllState);
 
     items.forEach(item => body.appendChild(makeRow(item)));
+    updateSelectAllIcon();
   } catch (err) {
     body.innerHTML = `<div class="sm-empty sm-error">Could not load Drive saves.<br><small>${err.message}</small></div>`;
   }
