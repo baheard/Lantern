@@ -402,7 +402,6 @@
 }
 .sm-row[data-type="autosave"]  { border-left-color: #4caf50; }
 .sm-row[data-type="quicksave"] { border-left-color: #2196f3; }
-.sm-row[data-type="customsave"]{ border-left-color: var(--accent-warm, #c4a35a); }
 
 .sm-row:last-child { border-bottom: none; }
 .sm-row.sm-synced { opacity: 0.5; }

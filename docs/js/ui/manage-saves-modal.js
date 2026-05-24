@@ -10,6 +10,7 @@ import { state } from '../core/state.js';
 import { getJSON, removeItem } from '../utils/storage/storage-api.js';
 import { confirmDialog } from './confirm-dialog.js';
 import { updateStatus } from '../utils/status.js';
+import { getGameDisplayName } from './settings/settings-panel.js';
 
 let overlayEl = null;
 let portalDropdown = null;
@@ -593,7 +594,7 @@ export function openManageSavesModal() {
   if (!overlayEl) return;
 
   const titleEl = document.getElementById('manageSavesTitle');
-  if (titleEl) titleEl.textContent = `Saves — ${state.currentGameName.replace(/\.[^.]+$/, '')}`;
+  if (titleEl) titleEl.textContent = `Saves — ${getGameDisplayName(state.currentGameName)}`;
 
   const listEl = document.getElementById('manageSavesList');
   if (listEl) {
