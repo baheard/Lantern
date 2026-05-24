@@ -17,6 +17,10 @@ let portalDropdown = null;
 const expandedBackups = new Set();
 const driveStatusCache = new Map(); // key → { hint, color }
 
+document.addEventListener('iftalk:synccomplete', ({ detail }) => {
+  refreshDriveStatusCache(detail.gameName);
+});
+
 async function refreshDriveStatusCache(gameName) {
   if (!state.gdriveSignedIn) return;
   try {

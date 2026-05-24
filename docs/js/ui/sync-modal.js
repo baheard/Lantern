@@ -74,7 +74,7 @@ function makeRow(item) {
   const isConflict = item.status === 'Conflict';
   const isSynced = item.status === 'Synced';
   const localMoves = item.localTimestamp ? (getMoveCount(item.key) ?? 0) : 0;
-  const driveMoves = item.driveMoveCount ?? (item.driveTimestamp ? localMoves : 0);
+  const driveMoves = item.driveMoveCount ?? 0;
 
   const hasLocal = !!item.localTimestamp;
   const hasDrive = !!item.driveTimestamp;
@@ -267,6 +267,7 @@ async function executeSync() {
     }
     updateStatus(`Synced ${ok} save${ok !== 1 ? 's' : ''}`, 'success');
     closeSyncModal();
+    document.dispatchEvent(new CustomEvent('iftalk:synccomplete', { detail: { gameName: currentGameName } }));
   } catch (err) {
     updateStatus('Sync failed: ' + err.message, 'error');
   }
