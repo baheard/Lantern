@@ -77,6 +77,13 @@ function makeRow(item) {
   // When we have actual Drive move data this should be updated
   const driveMoves = item.driveTimestamp && !item.localTimestamp ? 0 : localMoves;
 
+  const hasLocal = !!item.localTimestamp;
+  const hasDrive = !!item.driveTimestamp;
+  // Allowed directions: only upload if local exists, only download if drive exists
+  const allowedCycle = ARROW_CYCLE.filter(a =>
+    a === 'skip' || (a === 'upload' && hasLocal) || (a === 'download' && hasDrive)
+  );
+
   const row = document.createElement('div');
   row.className = `sm-row${isConflict ? ' sm-conflict' : ''}${isSynced ? ' sm-synced' : ''}`;
   row.dataset.key = item.key;
@@ -84,11 +91,12 @@ function makeRow(item) {
   row.dataset.localMoves = localMoves;
   row.dataset.driveMoves = driveMoves;
 
+  const showBtn = allowedCycle.length > 1;
   row.innerHTML = `
     ${cellHtml(item.localTimestamp, item.name, 'local', item.key)}
     <div class="sm-arrow-col">
       ${isConflict ? '<div class="sm-conflict-badge">!</div>' : ''}
-      <button class="sm-arrow-btn" title="Change direction">
+      <button class="sm-arrow-btn" title="Change direction" ${showBtn ? '' : 'disabled style="pointer-events:none"'}>
         <span class="material-icons" style="color:${arrowColor(arrow)}">${arrowIcon(arrow)}</span>
       </button>
     </div>
@@ -98,18 +106,18 @@ function makeRow(item) {
   const btn = row.querySelector('.sm-arrow-btn');
   btn.addEventListener('click', e => {
     e.stopPropagation();
-    const cur = ARROW_CYCLE.indexOf(row.dataset.arrow);
-    const next = ARROW_CYCLE[(cur + 1) % ARROW_CYCLE.length];
+    const cur = allowedCycle.indexOf(row.dataset.arrow);
+    const next = allowedCycle[(cur + 1) % allowedCycle.length];
     setArrow(row, next);
   });
 
-  // Clicking a cell aims sync toward that side
+  // Clicking a cell aims sync toward that side (only if that direction is allowed)
   row.querySelectorAll('.sm-cell:not(.sm-cell-empty)').forEach(cell => {
     cell.addEventListener('click', () => {
       const side = cell.dataset.side;
-      const cur = row.dataset.arrow;
       const aimed = side === 'local' ? 'upload' : 'download';
-      setArrow(row, cur === aimed ? 'skip' : aimed);
+      if (!allowedCycle.includes(aimed)) return;
+      setArrow(row, row.dataset.arrow === aimed ? (allowedCycle.includes('skip') ? 'skip' : aimed) : aimed);
     });
   });
 
