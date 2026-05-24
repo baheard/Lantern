@@ -273,6 +273,14 @@
 .ms-dropdown-item.danger { color: #f44336; }
 .ms-dropdown-item.danger .material-icons { color: #f44336; }
 
+.ms-drive-hint {
+  margin-left: auto;
+  font-size: 0.78em;
+  opacity: 0.8;
+  color: var(--text-secondary, #a8a5a0);
+  font-style: italic;
+}
+
 .ms-dropdown-divider {
   height: 1px;
   background: var(--border-subtle, rgba(255, 255, 255, 0.08));
