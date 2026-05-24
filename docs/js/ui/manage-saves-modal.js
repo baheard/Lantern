@@ -21,16 +21,11 @@ async function refreshDriveStatusCache(gameName) {
   if (!state.gdriveSignedIn) return;
   try {
     const { compareSaves } = await import('../utils/gdrive/gdrive-sync-preview.js');
-    const [exportItems, importItems] = await Promise.all([
-      compareSaves(gameName, 'export'),
-      compareSaves(gameName, 'import'),
-    ]);
-    const all = new Map();
-    for (const item of [...exportItems, ...importItems]) all.set(item.key, item);
+    // Export direction only: Newer=local is newer, Older=Drive is newer — consistent semantics
+    const items = await compareSaves(gameName, 'export');
     driveStatusCache.clear();
-    for (const item of all.values()) {
-      const { hint, color } = driveHint(item);
-      driveStatusCache.set(item.key, { hint, color });
+    for (const item of items) {
+      driveStatusCache.set(item.key, driveHint(item));
     }
   } catch { /* silent — Drive may not be available */ }
 }
