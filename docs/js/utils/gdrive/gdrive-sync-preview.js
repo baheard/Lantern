@@ -87,7 +87,7 @@ export async function compareSaves(gameName, direction) {
     const driveFile = driveFileMap.get(key);
 
     // Get save name from key
-    const saveName = getSaveNameFromKey(key);
+    const saveName = getSaveNameFromKey(key, gameName);
 
     if (!driveFile) {
       // Only exists locally
@@ -160,7 +160,7 @@ export async function compareSaves(gameName, direction) {
 
     if (!localSaves.has(localKey)) {
       // Only exists on Drive
-      const saveName = getSaveNameFromKey(localKey);
+      const saveName = getSaveNameFromKey(localKey, gameName);
 
       items.push({
         id: localKey,
@@ -188,7 +188,7 @@ export async function compareSaves(gameName, direction) {
 /**
  * Get human-readable save name from localStorage key
  */
-function getSaveNameFromKey(key) {
+function getSaveNameFromKey(key, gameName) {
   const parts = key.split('_');
   const type = parts[1]; // autosave, quicksave, customsave
 
@@ -197,8 +197,10 @@ function getSaveNameFromKey(key) {
   } else if (type === 'quicksave') {
     return 'Quick Save';
   } else if (type === 'customsave') {
-    // Extract custom save name if available
-    const name = parts.slice(2, -1).join(' '); // Remove game name
+    const prefix = `${APP_CONFIG.storagePrefix}_customsave_${gameName}_`;
+    const name = gameName && key.startsWith(prefix)
+      ? key.substring(prefix.length)
+      : parts.slice(3).join('_');
     return name || 'Manual Save';
   }
 
