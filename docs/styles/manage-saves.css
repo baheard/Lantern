@@ -127,10 +127,10 @@
 .ms-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 12px 12px 0;
+  gap: 6px;
+  padding: 10px 8px 10px 0;
   min-height: 44px;
-  margin: 0 16px;
+  margin: 0 8px;
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   position: relative;
 }
@@ -164,31 +164,30 @@
 }
 
 .ms-row-time {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  display: block;
   font-size: 0.75em;
   color: var(--text-secondary, #a8a5a0);
+  white-space: nowrap;
 }
 
-/* Cloud button — standalone flex item in the row, between info and actions */
-.ms-cloud-btn {
+/* Cloud button — standalone flex item between info and ⋮ menu */
+.ms-cloud-pill {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
+  flex: none;
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 5px;
   transition: background 0.15s;
-  flex-shrink: 0;
 }
 
-.ms-cloud-btn:hover { background: rgba(255, 255, 255, 0.08); }
-.ms-cloud-btn .material-icons { font-size: 16px; }
+.ms-cloud-pill:hover { background: rgba(255, 255, 255, 0.08); }
+.ms-cloud-pill .material-icons { font-size: 16px; }
 
 .cloud-synced      { color: #4caf50; }
 .cloud-upload      { color: var(--accent-warm, #c4a35a); }
@@ -594,7 +593,8 @@
   to   { transform: rotate(360deg); }
 }
 
-.ms-cloud-dot.syncing .material-icons {
+.ms-cloud-dot.syncing .material-icons,
+.ms-cloud-pill.syncing .material-icons {
   animation: ms-spin 1s linear infinite;
   color: var(--text-secondary, #a8a5a0);
 }

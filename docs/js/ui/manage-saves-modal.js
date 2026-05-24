@@ -165,7 +165,7 @@ async function saveToSlot(save) {
 
   if (success) {
     const row = document.querySelector(`.ms-row[data-key="${CSS.escape(save.key)}"]`);
-    if (row) row.querySelector('.ms-row-time span:first-child').textContent = 'Just now';
+    if (row) row.querySelector('.ms-row-time').textContent = 'Just now';
   }
 }
 
@@ -236,7 +236,7 @@ async function handleCloudClick(save, btn) {
     try {
       await signIn();
       updateStatus('Connected to Google Drive', 'success');
-      btn.className = 'ms-cloud-btn cloud-upload';
+      btn.className = 'ms-cloud-pill cloud-upload';
       btn.querySelector('.material-icons').textContent = 'cloud_upload';
       btn.title = 'Tap to sync with Drive';
     } catch (err) {
@@ -252,9 +252,9 @@ async function handleCloudClick(save, btn) {
 function setRowCloudState(key, icon, cls) {
   const row = document.querySelector(`.ms-row[data-key="${CSS.escape(key)}"]`);
   if (!row) return;
-  const btn = row.querySelector('.ms-cloud-btn');
+  const btn = row.querySelector('.ms-cloud-pill');
   if (!btn) return;
-  btn.className = `ms-cloud-btn ${cls}`;
+  btn.className = `ms-cloud-pill ${cls}`;
   btn.querySelector('.material-icons').textContent = icon;
 }
 
@@ -392,9 +392,10 @@ function renderRow(save) {
     <div class="ms-type-bar ${save.bar}"></div>
     <div class="ms-row-info">
       <div class="ms-row-name">${escapeHtml(save.name)}</div>
-      <div class="ms-row-time"><span>${relativeTime(save.timestamp)}</span>${movesHtml}</div>
+      <div class="ms-row-time">${relativeTime(save.timestamp)}</div>
+      ${movesHtml}
     </div>
-    <button class="ms-cloud-btn ${cloudStatus.cls}" title="${cloudStatus.label}" aria-label="${cloudStatus.label}">
+    <button class="ms-cloud-pill ${cloudStatus.cls}" title="${cloudStatus.label}" aria-label="${cloudStatus.label}">
       <span class="material-icons">${cloudStatus.icon}</span>
     </button>
     <div class="ms-row-actions">
@@ -406,7 +407,7 @@ function renderRow(save) {
     </div>
   `;
 
-  const cloudBtn = row.querySelector('.ms-cloud-btn');
+  const cloudBtn = row.querySelector('.ms-cloud-pill');
   cloudBtn.addEventListener('click', e => {
     e.stopPropagation();
     handleCloudClick(save, cloudBtn);
