@@ -397,8 +397,12 @@
   align-items: center;
   min-height: 56px;
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  border-left: 3px solid transparent;
   transition: background 0.1s;
 }
+.sm-row[data-type="autosave"]  { border-left-color: #4caf50; }
+.sm-row[data-type="quicksave"] { border-left-color: #2196f3; }
+.sm-row[data-type="customsave"]{ border-left-color: var(--accent-warm, #c4a35a); }
 
 .sm-row:last-child { border-bottom: none; }
 .sm-row.sm-synced { opacity: 0.5; }
@@ -447,9 +451,10 @@
 }
 
 .sm-cell-moves {
+  font-size: 0.72em;
   font-style: italic;
   opacity: 0.65;
-  margin-left: 6px;
+  margin-top: 1px;
 }
 
 /* "All" button in header — looks like a tappable chip */

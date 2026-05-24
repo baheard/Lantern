@@ -86,6 +86,7 @@ function makeRow(item) {
   const row = document.createElement('div');
   row.className = `sm-row${isConflict ? ' sm-conflict' : ''}${isSynced ? ' sm-synced' : ''}`;
   row.dataset.key = item.key;
+  row.dataset.type = item.key.includes('_autosave_') ? 'autosave' : item.key.includes('_quicksave_') ? 'quicksave' : 'customsave';
   row.dataset.arrow = arrow;
   row.dataset.localMoves = localMoves;
   row.dataset.driveMoves = driveMoves;
