@@ -396,9 +396,6 @@ function renderRow(save) {
       ${movesHtml}
     </div>
     <div class="ms-row-actions">
-      <button class="ms-cloud-pill ${cloudStatus.cls}" title="${cloudStatus.label}" aria-label="${cloudStatus.label}">
-        <span class="material-icons">${cloudStatus.icon}</span>
-      </button>
       <button class="ms-more-btn" title="More options">
         <span class="material-icons">more_vert</span>
       </button>
@@ -407,11 +404,6 @@ function renderRow(save) {
     </div>
   `;
 
-  const cloudBtn = row.querySelector('.ms-cloud-pill');
-  cloudBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    handleCloudClick(save, cloudBtn);
-  });
   row.querySelector('.ms-more-btn').addEventListener('click', e => {
     e.stopPropagation();
     openDropdown(e.currentTarget, save, row, cloudStatus);
