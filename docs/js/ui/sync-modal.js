@@ -10,7 +10,7 @@ import { updateStatus } from '../utils/status.js';
 
 let overlayEl = null;
 let currentGameName = null;
-let selectAllState = 'upload';
+let selectAllState = 'skip';
 let selectAllBtn = null;
 
 const ARROW_CYCLE = ['upload', 'download', 'skip'];
@@ -155,9 +155,9 @@ function buildOverlay() {
     <div class="sm-modal">
       <div class="sm-header">
         <span class="sm-col-label">This Device</span>
-        <button class="sm-all-btn sm-select-all-btn" title="Set direction for all saves">
-          <span class="sm-all-label">All</span>
-          <span class="material-icons sm-all-icon" style="color:${arrowColor('upload')}">${arrowIcon('upload')}</span>
+        <button class="sm-all-btn sm-select-all-btn hidden" title="Set direction for all saves">
+          <span class="sm-all-label">Sync all</span>
+          <span class="material-icons sm-all-icon" style="color:${arrowColor('skip')}">${arrowIcon('skip')}</span>
         </button>
         <span class="sm-col-label sm-col-right">Google Drive</span>
       </div>
@@ -179,7 +179,6 @@ function buildOverlay() {
     document.querySelectorAll('#smBody .sm-row[data-key]').forEach(r => setArrow(r, selectAllState));
   });
 
-  overlayEl.querySelector('.sm-close').addEventListener('click', closeSyncModal);
   overlayEl.querySelector('.sm-cancel-btn').addEventListener('click', closeSyncModal);
   overlayEl.addEventListener('click', e => { if (e.target === overlayEl) closeSyncModal(); });
   overlayEl.querySelector('.sm-sync-btn').addEventListener('click', executeSync);
@@ -243,12 +242,6 @@ async function executeSync() {
       if (item) {
         await syncSaveFile(item, direction);
         ok++;
-        // Update cloud icon in manage saves modal if it's still open
-        const cloudBtn = document.querySelector(`.ms-row[data-key="${CSS.escape(key)}"] .ms-cloud-btn`);
-        if (cloudBtn) {
-          cloudBtn.className = 'ms-cloud-btn cloud-synced';
-          cloudBtn.querySelector('.material-icons').textContent = 'cloud_done';
-        }
       }
     }
     updateStatus(`Synced ${ok} save${ok !== 1 ? 's' : ''}`, 'success');
@@ -258,7 +251,7 @@ async function executeSync() {
   }
 }
 
-export async function showSyncModal(gameName) {
+export async function showSyncModal(gameName, filterKey = null) {
   currentGameName = gameName;
   if (!overlayEl) buildOverlay();
 
@@ -267,7 +260,8 @@ export async function showSyncModal(gameName) {
   overlayEl.classList.remove('hidden');
 
   try {
-    const items = await loadItems(gameName);
+    let items = await loadItems(gameName);
+    if (filterKey) items = items.filter(i => i.key === filterKey);
     body.innerHTML = '';
 
     if (items.length === 0) {
@@ -276,8 +270,9 @@ export async function showSyncModal(gameName) {
       return;
     }
 
-    // Reset select-all to default state on each open
-    selectAllState = 'upload';
+    selectAllBtn.classList.toggle('hidden', items.length <= 1);
+
+    selectAllState = 'skip';
     const saIcon = selectAllBtn.querySelector('.sm-all-icon');
     saIcon.textContent = arrowIcon(selectAllState);
     saIcon.style.color = arrowColor(selectAllState);

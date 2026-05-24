@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.300';
+const CACHE_VERSION = 'v1.5.301';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -59,9 +59,11 @@ const CORE_ASSETS = [
   './js/ui/confirm-dialog.js',
   './js/ui/game-output.js',
   './js/ui/history.js',
+  './js/ui/manage-saves-modal.js',
   './js/ui/nav-buttons.js',
   './js/ui/mobile-menu.js',
   './js/ui/scroll-down-button.js',
+  './js/ui/sync-modal.js',
   './js/ui/sync-preview-modal.js',
   './js/ui/settings/data-management-ui.js',
   './js/ui/settings/gdrive-ui.js',
