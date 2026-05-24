@@ -395,10 +395,10 @@ function renderRow(save) {
       <div class="ms-row-time">${relativeTime(save.timestamp)}</div>
       ${movesHtml}
     </div>
-    <button class="ms-cloud-pill ${cloudStatus.cls}" title="${cloudStatus.label}" aria-label="${cloudStatus.label}">
-      <span class="material-icons">${cloudStatus.icon}</span>
-    </button>
     <div class="ms-row-actions">
+      <button class="ms-cloud-pill ${cloudStatus.cls}" title="${cloudStatus.label}" aria-label="${cloudStatus.label}">
+        <span class="material-icons">${cloudStatus.icon}</span>
+      </button>
       <button class="ms-more-btn" title="More options">
         <span class="material-icons">more_vert</span>
       </button>
