@@ -568,10 +568,11 @@ body {
 /* Mobile responsiveness */
 @media (max-width: 600px) {
   .update-notification {
-    top: calc(10px + env(safe-area-inset-top));
+    top: auto;
+    bottom: calc(80px + env(safe-area-inset-bottom));
     left: calc(10px + env(safe-area-inset-left));
     right: calc(10px + env(safe-area-inset-right));
-    transform: translateX(0) translateY(-80px);
+    transform: translateX(0) translateY(80px);
   }
 
   .update-notification.visible {
