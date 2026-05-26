@@ -683,6 +683,7 @@ export function openManageSavesModal() {
   }
 
   overlayEl.classList.remove('hidden');
+  updateDriveBtnIcon();
 }
 
 export function closeManageSavesModal() {
@@ -692,12 +693,33 @@ export function closeManageSavesModal() {
   lastMoreBtn = null;
 }
 
+function updateDriveBtnIcon() {
+  const btn = document.getElementById('manageSavesDriveBtn');
+  if (!btn) return;
+  btn.querySelector('.material-icons').textContent = state.gdriveSignedIn ? 'cloud' : 'cloud_off';
+  btn.title = state.gdriveSignedIn ? 'Sync with Google Drive' : 'Connect Google Drive';
+}
+
 export function initManageSavesModal() {
   overlayEl = document.getElementById('manageSavesOverlay');
   if (!overlayEl) return;
 
   document.getElementById('manageSavesClose')
     ?.addEventListener('click', closeManageSavesModal);
+
+  document.getElementById('manageSavesDriveBtn')
+    ?.addEventListener('click', async () => {
+      if (state.gdriveSignedIn) {
+        const { showSyncModal } = await import('./sync-modal.js');
+        showSyncModal(state.currentGameName);
+      } else {
+        const { ensureAuthenticated } = await import('../utils/gdrive/gdrive-auth.js');
+        await ensureAuthenticated();
+        updateDriveBtnIcon();
+      }
+    });
+
+  window.addEventListener('gdriveSignInChanged', updateDriveBtnIcon);
 
   overlayEl.addEventListener('click', e => {
     if (e.target === overlayEl) closeManageSavesModal();

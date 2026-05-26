@@ -43,7 +43,14 @@
   color: var(--text-secondary, #a8a5a0);
 }
 
-.manage-saves-close {
+.manage-saves-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.manage-saves-close,
+.manage-saves-drive-btn {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none;
@@ -51,7 +58,8 @@
   cursor: pointer; border-radius: 5px; transition: all 0.15s;
 }
 
-.manage-saves-close:hover {
+.manage-saves-close:hover,
+.manage-saves-drive-btn:hover {
   color: var(--text-primary, #e6e4e0);
   background: var(--bg-elevated, #22272e);
 }

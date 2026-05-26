@@ -896,9 +896,14 @@
     <div class="manage-saves-modal">
       <div class="manage-saves-header">
         <h3 id="manageSavesTitle">Manage Saves</h3>
-        <button class="manage-saves-close" id="manageSavesClose" aria-label="Close">
-          <span class="material-icons">close</span>
-        </button>
+        <div class="manage-saves-header-actions">
+          <button class="manage-saves-drive-btn" id="manageSavesDriveBtn" aria-label="Google Drive sync">
+            <span class="material-icons">cloud_off</span>
+          </button>
+          <button class="manage-saves-close" id="manageSavesClose" aria-label="Close">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
       </div>
       <div class="manage-saves-body" id="manageSavesList">
         <!-- Populated by JS -->

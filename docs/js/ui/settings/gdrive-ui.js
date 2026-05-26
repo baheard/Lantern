@@ -92,16 +92,14 @@ export function initGDriveUI() {
 
   async function runSyncAll() {
     try {
-      const { syncAllNow } = await import('../../utils/gdrive/gdrive-sync.js');
-      const count = await syncAllNow();
-      updateGDriveUI();
-      if (count === null) return; // cancelled
+      const { showSyncModal } = await import('../sync-modal.js');
+      await showSyncModal(null);
     } catch (error) {
       updateStatus('Sync failed: ' + error.message, 'error');
     }
   }
 
-  // Sync button — auth if needed, then sync all saves
+  // Sync button — auth if needed, then show sync modal
   const gdriveSyncBtn = document.getElementById('gdriveSyncBtn');
   if (gdriveSyncBtn) {
     gdriveSyncBtn.addEventListener('click', runSyncAll);
