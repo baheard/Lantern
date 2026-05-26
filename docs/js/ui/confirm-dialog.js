@@ -17,9 +17,14 @@ let titleEl = null;
 let messageEl = null;
 let okBtn = null;
 let cancelBtn = null;
+let inputRow = null;
+let inputLabel = null;
+let inputField = null;
+let inputHint = null;
 
 // Current promise resolver
 let currentResolve = null;
+let hasInput = false;
 
 /**
  * Initialize confirm dialog module
@@ -32,6 +37,10 @@ export function initConfirmDialog() {
   messageEl = document.getElementById('confirmDialogMessage');
   okBtn = document.getElementById('confirmOkBtn');
   cancelBtn = document.getElementById('confirmCancelBtn');
+  inputRow = document.getElementById('confirmDialogInputRow');
+  inputLabel = document.getElementById('confirmDialogInputLabel');
+  inputField = document.getElementById('confirmDialogInput');
+  inputHint = document.getElementById('confirmDialogInputHint');
 
   if (!overlay || !dialog || !titleEl || !messageEl || !okBtn || !cancelBtn) {
     return;
@@ -48,19 +57,31 @@ export function initConfirmDialog() {
     }
   });
 
+  // Enter in input field submits
+  inputField?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleOk();
+    }
+  });
+
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeydown);
 }
 
 /**
- * Show confirm dialog
+ * Show confirm dialog.
  * @param {string} message - Message to display
  * @param {Object} options - Optional configuration
  * @param {string} options.title - Dialog title (default: 'Confirm')
  * @param {string} options.okText - OK button text (default: 'OK')
  * @param {string} options.cancelText - Cancel button text (default: 'Cancel')
  * @param {boolean} options.okOnly - If true, hide cancel button (default: false)
- * @returns {Promise<boolean>} True if confirmed, false if cancelled
+ * @param {string} options.inputValue - Pre-filled value; presence enables input mode
+ * @param {string} options.inputPlaceholder - Placeholder for the input field
+ * @param {string} options.inputLabel - Label shown above the input
+ * @param {string} options.inputHint - Small hint text shown below the input
+ * @returns {Promise<boolean|string>} In normal mode: true/false. In input mode: the input string or false if cancelled.
  */
 export function confirmDialog(message, options = {}) {
   if (!overlay || !titleEl || !messageEl) {
@@ -68,41 +89,42 @@ export function confirmDialog(message, options = {}) {
   }
 
   return new Promise((resolve) => {
-    // Store resolver
     currentResolve = resolve;
+    hasInput = 'inputValue' in options;
 
-    // Set title
-    const title = options.title || 'Confirm';
-    titleEl.textContent = title;
-
-    // Set message
+    titleEl.textContent = options.title || 'Confirm';
     messageEl.textContent = message;
 
-    // Set button text
-    if (options.okText && okBtn) {
-      okBtn.textContent = options.okText;
-    } else if (okBtn) {
-      okBtn.textContent = 'OK';
-    }
+    if (okBtn) okBtn.textContent = options.okText || 'OK';
+    if (cancelBtn) cancelBtn.textContent = options.cancelText || 'Cancel';
 
-    if (options.cancelText && cancelBtn) {
-      cancelBtn.textContent = options.cancelText;
-    } else if (cancelBtn) {
-      cancelBtn.textContent = 'Cancel';
-    }
-
-    // Handle okOnly option - hide cancel button
     if (options.okOnly && cancelBtn) {
       cancelBtn.classList.add('hidden');
     } else if (cancelBtn) {
       cancelBtn.classList.remove('hidden');
     }
 
-    // Show overlay
+    // Input field
+    if (hasInput && inputRow && inputField) {
+      inputRow.classList.remove('hidden');
+      if (inputLabel) inputLabel.textContent = options.inputLabel || '';
+      inputField.value = options.inputValue ?? '';
+      inputField.placeholder = options.inputPlaceholder || '';
+      if (inputHint) inputHint.textContent = options.inputHint || '';
+    } else if (inputRow) {
+      inputRow.classList.add('hidden');
+    }
+
     overlay.classList.remove('hidden');
 
-    // Focus OK button for keyboard accessibility
-    setTimeout(() => okBtn?.focus(), 100);
+    setTimeout(() => {
+      if (hasInput && inputField) {
+        inputField.focus();
+        inputField.select();
+      } else {
+        okBtn?.focus();
+      }
+    }, 100);
   });
 }
 
@@ -141,17 +163,21 @@ function handleKeydown(e) {
 
 /**
  * Close dialog and resolve promise
- * @param {boolean} result - Dialog result
+ * @param {boolean} confirmed - Whether the user confirmed
  */
-function closeDialog(result) {
+function closeDialog(confirmed) {
   if (!overlay) return;
 
-  // Hide overlay
   overlay.classList.add('hidden');
 
-  // Resolve promise
   if (currentResolve) {
-    currentResolve(result);
+    if (!confirmed) {
+      currentResolve(false);
+    } else if (hasInput && inputField) {
+      currentResolve(inputField.value);
+    } else {
+      currentResolve(true);
+    }
     currentResolve = null;
   }
 }

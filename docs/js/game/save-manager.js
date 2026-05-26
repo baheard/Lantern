@@ -397,16 +397,6 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             }
         }
 
-        // Auto-sync to Google Drive (if enabled)
-        if (state.gdriveSyncEnabled && state.gdriveSignedIn) {
-            try {
-                const { scheduleDriveSync, getDeviceInfo } = await import('../utils/gdrive/index.js');
-                const enrichedData = { ...saveData, device: getDeviceInfo() };
-                scheduleDriveSync(storageKey, enrichedData);
-            } catch (error) {
-                // Drive sync failed silently
-            }
-        }
 
         // Show system message in game area (if displayName provided)
         if (displayName) {

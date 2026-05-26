@@ -252,13 +252,13 @@ body {
 }
 
 .btn-primary {
-  background: var(--accent-primary);
+  background: var(--accent-warm);
   color: var(--bg-primary);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 157, 195, 0.3);
+  box-shadow: 0 4px 12px rgba(196, 163, 90, 0.3);
   filter: brightness(1.1);
 }
 

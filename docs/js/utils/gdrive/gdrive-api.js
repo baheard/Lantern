@@ -181,7 +181,13 @@ export async function uploadFile(filename, data, appProperties) {
 
   const searchData = await searchResponse.json();
   const fileExists = searchData.files && searchData.files.length > 0;
-  const existingFileId = fileExists ? searchData.files[0].id : null;
+  // Sort by modifiedTime desc so files[0] is the newest
+  const sortedFiles = fileExists
+    ? [...searchData.files].sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime))
+    : [];
+  const existingFileId = sortedFiles.length > 0 ? sortedFiles[0].id : null;
+  // IDs beyond the first are orphaned duplicates — delete them after upload
+  const dupeIdsToDelete = sortedFiles.slice(1).map(f => f.id);
 
   // Prepare file content
   const boundary = '-------314159265358979323846';
@@ -225,6 +231,15 @@ export async function uploadFile(filename, data, appProperties) {
   }
 
   const result = await response.json();
+
+  // Clean up any duplicate files found during search (background, non-blocking)
+  if (dupeIdsToDelete.length > 0) {
+    (async () => {
+      for (const id of dupeIdsToDelete) {
+        try { await deleteFile(id); } catch { /* ignore */ }
+      }
+    })();
+  }
 
   return result;
 }
@@ -294,7 +309,7 @@ export async function listFiles() {
   const query = `'${folderId}' in parents and trashed=false`;
   const fields = 'files(id,name,modifiedTime,appProperties)';
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=${fields}`,
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=${fields}&orderBy=modifiedTime+desc`,
     {
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -307,8 +322,32 @@ export async function listFiles() {
   }
 
   const data = await response.json();
+  const files = data.files || [];
 
-  return data.files || [];
+  // Deduplicate by name — keep only the newest file per name (Drive allows
+  // multiple files with the same name; extras are orphaned historical uploads).
+  const seen = new Set();
+  const dupeIds = [];
+  const deduped = [];
+  for (const file of files) {
+    if (seen.has(file.name)) {
+      dupeIds.push(file.id); // collect extras for background cleanup
+    } else {
+      seen.add(file.name);
+      deduped.push(file);
+    }
+  }
+
+  // Delete orphaned duplicates in the background (no await — don't block list)
+  if (dupeIds.length > 0) {
+    (async () => {
+      for (const id of dupeIds) {
+        try { await deleteFile(id); } catch { /* ignore */ }
+      }
+    })();
+  }
+
+  return deduped;
 }
 
 /**

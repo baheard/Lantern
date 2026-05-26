@@ -101,11 +101,15 @@ export async function compareSaves(gameName, direction) {
         driveFile: null
       });
     } else {
-      // Exists in both places - compare timestamps
-      const driveModifiedTime = new Date(driveFile.modifiedTime).getTime();
+      // Exists in both places - compare timestamps.
+      // Prefer saveTimestamp appProperty (actual save creation time) over modifiedTime
+      // (upload time), which can be minutes later and cause false "Newer" flags.
+      const driveCompareTime = driveFile.appProperties?.saveTimestamp
+        ? new Date(driveFile.appProperties.saveTimestamp).getTime()
+        : new Date(driveFile.modifiedTime).getTime();
 
       let status;
-      const timeDiff = Math.abs(driveModifiedTime - localTime);
+      const timeDiff = Math.abs(driveCompareTime - localTime);
 
       if (timeDiff < SYNC_THRESHOLD_MS) {
         // Timestamps within 1 second - consider them equal
@@ -118,9 +122,9 @@ export async function compareSaves(gameName, direction) {
         // For IMPORT (showing Drive): Drive > Local means "Newer"
         // For EXPORT (showing Local): Local > Drive means "Newer"
         if (direction === 'import') {
-          status = driveModifiedTime > localTime ? 'Newer' : 'Older';
+          status = driveCompareTime > localTime ? 'Newer' : 'Older';
         } else {
-          status = localTime > driveModifiedTime ? 'Newer' : 'Older';
+          status = localTime > driveCompareTime ? 'Newer' : 'Older';
         }
       }
 

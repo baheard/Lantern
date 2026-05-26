@@ -401,7 +401,7 @@
 
 .sm-row {
   display: grid;
-  grid-template-columns: 1fr 56px 1fr;
+  grid-template-columns: 1fr 56px 1fr 40px;
   align-items: center;
   min-height: 56px;
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
@@ -427,7 +427,7 @@
 
 .sm-cell:hover { background: rgba(255, 255, 255, 0.04); }
 
-.sm-cell:last-child {
+.sm-cell[data-side="drive"] {
   text-align: right;
   align-items: flex-end;
 }
@@ -523,6 +523,28 @@
 
 .sm-arrow-btn:hover { background: rgba(255, 255, 255, 0.08); }
 .sm-arrow-btn .material-icons { font-size: 20px; }
+
+.sm-delete-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sm-delete-btn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none;
+  cursor: pointer; border-radius: 50%;
+  color: var(--text-secondary, #a8a5a0);
+  transition: background 0.15s, color 0.15s;
+}
+
+.sm-delete-btn:hover {
+  background: rgba(244, 67, 54, 0.12);
+  color: #f44336;
+}
+
+.sm-delete-btn .material-icons { font-size: 18px; }
 
 .sm-conflict-badge {
   font-size: 0.6em;

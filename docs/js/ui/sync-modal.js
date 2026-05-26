@@ -7,6 +7,7 @@
 import { state } from '../core/state.js';
 import { compareSaves, syncSaveFile } from '../utils/gdrive/gdrive-sync-preview.js';
 import { updateStatus } from '../utils/status.js';
+import { deleteFile } from '../utils/gdrive/gdrive-api.js';
 
 let overlayEl = null;
 let currentGameName = null;
@@ -69,6 +70,37 @@ function cellHtml(timestamp, name, side, localKey, driveMoves) {
   </div>`;
 }
 
+async function deleteSyncRow(item, rowEl) {
+  const hasLocal = !!item.localTimestamp;
+  const hasDrive = !!item.driveFile;
+  const where = hasLocal && hasDrive ? 'from this device and Google Drive'
+    : hasLocal ? 'from this device'
+    : 'from Google Drive';
+  const { confirmDialog } = await import('./confirm-dialog.js');
+  const ok = await confirmDialog(
+    `Delete "${item.name}" ${where}?\n\nThis cannot be undone.`,
+    { title: 'Delete Save?' }
+  );
+  if (!ok) return;
+
+  if (hasLocal) localStorage.removeItem(item.key);
+  if (hasDrive) {
+    try { await deleteFile(item.driveFile.id); } catch { /* silent */ }
+  }
+
+  rowEl.style.transition = 'opacity 0.2s';
+  rowEl.style.opacity = '0';
+  setTimeout(() => {
+    rowEl.remove();
+    const body = document.getElementById('smBody');
+    if (body && !body.querySelector('.sm-row')) {
+      body.innerHTML = '<div class="sm-empty">No saves to show.</div>';
+      overlayEl.querySelector('.sm-sync-btn').disabled = true;
+    }
+    updateSelectAllIcon();
+  }, 200);
+}
+
 function makeRow(item) {
   const arrow = defaultArrow(item);
   const isConflict = item.status === 'Conflict';
@@ -101,7 +133,17 @@ function makeRow(item) {
       </button>
     </div>
     ${cellHtml(item.driveTimestamp, item.name, 'drive', null, item.driveMoveCount ?? null)}
+    <div class="sm-delete-col">
+      <button class="sm-delete-btn" title="Delete save">
+        <span class="material-icons">delete_outline</span>
+      </button>
+    </div>
   `;
+
+  row.querySelector('.sm-delete-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    deleteSyncRow(item, row);
+  });
 
   const btn = row.querySelector('.sm-arrow-btn');
   btn.addEventListener('click', e => {

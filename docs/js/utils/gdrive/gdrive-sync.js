@@ -1,7 +1,7 @@
 /**
  * Google Drive Sync Logic Module
  *
- * Handles bidirectional sync, auto-sync with debouncing, and conflict resolution.
+ * Handles bidirectional manual sync and conflict resolution.
  */
 
 import { APP_CONFIG } from '../../config.js';
@@ -17,13 +17,6 @@ import {
 } from './gdrive-api.js';
 import { getDeviceInfo } from './gdrive-device.js';
 
-// Auto-sync queue-based system
-const pendingSyncQueue = new Set(); // Set of saveKeys that need syncing
-let syncTimer = null; // Single global timer for all saves
-
-// Session flag: user declined auth for auto-sync (don't prompt again this session)
-let autoSyncAuthDeclined = false;
-
 /**
  * Sync saves to Google Drive (bidirectional manual sync)
  * @param {string} gameName - Optional game name to sync only that game's saves
@@ -31,13 +24,13 @@ let autoSyncAuthDeclined = false;
  */
 export async function syncAllNow(gameName = null) {
   // Ensure authenticated (will prompt if needed)
-  const authenticated = await ensureAuthenticated(false); // Manual sync, always prompt
+  const authenticated = await ensureAuthenticated();
   if (!authenticated) {
     updateStatus('Sync cancelled - not signed in');
-    return 0;
+    return null;
   }
 
-  state.gdriveSyncPending = true;
+  updateStatus('Syncing with Google Drive…', 'processing');
 
   try {
     const deviceInfo = getDeviceInfo(); // Get once, reuse
@@ -191,99 +184,24 @@ export async function syncAllNow(gameName = null) {
     const syncTime = new Date().toISOString();
     state.gdriveLastSyncTime = syncTime;
     localStorage.setItem('iftalk_lastSyncTime', syncTime);
-    state.gdriveSyncPending = false;
     state.gdriveError = null;
 
-    return uploadCount + downloadCount;
+    const total = uploadCount + downloadCount;
+    if (total === 0) {
+      updateStatus('All saves already synced with Drive', 'success');
+    } else {
+      const parts = [];
+      if (uploadCount > 0) parts.push(`${uploadCount} uploaded`);
+      if (downloadCount > 0) parts.push(`${downloadCount} downloaded`);
+      updateStatus(`Synced: ${parts.join(', ')}`, 'success');
+    }
+    window.dispatchEvent(new CustomEvent('iftalk:synccomplete', { detail: { gameName } }));
+
+    return total;
   } catch (error) {
-    state.gdriveSyncPending = false;
     state.gdriveError = error.message;
     throw error;
   }
-}
-
-/**
- * Schedule Drive sync with queue-based debounce (auto-sync)
- * Collects all pending saves and uploads them together after 5 seconds
- * @param {string} saveKey - localStorage key for the save
- * @param {object} saveData - Save data (currently unused, reads from localStorage)
- */
-export function scheduleDriveSync(saveKey, saveData) {
-  // Only sync if auto-sync is enabled
-  if (!state.gdriveSyncEnabled) {
-    return;
-  }
-
-  // Don't queue if auth was declined this session
-  if (autoSyncAuthDeclined) {
-    return;
-  }
-
-  // Add save to pending queue
-  pendingSyncQueue.add(saveKey);
-
-  // Clear existing timer (reset 5-second countdown)
-  if (syncTimer) {
-    clearTimeout(syncTimer);
-  }
-
-  // Schedule batch upload (5 seconds after last save)
-  syncTimer = setTimeout(async () => {
-    try {
-      // Check auth before auto-syncing (may prompt if token expired)
-      const authenticated = await ensureAuthenticated(true); // Auto-sync mode
-      if (!authenticated) {
-        updateStatus('Auto-sync requires Google Drive sign-in');
-        pendingSyncQueue.clear(); // Clear queue on auth failure
-        return;
-      }
-
-      // Get all saves from queue
-      const saveKeys = Array.from(pendingSyncQueue);
-
-      let uploadCount = 0;
-
-      // Upload all pending saves
-      for (const key of saveKeys) {
-        try {
-          // Read latest data from localStorage (may have changed since queued)
-          const currentData = localStorage.getItem(key);
-          if (!currentData) {
-            continue;
-          }
-
-          const parsedData = JSON.parse(currentData);
-
-          // Add device info
-          const enrichedData = {
-            ...parsedData,
-            device: getDeviceInfo()
-          };
-
-          const filename = localStorageKeyToFilename(key);
-          await uploadFile(filename, enrichedData);
-          uploadCount++;
-        } catch (error) {
-          // Continue with remaining saves
-        }
-      }
-
-      // Update sync time
-      const syncTime = new Date().toISOString();
-      state.gdriveLastSyncTime = syncTime;
-      localStorage.setItem('iftalk_lastSyncTime', syncTime);
-
-      // Trigger UI update to show new sync time
-      window.dispatchEvent(new CustomEvent('gdriveSyncComplete'));
-
-    } catch (error) {
-      state.gdriveError = error.message;
-    } finally {
-      // Clear queue and timer
-      pendingSyncQueue.clear();
-      syncTimer = null;
-    }
-  }, 5000);
 }
 
 /**

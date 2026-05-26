@@ -22,8 +22,6 @@ let tokenClient = null;
 let accessToken = null;
 let refreshTimer = null;
 
-// Session flag: user declined auth for auto-sync (don't prompt again this session)
-let autoSyncAuthDeclined = false;
 
 export function getAccessToken() {
   return accessToken;
@@ -87,8 +85,9 @@ function silentRefresh() {
 /**
  * Ensure user is authenticated, prompting if needed.
  * Tries silent refresh first; only shows UI if that fails.
+ * Only shows the confirm dialog on first-ever sign-in — returning users go straight to Google.
  */
-export async function ensureAuthenticated(isAutoSync = false) {
+export async function ensureAuthenticated() {
   if (hasValidToken()) return true;
 
   // Try silent refresh before bothering the user
@@ -97,18 +96,17 @@ export async function ensureAuthenticated(isAutoSync = false) {
     if (refreshed) return true;
   }
 
-  if (isAutoSync && autoSyncAuthDeclined) return false;
-
-  const { confirmDialog } = await import('../../ui/confirm-dialog.js');
-  const confirmed = await confirmDialog(
-    'Sign in to Google Drive to sync your saves?',
-    { title: 'Authentication Required' }
-  );
-
-  if (!confirmed) {
-    if (isAutoSync) autoSyncAuthDeclined = true;
-    return false;
+  // Only show confirm dialog on first-ever sign-in
+  const tokenData = JSON.parse(localStorage.getItem('gdrive_token') || '{}');
+  if (!tokenData.email) {
+    const { confirmDialog } = await import('../../ui/confirm-dialog.js');
+    const confirmed = await confirmDialog(
+      'Sign in to Google Drive to sync your saves?',
+      { title: 'Connect Google Drive' }
+    );
+    if (!confirmed) return false;
   }
+  // Previously authenticated — skip the dialog and go straight to sign-in
 
   await signIn();
 

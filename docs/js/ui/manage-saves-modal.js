@@ -243,6 +243,18 @@ async function deleteSave(save, rowEl) {
   removeItem(save.key);
   updateStatus(`Deleted: ${save.name}`);
 
+  if (state.gdriveSignedIn) {
+    (async () => {
+      try {
+        const { listFiles, localStorageKeyToFilename, deleteFile } = await import('../utils/gdrive/index.js');
+        const filename = localStorageKeyToFilename(save.key);
+        const files = await listFiles();
+        const match = files.find(f => f.name === filename);
+        if (match) await deleteFile(match.id);
+      } catch { /* silent — local delete already done */ }
+    })();
+  }
+
   rowEl.style.transition = 'opacity 0.2s';
   rowEl.style.opacity = '0';
   setTimeout(() => {
@@ -584,30 +596,9 @@ function renderFooter(footerEl) {
   driveBtn.innerHTML = `${googleG}Sync Drive`;
 
   driveBtn.addEventListener('click', async () => {
-    closeManageSavesModal();
-    if (!state.gdriveSignedIn) {
-      const { signIn } = await import('../utils/gdrive/index.js');
-      try {
-        await signIn();
-        updateStatus('Connected to Google Drive', 'success');
-      } catch (err) {
-        updateStatus('Connection failed: ' + err.message, 'error');
-      }
-      return;
-    }
-    // Signed in — show export sync preview
-    const { showSyncPreview } = await import('./sync-preview-modal.js');
-    const { compareSaves } = await import('../utils/gdrive/gdrive-sync-preview.js');
-    updateStatus('Loading saves...', 'processing');
     try {
-      const items = await compareSaves(state.currentGameName, 'export');
-      updateStatus('');
-      if (items.length === 0) {
-        const { confirmDialog } = await import('./confirm-dialog.js');
-        await confirmDialog('No saves to sync for this game.', { title: 'Nothing to Sync', okOnly: true });
-        return;
-      }
-      showSyncPreview('export', items);
+      const { syncAllNow } = await import('../utils/gdrive/gdrive-sync.js');
+      await syncAllNow();
     } catch (err) {
       updateStatus('Sync failed: ' + err.message, 'error');
     }

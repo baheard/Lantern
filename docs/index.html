@@ -408,21 +408,11 @@
                 <button id="gdriveDisconnectBtn" class="link-button">Disconnect</button>
               </div>
 
-              <!-- Welcome screen message -->
-              <div class="welcome-section-item">
-                <p class="setting-description" style="margin-top: 12px;">Import/export options available in game</p>
-              </div>
 
-              <!-- Import/Export buttons (in-game only) -->
-              <div class="game-section-item">
-                <div class="button-group">
-                  <button id="gdriveImportBtn" class="compact-btn quick-action-btn">
-                    <span class="material-icons">download</span> Import Saves
-                  </button>
-                  <button id="gdriveExportBtn" class="compact-btn quick-action-btn">
-                    <span class="material-icons">upload</span> Export Saves
-                  </button>
-                </div>
+              <div style="margin-top: 10px;">
+                <button id="gdriveSyncAllBtn" class="compact-btn quick-action-btn">
+                  <span class="material-icons">sync</span> Sync All Saves
+                </button>
               </div>
             </div>
           </div>
@@ -867,6 +857,11 @@
       <p class="confirm-dialog-message" id="confirmDialogMessage">
         Are you sure?
       </p>
+      <div class="confirm-dialog-input-row hidden" id="confirmDialogInputRow">
+        <label class="confirm-dialog-input-label" id="confirmDialogInputLabel"></label>
+        <input type="text" class="confirm-dialog-input-field" id="confirmDialogInput" />
+        <p class="confirm-dialog-input-hint" id="confirmDialogInputHint"></p>
+      </div>
       <div class="confirm-dialog-buttons">
         <button class="btn-confirm-cancel" id="confirmCancelBtn">Cancel</button>
         <button class="btn-confirm-ok" id="confirmOkBtn">OK</button>

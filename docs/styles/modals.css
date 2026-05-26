@@ -248,7 +248,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10001; /* Above modals */
+  z-index: 10500; /* Above all modals including sync/manage-saves */
   opacity: 1;
   transition: opacity 0.2s ease;
   animation: fadeIn 0.2s ease;
@@ -317,8 +317,8 @@
 }
 
 .btn-confirm-ok {
-  background: var(--accent-primary);
-  color: var(--text-primary);
+  background: var(--accent-warm);
+  color: var(--bg-primary);
 }
 
 .btn-confirm-ok:hover {
@@ -328,6 +328,48 @@
 .btn-confirm-ok:active,
 .btn-confirm-cancel:active {
   transform: translateY(0);
+}
+
+/* Confirm Dialog — optional input field */
+.confirm-dialog-input-row {
+  margin: 12px 0 4px;
+}
+
+.confirm-dialog-input-row.hidden {
+  display: none;
+}
+
+.confirm-dialog-input-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.confirm-dialog-input-field {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.confirm-dialog-input-field:focus {
+  outline: none;
+  border-color: var(--accent-warm);
+}
+
+.confirm-dialog-input-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: left;
 }
 
 /* Feedback Modal extensions */
