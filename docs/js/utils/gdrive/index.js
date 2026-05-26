@@ -37,5 +37,6 @@ export {
 
 // Sync Logic
 export {
-  syncAllNow
+  syncAllNow,
+  scheduleDriveSync
 } from './gdrive-sync.js';

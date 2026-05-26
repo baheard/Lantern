@@ -84,6 +84,11 @@ export async function compareSaves(gameName, direction) {
 
     const localData = JSON.parse(localStorage.getItem(key));
     const localTime = new Date(localData.timestamp).getTime();
+    // _driveSyncTime is stamped on import so we can detect Synced even when
+    // appProperties.saveTimestamp is absent and modifiedTime differs from timestamp.
+    const localSyncTime = localData._driveSyncTime
+      ? new Date(localData._driveSyncTime).getTime()
+      : null;
     const driveFile = driveFileMap.get(key);
 
     // Get save name from key
@@ -98,7 +103,8 @@ export async function compareSaves(gameName, direction) {
         localTimestamp: localData.timestamp,
         driveTimestamp: null,
         key: key,
-        driveFile: null
+        driveFile: null,
+        gameName: gameName || getGameNameFromKey(key)
       });
     } else {
       // Exists in both places - compare timestamps.
@@ -110,9 +116,12 @@ export async function compareSaves(gameName, direction) {
 
       let status;
       const timeDiff = Math.abs(driveCompareTime - localTime);
+      // Also check against _driveSyncTime (set on import) to catch cases where
+      // appProperties.saveTimestamp was absent and modifiedTime was used instead.
+      const syncTimeDiff = localSyncTime !== null ? Math.abs(driveCompareTime - localSyncTime) : Infinity;
 
-      if (timeDiff < SYNC_THRESHOLD_MS) {
-        // Timestamps within 1 second - consider them equal
+      if (timeDiff < SYNC_THRESHOLD_MS || syncTimeDiff < SYNC_THRESHOLD_MS) {
+        // Timestamps match — synced
         status = 'Synced';
       } else if (timeDiff < CONFLICT_THRESHOLD_MS) {
         // Modified within 1 minute of each other - potential conflict
@@ -136,7 +145,8 @@ export async function compareSaves(gameName, direction) {
         driveTimestamp: driveFile.appProperties?.saveTimestamp || driveFile.modifiedTime,
         driveMoveCount: driveFile.appProperties?.moveCount != null ? parseInt(driveFile.appProperties.moveCount) : null,
         key: key,
-        driveFile: driveFile
+        driveFile: driveFile,
+        gameName: gameName || getGameNameFromKey(key)
       });
     }
   }
@@ -174,7 +184,8 @@ export async function compareSaves(gameName, direction) {
         driveTimestamp: file.appProperties?.saveTimestamp || file.modifiedTime,
         driveMoveCount: file.appProperties?.moveCount != null ? parseInt(file.appProperties.moveCount) : null,
         key: localKey,
-        driveFile: file
+        driveFile: file,
+        gameName: gameName || getGameNameFromKey(localKey)
       });
     }
   }
@@ -187,6 +198,25 @@ export async function compareSaves(gameName, direction) {
     // For import, only show items that exist on Drive or are newer on Drive
     return items.filter(item => item.driveTimestamp !== null);
   }
+}
+
+/**
+ * Extract raw game name from a localStorage save key
+ */
+function getGameNameFromKey(key) {
+  const prefix = APP_CONFIG.storagePrefix;
+  if (key.startsWith(`${prefix}_autosave_`)) {
+    return key.substring(`${prefix}_autosave_`.length);
+  }
+  if (key.startsWith(`${prefix}_quicksave_`)) {
+    return key.substring(`${prefix}_quicksave_`.length);
+  }
+  if (key.startsWith(`${prefix}_customsave_`)) {
+    const afterPrefix = key.substring(`${prefix}_customsave_`.length);
+    const firstUnderscore = afterPrefix.indexOf('_');
+    return firstUnderscore > 0 ? afterPrefix.substring(0, firstUnderscore) : afterPrefix;
+  }
+  return null;
 }
 
 /**
@@ -287,8 +317,12 @@ export async function syncSaveFile(item, direction) {
       createConflictBackup(item.key, JSON.parse(localData));
     }
 
-    // Save to localStorage
-    localStorage.setItem(item.key, JSON.stringify(driveData));
+    // Tag with the Drive compare time so compareSaves can confirm Synced next open.
+    // Without this, if appProperties.saveTimestamp is absent the comparison falls
+    // back to modifiedTime (upload time) which differs from the local timestamp.
+    const driveCompareTime = item.driveFile.appProperties?.saveTimestamp || item.driveFile.modifiedTime;
+    const dataToStore = { ...driveData, _driveSyncTime: driveCompareTime };
+    localStorage.setItem(item.key, JSON.stringify(dataToStore));
   }
 
   // Update last sync time

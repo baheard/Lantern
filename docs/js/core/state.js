@@ -89,6 +89,7 @@ const _state = {
   // Google Drive sync state
   gdriveSignedIn: false,
   gdriveEmail: null,
+  gdriveSyncEnabled: false,
   gdriveLastSyncTime: null,
   gdriveError: null,
 

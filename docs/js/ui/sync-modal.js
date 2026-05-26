@@ -8,11 +8,21 @@ import { state } from '../core/state.js';
 import { compareSaves, syncSaveFile } from '../utils/gdrive/gdrive-sync-preview.js';
 import { updateStatus } from '../utils/status.js';
 import { deleteFile } from '../utils/gdrive/gdrive-api.js';
+import { getGameDisplayName } from './settings/settings-panel.js';
+
+// Returns a display label for a raw game name, handling hex fingerprints gracefully
+function getGameLabel(gn) {
+  if (!gn) return 'Unknown Game';
+  // Hex fingerprint: long lowercase hex string (game loaded without a proper filename)
+  if (/^[0-9a-f]{20,}$/.test(gn)) return `Unknown Game (${gn.slice(0, 8)}…)`;
+  return getGameDisplayName(gn) || gn;
+}
 
 let overlayEl = null;
 let currentGameName = null;
 let selectAllState = 'skip';
 let selectAllBtn = null;
+let syncDone = false;
 
 const ARROW_CYCLE = ['upload', 'download', 'skip'];
 
@@ -91,7 +101,15 @@ async function deleteSyncRow(item, rowEl) {
   rowEl.style.transition = 'opacity 0.2s';
   rowEl.style.opacity = '0';
   setTimeout(() => {
+    const prevEl = rowEl.previousElementSibling;
     rowEl.remove();
+    // Remove game header if it's now orphaned (no rows follow it before the next header)
+    if (prevEl && prevEl.classList.contains('sm-game-header')) {
+      const nextEl = prevEl.nextElementSibling;
+      if (!nextEl || nextEl.classList.contains('sm-game-header')) {
+        prevEl.remove();
+      }
+    }
     const body = document.getElementById('smBody');
     if (body && !body.querySelector('.sm-row')) {
       body.innerHTML = '<div class="sm-empty">No saves to show.</div>';
@@ -119,6 +137,7 @@ function makeRow(item) {
   row.className = `sm-row${isConflict ? ' sm-conflict' : ''}${isSynced ? ' sm-synced' : ''}`;
   row.dataset.key = item.key;
   row.dataset.type = item.key.includes('_autosave_') ? 'autosave' : item.key.includes('_quicksave_') ? 'quicksave' : 'customsave';
+  if (item.gameName) row.dataset.gameName = item.gameName;
   row.dataset.arrow = arrow;
   row.dataset.localMoves = localMoves;
   row.dataset.driveMoves = driveMoves;
@@ -244,7 +263,10 @@ function buildOverlay() {
 
   overlayEl.querySelector('.sm-cancel-btn').addEventListener('click', closeSyncModal);
   overlayEl.addEventListener('click', e => { if (e.target === overlayEl) closeSyncModal(); });
-  overlayEl.querySelector('.sm-sync-btn').addEventListener('click', executeSync);
+  overlayEl.querySelector('.sm-sync-btn').addEventListener('click', () => {
+    if (syncDone) closeSyncModal();
+    else executeSync();
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !overlayEl.classList.contains('hidden')) closeSyncModal();
   });
@@ -261,8 +283,10 @@ async function loadItems(gameName) {
   for (const item of importItems) {
     if (!seen.has(item.key)) combined.push(item);
   }
-  // Same order as manage saves: autosave, quicksave, customsave; newest first within type
+  // Sort: by game name (when all-games), then autosave/quicksave/customsave, then newest first
   combined.sort((a, b) => {
+    const ga = a.gameName || '', gb = b.gameName || '';
+    if (ga !== gb) return ga.localeCompare(gb);
     const ta = typeOrder(a.key), tb = typeOrder(b.key);
     if (ta !== tb) return ta - tb;
     const da = a.localTimestamp || a.driveTimestamp;
@@ -277,7 +301,7 @@ async function executeSync() {
   const todo = [];
   rows.forEach(row => {
     if (row.dataset.arrow !== 'skip') {
-      todo.push({ key: row.dataset.key, direction: row.dataset.arrow === 'upload' ? 'export' : 'import' });
+      todo.push({ key: row.dataset.key, direction: row.dataset.arrow === 'upload' ? 'export' : 'import', gameName: row.dataset.gameName || '' });
     }
   });
 
@@ -289,30 +313,91 @@ async function executeSync() {
     const names = overwrites.map(r => {
       const lm = r.dataset.localMoves, dm = r.dataset.driveMoves;
       const dir = r.dataset.arrow === 'upload' ? `local (${lm} moves) → Drive (${dm} moves)` : `Drive (${dm} moves) → local (${lm} moves)`;
-      return `• ${r.querySelector('.sm-cell-name')?.textContent}: ${dir}`;
+      const saveName = r.querySelector('.sm-cell-name')?.textContent;
+      const gameLabel = !currentGameName && r.dataset.gameName ? getGameLabel(r.dataset.gameName) : null;
+      const label = gameLabel ? `${gameLabel} — ${saveName}` : saveName;
+      return `• ${label}: ${dir}`;
     }).join('\n');
     const ok = await confirmDialog(`This will overwrite saves with more progress:\n\n${names}\n\nContinue?`, { title: 'Overwrite warning' });
     if (!ok) return;
   }
 
+  // Switch to progress view
+  const body = document.getElementById('smBody');
+  const cancelBtn = overlayEl.querySelector('.sm-cancel-btn');
+  const syncBtn = overlayEl.querySelector('.sm-sync-btn');
+  const header = overlayEl.querySelector('.sm-header');
+
+  cancelBtn.classList.add('hidden');
+  syncBtn.disabled = true;
+  syncBtn.textContent = 'Syncing…';
+  header.classList.add('hidden');
+
+  body.innerHTML = '<div class="sm-progress-list"></div>';
+  const progressList = body.querySelector('.sm-progress-list');
+
   updateStatus('Syncing…', 'processing');
+
   try {
     const items = await loadItems(currentGameName);
     const keyMap = new Map(items.map(i => [i.key, i]));
-    let ok = 0;
-    for (const { key, direction } of todo) {
+    let ok = 0, failed = 0;
+
+    for (const { key, direction, gameName } of todo) {
       const item = keyMap.get(key);
-      if (item) {
-        await syncSaveFile(item, direction);
-        ok++;
+      const saveName = item?.name || key;
+      const gameLabel = !currentGameName && gameName ? getGameLabel(gameName) : null;
+      const label = gameLabel ? `${gameLabel} — ${saveName}` : saveName;
+      const dirIcon = direction === 'export' ? 'cloud_upload' : 'cloud_download';
+
+      const progressRow = document.createElement('div');
+      progressRow.className = 'sm-progress-item sm-progress-pending';
+      progressRow.innerHTML = `<span class="material-icons sm-spin">${dirIcon}</span><span class="sm-progress-label">${label}</span>`;
+      progressList.appendChild(progressRow);
+      progressList.scrollTop = progressList.scrollHeight;
+
+      try {
+        if (item) {
+          await syncSaveFile(item, direction);
+          progressRow.className = 'sm-progress-item sm-progress-ok';
+          progressRow.innerHTML = `<span class="material-icons">check_circle</span><span class="sm-progress-label">${label}</span>`;
+          ok++;
+        } else {
+          progressRow.className = 'sm-progress-item sm-progress-err';
+          progressRow.innerHTML = `<span class="material-icons">error</span><span class="sm-progress-label">${label}<br><small>Save not found</small></span>`;
+          failed++;
+        }
+      } catch (err) {
+        progressRow.className = 'sm-progress-item sm-progress-err';
+        progressRow.innerHTML = `<span class="material-icons">error</span><span class="sm-progress-label">${label}<br><small>${err.message}</small></span>`;
+        failed++;
       }
     }
-    updateStatus(`Synced ${ok} save${ok !== 1 ? 's' : ''}`, 'success');
-    closeSyncModal();
+
+    const summaryText = failed > 0
+      ? `${ok} synced, ${failed} failed`
+      : `${ok} save${ok !== 1 ? 's' : ''} synced`;
+    const summaryIcon = failed > 0 ? 'error' : 'check_circle';
+    const summaryClass = failed > 0 ? 'sm-progress-err' : 'sm-progress-ok';
+
+    const summaryEl = document.createElement('div');
+    summaryEl.className = `sm-progress-summary ${summaryClass}`;
+    summaryEl.innerHTML = `<span class="material-icons">${summaryIcon}</span><span>${summaryText}</span>`;
+    body.insertBefore(summaryEl, progressList);
+
+    updateStatus(summaryText, failed > 0 ? 'error' : 'success');
     document.dispatchEvent(new CustomEvent('iftalk:synccomplete', { detail: { gameName: currentGameName } }));
   } catch (err) {
+    const errEl = document.createElement('div');
+    errEl.className = 'sm-progress-summary sm-progress-err';
+    errEl.innerHTML = `<span class="material-icons">error</span><span>Sync failed: ${err.message}</span>`;
+    body.insertBefore(errEl, progressList);
     updateStatus('Sync failed: ' + err.message, 'error');
   }
+
+  syncDone = true;
+  syncBtn.textContent = 'Done';
+  syncBtn.disabled = false;
 }
 
 export async function showSyncModal(gameName, filterKey = null) {
@@ -338,7 +423,24 @@ export async function showSyncModal(gameName, filterKey = null) {
 
     selectAllState = 'skip';
 
-    items.forEach(item => body.appendChild(makeRow(item)));
+    if (!gameName) {
+      // Group by game with separator headers
+      const groups = new Map();
+      for (const item of items) {
+        const gn = item.gameName || '';
+        if (!groups.has(gn)) groups.set(gn, []);
+        groups.get(gn).push(item);
+      }
+      for (const [gn, groupItems] of groups) {
+        const header = document.createElement('div');
+        header.className = 'sm-game-header';
+        header.textContent = getGameLabel(gn);
+        body.appendChild(header);
+        groupItems.forEach(item => body.appendChild(makeRow(item)));
+      }
+    } else {
+      items.forEach(item => body.appendChild(makeRow(item)));
+    }
     updateSelectAllIcon();
   } catch (err) {
     body.innerHTML = `<div class="sm-empty sm-error">Could not load Drive saves.<br><small>${err.message}</small></div>`;
@@ -347,4 +449,12 @@ export async function showSyncModal(gameName, filterKey = null) {
 
 export function closeSyncModal() {
   overlayEl?.classList.add('hidden');
+  // Reset progress state so next open starts fresh
+  syncDone = false;
+  const cancelBtn = overlayEl?.querySelector('.sm-cancel-btn');
+  const syncBtn = overlayEl?.querySelector('.sm-sync-btn');
+  const header = overlayEl?.querySelector('.sm-header');
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+  if (syncBtn) { syncBtn.textContent = 'Sync'; syncBtn.disabled = false; }
+  if (header) header.classList.remove('hidden');
 }

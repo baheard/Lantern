@@ -7,6 +7,8 @@
 import { state } from '../../core/state.js';
 import { updateStatus } from '../../utils/status.js';
 
+const AUTO_SYNC_KEY = 'iftalk_gdrive_autosync';
+
 /**
  * Update Google Drive UI based on sign-in state
  */
@@ -133,6 +135,24 @@ export function initGDriveUI() {
 
   // Listen for auto-sync completion to update last sync time
   window.addEventListener('gdriveSyncComplete', () => {
+    updateGDriveUI();
+  });
+
+  // Auto-sync toggle
+  const autoSyncToggle = document.getElementById('gdriveAutoSyncToggle');
+  if (autoSyncToggle) {
+    // Restore persisted setting
+    state.gdriveSyncEnabled = localStorage.getItem(AUTO_SYNC_KEY) === 'true';
+    autoSyncToggle.checked = state.gdriveSyncEnabled;
+
+    autoSyncToggle.addEventListener('change', () => {
+      state.gdriveSyncEnabled = autoSyncToggle.checked;
+      localStorage.setItem(AUTO_SYNC_KEY, state.gdriveSyncEnabled);
+    });
+  }
+
+  // Listen for auto-sync errors and surface them in Drive UI
+  window.addEventListener('gdriveAutoSyncError', () => {
     updateGDriveUI();
   });
 
