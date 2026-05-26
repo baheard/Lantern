@@ -399,16 +399,16 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.scroll-down-btn:hover {
-  opacity: 0.8;
-  background: rgba(100, 116, 139, 0.25);
-  border-color: rgba(148, 163, 184, 0.8);
-  color: rgba(226, 232, 240, 0.95);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Only apply :active state on devices with hover capability (desktop) */
+/* Only apply hover/active states on devices with a real pointer (desktop) */
 @media (hover: hover) {
+  .scroll-down-btn:hover {
+    opacity: 0.8;
+    background: rgba(100, 116, 139, 0.25);
+    border-color: rgba(148, 163, 184, 0.8);
+    color: rgba(226, 232, 240, 0.95);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  }
+
   .scroll-down-btn:active {
     opacity: 1;
     background: rgba(100, 116, 139, 0.3);

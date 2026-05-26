@@ -14,8 +14,8 @@ import { createTouchTracker } from '../utils/touch-detection.js';
 let holdTimer = null;
 let scrollTimer = null;
 let isDragging = false;
+let holdHasFired = false;
 let debounceTimer = null; // For debouncing viewport resize updates
-const INITIAL_SCROLL_DELAY = 50; // ms - small delay to detect drag before scrolling
 const SCROLL_TO_BOTTOM_DELAY = 300; // ms - if still held after this, interrupt with fast scroll to bottom
 const SCROLL_TO_BOTTOM_DURATION = 500; // ms - duration of scroll to bottom animation
 const DEBOUNCE_DELAY = 100; // ms - debounce delay for viewport resize updates
@@ -34,6 +34,7 @@ function cancelInteractions() {
   scrollTimer = null;
   holdTimer = null;
   isDragging = false;
+  holdHasFired = false;
   touchTracker.reset();
 }
 
@@ -55,20 +56,15 @@ export function initScrollDownButton() {
     e.stopPropagation();
     touchTracker.track(e);
     isDragging = false;
+    holdHasFired = false;
 
     // Add pressed state (steady glow)
     button.classList.add('pressed');
 
-    // Small delay before scrolling to allow drag detection
-    scrollTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollDownOnePage(container);
-      }
-    }, INITIAL_SCROLL_DELAY);
-
     // If still held after delay, scroll to bottom
     holdTimer = setTimeout(() => {
       if (!isDragging) {
+        holdHasFired = true;
         scrollToBottomSmooth(container);
       }
     }, SCROLL_TO_BOTTOM_DELAY);
@@ -102,6 +98,12 @@ export function initScrollDownButton() {
     button.blur();
 
     releasePressedState(button);
+
+    // Scroll one page on tap (unless dragging or hold already scrolled to bottom)
+    if (!isDragging && !holdHasFired) {
+      scrollDownOnePage(container);
+    }
+
     cancelInteractions();
   });
 
@@ -122,20 +124,15 @@ export function initScrollDownButton() {
     e.stopPropagation();
     touchTracker.track(e);
     isDragging = false;
+    holdHasFired = false;
 
     // Add pressed state (steady glow)
     button.classList.add('pressed');
 
-    // Small delay before scrolling to allow drag detection
-    scrollTimer = setTimeout(() => {
-      if (!isDragging) {
-        scrollDownOnePage(container);
-      }
-    }, INITIAL_SCROLL_DELAY);
-
     // If still held after delay, scroll to bottom
     holdTimer = setTimeout(() => {
       if (!isDragging) {
+        holdHasFired = true;
         scrollToBottomSmooth(container);
       }
     }, SCROLL_TO_BOTTOM_DELAY);
@@ -172,6 +169,12 @@ export function initScrollDownButton() {
     button.blur();
 
     releasePressedState(button);
+
+    // Scroll one page on click (unless dragging or hold already scrolled to bottom)
+    if (!isDragging && !holdHasFired) {
+      scrollDownOnePage(container);
+    }
+
     cancelInteractions();
   });
 
