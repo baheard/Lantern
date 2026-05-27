@@ -124,10 +124,29 @@ export async function compareSaves(gameName, direction) {
         // Timestamps match — synced
         status = 'Synced';
       } else if (timeDiff < CONFLICT_THRESHOLD_MS) {
-        // Modified within 1 minute of each other - potential conflict
-        status = 'Conflict';
+        // Close timestamps — use move count as tiebreaker before declaring conflict
+        const localMoves = (() => {
+          try {
+            const html = localData?.displayHTML?.statusBar || '';
+            const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
+            return m ? parseInt(m[1]) : null;
+          } catch { return null; }
+        })();
+        const driveMoves = driveFile.appProperties?.moveCount != null
+          ? parseInt(driveFile.appProperties.moveCount) : null;
+
+        if (localMoves !== null && driveMoves !== null && localMoves !== driveMoves) {
+          // Move counts clearly resolve which is further ahead — use that
+          if (direction === 'import') {
+            status = driveMoves > localMoves ? 'Newer' : 'Older';
+          } else {
+            status = localMoves > driveMoves ? 'Newer' : 'Older';
+          }
+        } else {
+          status = 'Conflict';
+        }
       } else {
-        // Clear difference - determine which is newer
+        // Clear timestamp difference - determine which is newer
         // For IMPORT (showing Drive): Drive > Local means "Newer"
         // For EXPORT (showing Local): Local > Drive means "Newer"
         if (direction === 'import') {

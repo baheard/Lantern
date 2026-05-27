@@ -145,8 +145,11 @@ function makeRow(item) {
     a === 'skip' || (a === 'upload' && hasLocal) || (a === 'download' && hasDrive)
   );
 
+  // Both conflict and uncertain: button shows a special icon, click enters the cycle
+  const needsChoice = isConflict || isUncertain;
+
   const row = document.createElement('div');
-  row.className = `sm-row${isConflict ? ' sm-conflict' : ''}${isSynced ? ' sm-synced' : ''}`;
+  row.className = `sm-row${isSynced ? ' sm-synced' : ''}`;
   row.dataset.key = item.key;
   row.dataset.type = item.key.includes('_autosave_') ? 'autosave' : item.key.includes('_quicksave_') ? 'quicksave' : 'customsave';
   if (item.gameName) row.dataset.gameName = item.gameName;
@@ -154,16 +157,18 @@ function makeRow(item) {
   row.dataset.localMoves = localMoves;
   row.dataset.driveMoves = driveMoves;
 
-  if (isUncertain) row.dataset.uncertain = 'true';
+  if (needsChoice) row.dataset.needsChoice = 'true';
 
   const showBtn = allowedCycle.length > 1;
-  const btnIcon = isUncertain ? 'question_mark' : arrowIcon(arrow);
-  const btnColor = isUncertain ? '#ff9800' : arrowColor(arrow);
+  const btnIcon = isConflict ? 'priority_high' : isUncertain ? 'question_mark' : arrowIcon(arrow);
+  const btnColor = isConflict ? '#f44336' : isUncertain ? '#ff9800' : arrowColor(arrow);
+  const btnTitle = isConflict ? 'Conflict — click to choose direction'
+    : isUncertain ? 'Timestamp and move count disagree — click to choose direction'
+    : 'Change direction';
   row.innerHTML = `
     ${cellHtml(item.localTimestamp, item.name, 'local', item.key)}
     <div class="sm-arrow-col">
-      ${isConflict ? '<div class="sm-conflict-badge">!</div>' : ''}
-      <button class="sm-arrow-btn" title="${isUncertain ? 'Timestamp and move count disagree — click to choose direction' : 'Change direction'}" ${showBtn ? '' : 'disabled style="pointer-events:none"'}>
+      <button class="sm-arrow-btn" title="${btnTitle}" ${showBtn ? '' : 'disabled style="pointer-events:none"'}>
         <span class="material-icons" style="color:${btnColor}">${btnIcon}</span>
       </button>
     </div>
@@ -183,7 +188,7 @@ function makeRow(item) {
   const btn = row.querySelector('.sm-arrow-btn');
   btn.addEventListener('click', e => {
     e.stopPropagation();
-    if (row.dataset.uncertain === 'true') {
+    if (row.dataset.needsChoice === 'true') {
       setArrow(row, allowedCycle[0]);
     } else {
       const cur = allowedCycle.indexOf(row.dataset.arrow);
@@ -232,7 +237,7 @@ function updateSelectAllIcon() {
 
 function setArrow(row, state) {
   row.dataset.arrow = state;
-  delete row.dataset.uncertain;
+  delete row.dataset.needsChoice;
   const btn = row.querySelector('.sm-arrow-btn');
   const icon = btn.querySelector('.material-icons');
   let warn = row.querySelector('.sm-warn-badge');

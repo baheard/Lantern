@@ -421,7 +421,6 @@
 
 .sm-row:last-child { border-bottom: none; }
 .sm-row.sm-synced { opacity: 0.5; }
-.sm-row.sm-conflict { background: rgba(244, 67, 54, 0.04); }
 
 .sm-cell {
   padding: 10px 12px;
@@ -554,13 +553,6 @@
 
 .sm-delete-btn .material-icons { font-size: 18px; }
 
-.sm-conflict-badge {
-  font-size: 0.6em;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #f44336;
-  line-height: 1;
-}
 
 
 .sm-warn-badge {
