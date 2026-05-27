@@ -223,7 +223,7 @@
 }
 
 .settings-section.collapsible .section-content {
-  max-height: 1000px;
+  max-height: 5000px;
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   opacity: 1;
@@ -1361,5 +1361,9 @@ body.voice-controls-hidden #settings-btn {
   margin: 0;
   justify-self: start;
   width: auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   height: auto; /* Override fixed height from controls.css */
 }

@@ -112,62 +112,6 @@
         </button>
       </div>
 
-      <!-- Quick Actions Section (hidden - redundant with quick menu) -->
-      <div class="settings-section collapsible collapsed game-section-item" id="quickActionsSection" style="display: none;">
-        <h3 class="section-header">
-          <span class="material-icons">bolt</span> Quick Actions
-        </h3>
-        <div class="section-content">
-          <!-- Quick Actions Header -->
-          <div class="quick-actions-header">
-            <p class="setting-description">
-              Choose which actions to show in the <strong>quick menu</strong> (accessed via the menu button during gameplay).
-            </p>
-          </div>
-
-          <!-- Quick Actions Grid: Checkboxes on left, buttons on right -->
-          <div class="quick-actions-grid">
-            <!-- Column Headers -->
-            <div class="quick-actions-grid-header">
-              <span class="quick-access-header">Quick access</span>
-              <span class="action-header">Action</span>
-            </div>
-
-            <!-- Quick Action: Game Map -->
-            <div class="quick-action-row">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaMapToggle" class="toggle-switch" checked>
-              </label>
-              <button id="mapBtn" class="compact-btn quick-action-btn">
-                <span class="material-icons">map</span> Game Map
-              </button>
-            </div>
-
-            <!-- Quick Action: Quick Save -->
-            <div class="quick-action-row">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaSaveToggle" class="toggle-switch" checked>
-              </label>
-              <button id="quickSaveBtn" class="compact-btn quick-action-btn" title="F5">
-                <span class="material-icons">save</span> Quick Save
-              </button>
-            </div>
-
-            <!-- Quick Action: Quick Restore -->
-            <div class="quick-action-row">
-              <label class="quick-action-checkbox">
-                <input type="checkbox" id="qaLoadToggle" class="toggle-switch" checked>
-              </label>
-              <button id="quickRestoreBtn" class="compact-btn quick-action-btn" title="F9">
-                <span class="material-icons">restore</span> Quick Restore
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-
       <!-- Voice & Input Section -->
       <div class="settings-section collapsible collapsed" id="voiceInputSection">
         <h3 class="section-header">
@@ -227,6 +171,67 @@
               <input type="checkbox" id="voiceControlsToggle" class="toggle-switch" checked>
             </label>
             <p class="setting-description">Show voice navigation bar (play, pause, skip controls)</p>
+          </div>
+
+          <!-- Quick Menu sub-section -->
+          <div class="settings-section collapsible collapsed game-section-item" id="quickMenuSection">
+            <h4 class="section-header">Quick Menu</h4>
+            <div class="section-content">
+              <div class="quick-actions-header">
+                <p class="setting-description">Choose which items appear in the ☰ quick menu. Tap an action to trigger it.</p>
+              </div>
+              <div class="quick-actions-grid">
+                <div class="quick-actions-grid-header">
+                  <span class="quick-access-header">Show</span>
+                  <span class="action-header">Action</span>
+                </div>
+                <!-- Feedback -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaFeedbackToggle" class="toggle-switch" checked>
+                  </label>
+                  <button class="compact-btn quick-action-btn" id="feedbackMenuBtn">
+                    <span class="material-icons">feedback</span> Feedback
+                  </button>
+                </div>
+                <!-- Manage Saves -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaManageSavesToggle" class="toggle-switch" checked>
+                  </label>
+                  <button id="manageSavesMenuBtn" class="compact-btn quick-action-btn">
+                    <span class="material-icons">folder_open</span> Saves
+                  </button>
+                </div>
+                <!-- Quick Restore -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaLoadToggle" class="toggle-switch" checked>
+                  </label>
+                  <button id="quickRestoreBtn" class="compact-btn quick-action-btn" title="F9">
+                    <span class="material-icons">restore</span> Quick Restore
+                  </button>
+                </div>
+                <!-- Quick Save -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaSaveToggle" class="toggle-switch" checked>
+                  </label>
+                  <button id="quickSaveBtn" class="compact-btn quick-action-btn" title="F5">
+                    <span class="material-icons">save</span> Quick Save
+                  </button>
+                </div>
+                <!-- Map -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaMapToggle" class="toggle-switch" checked>
+                  </label>
+                  <button id="mapBtn" class="compact-btn quick-action-btn">
+                    <span class="material-icons">map</span> Game Map
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Voice Commands (collapsible help) -->
@@ -903,7 +908,7 @@
         <h3 id="manageSavesTitle">Manage Saves</h3>
         <div class="manage-saves-header-actions">
           <button class="manage-saves-drive-btn" id="manageSavesDriveBtn" aria-label="Google Drive sync">
-            <span class="material-icons">cloud_off</span>
+            <span class="material-icons">cloud_download</span>
           </button>
           <button class="manage-saves-close" id="manageSavesClose" aria-label="Close">
             <span class="material-icons">close</span>

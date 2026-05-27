@@ -16,11 +16,13 @@ let menuEl = null;
 let menuBtnEl = null;
 let charMenuBtnEl = null;
 
-// Default preferences (all enabled except Settings which is always shown)
+// Default preferences (all enabled except Settings and Feedback which are always shown)
 const DEFAULT_QA_PREFS = {
   map: true,
   save: true,
-  load: true
+  load: true,
+  managesaves: true,
+  feedback: true
 };
 
 /**
@@ -214,21 +216,17 @@ async function handleMenuAction(action) {
 export function updateMobileMenuForGameState(inGame) {
   const prefs = getQuickAccessPrefs();
 
-  // Feedback and Settings are always shown (no toggle)
-  const feedbackIcon = document.getElementById('mobileFeedbackIcon');
-  if (feedbackIcon) feedbackIcon.style.display = 'flex';
-
+  // Settings is always shown (no toggle)
   const settingsIcon = document.getElementById('mobileSettingsIcon');
-  if (settingsIcon) {
-    settingsIcon.style.display = 'flex';
-  }
+  if (settingsIcon) settingsIcon.style.display = 'flex';
 
   // Toggle-controlled menu items
   const menuItems = [
     { id: 'mobileMapIcon', pref: 'map', gameOnly: true },
     { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
     { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
-    { id: 'mobileManageSavesIcon', pref: null, gameOnly: true }
+    { id: 'mobileManageSavesIcon', pref: 'managesaves', gameOnly: true },
+    { id: 'mobileFeedbackIcon', pref: 'feedback', gameOnly: false }
   ];
 
   menuItems.forEach(({ id, pref, gameOnly }) => {
@@ -248,11 +246,13 @@ export function updateMobileMenuForGameState(inGame) {
 function initQuickAccessToggles() {
   const prefs = getQuickAccessPrefs();
 
-  // Set initial toggle states (Settings has no toggle - always shown)
+  // Set initial toggle states (Settings and Feedback have no toggle - always shown)
   const toggles = {
     qaMapToggle: 'map',
     qaSaveToggle: 'save',
-    qaLoadToggle: 'load'
+    qaLoadToggle: 'load',
+    qaManageSavesToggle: 'managesaves',
+    qaFeedbackToggle: 'feedback'
   };
 
   Object.entries(toggles).forEach(([toggleId, prefKey]) => {
@@ -267,6 +267,16 @@ function initQuickAccessToggles() {
         updateMobileMenuForGameState(!!window._inGame);
       });
     }
+  });
+
+  // Wire settings-panel quick menu buttons to their actions
+  document.getElementById('manageSavesMenuBtn')?.addEventListener('click', async () => {
+    const { openManageSavesModal } = await import('./manage-saves-modal.js');
+    openManageSavesModal();
+  });
+  document.getElementById('feedbackMenuBtn')?.addEventListener('click', async () => {
+    const { openFeedbackModal } = await import('./feedback-modal.js');
+    openFeedbackModal();
   });
 
   // Update menu visibility based on initial prefs

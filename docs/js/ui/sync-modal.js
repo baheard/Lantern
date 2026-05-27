@@ -57,6 +57,12 @@ function defaultArrow(item) {
   if (!item.driveTimestamp) return 'upload';
   if (item.status === 'Synced') return 'skip';
   if (item.status === 'Conflict') return 'skip';
+  // Prefer move count over timestamp — it's a better proxy for progress
+  const lm = getMoveCount(item.key);
+  const dm = item.driveMoveCount ?? null;
+  if (lm !== null && dm !== null && lm !== dm) {
+    return lm > dm ? 'upload' : 'download';
+  }
   if (item.status === 'Newer') return 'upload';
   if (item.status === 'Older') return 'download';
   return 'skip';
@@ -126,6 +132,12 @@ function makeRow(item) {
   const localMoves = item.localTimestamp ? (getMoveCount(item.key) ?? 0) : 0;
   const driveMoves = item.driveMoveCount ?? 0;
 
+  // Show ? badge when timestamp and move count point in opposite directions
+  const timestampDir = item.status === 'Newer' ? 'upload' : item.status === 'Older' ? 'download' : null;
+  const moveDir = localMoves && driveMoves && localMoves !== driveMoves
+    ? (localMoves > driveMoves ? 'upload' : 'download') : null;
+  const isUncertain = !!timestampDir && !!moveDir && timestampDir !== moveDir;
+
   const hasLocal = !!item.localTimestamp;
   const hasDrive = !!item.driveTimestamp;
   // Allowed directions: only upload if local exists, only download if drive exists
@@ -142,13 +154,17 @@ function makeRow(item) {
   row.dataset.localMoves = localMoves;
   row.dataset.driveMoves = driveMoves;
 
+  if (isUncertain) row.dataset.uncertain = 'true';
+
   const showBtn = allowedCycle.length > 1;
+  const btnIcon = isUncertain ? 'question_mark' : arrowIcon(arrow);
+  const btnColor = isUncertain ? '#ff9800' : arrowColor(arrow);
   row.innerHTML = `
     ${cellHtml(item.localTimestamp, item.name, 'local', item.key)}
     <div class="sm-arrow-col">
       ${isConflict ? '<div class="sm-conflict-badge">!</div>' : ''}
-      <button class="sm-arrow-btn" title="Change direction" ${showBtn ? '' : 'disabled style="pointer-events:none"'}>
-        <span class="material-icons" style="color:${arrowColor(arrow)}">${arrowIcon(arrow)}</span>
+      <button class="sm-arrow-btn" title="${isUncertain ? 'Timestamp and move count disagree — click to choose direction' : 'Change direction'}" ${showBtn ? '' : 'disabled style="pointer-events:none"'}>
+        <span class="material-icons" style="color:${btnColor}">${btnIcon}</span>
       </button>
     </div>
     ${cellHtml(item.driveTimestamp, item.name, 'drive', null, item.driveMoveCount ?? null)}
@@ -167,9 +183,13 @@ function makeRow(item) {
   const btn = row.querySelector('.sm-arrow-btn');
   btn.addEventListener('click', e => {
     e.stopPropagation();
-    const cur = allowedCycle.indexOf(row.dataset.arrow);
-    const next = allowedCycle[(cur + 1) % allowedCycle.length];
-    setArrow(row, next);
+    if (row.dataset.uncertain === 'true') {
+      setArrow(row, allowedCycle[0]);
+    } else {
+      const cur = allowedCycle.indexOf(row.dataset.arrow);
+      const next = allowedCycle[(cur + 1) % allowedCycle.length];
+      setArrow(row, next);
+    }
   });
 
   // Clicking a cell aims sync toward that side (only if that direction is allowed)
@@ -212,6 +232,7 @@ function updateSelectAllIcon() {
 
 function setArrow(row, state) {
   row.dataset.arrow = state;
+  delete row.dataset.uncertain;
   const btn = row.querySelector('.sm-arrow-btn');
   const icon = btn.querySelector('.material-icons');
   let warn = row.querySelector('.sm-warn-badge');

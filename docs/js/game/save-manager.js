@@ -586,6 +586,12 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             // This ensures we start at the end so user can use back/rewind buttons
             state.skipNarrationAfterLoad = true;
 
+            // Grace period: skip autosave for the first 3 moves after any restore
+            state.autosaveGraceMoves = 3;
+
+            // Reset backup cooldown so the first autosave after a load creates a backup
+            lastAutosaveBackupTime = 0;
+
             // Show system message in game area (if requested)
             if (options.showSystemMessage && displayName) {
                 addGameText(`<div class="system-message">Game restored - ${escapeHtml(displayName)}</div>`, false);
@@ -670,6 +676,12 @@ export async function autoSave() {
         return false;
     }
 
+    // Grace period after a restore — skip autosave for the first N moves
+    if (state.autosaveGraceMoves > 0) {
+        state.autosaveGraceMoves--;
+        return false;
+    }
+
     // Verification data to confirm successful restore
     const verification = {
         pc: window.zvmInstance?.pc || 0,
@@ -678,7 +690,17 @@ export async function autoSave() {
     };
 
     const key = `iftalk_autosave_${state.currentGameName}`;
-    return await performSave(key, null, { verification });
+    const success = await performSave(key, null, { verification });
+
+    if (success) {
+        const now = Date.now();
+        if (now - lastAutosaveBackupTime >= BACKUP_INTERVAL_MS) {
+            lastAutosaveBackupTime = now;
+            await createBackup('autosave', false);
+        }
+    }
+
+    return success;
 }
 
 /**
@@ -839,23 +861,10 @@ export async function importSaveFromFile() {
     }
 }
 
-// Autosave backup interval (5 minutes)
+// Autosave backup: triggered by moves, rate-limited to once per 5 minutes
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_BACKUPS_PER_GAME = 3;
-let backupIntervalId = null;
-
-/**
- * Create a timestamped backup of the current autosave
- * @returns {Promise<boolean>} Success/failure
- */
-async function createAutosaveBackup() {
-    if (!state.currentGameName) {
-        return false;
-    }
-
-    // Use the new createBackup function with autosave type
-    return await createBackup('autosave', false);
-}
+let lastAutosaveBackupTime = 0;
 
 /**
  * Create a backup of any save type (autosave or quicksave)
@@ -932,25 +941,13 @@ function cleanupOldBackups(gameName, saveType = 'autosave') {
 }
 
 /**
- * Start automatic backup timer
+ * Reset the autosave backup rate-limit window (call when a new game session starts).
+ * Backups are now triggered by moves, not a timer — this just resets the cooldown.
  */
 export function startAutosaveBackupTimer() {
-    // Stop existing timer if any
-    stopAutosaveBackupTimer();
-
-    // Set up interval for future backups (start timer without immediate backup)
-    backupIntervalId = setInterval(() => {
-        createAutosaveBackup();
-    }, BACKUP_INTERVAL_MS);
+    lastAutosaveBackupTime = 0;
 }
 
-/**
- * Stop automatic backup timer
- */
-export function stopAutosaveBackupTimer() {
-    if (backupIntervalId) {
-        clearInterval(backupIntervalId);
-        backupIntervalId = null;
-    }
-}
+/** No-op — kept for call-site compatibility */
+export function stopAutosaveBackupTimer() {}
 

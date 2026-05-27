@@ -93,6 +93,9 @@ const _state = {
   gdriveLastSyncTime: null,
   gdriveError: null,
 
+  // Autosave grace period: number of turns to skip autosave after a restore
+  autosaveGraceMoves: 0,
+
   // Device tracking
   deviceId: null,
   deviceInfo: null,

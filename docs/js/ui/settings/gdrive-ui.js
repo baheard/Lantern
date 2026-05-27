@@ -95,7 +95,7 @@ export function initGDriveUI() {
   async function runSyncAll() {
     try {
       const { showSyncModal } = await import('../sync-modal.js');
-      await showSyncModal(null);
+      await showSyncModal(state.currentGameName || null);
     } catch (error) {
       updateStatus('Sync failed: ' + error.message, 'error');
     }

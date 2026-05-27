@@ -17,9 +17,12 @@ import {
 } from './gdrive-api.js';
 import { getDeviceInfo } from './gdrive-device.js';
 
-// Auto-sync: queue of save keys waiting to be uploaded, single debounce timer
+// Auto-sync: rate-limited upload queue (30s window)
+// First save after 30s flushes immediately; saves within the window batch until the 30s mark.
 const pendingSyncQueue = new Set();
 let syncTimer = null;
+let lastFlushTime = 0;
+const SYNC_INTERVAL_MS = 30 * 1000;
 
 /**
  * Sync saves to Google Drive (bidirectional manual sync)
@@ -209,127 +212,140 @@ export async function syncAllNow(gameName = null) {
 }
 
 /**
- * Schedule an auto-sync upload for a just-written save (5-second debounce).
+ * Queue a save key for auto-sync upload.
+ * Flushes immediately if 30s have elapsed since the last flush;
+ * otherwise schedules a flush at the 30s mark so saves batch within the window.
  * Errors are NEVER silent — failures show prominently in the status bar.
  */
 export function scheduleDriveSync(saveKey) {
   if (!state.gdriveSyncEnabled || !state.gdriveSignedIn) return;
 
   pendingSyncQueue.add(saveKey);
-  if (syncTimer) clearTimeout(syncTimer);
+
+  if (syncTimer) return; // Already scheduled for this window
+
+  const elapsed = Date.now() - lastFlushTime;
+  const delay = elapsed >= SYNC_INTERVAL_MS ? 0 : SYNC_INTERVAL_MS - elapsed;
 
   syncTimer = setTimeout(async () => {
     syncTimer = null;
-    // Re-check: user may have disabled sync or signed out during the debounce window
-    if (!state.gdriveSyncEnabled || !state.gdriveSignedIn) {
-      pendingSyncQueue.clear();
-      return;
-    }
-    const keys = Array.from(pendingSyncQueue);
+    lastFlushTime = Date.now();
+    await flushSyncQueue();
+  }, delay);
+}
+
+async function flushSyncQueue() {
+  if (!state.gdriveSyncEnabled || !state.gdriveSignedIn) {
     pendingSyncQueue.clear();
+    return;
+  }
 
-    const authenticated = await ensureAuthenticated(true);
-    if (!authenticated) {
-      updateStatus('Auto-sync failed: not signed in to Google Drive', 'error');
-      state.gdriveError = 'Auto-sync failed: not signed in';
-      window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { error: state.gdriveError } }));
-      return;
+  const keys = Array.from(pendingSyncQueue);
+  pendingSyncQueue.clear();
+  if (keys.length === 0) return;
+
+  const authenticated = await ensureAuthenticated(true);
+  if (!authenticated) {
+    updateStatus('Auto-sync failed: not signed in to Google Drive', 'error');
+    state.gdriveError = 'Auto-sync failed: not signed in';
+    window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { error: state.gdriveError } }));
+    return;
+  }
+
+  // Fetch current Drive state once to check for newer versions before uploading
+  let driveFileMap = new Map();
+  try {
+    const driveFiles = await listFiles();
+    for (const f of driveFiles) {
+      driveFileMap.set(filenameToLocalStorageKey(f.name), f);
     }
+  } catch { /* If we can't list, proceed without the guard — upload errors caught below */ }
 
-    // Fetch current Drive state once to check for newer versions before uploading
-    let driveFileMap = new Map();
+  let uploadCount = 0;
+  const failures = [];
+  const skipped = []; // Drive is newer — would overwrite progress from another device
+
+  for (const key of keys) {
     try {
-      const driveFiles = await listFiles();
-      for (const f of driveFiles) {
-        driveFileMap.set(filenameToLocalStorageKey(f.name), f);
-      }
-    } catch { /* If we can't list, proceed without the guard — upload errors caught below */ }
+      const currentData = localStorage.getItem(key);
+      if (!currentData) continue;
 
-    let uploadCount = 0;
-    const failures = [];
-    const skipped = []; // Drive is newer — would overwrite progress from another device
+      const saveData = JSON.parse(currentData);
+      const localTime = new Date(saveData.timestamp).getTime();
 
-    for (const key of keys) {
-      try {
-        const currentData = localStorage.getItem(key);
-        if (!currentData) continue;
-
-        const saveData = JSON.parse(currentData);
-        const localTime = new Date(saveData.timestamp).getTime();
-
-        // Guard: if Drive already has a newer version, don't overwrite it.
-        // Use move count as the primary signal (more reliable than wall-clock time
-        // across devices). Fall back to timestamp comparison.
-        const driveFile = driveFileMap.get(key);
-        if (driveFile) {
-          const driveMoves = driveFile.appProperties?.moveCount != null
-            ? (n => isNaN(n) ? null : n)(parseInt(driveFile.appProperties.moveCount, 10)) : null;
-          const localMoves = (() => {
-            try {
-              const html = saveData?.displayHTML?.statusBar || '';
-              const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-              return m ? parseInt(m[1]) : null;
-            } catch { return null; }
-          })();
-
-          const driveCompareTime = driveFile.appProperties?.saveTimestamp
-            ? new Date(driveFile.appProperties.saveTimestamp).getTime()
-            : new Date(driveFile.modifiedTime).getTime();
-
-          const driveIsNewer = driveMoves != null && localMoves != null
-            ? driveMoves > localMoves
-            : driveCompareTime > localTime + 1000; // fall back to timestamp with 1s grace
-
-          if (driveIsNewer) {
-            skipped.push(key);
-            continue;
-          }
-        }
-
-        const enrichedData = { ...saveData, device: getDeviceInfo() };
-        const localMoveStr = (() => {
+      // Guard: if Drive already has a newer version, don't overwrite it.
+      // Use move count as the primary signal (more reliable than wall-clock time
+      // across devices). Fall back to timestamp comparison.
+      const driveFile = driveFileMap.get(key);
+      if (driveFile) {
+        const driveMoves = driveFile.appProperties?.moveCount != null
+          ? (n => isNaN(n) ? null : n)(parseInt(driveFile.appProperties.moveCount, 10)) : null;
+        const localMoves = (() => {
           try {
             const html = saveData?.displayHTML?.statusBar || '';
             const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-            return m ? m[1] : null;
+            return m ? parseInt(m[1]) : null;
           } catch { return null; }
         })();
-        const appProperties = { saveTimestamp: saveData.timestamp || '' };
-        if (localMoveStr !== null) appProperties.moveCount = localMoveStr;
 
-        const filename = localStorageKeyToFilename(key);
-        await uploadFile(filename, enrichedData, appProperties);
-        uploadCount++;
-      } catch (error) {
-        failures.push({ key, error: error.message });
+        const driveCompareTime = driveFile.appProperties?.saveTimestamp
+          ? new Date(driveFile.appProperties.saveTimestamp).getTime()
+          : new Date(driveFile.modifiedTime).getTime();
+
+        // Skip upload if Drive is ahead on moves OR on timestamp — either signal is enough
+        const driveIsNewer =
+          (driveMoves != null && localMoves != null && driveMoves > localMoves) ||
+          (driveCompareTime > localTime + 1000);
+
+        if (driveIsNewer) {
+          skipped.push(key);
+          continue;
+        }
       }
-    }
 
-    const syncTime = new Date().toISOString();
-    state.gdriveLastSyncTime = syncTime;
-    localStorage.setItem('iftalk_lastSyncTime', syncTime);
+      const enrichedData = { ...saveData, device: getDeviceInfo() };
+      const localMoveStr = (() => {
+        try {
+          const html = saveData?.displayHTML?.statusBar || '';
+          const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
+          return m ? m[1] : null;
+        } catch { return null; }
+      })();
+      const appProperties = { saveTimestamp: saveData.timestamp || '' };
+      if (localMoveStr !== null) appProperties.moveCount = localMoveStr;
 
-    if (skipped.length > 0) {
-      // Drive has newer saves — this is front-and-center, not a silent skip
-      const names = skipped.map(k => k.split('_').slice(2).join('_') || k).join(', ');
-      const msg = `Auto-sync skipped (Drive is newer): ${names} — open Sync to resolve`;
-      state.gdriveError = msg;
-      updateStatus(msg, 'error');
-      window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { skipped } }));
-    } else if (failures.length > 0) {
-      const names = failures.map(f => f.key.split('_').slice(2).join('_') || f.key).join(', ');
-      const msg = `Auto-sync failed for: ${names}`;
-      state.gdriveError = msg;
-      updateStatus(msg, 'error');
-      window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { failures } }));
-    } else {
-      state.gdriveError = null;
-      if (uploadCount > 0) {
-        updateStatus(`Auto-synced ${uploadCount} save${uploadCount !== 1 ? 's' : ''} to Drive`, 'success');
-      }
-      window.dispatchEvent(new CustomEvent('gdriveSyncComplete'));
+      const filename = localStorageKeyToFilename(key);
+      await uploadFile(filename, enrichedData, appProperties);
+      uploadCount++;
+    } catch (error) {
+      failures.push({ key, error: error.message });
     }
-  }, 5000);
+  }
+
+  const syncTime = new Date().toISOString();
+  state.gdriveLastSyncTime = syncTime;
+  localStorage.setItem('iftalk_lastSyncTime', syncTime);
+
+  if (skipped.length > 0) {
+    // Drive has newer saves — this is front-and-center, not a silent skip
+    const names = skipped.map(k => k.split('_').slice(2).join('_') || k).join(', ');
+    const msg = `Auto-sync skipped (Drive is newer): ${names} — open Sync to resolve`;
+    state.gdriveError = msg;
+    updateStatus(msg, 'error');
+    window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { skipped } }));
+  } else if (failures.length > 0) {
+    const names = failures.map(f => f.key.split('_').slice(2).join('_') || f.key).join(', ');
+    const msg = `Auto-sync failed for: ${names}`;
+    state.gdriveError = msg;
+    updateStatus(msg, 'error');
+    window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { failures } }));
+  } else {
+    state.gdriveError = null;
+    if (uploadCount > 0) {
+      updateStatus(`Auto-synced ${uploadCount} save${uploadCount !== 1 ? 's' : ''} to Drive`, 'success');
+    }
+    window.dispatchEvent(new CustomEvent('gdriveSyncComplete'));
+  }
 }
 
 /**

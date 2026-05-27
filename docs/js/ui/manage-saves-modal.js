@@ -19,6 +19,9 @@ const driveStatusCache = new Map(); // key → { hint, color }
 
 document.addEventListener('iftalk:synccomplete', ({ detail }) => {
   refreshDriveStatusCache(detail.gameName);
+  if (overlayEl && !overlayEl.classList.contains('hidden')) {
+    refreshSavesList();
+  }
 });
 
 async function refreshDriveStatusCache(gameName) {
@@ -105,12 +108,15 @@ function renderBackupSection(save, backups) {
   section.dataset.saveKey = save.key;
 
   backups.forEach(b => {
+    const moves = getMoveCount(b.saveData);
+    const movesHtml = moves !== null ? `<div class="ms-backup-moves">${moves} moves</div>` : '';
     const row = document.createElement('div');
     row.className = 'ms-backup-row';
     row.innerHTML = `
       <div class="ms-backup-tick"></div>
       <div class="ms-backup-info">
         <div class="ms-backup-time">${relativeTimeMs(b.ts)}</div>
+        ${movesHtml}
       </div>
       <button class="ms-backup-load">Load</button>
     `;
@@ -609,6 +615,69 @@ function renderFooter(footerEl) {
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+function refreshSavesList() {
+  if (!state.currentGameName) return;
+  const listEl = document.getElementById('manageSavesList');
+  if (!listEl) return;
+
+  expandedBackups.clear();
+  listEl.innerHTML = '';
+
+  const saves = collectSaves(state.currentGameName);
+  if (saves.length === 0) {
+    listEl.innerHTML = '<div class="manage-saves-empty">No saves yet — use Save to create one.</div>';
+  } else {
+    saves.forEach(save => listEl.appendChild(renderRow(save)));
+  }
+
+  const bottomRow = document.createElement('div');
+  bottomRow.className = 'ms-bottom-row';
+
+  const newBtn = document.createElement('button');
+  newBtn.className = 'ms-new-row';
+  newBtn.innerHTML = '<span class="material-icons">add</span> Save Game';
+  newBtn.addEventListener('click', () => {
+    const form = document.createElement('div');
+    form.className = 'ms-new-row-form';
+    form.innerHTML = `
+      <input class="ms-new-input" type="text" placeholder="Save name…" maxlength="40">
+      <button class="ms-new-confirm">Save</button>
+      <button class="ms-new-cancel"><span class="material-icons">close</span></button>
+    `;
+    newBtn.replaceWith(form);
+    const input = form.querySelector('.ms-new-input');
+    input.focus();
+
+    const doSave = async () => {
+      const name = input.value.trim();
+      if (!name) return;
+      closeManageSavesModal();
+      const { customSave } = await import('../game/save-manager.js');
+      await customSave(name);
+    };
+    const doCancel = () => form.replaceWith(newBtn);
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSave();
+      if (e.key === 'Escape') doCancel();
+    });
+    form.querySelector('.ms-new-confirm').addEventListener('click', doSave);
+    form.querySelector('.ms-new-cancel').addEventListener('click', doCancel);
+  });
+
+  const moreBtn = document.createElement('button');
+  moreBtn.className = 'ms-bottom-more-btn';
+  moreBtn.innerHTML = '<span class="material-icons">more_vert</span>';
+  moreBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    openBottomDropdown(moreBtn);
+  });
+
+  bottomRow.appendChild(newBtn);
+  bottomRow.appendChild(moreBtn);
+  listEl.appendChild(bottomRow);
+}
+
 export function openManageSavesModal() {
   if (!state.currentGameName) {
     updateStatus('No game loaded');
@@ -623,64 +692,7 @@ export function openManageSavesModal() {
 
   refreshDriveStatusCache(state.currentGameName);
 
-  const listEl = document.getElementById('manageSavesList');
-  if (listEl) {
-    listEl.innerHTML = '';
-
-    const saves = collectSaves(state.currentGameName);
-    if (saves.length === 0) {
-      listEl.innerHTML = '<div class="manage-saves-empty">No saves yet — use Save to create one.</div>';
-    } else {
-      saves.forEach(save => listEl.appendChild(renderRow(save)));
-    }
-
-    const bottomRow = document.createElement('div');
-    bottomRow.className = 'ms-bottom-row';
-
-    const newBtn = document.createElement('button');
-    newBtn.className = 'ms-new-row';
-    newBtn.innerHTML = '<span class="material-icons">add</span> Save Game';
-    newBtn.addEventListener('click', () => {
-      const form = document.createElement('div');
-      form.className = 'ms-new-row-form';
-      form.innerHTML = `
-        <input class="ms-new-input" type="text" placeholder="Save name…" maxlength="40">
-        <button class="ms-new-confirm">Save</button>
-        <button class="ms-new-cancel"><span class="material-icons">close</span></button>
-      `;
-      newBtn.replaceWith(form);
-      const input = form.querySelector('.ms-new-input');
-      input.focus();
-
-      const doSave = async () => {
-        const name = input.value.trim();
-        if (!name) return;
-        closeManageSavesModal();
-        const { customSave } = await import('../game/save-manager.js');
-        await customSave(name);
-      };
-      const doCancel = () => form.replaceWith(newBtn);
-
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') doSave();
-        if (e.key === 'Escape') doCancel();
-      });
-      form.querySelector('.ms-new-confirm').addEventListener('click', doSave);
-      form.querySelector('.ms-new-cancel').addEventListener('click', doCancel);
-    });
-
-    const moreBtn = document.createElement('button');
-    moreBtn.className = 'ms-bottom-more-btn';
-    moreBtn.innerHTML = '<span class="material-icons">more_vert</span>';
-    moreBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      openBottomDropdown(moreBtn);
-    });
-
-    bottomRow.appendChild(newBtn);
-    bottomRow.appendChild(moreBtn);
-    listEl.appendChild(bottomRow);
-  }
+  refreshSavesList();
 
   overlayEl.classList.remove('hidden');
   updateDriveBtnIcon();
@@ -696,7 +708,7 @@ export function closeManageSavesModal() {
 function updateDriveBtnIcon() {
   const btn = document.getElementById('manageSavesDriveBtn');
   if (!btn) return;
-  btn.querySelector('.material-icons').textContent = state.gdriveSignedIn ? 'cloud' : 'cloud_off';
+  btn.querySelector('.material-icons').textContent = state.gdriveSignedIn ? 'cloud_download' : 'cloud_off';
   btn.title = state.gdriveSignedIn ? 'Sync with Google Drive' : 'Connect Google Drive';
 }
 
