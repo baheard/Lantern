@@ -14,7 +14,14 @@ const MAX_SAVES = 5;
 const WORD_DIGITS = { one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',ten:'10' };
 function normalizeInput(input) {
   const trimmed = input.trim();
-  return WORD_DIGITS[trimmed.toLowerCase()] ?? trimmed;
+  const digit = WORD_DIGITS[trimmed.toLowerCase()];
+  // Only convert word→digit if no existing save is named that word
+  if (digit) {
+    const saves = getUnifiedSavesList();
+    const namedSave = saves.find(s => s.name.toLowerCase() === trimmed.toLowerCase());
+    if (!namedSave) return digit;
+  }
+  return trimmed;
 }
 
 // State tracking for interactive meta-commands
