@@ -11,6 +11,12 @@ import { getCustomSaves, getUnifiedSavesList, formatSavesList } from './save-lis
 
 const MAX_SAVES = 5;
 
+const WORD_DIGITS = { one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',ten:'10' };
+function normalizeInput(input) {
+  const trimmed = input.trim();
+  return WORD_DIGITS[trimmed.toLowerCase()] ?? trimmed;
+}
+
 // State tracking for interactive meta-commands
 let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
@@ -187,21 +193,23 @@ export async function handleMetaResponse(input) {
   // For restore/delete, use the unified list (same order as displayed)
   const allSaves = getUnifiedSavesList();
 
+  const normalizedInput = normalizeInput(input);
+
   switch (mode) {
     case 'save':
-      return await handleSaveResponse(input.trim(), customSaves);
+      return await handleSaveResponse(normalizedInput, customSaves);
 
     case 'restore':
-      return await handleRestoreResponse(input.trim(), allSaves);
+      return await handleRestoreResponse(normalizedInput, allSaves);
 
     case 'delete':
-      return await handleDeleteResponse(input.trim(), allSaves);
+      return await handleDeleteResponse(normalizedInput, allSaves);
 
     case 'game-save':
-      return await handleGameSaveResponse(input.trim(), customSaves);
+      return await handleGameSaveResponse(normalizedInput, customSaves);
 
     case 'game-restore':
-      return await handleGameRestoreResponse(input.trim(), allSaves);
+      return await handleGameRestoreResponse(normalizedInput, allSaves);
 
     case 'repair':
       return await handleRepairResponse(input.trim());
@@ -242,7 +250,8 @@ function validateSaveName(input) {
     return { valid: false, errorMessage: 'That name is reserved. Please choose a different name.' };
   }
 
-  const existingSave = getCustomSaves().find(s => s.name === targetSaveName);
+  const existingSave = getCustomSaves().find(s => s.name.toLowerCase() === targetSaveName.toLowerCase());
+  if (existingSave) targetSaveName = existingSave.name; // preserve original case
   if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
     return { valid: false, errorMessage: `Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.` };
   }
