@@ -11,6 +11,7 @@ import { getItem } from '../../utils/storage/storage-api.js';
 // save-manager imported dynamically in initSaveHandlers to break the circular dep:
 // settings-panel → save-manager → game-output → tts-player → settings/index → settings-panel
 import { showBackupSavesDialog } from '../backup-saves-dialog.js';
+import { loadOpenAITTSConfig, saveOpenAITTSConfig, testOpenAITTS } from '../../narration/openai-tts.js';
 
 // Element to return focus to when the panel closes (typically the trigger button)
 let lastFocusedBeforeOpen = null;
@@ -99,34 +100,56 @@ export function getGameDisplayName(gameName) {
 }
 
 /**
+ * Show/hide browser narrator voice settings based on whether OpenAI TTS is active.
+ */
+export function updateAudioSettingsVisibility() {
+  const browserNarratorSettings = document.getElementById('browserNarratorSettings');
+  if (!browserNarratorSettings) return;
+  const openAiEnabled = !!(state.openAiTtsConfig?.enabled && state.openAiTtsConfig?.apiKey);
+  browserNarratorSettings.style.display = openAiEnabled ? 'none' : '';
+}
+
+/**
  * Update settings panel labels based on context (welcome vs in-game)
  * Called when settings panel opens and when game loads/unloads
  */
 export function updateSettingsContext() {
   const isWelcome = isOnWelcomeScreen();
 
+  // Update panel title
+  const titleEl = document.getElementById('settingsPanelTitle');
+  if (titleEl) {
+    if (isWelcome) {
+      titleEl.textContent = 'Settings';
+    } else {
+      const displayName = getGameDisplayName(state.currentGameName);
+      titleEl.textContent = displayName ? `Settings — ${displayName}` : 'Settings';
+    }
+  }
+
   // Show/hide game-specific items
   const gameItems = document.querySelectorAll('.game-section-item');
   gameItems.forEach(item => {
-    if (isWelcome) {
-      item.style.display = 'none';
-    } else {
-      // Show the item by setting explicit display value (override CSS display: none)
-      item.style.display = 'block';
-    }
+    item.style.display = isWelcome ? 'none' : 'block';
   });
 
   // Show/hide welcome-specific items
   const welcomeItems = document.querySelectorAll('.welcome-section-item');
   welcomeItems.forEach(item => {
-    if (isWelcome) {
-      item.style.display = 'block'; // Explicitly show (overrides CSS display: none)
-    } else {
-      item.style.display = 'none';
-    }
+    item.style.display = isWelcome ? 'block' : 'none';
   });
 
-  // No need to reload settings - they're global now!
+  // Sync audio settings visibility with current OpenAI state
+  updateAudioSettingsVisibility();
+
+  // Refresh cost display when settings opens
+  const costEl = document.getElementById('openaiTtsCost');
+  if (costEl) {
+    import('../../narration/openai-tts.js').then(({ getSessionCost }) => {
+      const cost = getSessionCost();
+      costEl.textContent = cost < 0.001 ? '≈ $0.000 this session' : `≈ $${cost.toFixed(3)} this session`;
+    });
+  }
 }
 
 /**
@@ -168,6 +191,125 @@ export async function reloadSettingsForGame() {
   // Refresh voice dropdowns to show current selection
   const { populateVoiceDropdown } = await import('./voice-selection.js');
   populateVoiceDropdown();
+}
+
+/**
+ * Initialize OpenAI TTS settings UI and wire handlers
+ */
+function initOpenAITTSSettings() {
+  loadOpenAITTSConfig();
+  const cfg = state.openAiTtsConfig || {};
+
+  const toggle = document.getElementById('openaiTtsToggle');
+  const settingsDiv = document.getElementById('openaiTtsSettings');
+  const apiKeyInput = document.getElementById('openaiApiKey');
+  const apiKeySaveBtn = document.getElementById('openaiApiKeySave');
+  const apiKeyStatus = document.getElementById('openaiApiKeyStatus');
+  const voiceSelect = document.getElementById('openaiVoiceSelect');
+  const testBtn = document.getElementById('openaiTestVoiceBtn');
+  const speedSlider = document.getElementById('openaiSpeed');
+  const speedValue = document.getElementById('openaiSpeedValue');
+  const modelSelect = document.getElementById('openaiModelSelect');
+
+  if (!toggle) return;
+
+  // Restore saved state
+  const hasKey = !!(cfg.apiKey);
+  toggle.checked = !!(cfg.enabled && hasKey);
+  if (settingsDiv) settingsDiv.style.display = toggle.checked ? 'block' : 'none';
+  if (apiKeyStatus && hasKey) {
+    const last4 = cfg.apiKey.slice(-4);
+    apiKeyStatus.textContent = `Key saved (…${last4}). Stored only in your browser.`;
+  }
+  if (voiceSelect && cfg.voice) voiceSelect.value = cfg.voice;
+  if (speedSlider && cfg.speed) {
+    speedSlider.value = cfg.speed;
+    if (speedValue) speedValue.textContent = cfg.speed.toFixed(1) + 'x';
+  }
+  if (modelSelect && cfg.model) modelSelect.value = cfg.model;
+
+  // Toggle: show/hide sub-settings and browser voice controls
+  toggle.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    if (settingsDiv) settingsDiv.style.display = enabled ? 'block' : 'none';
+    if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+    state.openAiTtsConfig.enabled = enabled;
+    saveOpenAITTSConfig();
+    updateAudioSettingsVisibility();
+    updateStatus(enabled ? '✓ AI narration enabled' : '✗ AI narration disabled — using device voice');
+  });
+
+  // Save API key
+  if (apiKeySaveBtn) {
+    apiKeySaveBtn.addEventListener('click', () => {
+      const key = apiKeyInput?.value?.trim();
+      if (!key) {
+        updateStatus('Enter your OpenAI API key first');
+        return;
+      }
+      if (!key.startsWith('sk-')) {
+        updateStatus('Key should start with sk-');
+        return;
+      }
+      if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+      state.openAiTtsConfig.apiKey = key;
+      saveOpenAITTSConfig();
+      if (apiKeyInput) apiKeyInput.value = '';
+      if (apiKeyStatus) {
+        const last4 = key.slice(-4);
+        apiKeyStatus.textContent = `Key saved (…${last4}). Stored only in your browser.`;
+      }
+      updateStatus('✓ API key saved');
+    });
+  }
+
+  // Voice selection
+  if (voiceSelect) {
+    voiceSelect.addEventListener('change', (e) => {
+      if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+      state.openAiTtsConfig.voice = e.target.value;
+      saveOpenAITTSConfig();
+      updateStatus(`✓ AI voice: ${e.target.value}`);
+    });
+  }
+
+  // Speed slider
+  if (speedSlider) {
+    speedSlider.addEventListener('input', (e) => {
+      const speed = parseFloat(e.target.value);
+      if (speedValue) speedValue.textContent = speed.toFixed(1) + 'x';
+      if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+      state.openAiTtsConfig.speed = speed;
+      saveOpenAITTSConfig();
+    });
+  }
+
+  // Model selection
+  if (modelSelect) {
+    modelSelect.addEventListener('change', (e) => {
+      if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+      state.openAiTtsConfig.model = e.target.value;
+      saveOpenAITTSConfig();
+      updateStatus(`✓ AI model: ${e.target.value}`);
+    });
+  }
+
+  // Test voice button
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      if (!state.openAiTtsConfig?.apiKey) {
+        updateStatus('Save your API key first');
+        return;
+      }
+      updateStatus('Testing AI voice…');
+      try {
+        await testOpenAITTS();
+        updateStatus('✓ AI voice test complete');
+      } catch (err) {
+        updateStatus('AI TTS error: ' + err.message);
+      }
+    });
+  }
 }
 
 /**
@@ -373,6 +515,7 @@ export function initSettings() {
     });
   }
 
+  initOpenAITTSSettings();
 }
 
 /**

@@ -95,7 +95,10 @@
   <!-- Settings Panel -->
   <div class="settings-panel" id="settingsPanel" inert aria-hidden="true">
     <div class="settings-header">
-      <h2>Game Default Settings</h2>
+      <div class="settings-header-text">
+        <h2 id="settingsPanelTitle">Settings</h2>
+        <p id="settingsStatusMsg" class="settings-status-msg"></p>
+      </div>
       <button id="closeSettingsBtn" class="close-settings-btn">✕</button>
     </div>
 
@@ -330,17 +333,22 @@
             </div>
           </div>
 
-          <!-- Narration Voice -->
-          <div class="setting-item">
-            <label>Narration Voice</label>
-            <div class="voice-controls">
-              <select id="voiceSelect" class="voice-select">
-                <option value="">Loading voices...</option>
-              </select>
-              <button id="testVoiceBtn" class="test-voice-btn">
-                <span class="material-icons">play_arrow</span>
-              </button>
+          <!-- Narration Voice (hidden when AI narration is active) -->
+          <div id="browserNarratorSettings">
+            <div class="setting-item">
+              <label>Narration Voice</label>
+              <div class="voice-controls">
+                <select id="voiceSelect" class="voice-select">
+                  <option value="">Loading voices...</option>
+                </select>
+                <button id="testVoiceBtn" class="test-voice-btn">
+                  <span class="material-icons">play_arrow</span>
+                </button>
+              </div>
             </div>
+
+            <!-- More voices hint (populated by JS based on platform) -->
+            <p id="moreVoicesHint" class="setting-description more-voices-hint"></p>
           </div>
 
           <!-- App Voice -->
@@ -356,8 +364,69 @@
             </div>
           </div>
 
-          <!-- More voices hint (populated by JS based on platform) -->
-          <p id="moreVoicesHint" class="setting-description more-voices-hint"></p>
+          <!-- AI Narration (OpenAI TTS) -->
+          <div class="setting-item setting-divider-top">
+            <label>
+              AI Narration (OpenAI)
+              <input type="checkbox" id="openaiTtsToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Higher-quality voices using your own OpenAI API key. <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get a key</a> — add a <a href="https://platform.openai.com/account/limits" target="_blank" rel="noopener">spending limit</a> first. Cost: ~$0.015 per 1,000 characters.</p>
+          </div>
+
+          <div id="openaiTtsSettings" class="openai-tts-settings" style="display:none">
+            <!-- API Key -->
+            <div class="setting-item">
+              <label>API Key</label>
+              <div class="voice-controls">
+                <input type="password" id="openaiApiKey" class="text-input" placeholder="sk-..." autocomplete="off" spellcheck="false">
+                <button id="openaiApiKeySave" class="compact-btn">Save</button>
+              </div>
+              <p class="setting-description" id="openaiApiKeyStatus">Your key is stored only in your browser and sent directly to OpenAI.</p>
+            </div>
+
+            <!-- Voice -->
+            <div class="setting-item">
+              <label>Voice</label>
+              <div class="voice-controls">
+                <select id="openaiVoiceSelect" class="voice-select">
+                  <option value="fable">Fable — British storyteller (recommended)</option>
+                  <option value="alloy">Alloy — Neutral</option>
+                  <option value="echo">Echo — Male</option>
+                  <option value="onyx">Onyx — Deep male</option>
+                  <option value="nova">Nova — Female</option>
+                  <option value="shimmer">Shimmer — Soft female</option>
+                </select>
+                <button id="openaiTestVoiceBtn" class="test-voice-btn" title="Test voice">
+                  <span class="material-icons">play_arrow</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Speed -->
+            <div class="setting-item">
+              <label>AI Speech Speed</label>
+              <div class="slider-container">
+                <span class="slider-label">0.5x</span>
+                <input type="range" id="openaiSpeed" min="0.5" max="2.0" step="0.1" value="1.0" class="slider">
+                <span class="slider-label">2.0x</span>
+                <span id="openaiSpeedValue" class="slider-value">1.0x</span>
+              </div>
+            </div>
+
+            <!-- Model -->
+            <div class="setting-item">
+              <label>Model</label>
+              <select id="openaiModelSelect" class="voice-select">
+                <option value="tts-1">tts-1 — Standard (cheaper, ~15ms latency)</option>
+                <option value="tts-1-hd">tts-1-hd — High quality (2× cost)</option>
+              </select>
+            </div>
+
+            <!-- Cost display -->
+            <div class="setting-item">
+              <p class="setting-description" id="openaiTtsCost">≈ $0.000 this session</p>
+            </div>
+          </div>
         </div>
       </div>
 

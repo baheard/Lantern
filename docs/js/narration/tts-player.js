@@ -13,6 +13,7 @@ import { recordSpokenChunk } from '../voice/echo-detection.js';
 import { updateTextHighlight, removeHighlight } from './highlighting.js';
 import { getDefaultVoice, getDefaultAppVoice } from '../ui/settings/index.js';
 import { scrollToBottom } from '../utils/scroll.js';
+import { isOpenAITTSEnabled, playWithOpenAITTS, prefetchOpenAIChunk } from './openai-tts.js';
 
 // Keep-alive audio context for mobile background playback
 let keepAliveAudio = null;
@@ -254,6 +255,16 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
   state.isPaused = false;
   state.isNarrating = true;
 
+  // Kick off fetch for the first chunk immediately — before RAF delays, highlights,
+  // and nav-button updates — so the network round-trip overlaps with setup work.
+  if (isOpenAITTSEnabled()) {
+    for (let j = startFromIndex; j < state.narrationChunks.length; j++) {
+      const c = state.narrationChunks[j];
+      const v = typeof c === 'object' ? c.voice : 'narrator';
+      if (v !== 'app') { prefetchOpenAIChunk(typeof c === 'string' ? c : c.text); break; }
+    }
+  }
+
   // Mic state is intentionally decoupled from narration — see .tome/mic-narration-coupling.md.
 
   // Start keep-alive for mobile background playback
@@ -318,10 +329,33 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
       }
     }
 
-    // Use browser TTS directly (no server round-trip needed)
     // Mark when this chunk started playing
     state.currentChunkStartTime = Date.now();
-    await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
+
+    if (isOpenAITTSEnabled()) {
+      state.ttsIsSpeaking = true;
+
+      // Prefetch chunk i+2 now (i+1 was already prefetched by the previous iteration
+      // or by the early-fetch above). This keeps the pipeline two chunks deep.
+      for (let j = i + 2; j < totalChunks; j++) {
+        const nextChunk = state.narrationChunks[j];
+        const nextVoice = typeof nextChunk === 'object' ? nextChunk.voice : 'narrator';
+        if (nextVoice !== 'app') {
+          prefetchOpenAIChunk(typeof nextChunk === 'string' ? nextChunk : nextChunk.text);
+          break;
+        }
+      }
+
+      try {
+        await playWithOpenAITTS(chunkText);
+      } catch (err) {
+        updateStatus('AI TTS error: ' + err.message);
+      }
+      state.ttsIsSpeaking = false;
+      state.chunkWasInterrupted = false;
+    } else {
+      await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
+    }
 
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {

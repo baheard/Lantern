@@ -79,10 +79,28 @@
   align-items: center;
 }
 
+.settings-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .settings-header h2 {
   margin: 0;
   font-size: var(--font-xl);
   color: var(--text-primary);
+}
+
+.settings-status-msg {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-height: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s;
 }
 
 /* All icons in settings panel use accent-warm */
@@ -1006,12 +1024,15 @@
   color: var(--text-secondary);
 }
 
-.more-voices-hint a {
-  color: var(--accent-primary);
+.more-voices-hint a,
+.setting-description a {
+  color: var(--link-color);
   text-decoration: none;
 }
 
-.more-voices-hint a:hover {
+.more-voices-hint a:hover,
+.setting-description a:hover {
+  color: var(--link-color-hover);
   text-decoration: underline;
 }
 
@@ -1387,4 +1408,17 @@ body.voice-controls-hidden #settings-btn {
   text-overflow: ellipsis;
   white-space: nowrap;
   height: auto; /* Override fixed height from controls.css */
+}
+
+/* OpenAI TTS settings */
+.setting-divider-top {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.openai-tts-settings {
+  padding-left: 8px;
+  border-left: 2px solid var(--accent-primary);
+  margin-left: 4px;
 }

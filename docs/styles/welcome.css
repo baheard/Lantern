@@ -218,14 +218,14 @@
 }
 
 .if-database-section a {
-  color: var(--accent-primary);
+  color: var(--link-color);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .if-database-section a:hover {
-  color: var(--accent-warm);
+  color: var(--link-color-hover);
   text-decoration: underline;
 }
 

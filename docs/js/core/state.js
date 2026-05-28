@@ -83,6 +83,9 @@ const _state = {
   // Voice config
   browserVoiceConfig: null,
 
+  // OpenAI TTS config (BYOK — stored in localStorage)
+  openAiTtsConfig: null,
+
   // Lock screen state
   isScreenLocked: false,
 
