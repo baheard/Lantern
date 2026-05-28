@@ -231,15 +231,19 @@ function validateSaveName(input) {
   let targetSaveName = input;
   const allSaves = getUnifiedSavesList();
 
-  if (!isNaN(num) && num >= 1 && num <= allSaves.length) {
-    const save = allSaves[num - 1];
-    if (save.type === 'quicksave') {
-      return { valid: false, errorMessage: 'Cannot overwrite quicksave. Use Quick Save button or choose a different name.' };
+  if (!isNaN(num)) {
+    if (num >= 1 && num <= allSaves.length) {
+      const save = allSaves[num - 1];
+      if (save.type === 'quicksave') {
+        return { valid: false, errorMessage: 'Cannot overwrite quicksave. Use Quick Save button or choose a different name.' };
+      }
+      if (save.type === 'autosave') {
+        return { valid: false, errorMessage: 'Cannot overwrite autosave. Choose a different name.' };
+      }
+      targetSaveName = save.name;
+    } else {
+      return { valid: false, errorMessage: `No save in slot ${num}. Enter a name for a new save.` };
     }
-    if (save.type === 'autosave') {
-      return { valid: false, errorMessage: 'Cannot overwrite autosave. Choose a different name.' };
-    }
-    targetSaveName = save.name;
   }
 
   if (!/^[a-zA-Z0-9_ -]+$/.test(targetSaveName)) {
