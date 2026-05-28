@@ -101,17 +101,6 @@
 
     <div class="settings-content">
 
-      <!-- Currently Playing + Home Button (in-game only, top level) -->
-      <div class="current-game-display game-section-item" id="currentGameDisplay">
-        <div class="current-game-info">
-          <span class="current-game-label">Currently playing:</span>
-          <span class="current-game-name" id="currentGameName">No game loaded</span>
-        </div>
-        <button class="btn btn-sm btn-secondary" id="selectGameBtn">
-          <span class="material-icons">arrow_back</span> Home
-        </button>
-      </div>
-
       <!-- Voice & Input Section -->
       <div class="settings-section collapsible collapsed" id="voiceInputSection">
         <h3 class="section-header">
@@ -785,10 +774,19 @@
         <span class="material-icons">folder_open</span>
         <span class="menu-item-text">Saves</span>
       </button>
-      <!-- Feedback (top of visual menu — last in HTML due to column-reverse) -->
+      <!-- Feedback -->
       <button class="mobile-menu-item" id="mobileFeedbackIcon" data-action="feedback" role="menuitem" title="Leave Feedback">
         <span class="material-icons">feedback</span>
         <span class="menu-item-text">Feedback</span>
+      </button>
+      <!-- Home / currently playing (top of visual menu — last in HTML due to column-reverse, game-only) -->
+      <div class="mobile-menu-separator" id="mobileHomeSeparator"></div>
+      <button class="mobile-menu-item mobile-menu-home" id="mobileHomeIcon" data-action="home" role="menuitem" title="Back to Home Screen">
+        <span class="material-icons">chevron_left</span>
+        <div class="menu-home-text">
+          <span class="menu-home-label">Currently Playing</span>
+          <span class="menu-item-game-name" id="mobileHomeGameName">Home</span>
+        </div>
       </button>
     </div>
 

@@ -105,20 +105,8 @@ export function getGameDisplayName(gameName) {
 export function updateSettingsContext() {
   const isWelcome = isOnWelcomeScreen();
 
-  // Update current game display
-  const currentGameDisplay = document.getElementById('currentGameDisplay');
-  if (currentGameDisplay) {
-    currentGameDisplay.style.display = isWelcome ? 'none' : 'flex';
-    if (!isWelcome) {
-      const gameNameSpan = document.getElementById('currentGameName');
-      if (gameNameSpan) {
-        gameNameSpan.textContent = getGameDisplayName(state.currentGameName);
-      }
-    }
-  }
-
-  // Show/hide game-specific items (exclude currentGameDisplay, it's handled separately)
-  const gameItems = document.querySelectorAll('.game-section-item:not(#currentGameDisplay)');
+  // Show/hide game-specific items
+  const gameItems = document.querySelectorAll('.game-section-item');
   gameItems.forEach(item => {
     if (isWelcome) {
       item.style.display = 'none';
@@ -146,9 +134,10 @@ export function updateSettingsContext() {
  * @param {string} gameName - Name of the current game (filename with or without extension)
  */
 export function updateCurrentGameDisplay(gameName) {
-  const currentGameNameEl = document.getElementById('currentGameName');
-  if (currentGameNameEl) {
-    currentGameNameEl.textContent = getGameDisplayName(gameName);
+  const displayName = getGameDisplayName(gameName);
+  const mobileHomeGameName = document.getElementById('mobileHomeGameName');
+  if (mobileHomeGameName) {
+    mobileHomeGameName.textContent = displayName || 'Home';
   }
 }
 
@@ -384,17 +373,6 @@ export function initSettings() {
     });
   }
 
-  // Home button (return to game selection)
-  const selectGameBtn = document.getElementById('selectGameBtn');
-  if (selectGameBtn) {
-    selectGameBtn.addEventListener('click', async () => {
-      // Import and call unload function
-      const { unloadGame } = await import('../../game/game-loader.js');
-      unloadGame();
-      // Close settings panel
-      closeSettings();
-    });
-  }
 }
 
 /**

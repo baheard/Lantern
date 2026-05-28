@@ -204,6 +204,11 @@ async function handleMenuAction(action) {
       openFeedbackModal();
       break;
 
+    case 'home':
+      localStorage.removeItem('iftalk_last_game');
+      location.reload();
+      break;
+
     default:
       console.warn('Unknown menu action:', action);
   }
@@ -219,6 +224,12 @@ export function updateMobileMenuForGameState(inGame) {
   // Settings is always shown (no toggle)
   const settingsIcon = document.getElementById('mobileSettingsIcon');
   if (settingsIcon) settingsIcon.style.display = 'flex';
+
+  // Home item — always shown when in-game, never toggleable
+  const homeIcon = document.getElementById('mobileHomeIcon');
+  const homeSeparator = document.getElementById('mobileHomeSeparator');
+  if (homeIcon) homeIcon.style.display = inGame ? 'flex' : 'none';
+  if (homeSeparator) homeSeparator.style.display = inGame ? 'block' : 'none';
 
   // Toggle-controlled menu items
   const menuItems = [
