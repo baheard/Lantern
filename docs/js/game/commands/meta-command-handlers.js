@@ -7,7 +7,7 @@
 import { state } from '../../core/state.js';
 import { respondAsGame } from '../../ui/respond-as-game.js';
 import { enterSystemEntryMode, exitSystemEntryMode } from '../../input/keyboard/index.js';
-import { getCustomSaves, getUnifiedSavesList, formatSavesList } from './save-list-formatter.js';
+import { getCustomSaves, getUnifiedSavesList, getRestoreList, formatSavesList } from './save-list-formatter.js';
 
 const MAX_SAVES = 5;
 
@@ -51,7 +51,7 @@ export async function handleSaveCommand() {
  * Handle RESTORE command (typed by user)
  */
 export async function handleRestoreCommand() {
-  const allSaves = getUnifiedSavesList();
+  const allSaves = getRestoreList();
 
   if (allSaves.length === 0) {
     respondAsGame('<div class="system-message">No saved games found. Use SAVE to create one.</div>');
@@ -75,7 +75,7 @@ export async function handleRestoreCommand() {
  * Handle DELETE command
  */
 export async function handleDeleteCommand() {
-  const allSaves = getUnifiedSavesList();
+  const allSaves = getRestoreList();
 
   if (allSaves.length === 0) {
     respondAsGame('<div class="system-message">No save games currently exist. Use "Save" to save one.</div>');
@@ -194,8 +194,8 @@ export async function handleMetaResponse(input) {
 
   // For save, only count custom saves toward the limit
   const customSaves = getCustomSaves();
-  // For restore/delete, use the unified list (same order as displayed)
-  const allSaves = getUnifiedSavesList();
+  // For restore/delete, use the full list including autosave (same order as displayed)
+  const allSaves = getRestoreList();
 
   const normalizedInput = normalizeInput(input);
 
@@ -357,7 +357,6 @@ async function handleRestoreResponse(input, saves) {
   sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
     autoplayEnabled: state.autoplayEnabled,
     micUnmuted: !state.isMuted,
-    readLastChunk: true
   }));
 
   // Reload page to trigger autorestore
@@ -486,9 +485,9 @@ async function handleGameRestoreResponse(input, saves) {
     return true;
   }
 
-  // Only allow restoring custom saves (not quicksave or autosave) for in-game restore
-  if (save.type !== 'customsave') {
-    respondAsGame('<div class="system-message">Can only restore custom saves from in-game. Use Quick Load button for quicksave.</div>');
+  // Quicksave cannot be restored via in-game dialog
+  if (save.type === 'quicksave') {
+    respondAsGame('<div class="system-message">Use the Quick Load button to restore a quicksave.</div>');
 
     // Re-prompt
     // IMPORTANT: Restore awaitingMetaInput flag so ESC/Enter cancellation works
@@ -501,11 +500,10 @@ async function handleGameRestoreResponse(input, saves) {
 
   // Use page reload approach (same as Quick Load and typed RESTORE command)
   // This avoids the crash from calling restore_file() and then returning to dialog callback
-  sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
-    type: 'customsave',
-    key: save.name,
-    gameName: state.currentGameName
-  }));
+  const pendingRestore = save.type === 'autosave'
+    ? { type: 'autosave', key: state.currentGameName, gameName: state.currentGameName }
+    : { type: 'customsave', key: save.name, gameName: state.currentGameName };
+  sessionStorage.setItem('iftalk_pending_restore', JSON.stringify(pendingRestore));
 
   respondAsGame(`<div class="system-message">Restoring from "${save.name}"...</div>`);
 
@@ -513,7 +511,6 @@ async function handleGameRestoreResponse(input, saves) {
   sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
     autoplayEnabled: state.autoplayEnabled,
     micUnmuted: !state.isMuted,
-    readLastChunk: true
   }));
 
   // Reload page - autorestore will handle the restore during startup
@@ -537,7 +534,7 @@ export function initDialogInterceptor() {
     if (usage === 'save') {
       if (!tosave) {
         // RESTORE request from game
-        const allSaves = getUnifiedSavesList();
+        const allSaves = getRestoreList();
 
         if (allSaves.length === 0) {
           respondAsGame('<div class="system-message">No saved games found. Use SAVE command first.</div>');

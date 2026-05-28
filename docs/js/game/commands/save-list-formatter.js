@@ -114,6 +114,7 @@ export function formatSaveEntry(save, index) {
  * Get unified list of all saves (custom + quicksave) for display
  * Sorted by timestamp, newest first
  * Note: Autosave is excluded - it's automatic and managed by the system
+ * Used for SAVE command lists (autosave cannot be overwritten)
  * @returns {Array} Array of save objects
  */
 export function getUnifiedSavesList() {
@@ -125,6 +126,24 @@ export function getUnifiedSavesList() {
   }
 
   // Sort by timestamp, newest first
+  saves.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return saves;
+}
+
+/**
+ * Get list of all saves available for restore/delete (custom + quicksave + autosave)
+ * Sorted by timestamp, newest first
+ * Used for RESTORE and DELETE command lists
+ * @returns {Array} Array of save objects
+ */
+export function getRestoreList() {
+  const saves = getCustomSaves();
+  const quicksave = getQuicksave();
+  const autosave = getAutosave();
+
+  if (quicksave) saves.push(quicksave);
+  if (autosave) saves.push(autosave);
+
   saves.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   return saves;
 }
