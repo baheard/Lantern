@@ -65,6 +65,45 @@ export const voiceCommandHandlers = {
     state.autoplayEnabled = true;
     skipToStart(() => speakTextChunked(null, state.currentChunkIndex));
   },
+  repeat: async () => {
+    state.autoplayEnabled = true;
+    state.narrationEnabled = true;
+    state.isPaused = false;
+
+    // Find last non-app-voice chunk in current chunks
+    if (state.narrationChunks.length > 0) {
+      let idx = Math.min(state.currentChunkIndex, state.narrationChunks.length - 1);
+      while (idx > 0 && state.narrationChunks[idx]?.voice === 'app') idx--;
+      if (state.narrationChunks[idx]?.voice !== 'app') {
+        speakTextChunked(null, idx);
+        return;
+      }
+    }
+
+    // Fallback: chunks are empty or all app-voice (e.g. right after restore).
+    // Find the last non-system-message game-text in the DOM and build chunks from it.
+    const lw = document.getElementById('lowerWindow');
+    if (!lw) return;
+    const gameTexts = [...lw.querySelectorAll('.game-text')];
+    let targetEl = null;
+    for (let i = gameTexts.length - 1; i >= 0; i--) {
+      if (!gameTexts[i].querySelector('.system-message') && gameTexts[i].textContent.trim()) {
+        targetEl = gameTexts[i];
+        break;
+      }
+    }
+    if (!targetEl) return;
+
+    state.chunksValid = false;
+    state.narrationChunks = [];
+    state.currentGameTextElement = targetEl;
+    const { ensureChunksReady } = await import('../ui/game-output.js');
+    if (ensureChunksReady() && state.narrationChunks.length > 0) {
+      const idx = state.narrationChunks.length - 1;
+      state.currentChunkIndex = idx;
+      speakTextChunked(null, idx);
+    }
+  },
   back: () => {
     state.autoplayEnabled = true;
     skipToChunk(-1, () => speakTextChunked(null, state.currentChunkIndex));

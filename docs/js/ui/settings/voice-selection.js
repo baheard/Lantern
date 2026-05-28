@@ -15,6 +15,9 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
 // Detect Windows
 const isWindows = /Win/.test(navigator.platform);
 
+// Detect Mac (excludes iOS which also reports MacIntel)
+const isMac = /Mac/.test(navigator.platform) && !isIOS;
+
 // iOS preferred voices (starred, shown at top, in order)
 // High-quality and classic Mac voices
 const IOS_PREFERRED_VOICES = [
@@ -204,7 +207,9 @@ function filterAndSortVoices(voices) {
  */
 function getVoiceDisplayName(voice) {
   const star = isIOS && getIOSPreferredIndex(voice) !== -1 ? '★ ' : '';
-  return `${star}${voice.name} (${voice.lang})`;
+  // Skip lang suffix when the name already has a parenthesized region (e.g. "Microsoft Zira - English (United States)")
+  const langSuffix = / \([^)]+\)$/.test(voice.name) ? '' : ` (${voice.lang})`;
+  return `${star}${voice.name}${langSuffix}`;
 }
 
 /**
@@ -268,6 +273,8 @@ export function populateVoiceDropdown() {
       dom.appVoiceSelect.appendChild(option);
     });
   }
+
+  initMoreVoicesHint();
 }
 
 /**
@@ -383,4 +390,24 @@ export function initVoiceSelection() {
       updateStatus('Testing app voice: ' + dom.appVoiceSelect.value);
     });
   }
+
+  initMoreVoicesHint();
+}
+
+function initMoreVoicesHint() {
+  const hint = document.getElementById('moreVoicesHint');
+  if (!hint) return;
+
+  let html;
+  if (isWindows) {
+    html = 'Missing a voice? <a href="ms-settings:speech">Open Windows Speech Settings</a> to download more.';
+  } else if (isIOS) {
+    html = 'Missing a voice? <strong>Settings → Accessibility → Spoken Content → Voices → English</strong> to download more.';
+  } else if (isMac) {
+    html = 'Missing a voice? <strong>System Settings → Accessibility → Spoken Content → Manage Voices</strong> to download more.';
+  } else {
+    html = 'Voice availability depends on your OS and browser. In Chrome, Google voices load automatically.';
+  }
+
+  hint.innerHTML = html;
 }

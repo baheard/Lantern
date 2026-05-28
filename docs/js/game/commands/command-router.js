@@ -181,8 +181,7 @@ See Settings → Voice Commands for complete reference.
     // Navigation commands - work whether typed or spoken
     case 'repeat':
       playAppCommand();
-      const handlers = voiceCommandHandlers;
-      handlers.restart();
+      voiceCommandHandlers.repeat();
       return true;
 
     case 'back':

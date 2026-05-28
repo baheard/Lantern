@@ -25,12 +25,12 @@ import { initVoiceRecognition, showConfirmedTranscript } from './voice/recogniti
 import { processVoiceKeywords } from './voice/voice-commands.js';
 
 // Narration modules
-import { speakTextChunked, stopNarration } from './narration/tts-player.js';
+import { speakTextChunked, stopNarration, speakAppMessage } from './narration/tts-player.js';
 import { skipToChunk, skipToStart, skipToEnd } from './narration/navigation.js';
 
 // UI modules
 import { updateNavButtons } from './ui/nav-buttons.js';
-import { addGameText } from './ui/game-output.js';
+import { addGameText, ensureChunksReady } from './ui/game-output.js';
 import { initAllSettings, loadBrowserVoiceConfig, updateSettingsContext } from './ui/settings/index.js';
 import { toggleSettings, closeSettings, initSaveHandlers } from './ui/settings/settings-panel.js';
 import { initHistoryButtons } from './ui/history.js';
@@ -84,12 +84,66 @@ import { voiceCommandHandlers, pausePlayback, resumePlayback } from './voice/com
 export { voiceCommandHandlers, pausePlayback, resumePlayback };
 
 // Handle game output from GlkOte
-function handleGameOutput(text) {
+async function handleGameOutput(text) {
 
   // Store for potential narration
   // Note: Don't stop narration here - speakTextChunked() handles stopping the old session
   // properly with a 50ms delay to let the old loop exit cleanly
   state.pendingNarrationText = text;
+
+  // Re-enable autoplay if it was on before a restore reload
+  if (window._pendingRestoreAutoplay) {
+    window._pendingRestoreAutoplay = false;
+    state.autoplayEnabled = true;
+  }
+
+  // After a restore: speak the app message ("Game restored - name") then the last visible game text
+  if (window._pendingReadLastChunk) {
+    window._pendingReadLastChunk = false;
+    state.narrationEnabled = true;
+    state.isPaused = false;
+
+    const lowerWindow = document.getElementById('lowerWindow');
+    const currentEl = state.currentGameTextElement;
+    if (lowerWindow) {
+      const allGameTexts = [...lowerWindow.querySelectorAll('.game-text')];
+      const startIdx = currentEl ? allGameTexts.indexOf(currentEl) : allGameTexts.length - 1;
+      const searchFrom = startIdx >= 0 ? startIdx : allGameTexts.length - 1;
+
+      // Find and speak the restore system message (search from currentEl backwards)
+      for (let i = searchFrom; i >= 0; i--) {
+        const sysMsg = allGameTexts[i].querySelector('.system-message');
+        if (sysMsg) {
+          const html = sysMsg.innerHTML.replace(/<br\s*\/?>/gi, '. ');
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          const msgText = tmp.textContent.trim();
+          if (msgText) speakAppMessage(msgText); // sets appVoicePromise; speakTextChunked awaits it
+          break;
+        }
+      }
+
+      // Then find the last non-system-message game-text (include currentEl in case VM re-described after restore)
+      let targetEl = null;
+      for (let i = searchFrom; i >= 0; i--) {
+        if (!allGameTexts[i].querySelector('.system-message') && allGameTexts[i].textContent.trim()) {
+          targetEl = allGameTexts[i];
+          break;
+        }
+      }
+      if (targetEl) {
+        state.chunksValid = false;
+        state.narrationChunks = [];
+        state.currentGameTextElement = targetEl;
+        if (ensureChunksReady() && state.narrationChunks.length > 0) {
+          const lastIdx = state.narrationChunks.length - 1;
+          state.currentChunkIndex = lastIdx;
+          speakTextChunked(null, lastIdx);
+        }
+      }
+    }
+    return;
+  }
 
   // STRICT CHECK: Auto-start narration ONLY if autoplay is explicitly enabled
   if (state.autoplayEnabled === true) {
@@ -261,6 +315,12 @@ function initVoice() {
 
       // Update lock button visibility now that recognition is initialized
       updateLockButtonVisibility();
+
+      // Re-enable mic if it was on before a restore reload (skip if push-to-talk mode)
+      if (window._pendingRestoreMic && !state.pushToTalkMode) {
+        window._pendingRestoreMic = false;
+        voiceCommandHandlers.unmute();
+      }
     } catch (error) {
       // Voice recognition failed
     }
@@ -960,6 +1020,18 @@ function wireLifecycle() {
 
 // Initialize app
 async function initApp() {
+  // Restore player/mic state preserved across a restore reload
+  const savedUiState = sessionStorage.getItem('iftalk_restore_ui_state');
+  if (savedUiState) {
+    sessionStorage.removeItem('iftalk_restore_ui_state');
+    try {
+      const ui = JSON.parse(savedUiState);
+      if (ui.autoplayEnabled) window._pendingRestoreAutoplay = true;
+      if (ui.micUnmuted) window._pendingRestoreMic = true;
+      if (ui.readLastChunk) window._pendingReadLastChunk = true;
+    } catch (e) {}
+  }
+
   initViewport();
   initDOMandValidation();
   initVoice();

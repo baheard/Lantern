@@ -353,6 +353,13 @@ async function handleRestoreResponse(input, saves) {
     }));
   }
 
+  // Preserve player/mic state across the reload
+  sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
+    autoplayEnabled: state.autoplayEnabled,
+    micUnmuted: !state.isMuted,
+    readLastChunk: true
+  }));
+
   // Reload page to trigger autorestore
   window.location.reload();
 
@@ -501,6 +508,13 @@ async function handleGameRestoreResponse(input, saves) {
   }));
 
   respondAsGame(`<div class="system-message">Restoring from "${save.name}"...</div>`);
+
+  // Preserve player/mic state across the reload
+  sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
+    autoplayEnabled: state.autoplayEnabled,
+    micUnmuted: !state.isMuted,
+    readLastChunk: true
+  }));
 
   // Reload page - autorestore will handle the restore during startup
   // Dialog callback will never be called (page is reloading anyway)

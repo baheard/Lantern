@@ -994,6 +994,27 @@
   font-size: 14px;
 }
 
+/* Native OS dropdown popup needs explicit colors — inherited white text bleeds in */
+.voice-select option {
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
+
+.more-voices-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.more-voices-hint a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.more-voices-hint a:hover {
+  text-decoration: underline;
+}
+
 .test-voice-btn {
   padding: 8px 12px;
   background: var(--bg-elevated);
