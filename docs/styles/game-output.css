@@ -273,7 +273,7 @@ body.tap-to-examine-enabled .game-text {
   width: 100%;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  border-left: 4px solid var(--accent-muted, #666);
+  border-left: 4px solid var(--accent-warm);
 }
 
 /* Hide chunk delimiters (used only for TTS chunking) */
