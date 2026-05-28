@@ -49,7 +49,8 @@ export async function dispatchPTTFallback() {
  */
 const INSTANT_NO_WAIT = [
   'stop',
-  'repeat'
+  'repeat',
+  'freeze', 'unfreeze'
 ];
 
 /**
