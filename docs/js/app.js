@@ -333,6 +333,11 @@ function initUIComponents() {
 
   // Initialize tap-to-examine toggle
   const tapToExamineToggle = document.getElementById('tapToExamineToggle');
+  if (tapToExamineToggle && !isTouchDevice) {
+    const tapLabel = tapToExamineToggle.closest('.setting-item');
+    tapLabel.querySelector('label').childNodes[0].textContent = 'Click to Examine';
+    tapLabel.querySelector('.setting-description').textContent = 'Click words to enter them in the command input';
+  }
   if (tapToExamineToggle) {
     const saved = localStorage.getItem('iftalk_tap_to_examine');
     tapToExamineToggle.checked = saved !== 'false'; // default enabled
