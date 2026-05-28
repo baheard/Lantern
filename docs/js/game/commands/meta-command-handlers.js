@@ -241,6 +241,7 @@ function validateSaveName(input) {
         return { valid: false, errorMessage: 'Cannot overwrite autosave. Choose a different name.' };
       }
       targetSaveName = save.name;
+      return { valid: true, targetSaveName, slotNum: num };
     } else {
       return { valid: false, errorMessage: `No save in slot ${num}. Enter a name for a new save.` };
     }
@@ -271,6 +272,10 @@ async function handleSaveResponse(input, saves) {
   if (!result.valid) {
     respondAsGame(`<div class="system-message">${result.errorMessage}</div>`);
     return true;
+  }
+
+  if (result.slotNum) {
+    respondAsGame(`<div class="system-message">Overwriting save ${result.slotNum}: ${result.targetSaveName}...</div>`);
   }
 
   const { customSave } = await import('../save-manager.js');
