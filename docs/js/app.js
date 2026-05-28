@@ -314,7 +314,11 @@ function initUIComponents() {
   // Initialize keep awake (screen wake lock)
   initKeepAwake();
   const keepAwakeToggle = document.getElementById('keepAwakeToggle');
-  if (keepAwakeToggle) {
+  const isTouchDevice = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+  if (!isTouchDevice) {
+    keepAwakeToggle?.closest('.setting-item')?.remove();
+  }
+  if (keepAwakeToggle && isTouchDevice) {
     keepAwakeToggle.checked = isKeepAwakeEnabled();
     keepAwakeToggle.addEventListener('change', (e) => {
       if (e.target.checked) {
