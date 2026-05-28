@@ -18,9 +18,10 @@ function normalizeInput(input) {
 }
 
 // State tracking for interactive meta-commands
-let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', or null
+let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', 'save-confirm', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
 let gameDialogRef = null; // File reference for in-game dialogs
+let pendingSaveTarget = null; // Save name pending confirmation when overwriting by slot
 
 /**
  * Handle SAVE command
@@ -172,6 +173,9 @@ export async function handleMetaResponse(input) {
         gameDialogCallback = null;
         gameDialogRef = null;
       }, 0);
+    } else if (mode === 'save-confirm') {
+      pendingSaveTarget = null;
+      respondAsGame('<div class="system-message"><i>Cancelled.</i></div>');
     } else if (mode === 'repair') {
       // For repair cancellation, reset the repair flag and show helpful message
       const { resetRepairFlag } = await import('../voxglk-watchdog.js');
@@ -210,6 +214,20 @@ export async function handleMetaResponse(input) {
 
     case 'game-restore':
       return await handleGameRestoreResponse(normalizedInput, allSaves);
+
+    case 'save-confirm': {
+      const saveName = pendingSaveTarget;
+      pendingSaveTarget = null;
+      const yes = ['yes', 'y'].includes(normalizedInput.toLowerCase());
+      if (!yes) {
+        respondAsGame('<div class="system-message"><i>Cancelled.</i></div>');
+        return true;
+      }
+      const { customSave } = await import('../save-manager.js');
+      const success = await customSave(saveName);
+      if (!success) respondAsGame('<div class="system-message">Save failed. Please try again.</div>');
+      return true;
+    }
 
     case 'repair':
       return await handleRepairResponse(input.trim());
@@ -275,7 +293,11 @@ async function handleSaveResponse(input, saves) {
   }
 
   if (result.slotNum) {
-    respondAsGame(`<div class="system-message">Overwriting save ${result.slotNum}: ${result.targetSaveName}...</div>`);
+    pendingSaveTarget = result.targetSaveName;
+    awaitingMetaInput = 'save-confirm';
+    respondAsGame(`<div class="system-message">Overwrite save ${result.slotNum}: <b>${result.targetSaveName}</b>? (yes / no)</div>`);
+    enterSystemEntryMode('yes or no');
+    return true;
   }
 
   const { customSave } = await import('../save-manager.js');
