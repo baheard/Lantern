@@ -595,6 +595,39 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             // Show system message in game area (if requested)
             if (options.showSystemMessage && displayName) {
                 addGameText(`<div class="system-message">Game restored - ${escapeHtml(displayName)}</div>`, false);
+
+                if (window._pendingRepeatAfterRestore) {
+                    window._pendingRepeatAfterRestore = false;
+                    (async () => {
+                        const { speakAppMessage, speakTextChunked } = await import('../narration/tts-player.js');
+                        await speakAppMessage(`Game restored - ${displayName}`);
+                        // Only intervene if autoplay hasn't already started narration
+                        if (state.narrationEnabled) return;
+                        // Use the same DOM walk as the 'repeat' command fallback —
+                        // finds the last real game-text element (e.g. the LOOK response for char-mode)
+                        const lw = document.getElementById('lowerWindow');
+                        if (!lw) return;
+                        const gameTexts = [...lw.querySelectorAll('.game-text')];
+                        let targetEl = null;
+                        for (let i = gameTexts.length - 1; i >= 0; i--) {
+                            if (!gameTexts[i].querySelector('.system-message') && gameTexts[i].textContent.trim()) {
+                                targetEl = gameTexts[i];
+                                break;
+                            }
+                        }
+                        if (!targetEl) return;
+                        state.chunksValid = false;
+                        state.narrationChunks = [];
+                        state.currentGameTextElement = targetEl;
+                        const { ensureChunksReady } = await import('../ui/game-output.js');
+                        if (ensureChunksReady() && state.narrationChunks.length > 0) {
+                            state.narrationEnabled = true;
+                            state.isPaused = false;
+                            state.currentChunkIndex = 0;
+                            speakTextChunked(null, 0);
+                        }
+                    })();
+                }
             }
 
             // Update status (if provided)

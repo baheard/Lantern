@@ -91,57 +91,11 @@ async function handleGameOutput(text) {
   // properly with a 50ms delay to let the old loop exit cleanly
   state.pendingNarrationText = text;
 
-  // Re-enable autoplay if it was on before a restore reload
-  if (window._pendingRestoreAutoplay) {
-    window._pendingRestoreAutoplay = false;
-    state.autoplayEnabled = true;
-  }
-
-  // After a restore: speak the app message ("Game restored - name") then the last visible game text
-  if (window._pendingReadLastChunk) {
-    window._pendingReadLastChunk = false;
-    state.narrationEnabled = true;
-    state.isPaused = false;
-
-    const lowerWindow = document.getElementById('lowerWindow');
-    const currentEl = state.currentGameTextElement;
-    if (lowerWindow) {
-      const allGameTexts = [...lowerWindow.querySelectorAll('.game-text')];
-      const startIdx = currentEl ? allGameTexts.indexOf(currentEl) : allGameTexts.length - 1;
-      const searchFrom = startIdx >= 0 ? startIdx : allGameTexts.length - 1;
-
-      // Find and speak the restore system message (search from currentEl backwards)
-      for (let i = searchFrom; i >= 0; i--) {
-        const sysMsg = allGameTexts[i].querySelector('.system-message');
-        if (sysMsg) {
-          const html = sysMsg.innerHTML.replace(/<br\s*\/?>/gi, '. ');
-          const tmp = document.createElement('div');
-          tmp.innerHTML = html;
-          const msgText = tmp.textContent.trim();
-          if (msgText) speakAppMessage(msgText); // sets appVoicePromise; speakTextChunked awaits it
-          break;
-        }
-      }
-
-      // Then find the last non-system-message game-text (include currentEl in case VM re-described after restore)
-      let targetEl = null;
-      for (let i = searchFrom; i >= 0; i--) {
-        if (!allGameTexts[i].querySelector('.system-message') && allGameTexts[i].textContent.trim()) {
-          targetEl = allGameTexts[i];
-          break;
-        }
-      }
-      if (targetEl) {
-        state.chunksValid = false;
-        state.narrationChunks = [];
-        state.currentGameTextElement = targetEl;
-        if (ensureChunksReady() && state.narrationChunks.length > 0) {
-          const lastIdx = state.narrationChunks.length - 1;
-          state.currentChunkIndex = lastIdx;
-          speakTextChunked(null, lastIdx);
-        }
-      }
-    }
+  // Suppress the intro-text update that fires before restore completes on page-reload restores.
+  // autoplayEnabled was set in initApp(); addGameText auto-speaks the "Game restored" message,
+  // and normal autoplay handles the subsequent LOOK response (char-mode games).
+  if (window._suppressFirstNarration) {
+    window._suppressFirstNarration = false;
     return;
   }
 
@@ -1026,9 +980,12 @@ async function initApp() {
     sessionStorage.removeItem('iftalk_restore_ui_state');
     try {
       const ui = JSON.parse(savedUiState);
-      if (ui.autoplayEnabled) window._pendingRestoreAutoplay = true;
+      if (ui.autoplayEnabled) {
+        state.autoplayEnabled = true;
+        window._suppressFirstNarration = true;  // suppress intro text on the page-reload update
+      }
       if (ui.micUnmuted) window._pendingRestoreMic = true;
-      if (ui.readLastChunk) window._pendingReadLastChunk = true;
+      window._pendingRepeatAfterRestore = true;  // speak app message + read section after restore
     } catch (e) {}
   }
 

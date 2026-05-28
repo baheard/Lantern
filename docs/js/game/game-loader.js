@@ -47,10 +47,13 @@ export async function startGame(gamePath, onOutput) {
     // Update UI for game context (refresh voice dropdowns, inject sync button)
     reloadSettingsForGame();
 
-    // Always start with autoplay OFF - user must click play to start narration
-    state._loadingAutoplay = true;
-    state.autoplayEnabled = false;
-    state._loadingAutoplay = false;
+    // Always start with autoplay OFF — unless this is a page-reload restore,
+    // which sets autoplayEnabled in initApp() and needs it preserved.
+    if (!window._suppressFirstNarration) {
+      state._loadingAutoplay = true;
+      state.autoplayEnabled = false;
+      state._loadingAutoplay = false;
+    }
 
     // Activate keep awake if enabled (requires user gesture - game click qualifies)
     activateIfEnabled();

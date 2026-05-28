@@ -297,7 +297,8 @@ export function addGameText(text, isCommand = false, isVoiceCommand = false, isA
     state.currentChunkStartTime = 0;
 
     // Auto-narrate system messages using app voice (only if narration is active)
-    if (isSystemMessage && (state.isNarrating || state.autoplayEnabled)) {
+    // Skip if _pendingRepeatAfterRestore — performRestore will speak + chain section narration itself
+    if (isSystemMessage && (state.isNarrating || state.autoplayEnabled) && !window._pendingRepeatAfterRestore) {
       // Speak system message
       (async () => {
         const { speakAppMessage } = await import('../narration/tts-player.js');

@@ -70,17 +70,13 @@ export const voiceCommandHandlers = {
     state.narrationEnabled = true;
     state.isPaused = false;
 
-    // Find last non-app-voice chunk in current chunks
+    // Repeat the whole current section from the beginning
     if (state.narrationChunks.length > 0) {
-      let idx = Math.min(state.currentChunkIndex, state.narrationChunks.length - 1);
-      while (idx > 0 && state.narrationChunks[idx]?.voice === 'app') idx--;
-      if (state.narrationChunks[idx]?.voice !== 'app') {
-        speakTextChunked(null, idx);
-        return;
-      }
+      speakTextChunked(null, 0);
+      return;
     }
 
-    // Fallback: chunks are empty or all app-voice (e.g. right after restore).
+    // Fallback: chunks are empty (e.g. right after restore).
     // Find the last non-system-message game-text in the DOM and build chunks from it.
     const lw = document.getElementById('lowerWindow');
     if (!lw) return;
@@ -99,9 +95,8 @@ export const voiceCommandHandlers = {
     state.currentGameTextElement = targetEl;
     const { ensureChunksReady } = await import('../ui/game-output.js');
     if (ensureChunksReady() && state.narrationChunks.length > 0) {
-      const idx = state.narrationChunks.length - 1;
-      state.currentChunkIndex = idx;
-      speakTextChunked(null, idx);
+      state.currentChunkIndex = 0;
+      speakTextChunked(null, 0);
     }
   },
   back: () => {
