@@ -55,6 +55,7 @@ import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, a
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 import { initPWA } from './utils/pwa-updater.js';
+import { scrollToBottom } from './utils/scroll.js';
 
 // PWA: service worker, update notification, install prompt, standalone detection.
 initPWA();
@@ -162,9 +163,12 @@ function initViewport() {
   }
 
   window.addEventListener('orientationchange', () => {
+    // Skip scroll-position pinning on rotation — layout changes too much; just go to bottom
+    window.skipBottomLinePinning = true;
     setMobileViewportHeight();
-    // Restart voice recognition after orientation change (can terminate recognition)
     setTimeout(() => {
+      scrollToBottom();
+      // Restart voice recognition after orientation change (can terminate recognition)
       if (state.listeningEnabled && state.recognition && !state.isRecognitionActive) {
         try {
           state.recognition.start();

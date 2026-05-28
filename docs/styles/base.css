@@ -46,6 +46,7 @@ label,
 
 html {
   font-size: var(--html-font-size);
+  background: var(--bg-primary);
 }
 
 body {
