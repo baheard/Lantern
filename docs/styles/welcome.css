@@ -17,6 +17,7 @@
 @media (display-mode: standalone) {
   .welcome {
     padding-top: 8px;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
