@@ -150,7 +150,7 @@ export function openNodeSheet(node) {
     badge.textContent = 'Your location';
     badge.className = 'sheet-node-badge user';
   } else {
-    badge.textContent = 'Auto-mapped';
+    badge.textContent = '';
     badge.className = 'sheet-node-badge auto';
   }
 

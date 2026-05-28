@@ -82,6 +82,7 @@ const COMMON_VERBS = [
   'listen', 'smell', 'taste',
   'eat', 'drink',
   'wear', 'remove',
+  'throw', 'fill',
   'give',
   'talk', 'ask', 'tell', 'say',
   'wait', 'z',

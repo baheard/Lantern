@@ -58,7 +58,7 @@ const INSTANT_NO_WAIT = [
  */
 const INSTANT_COMMANDS = [
   // App navigation commands (most important!)
-  'play', 'pause', 'resume',
+  'pause', 'resume',  // 'play' removed — conflicts with "playing" mid-sentence
   'skip', 'end',  // "back" moved to patterns, "stop" and "repeat" moved to no-wait list
   'mute',
   'status',
