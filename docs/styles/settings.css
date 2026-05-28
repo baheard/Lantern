@@ -85,14 +85,6 @@
   color: var(--text-primary);
 }
 
-.settings-subtitle {
-  padding: 6px 20px 0;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 /* All icons in settings panel use accent-warm */
 .settings-panel .material-icons {
   color: var(--accent-warm);
