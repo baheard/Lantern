@@ -141,6 +141,10 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
         clearTimeout(startTimeout);
         startTimeout = null;
       }
+      if (state.narrationT0) {
+        console.log(`[TTS:timing] browser TTS onstart: ${(performance.now() - state.narrationT0).toFixed(0)}ms from handleGameOutput`);
+        state.narrationT0 = null;
+      }
     };
 
     utterance.onend = () => {
@@ -264,10 +268,11 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
   state.isPaused = false;
   state.isNarrating = true;
 
-  // Kick off fetch for the first chunk immediately — before RAF delays, highlights,
-  // and nav-button updates — so all chunk fetches overlap with setup work.
+  // Prefetch chunks 1+ early so their fetches overlap with chunk 0 streaming.
+  // Chunk 0 is intentionally skipped here — it goes through playStreamingFromOpenAI
+  // directly, giving ~300ms first-byte latency instead of waiting for a full blob.
   if (isOpenAITTSEnabled()) {
-    for (let j = startFromIndex; j < state.narrationChunks.length; j++) {
+    for (let j = startFromIndex + 1; j < state.narrationChunks.length; j++) {
       const c = state.narrationChunks[j];
       const v = typeof c === 'object' ? c.voice : 'narrator';
       if (v !== 'app') prefetchOpenAIChunk(typeof c === 'string' ? c : c.text, getChunkSpeedModifier(j));

@@ -37,10 +37,9 @@ For novel text (new room, never visited), even with prefetch there's an irreduci
 OpenAI TTS is **BYOK and billed to the user's own API key** at $15/million chars (tts-1). Every API call costs real money. Design decisions must prioritize minimizing API calls:
 
 - **Cache hits are free** — persistent Cache API means second visits to any room cost nothing.
-- **Duplicate fetches are waste** — the current duplicate-fetch bug on chunk 0 (first visit) burns ~2× the tokens for every room entered in autoplay. Fix this before shipping.
+- **Duplicate fetches prevented (v1.5.379)** — `pendingFetches: Map<cacheKey, Promise<Blob>>` in `openai-tts.js`. Prefetch registers its in-flight promise; `playWithOpenAITTS` awaits it instead of streaming. One API call per chunk regardless of path. Verified: 4-chunk session fires exactly 4 calls.
 - **Prefetch is speculative cost** — prefetching chunks the user never plays wastes money. Only prefetch if narration is active or likely (autoplay mode). Don't prefetch on manual-play unless the user already pressed play.
 - **`sessionChars` only counts API calls** (cache misses), not cache hits. This is the right metric to show the user.
-- **Token-saving priority order:** (1) deduplication Map to prevent double-fetching, (2) early prefetch only in active autoplay, (3) cache hit rate (already good after first visit).
 
 ## Cost tracking
 
@@ -54,6 +53,11 @@ OpenAI TTS is **BYOK and billed to the user's own API key** at $15/million chars
 - `onpause` when `state.isPaused || !state.isNarrating` (user-requested stop via `stopNarration()`): does not set the flag.
 
 The outer loop in `speakTextChunked` reads `chunkWasInterrupted` and retries the current chunk after 100ms — the same iOS recovery path used by browser TTS. **Do not clear `chunkWasInterrupted` in `tts-player.js` after OpenAI playback** — that was the original bug; let `playBlob` own it.
+
+**Chrome fires `pause` before `ended` at natural completion (v1.5.378):** This affects BOTH `playBlob` and `playStreamingFromOpenAI`. When audio reaches its natural end, Chrome sets `audio.ended = true` and then fires `pause` before firing `ended`. Without guards, `onpause` falsely sets `chunkWasInterrupted = true`, causing every cached chunk to retry. Fix:
+- `playBlob.onpause`: `if (audio.ended) return;` — `audio.ended` is already `true` when the spurious pause fires.
+- `playStreamingFromOpenAI.onpause`: `if (streamEnded) return;` — same pattern, `streamEnded` flag set when `ms.endOfStream()` is called.
+- A `naturalEnd` boolean set in `onended` does NOT work — `onpause` fires before `onended`, so the flag is always false when you need it.
 
 **Buffer stall vs real pause (v1.5.374):** `playStreamingFromOpenAI` tracks a `isBufferStall` flag via `waiting`/`playing` events. A `pause` event while `isBufferStall = true` is ignored — the browser paused due to the SourceBuffer running out of data mid-stream, and the reader loop's next `appendBuffer` will resume it via a `canplay` handler. Without this, any mid-stream buffer underrun (slow network) triggered the retry loop, causing infinite looping on that chunk.
 
@@ -74,24 +78,42 @@ app.js:115     handleGameOutput → speakTextChunked()
 tts-player.js  await stopNarration()
                await sleep(50)                  ← ~50ms wait (almost always paid in autoplay)
                ensureChunksReady()
-               prefetchOpenAIChunk(chunk 0..N)  ← OpenAI fetch starts HERE
+               prefetchOpenAIChunk(chunk 1..N)  ← chunks 1+ prefetched; chunk 0 intentionally skipped
                [2 RAF frames ~33ms]
                playWithOpenAITTS(chunk 0)
-                 getCachedBlob → miss (prefetch not done)
-                 playStreamingFromOpenAI        ← second OpenAI fetch starts HERE
-                 first byte arrives 1–3s later → playback starts
+                 getCachedBlob → hit  → playBlob()               ← ~35ms e2e (second visit)
+                 getCachedBlob → miss → playStreamingFromOpenAI() ← ~2s e2e (first visit, short text)
+               playWithOpenAITTS(chunk 1)
+                 pendingFetches.has(key) → true  ← awaits in-flight promise from prefetch
+                 blob arrives → playBlob()
 ```
 
 `s.onTextOutput` = `handleGameOutput`, wired via `initGameSelection(handleGameOutput)` in `app.js:478`.
 
-**The 50ms wait is the main recoverable gap.** In autoplay, narration is almost always active when a new command is entered, so `stopNarration() + sleep(50)` is almost always paid. The prefetch could fire ~50ms earlier if triggered directly in `handleGameOutput` (before `speakTextChunked`), since the DOM is already updated by `addGameText` at that point.
+## Measured latency benchmarks (2026-05-29, Anchorhead/Kitchen, Chrome desktop)
 
-**Optimization: early prefetch in `handleGameOutput`**
-Call `ensureChunksReady()` + `prefetchOpenAIChunk` for chunk 0 inside `handleGameOutput`, before `speakTextChunked`. Saves ~50ms. `ensureChunksReady()` is already imported in `app.js`. This is safe: `ensureChunksReady` is idempotent (guards on `chunksValid`), and `speakTextChunked` will call it again harmlessly.
+| Path | e2e latency (handleGameOutput → audio) |
+|---|---|
+| AI TTS — cache hit | 32–40ms |
+| Browser TTS | 68ms |
+| AI TTS — uncached, short text ("Kitchen") | ~2s (full API round-trip, no streaming benefit) |
+| AI TTS — uncached, long text | ~300–500ms first-byte via MediaSource streaming |
 
-**Duplicate fetch problem (not yet fixed, HIGH PRIORITY — costs real money):** Both the early prefetch and `speakTextChunked`'s own prefetch loop check `getCachedBlob` and both find a miss ~simultaneously, so two parallel OpenAI requests fire for the same chunk 0 text. Fix requires a `pendingFetches: Map<cacheKey, Promise<Blob>>` deduplication layer in `openai-tts.js`. This is not theoretical — every autoplay command currently fires a duplicate request for chunk 0 on first visit.
+**Cache hit is faster than browser TTS.** 32–40ms vs 68ms — because `audio.play()` on a pre-fetched blob resolves immediately, while browser TTS `onstart` waits for the synthesizer.
 
-**The hard ceiling:** OpenAI API round trip is ~1–3s. No amount of early prefetching beats that for first-visit novel text. The streaming path (`playStreamingFromOpenAI`) already starts playback at first byte (~100–300ms into the response), which is the best achievable latency for cache misses. Second visits are instant (cache hit via `playBlob`).
+**Short text kills streaming benefit.** "Kitchen" is one word — the entire MP3 arrives in a single HTTP read so MediaSource streaming fires at the same time as a full blob fetch (~2s). Streaming only helps on long chunks where first bytes arrive well before the full response.
+
+**The 50ms wait is the remaining recoverable gap.** In autoplay, narration is almost always active when a new command is entered, so `stopNarration() + sleep(50)` is almost always paid. The prefetch fires ~50ms later than it could.
+
+**Early prefetch blocker:** Firing `prefetchOpenAIChunk` earlier (in `handleGameOutput`) requires `ensureChunksReady()` to get correct chunk boundaries and speed modifiers. But `ensureChunksReady` starts by removing ALL `.chunk-marker-start/.chunk-marker-end` elements from the DOM. While old narration is active, those markers drive text highlighting — removing them mid-narration would break it. Safe only when `!state.isNarrating`, which is rare in autoplay.
+
+## Chunk 0 streaming vs chunk 1+ pendingFetches (v1.5.381)
+
+**Chunk 0 is intentionally NOT prefetched.** The early-fetch loop in `speakTextChunked` starts at `startFromIndex + 1`. This lets chunk 0 fall through to `playStreamingFromOpenAI` directly, giving first-byte audio as soon as OpenAI starts responding rather than waiting for the complete blob.
+
+**Why chunk 0 was accidentally broken (v1.5.379):** The dedup fix registered ALL chunks (including chunk 0) in `pendingFetches` via `prefetchOpenAIChunk`. By the time `playWithOpenAITTS` ran 2 RAF frames later, `pendingFetches` already had chunk 0 — forcing the `await pendingFetches.get(key)` (full blob) path. The streaming branch at the bottom of `playWithOpenAITTS` became unreachable. Fixed in v1.5.381 by starting the prefetch loop at `startFromIndex + 1`.
+
+**Chunks 1+ use pendingFetches/blob intentionally.** Their prefetch fires ~23ms into the session and runs in parallel with chunk 0 streaming/playback. If the prefetch completes before chunk 0 finishes playing → instant transition. If not → waits for blob. No streaming for chunk 1+ currently; adding it would require changing `pendingFetches` to hold a streamable response rather than a blob promise.
 
 ## Text chunking for long inputs
 
