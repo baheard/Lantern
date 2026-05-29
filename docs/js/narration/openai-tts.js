@@ -419,6 +419,31 @@ export function updateCostDisplay() {
     : `≈ $${cost.toFixed(3)} this session`;
 }
 
+/**
+ * Validate an API key by making a minimal TTS request (2 chars ≈ $0.00003).
+ * Throws with a user-facing message if the key is invalid or lacks TTS access.
+ */
+export async function validateOpenAIKey(apiKey) {
+  const response = await fetch(OPENAI_TTS_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ model: 'tts-1', voice: 'fable', input: 'Hi', response_format: 'mp3' })
+  });
+  if (!response.ok) {
+    let msg = `Error ${response.status}`;
+    try {
+      const body = await response.json();
+      msg = body?.error?.message || msg;
+    } catch (_) {}
+    if (response.status === 401) throw new Error('Invalid API key');
+    if (response.status === 429) throw new Error('Rate limited — try again shortly');
+    throw new Error(msg);
+  }
+}
+
 export async function testOpenAITTS() {
   const cfg = state.openAiTtsConfig;
   if (!cfg?.apiKey) throw new Error('No API key');

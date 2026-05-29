@@ -366,11 +366,16 @@
 
           <!-- AI Narration (OpenAI TTS) -->
           <div class="setting-item setting-divider-top">
-            <label>
-              AI Narration (OpenAI)
-              <input type="checkbox" id="openaiTtsToggle" class="toggle-switch">
-            </label>
-            <p class="setting-description">Higher-quality voices using your own OpenAI API key. <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get a key</a> — add a <a href="https://platform.openai.com/account/limits" target="_blank" rel="noopener">spending limit</a> first. Cost: ~$0.015 per 1,000 characters.</p>
+            <div id="openaiSetupRow">
+              <button id="openaiSetupBtn" class="setup-feature-btn">Set Up AI Narration →</button>
+              <p class="setting-description">Higher-quality voices using your own OpenAI API key. <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get a key</a> — add a <a href="https://platform.openai.com/account/limits" target="_blank" rel="noopener">spending limit</a> first. See <a href="https://openai.com/api/pricing/" target="_blank" rel="noopener">current pricing</a>.</p>
+            </div>
+            <div id="openaiToggleRow" style="display:none">
+              <label>
+                AI Narration (OpenAI)
+                <input type="checkbox" id="openaiTtsToggle" class="toggle-switch">
+              </label>
+            </div>
           </div>
 
           <div id="openaiTtsSettings" class="openai-tts-settings" style="display:none">

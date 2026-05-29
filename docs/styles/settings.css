@@ -1417,6 +1417,26 @@ body.voice-controls-hidden #settings-btn {
   margin-top: 4px;
 }
 
+.setup-feature-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.setup-feature-btn:hover {
+  background: var(--accent-hover, color-mix(in srgb, var(--accent-primary) 85%, #000));
+}
+
 .openai-tts-settings {
   padding-left: 8px;
   border-left: 2px solid var(--accent-primary);

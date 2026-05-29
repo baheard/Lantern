@@ -11,7 +11,7 @@ import { getItem } from '../../utils/storage/storage-api.js';
 // save-manager imported dynamically in initSaveHandlers to break the circular dep:
 // settings-panel → save-manager → game-output → tts-player → settings/index → settings-panel
 import { showBackupSavesDialog } from '../backup-saves-dialog.js';
-import { loadOpenAITTSConfig, saveOpenAITTSConfig, testOpenAITTS } from '../../narration/openai-tts.js';
+import { loadOpenAITTSConfig, saveOpenAITTSConfig, testOpenAITTS, validateOpenAIKey } from '../../narration/openai-tts.js';
 
 // Element to return focus to when the panel closes (typically the trigger button)
 let lastFocusedBeforeOpen = null;
@@ -200,6 +200,9 @@ function initOpenAITTSSettings() {
   loadOpenAITTSConfig();
   const cfg = state.openAiTtsConfig || {};
 
+  const setupRow = document.getElementById('openaiSetupRow');
+  const toggleRow = document.getElementById('openaiToggleRow');
+  const setupBtn = document.getElementById('openaiSetupBtn');
   const toggle = document.getElementById('openaiTtsToggle');
   const settingsDiv = document.getElementById('openaiTtsSettings');
   const apiKeyInput = document.getElementById('openaiApiKey');
@@ -211,15 +214,23 @@ function initOpenAITTSSettings() {
   const speedValue = document.getElementById('openaiSpeedValue');
   const modelSelect = document.getElementById('openaiModelSelect');
 
-  if (!toggle) return;
+  if (!setupRow) return;
 
-  // Restore saved state
+  // Restore saved state — show setup button or toggle depending on whether a key exists
   const hasKey = !!(cfg.apiKey);
-  toggle.checked = !!(cfg.enabled && hasKey);
-  if (settingsDiv) settingsDiv.style.display = toggle.checked ? 'block' : 'none';
-  if (apiKeyStatus && hasKey) {
-    const last4 = cfg.apiKey.slice(-4);
-    apiKeyStatus.textContent = `Key saved (…${last4}). Stored only in your browser.`;
+  if (hasKey) {
+    setupRow.style.display = 'none';
+    if (toggleRow) toggleRow.style.display = '';
+    if (toggle) toggle.checked = !!(cfg.enabled);
+    if (settingsDiv) settingsDiv.style.display = toggle?.checked ? 'block' : 'none';
+    if (apiKeyStatus) {
+      const last4 = cfg.apiKey.slice(-4);
+      apiKeyStatus.textContent = `Key saved (…${last4}). Stored only in your browser.`;
+    }
+  } else {
+    setupRow.style.display = '';
+    if (toggleRow) toggleRow.style.display = 'none';
+    if (settingsDiv) settingsDiv.style.display = 'none';
   }
   if (voiceSelect && cfg.voice) voiceSelect.value = cfg.voice;
   if (speedSlider && cfg.speed) {
@@ -228,25 +239,30 @@ function initOpenAITTSSettings() {
   }
   if (modelSelect && cfg.model) modelSelect.value = cfg.model;
 
-  // Toggle: show/hide sub-settings and browser voice controls
-  toggle.addEventListener('change', (e) => {
-    const enabled = e.target.checked;
-    if (settingsDiv) settingsDiv.style.display = enabled ? 'block' : 'none';
-    if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
-    state.openAiTtsConfig.enabled = enabled;
-    saveOpenAITTSConfig();
-    updateAudioSettingsVisibility();
-    if (enabled) {
-      const hasKey = !!(state.openAiTtsConfig?.apiKey);
-      updateStatus(hasKey ? '✓ AI narration enabled' : '⚠ AI narration on — save an API key to activate');
-    } else {
-      updateStatus('✗ AI narration disabled — using device voice');
-    }
-  });
+  // Setup button: open the key-entry form
+  if (setupBtn) {
+    setupBtn.addEventListener('click', () => {
+      if (settingsDiv) settingsDiv.style.display = 'block';
+      if (apiKeyInput) apiKeyInput.focus();
+    });
+  }
 
-  // Save API key
+  // Toggle: show/hide sub-settings
+  if (toggle) {
+    toggle.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      if (settingsDiv) settingsDiv.style.display = enabled ? 'block' : 'none';
+      if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
+      state.openAiTtsConfig.enabled = enabled;
+      saveOpenAITTSConfig();
+      updateAudioSettingsVisibility();
+      updateStatus(enabled ? '✓ AI narration enabled' : '✗ AI narration disabled — using device voice');
+    });
+  }
+
+  // Save API key — validate against OpenAI before accepting
   if (apiKeySaveBtn) {
-    apiKeySaveBtn.addEventListener('click', () => {
+    apiKeySaveBtn.addEventListener('click', async () => {
       const key = apiKeyInput?.value?.trim();
       if (!key) {
         updateStatus('Enter your OpenAI API key first');
@@ -256,15 +272,34 @@ function initOpenAITTSSettings() {
         updateStatus('Key should start with sk-');
         return;
       }
+      apiKeySaveBtn.disabled = true;
+      apiKeySaveBtn.textContent = 'Checking…';
+      updateStatus('Validating key…');
+      try {
+        await validateOpenAIKey(key);
+      } catch (err) {
+        apiKeySaveBtn.disabled = false;
+        apiKeySaveBtn.textContent = 'Save';
+        updateStatus(`⚠ ${err.message}`);
+        return;
+      }
+      apiKeySaveBtn.disabled = false;
+      apiKeySaveBtn.textContent = 'Save';
       if (!state.openAiTtsConfig) state.openAiTtsConfig = {};
       state.openAiTtsConfig.apiKey = key;
+      state.openAiTtsConfig.enabled = true;
       saveOpenAITTSConfig();
       if (apiKeyInput) apiKeyInput.value = '';
       if (apiKeyStatus) {
         const last4 = key.slice(-4);
         apiKeyStatus.textContent = `Key saved (…${last4}). Stored only in your browser.`;
       }
-      updateStatus('✓ API key saved');
+      // Swap from setup button to toggle, auto-enabled; settings div stays open
+      setupRow.style.display = 'none';
+      if (toggleRow) toggleRow.style.display = '';
+      if (toggle) toggle.checked = true;
+      updateAudioSettingsVisibility();
+      updateStatus('✓ AI narration enabled');
     });
   }
 
