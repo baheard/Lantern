@@ -170,9 +170,11 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
     const ms = new MediaSource();
     const url = URL.createObjectURL(ms);
     const audio = new Audio(url);
-    URL.revokeObjectURL(url); // Safe once audio.src is set; MediaSource stays alive via audio element
+    // Do NOT revoke url here — Safari needs it valid until sourceopen fires.
+    // Revoked in finish()/onerror once we're truly done.
     state.currentAudio = audio;
     let settled = false;
+    let streamEnded = false; // True once ms.endOfStream() has been called
     let reader = null;
 
     const finish = (interrupted = false) => {
@@ -180,16 +182,25 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
       settled = true;
       if (interrupted) state.chunkWasInterrupted = true;
       if (reader) reader.cancel();
+      URL.revokeObjectURL(url);
       if (state.currentAudio === audio) state.currentAudio = null;
       resolve();
     };
 
     audio.onended = () => finish(false);
-    audio.onpause = () => finish(state.isNarrating && !state.isPaused);
+
+    audio.onpause = () => {
+      if (settled) return;
+      if (streamEnded) return; // Browser fires pause before ended after endOfStream() — ignore
+      if (audio.currentTime === 0 && !state.isPaused) return; // Pre-play buffer-empty stall — ignore
+      finish(state.isNarrating && !state.isPaused);
+    };
+
     audio.onerror = () => {
       if (settled) return;
       settled = true;
       if (reader) reader.cancel();
+      URL.revokeObjectURL(url);
       if (state.currentAudio === audio) state.currentAudio = null;
       reject(new Error('Audio playback error'));
     };
@@ -200,16 +211,17 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
 
       (async () => {
         try {
+          let playStarted = false;
           while (true) {
             const { done, value } = await reader.read();
             if (settled) break;
 
             if (done) {
-              // Wait for any in-progress append before signalling end
               if (sb.updating) {
                 await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
               }
               if (!settled) {
+                streamEnded = true;
                 ms.endOfStream();
                 storeInCache(cacheKey, new Blob(collectedChunks, { type: 'audio/mpeg' })).catch(() => {});
               }
@@ -220,26 +232,38 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
             if (sb.updating) {
               await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
             }
-            if (!settled) sb.appendBuffer(value);
+            if (settled) break;
+            sb.appendBuffer(value);
+
+            // Start playback after the first chunk is committed to the SourceBuffer.
+            // Calling play() before any data is buffered causes Chrome to stall/pause,
+            // which triggers our interruption-recovery loop.
+            if (!playStarted) {
+              playStarted = true;
+              await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
+              if (!settled) {
+                audio.play().catch(err => {
+                  if (!settled) {
+                    settled = true;
+                    if (reader) reader.cancel();
+                    URL.revokeObjectURL(url);
+                    if (state.currentAudio === audio) state.currentAudio = null;
+                    reject(err);
+                  }
+                });
+              }
+            }
           }
         } catch (err) {
           if (!settled) {
             settled = true;
             if (reader) reader.cancel();
+            URL.revokeObjectURL(url);
             if (state.currentAudio === audio) state.currentAudio = null;
             reject(err);
           }
         }
       })();
-
-      audio.play().catch(err => {
-        if (!settled) {
-          settled = true;
-          if (reader) reader.cancel();
-          if (state.currentAudio === audio) state.currentAudio = null;
-          reject(err);
-        }
-      });
     });
   });
 }
