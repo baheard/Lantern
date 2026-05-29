@@ -2,7 +2,7 @@
 title: OpenAI TTS Pipeline & Caching
 tags: [narration, tts, openai, cache, prefetch, performance]
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-05-29
 aliases: [openai-tts, tts-cache, prefetch pipeline, AI TTS latency]
 ---
 
@@ -32,6 +32,16 @@ The design is fire-and-forget prefetch so network round-trips overlap with playb
 
 For novel text (new room, never visited), even with prefetch there's an irreducible OpenAI API round-trip (~0.5–2 s). This is most noticeable on long chunks because the gap between "got the short header audio" and "need the long body audio" is small. Caching means second visits are instant.
 
+## API cost — this is real money
+
+OpenAI TTS is **BYOK and billed to the user's own API key** at $15/million chars (tts-1). Every API call costs real money. Design decisions must prioritize minimizing API calls:
+
+- **Cache hits are free** — persistent Cache API means second visits to any room cost nothing.
+- **Duplicate fetches are waste** — the current duplicate-fetch bug on chunk 0 (first visit) burns ~2× the tokens for every room entered in autoplay. Fix this before shipping.
+- **Prefetch is speculative cost** — prefetching chunks the user never plays wastes money. Only prefetch if narration is active or likely (autoplay mode). Don't prefetch on manual-play unless the user already pressed play.
+- **`sessionChars` only counts API calls** (cache misses), not cache hits. This is the right metric to show the user.
+- **Token-saving priority order:** (1) deduplication Map to prevent double-fetching, (2) early prefetch only in active autoplay, (3) cache hit rate (already good after first visit).
+
 ## Cost tracking
 
 `sessionChars` accumulates in memory for the life of the page. `getSessionCost()` returns `sessionChars / 1_000_000 * 15.00` (tts-1 pricing as of 2026). **Only incremented on actual API calls (cache miss), not on Cache API hits.** This is correct for same-session re-plays; it does not charge for cross-session cache hits that were already paid for in an earlier session.
@@ -52,6 +62,36 @@ The outer loop in `speakTextChunked` reads `chunkWasInterrupted` and retries the
 ## Error fallback
 
 If `playWithOpenAITTS` throws (network error, 429, 401), `speakTextChunked` falls back to `playWithBrowserTTS` for that chunk and shows a status message. Narration continues uninterrupted in degraded mode. A persistent API outage degrades gracefully rather than silently dropping all remaining chunks.
+
+## Autoplay chain and first-chunk latency
+
+**The full autoplay flow (every command in autoplay mode):**
+
+```
+voxglk.js:399  addGameText(mainWindowHTML)      ← DOM updated, currentGameTextElement set
+voxglk.js:467  s.onTextOutput(finalTextForTTS)  ← same sync block, calls handleGameOutput
+app.js:115     handleGameOutput → speakTextChunked()
+tts-player.js  await stopNarration()
+               await sleep(50)                  ← ~50ms wait (almost always paid in autoplay)
+               ensureChunksReady()
+               prefetchOpenAIChunk(chunk 0..N)  ← OpenAI fetch starts HERE
+               [2 RAF frames ~33ms]
+               playWithOpenAITTS(chunk 0)
+                 getCachedBlob → miss (prefetch not done)
+                 playStreamingFromOpenAI        ← second OpenAI fetch starts HERE
+                 first byte arrives 1–3s later → playback starts
+```
+
+`s.onTextOutput` = `handleGameOutput`, wired via `initGameSelection(handleGameOutput)` in `app.js:478`.
+
+**The 50ms wait is the main recoverable gap.** In autoplay, narration is almost always active when a new command is entered, so `stopNarration() + sleep(50)` is almost always paid. The prefetch could fire ~50ms earlier if triggered directly in `handleGameOutput` (before `speakTextChunked`), since the DOM is already updated by `addGameText` at that point.
+
+**Optimization: early prefetch in `handleGameOutput`**
+Call `ensureChunksReady()` + `prefetchOpenAIChunk` for chunk 0 inside `handleGameOutput`, before `speakTextChunked`. Saves ~50ms. `ensureChunksReady()` is already imported in `app.js`. This is safe: `ensureChunksReady` is idempotent (guards on `chunksValid`), and `speakTextChunked` will call it again harmlessly.
+
+**Duplicate fetch problem (not yet fixed, HIGH PRIORITY — costs real money):** Both the early prefetch and `speakTextChunked`'s own prefetch loop check `getCachedBlob` and both find a miss ~simultaneously, so two parallel OpenAI requests fire for the same chunk 0 text. Fix requires a `pendingFetches: Map<cacheKey, Promise<Blob>>` deduplication layer in `openai-tts.js`. This is not theoretical — every autoplay command currently fires a duplicate request for chunk 0 on first visit.
+
+**The hard ceiling:** OpenAI API round trip is ~1–3s. No amount of early prefetching beats that for first-visit novel text. The streaming path (`playStreamingFromOpenAI`) already starts playback at first byte (~100–300ms into the response), which is the best achievable latency for cache misses. Second visits are instant (cache hit via `playBlob`).
 
 ## Text chunking for long inputs
 

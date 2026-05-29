@@ -17,6 +17,10 @@ const COST_PER_MILLION_CHARS = 15.00;
 
 let sessionChars = 0;
 
+// Tracks in-flight fetch promises keyed by cache URL. Prevents duplicate API calls
+// when prefetch and playWithOpenAITTS both target the same chunk simultaneously.
+const pendingFetches = new Map();
+
 export function getSessionCost() {
   return (sessionChars / 1_000_000) * COST_PER_MILLION_CHARS;
 }
@@ -321,6 +325,8 @@ async function fetchFromOpenAI(text, voice, speed, apiKey) {
 /**
  * Prefetch audio for a future narration chunk into the cache.
  * Fire-and-forget — call while current chunk is playing so the next is ready.
+ * Registers in-flight promises in pendingFetches so playWithOpenAITTS can await
+ * them instead of firing a duplicate request.
  */
 export function prefetchOpenAIChunk(text, speedModifier = 0) {
   const cfg = state.openAiTtsConfig;
@@ -331,9 +337,19 @@ export function prefetchOpenAIChunk(text, speedModifier = 0) {
   for (const chunk of splitIntoChunks(text)) {
     (async () => {
       const key = await makeCacheKey(chunk, voice, speed);
-      if (await getCachedBlob(key)) return; // already cached
-      const blob = await fetchFromOpenAI(chunk, voice, speed, cfg.apiKey);
-      await storeInCache(key, blob);
+      if (await getCachedBlob(key)) return;  // already cached
+      if (pendingFetches.has(key)) return;   // already in-flight
+      const promise = fetchFromOpenAI(chunk, voice, speed, cfg.apiKey)
+        .then(async blob => {
+          await storeInCache(key, blob);
+          pendingFetches.delete(key);
+          return blob;
+        })
+        .catch(err => {
+          pendingFetches.delete(key);
+          throw err;
+        });
+      pendingFetches.set(key, promise);
     })().catch(() => {});
   }
 }
@@ -358,8 +374,17 @@ export async function playWithOpenAITTS(text, speedModifier = 0) {
 
     if (cachedBlob) {
       await playBlob(cachedBlob);
+    } else if (pendingFetches.has(key)) {
+      // Prefetch already in-flight — await it instead of firing a duplicate request.
+      // One API call serves both prefetch and playback.
+      console.log(`[TTS:stream] awaiting in-flight prefetch — "${chunk.slice(0, 40).replace(/\n/g, ' ')}"`);
+      const blob = await pendingFetches.get(key);
+      if ((!state.isNarrating && !state.ttsIsSpeaking) || state.isPaused) break;
+      sessionChars += chunk.length;
+      updateCostDisplay();
+      await playBlob(blob);
     } else if (supportsMediaSourceMp3()) {
-      // Stream: audio starts at first-byte (~100-300ms). Caches on completion.
+      // No prefetch in flight — stream directly. Starts playing at first-byte (~100-300ms).
       await playStreamingFromOpenAI(chunk, voice, speed, apiKey, key);
       sessionChars += chunk.length;
       updateCostDisplay();
