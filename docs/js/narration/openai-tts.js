@@ -48,7 +48,7 @@ function splitIntoChunks(text) {
       slice.lastIndexOf('? '),
       slice.lastIndexOf('\n')
     );
-    const cutAt = lastBreak > 0 ? lastBreak + 2 : MAX_CHARS;
+    const cutAt = lastBreak > 0 ? lastBreak + 1 : MAX_CHARS;
     chunks.push(remaining.slice(0, cutAt).trim());
     remaining = remaining.slice(cutAt).trim();
   }
@@ -101,15 +101,24 @@ function playBlob(blob) {
       if (state.currentAudio === audio) state.currentAudio = null;
     };
 
-    const done = () => {
+    audio.onended = () => {
       if (settled) return;
       settled = true;
       cleanup();
       resolve();
     };
 
-    audio.onended = done;
-    audio.onpause = done;   // stopNarration() calls audio.pause() — must resolve here
+    audio.onpause = () => {
+      if (settled) return;
+      settled = true;
+      // Unexpected system pause (phone call, Siri, etc.) — not a user-requested stop
+      if (state.isNarrating && !state.isPaused) {
+        state.chunkWasInterrupted = true;
+      }
+      cleanup();
+      resolve();
+    };
+
     audio.onerror = () => {
       if (settled) return;
       settled = true;
@@ -149,11 +158,11 @@ async function fetchFromOpenAI(text, voice, speed, apiKey) {
  * Prefetch audio for a future narration chunk into the cache.
  * Fire-and-forget — call while current chunk is playing so the next is ready.
  */
-export function prefetchOpenAIChunk(text) {
+export function prefetchOpenAIChunk(text, speedModifier = 0) {
   const cfg = state.openAiTtsConfig;
   if (!cfg?.apiKey || !text) return;
   const voice = cfg.voice || 'fable';
-  const speed = cfg.speed || 1.0;
+  const speed = Math.min(4.0, Math.max(0.25, (cfg.speed || 1.0) + speedModifier));
 
   for (const chunk of splitIntoChunks(text)) {
     (async () => {
@@ -167,14 +176,14 @@ export function prefetchOpenAIChunk(text) {
 
 /**
  * Speak text via OpenAI TTS.
- * Chunks long text, caches results, tracks cost.
+ * Chunks long text, caches results, tracks cost only for actual API calls.
  */
-export async function playWithOpenAITTS(text) {
+export async function playWithOpenAITTS(text, speedModifier = 0) {
   const cfg = state.openAiTtsConfig;
   if (!cfg?.apiKey) throw new Error('No OpenAI API key configured');
 
   const voice = cfg.voice || 'fable';
-  const speed = cfg.speed || 1.0;
+  const speed = Math.min(4.0, Math.max(0.25, (cfg.speed || 1.0) + speedModifier));
   const apiKey = cfg.apiKey;
 
   for (const chunk of splitIntoChunks(text)) {
@@ -186,10 +195,9 @@ export async function playWithOpenAITTS(text) {
     if (!blob) {
       blob = await fetchFromOpenAI(chunk, voice, speed, apiKey);
       await storeInCache(key, blob);
+      sessionChars += chunk.length; // Only count actual API calls, not cache hits
+      updateCostDisplay();
     }
-
-    sessionChars += chunk.length;
-    updateCostDisplay();
 
     await playBlob(blob);
   }

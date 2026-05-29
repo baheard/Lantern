@@ -216,6 +216,15 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
   });
 }
 
+function getChunkSpeedModifier(chunkIndex) {
+  const endMarker = document.querySelector(`.chunk-marker-end[data-chunk="${chunkIndex}"]`);
+  if (!endMarker?.dataset.glkClass) return 0;
+  const glkClass = endMarker.dataset.glkClass;
+  if (glkClass === 'header' || glkClass === 'subheader') return -0.1;
+  if (glkClass === 'note') return 0.1;
+  return 0;
+}
+
 /**
  * Speak text in chunks (with resume and navigation support)
  * @param {string|null} text - Unused (chunks come from state.narrationChunks)
@@ -261,7 +270,7 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     for (let j = startFromIndex; j < state.narrationChunks.length; j++) {
       const c = state.narrationChunks[j];
       const v = typeof c === 'object' ? c.voice : 'narrator';
-      if (v !== 'app') { prefetchOpenAIChunk(typeof c === 'string' ? c : c.text); break; }
+      if (v !== 'app') { prefetchOpenAIChunk(typeof c === 'string' ? c : c.text, getChunkSpeedModifier(j)); break; }
     }
   }
 
@@ -341,18 +350,19 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
         const nextChunk = state.narrationChunks[j];
         const nextVoice = typeof nextChunk === 'object' ? nextChunk.voice : 'narrator';
         if (nextVoice !== 'app') {
-          prefetchOpenAIChunk(typeof nextChunk === 'string' ? nextChunk : nextChunk.text);
+          prefetchOpenAIChunk(typeof nextChunk === 'string' ? nextChunk : nextChunk.text, getChunkSpeedModifier(j));
           break;
         }
       }
 
       try {
-        await playWithOpenAITTS(chunkText);
+        await playWithOpenAITTS(chunkText, speedModifier);
       } catch (err) {
-        updateStatus('AI TTS error: ' + err.message);
+        updateStatus('AI TTS error — falling back to device voice');
+        await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
       }
       state.ttsIsSpeaking = false;
-      state.chunkWasInterrupted = false;
+      // chunkWasInterrupted is managed by playBlob in openai-tts.js
     } else {
       await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
     }

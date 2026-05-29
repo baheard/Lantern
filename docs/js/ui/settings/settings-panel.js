@@ -236,7 +236,12 @@ function initOpenAITTSSettings() {
     state.openAiTtsConfig.enabled = enabled;
     saveOpenAITTSConfig();
     updateAudioSettingsVisibility();
-    updateStatus(enabled ? '✓ AI narration enabled' : '✗ AI narration disabled — using device voice');
+    if (enabled) {
+      const hasKey = !!(state.openAiTtsConfig?.apiKey);
+      updateStatus(hasKey ? '✓ AI narration enabled' : '⚠ AI narration on — save an API key to activate');
+    } else {
+      updateStatus('✗ AI narration disabled — using device voice');
+    }
   });
 
   // Save API key
