@@ -179,6 +179,13 @@ export async function startGame(gamePath, onOutput) {
       }
     }
 
+    // If auto-sync is enabled, check Drive for a newer autosave before loading local.
+    // This lets a save from another device appear seamlessly on first load here.
+    if (state.gdriveSyncEnabled && !skipAutoload && !pendingRestoreJson) {
+      const { checkDriveForNewerAutosave } = await import('../utils/gdrive/index.js');
+      await checkDriveForNewerAutosave(state.currentGameName);
+    }
+
     // Check for autosave - will restore after VM starts (on first update)
     const autosaveKey = `iftalk_autosave_${state.currentGameName}`;
     const hasAutosave = !skipAutoload && !pendingRestoreJson && localStorage.getItem(autosaveKey) !== null;

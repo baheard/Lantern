@@ -17,6 +17,29 @@ import {
 } from './gdrive-api.js';
 import { getDeviceInfo } from './gdrive-device.js';
 
+/**
+ * Return a human-readable label for a save localStorage key.
+ * Strips the game name so only the save type / custom name is shown.
+ * e.g. iftalk_autosave_anchorhead        → "Autosave"
+ *      iftalk_quicksave_anchorhead        → "Quicksave"
+ *      iftalk_customsave_anchorhead_slot1 → "slot1"
+ */
+function saveLabel(key, gameName) {
+  const type = key.split('_')[1];
+  if (type === 'autosave') return 'Autosave';
+  if (type === 'quicksave') return 'Quicksave';
+  if (type === 'customsave' && gameName) {
+    const prefix = `iftalk_customsave_${gameName}_`;
+    if (key.startsWith(prefix)) return key.slice(prefix.length) || 'Custom save';
+  }
+  return key.split('_').slice(3).join('_') || type || key;
+}
+
+/** Capitalize first letter of a game name for display. */
+function displayGameName(gameName) {
+  return gameName ? gameName.charAt(0).toUpperCase() + gameName.slice(1) : 'Game';
+}
+
 // Auto-sync: rate-limited upload queue (30s window)
 // First save after 30s flushes immediately; saves within the window batch until the 30s mark.
 const pendingSyncQueue = new Set();
@@ -342,12 +365,21 @@ async function flushSyncQueue() {
   localStorage.setItem('iftalk_lastSyncTime', syncTime);
 
   if (skipped.length > 0) {
-    // Drive has newer saves — this is front-and-center, not a silent skip
-    const names = skipped.map(k => k.split('_').slice(2).join('_') || k).join(', ');
-    const msg = `Auto-sync skipped (Drive is newer): ${names} — open Sync to resolve`;
+    const skippedGameName = state.currentGameName || skipped[0]?.split('_')[2] || '';
+    const bullet = skipped.map(k => `• ${saveLabel(k, skippedGameName)}`).join('\n');
+    const msg = `Auto-sync skipped (Drive is newer) — open Save Sync to resolve`;
     state.gdriveError = msg;
     updateStatus(msg, 'error');
     window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { skipped } }));
+    const { confirmDialog } = await import('../../ui/confirm-dialog.js');
+    const openSync = await confirmDialog(
+      `Drive has a newer version than your local save for:\n\n${bullet}\n\nOpen Save Sync to review and resolve.`,
+      { title: `${displayGameName(skippedGameName)} Save Conflict`, okText: 'Dismiss', cancelText: 'Open Save Sync' }
+    );
+    if (openSync === false) {
+      const { showSyncModal } = await import('../../ui/sync-modal.js');
+      showSyncModal(skippedGameName || null);
+    }
   } else if (failures.length > 0) {
     const names = failures.map(f => f.key.split('_').slice(2).join('_') || f.key).join(', ');
     const msg = `Auto-sync failed for: ${names}`;
@@ -360,6 +392,110 @@ async function flushSyncQueue() {
       updateStatus(`Auto-synced ${uploadCount} save${uploadCount !== 1 ? 's' : ''} to Drive`, 'success');
     }
     window.dispatchEvent(new CustomEvent('gdriveSyncComplete'));
+  }
+}
+
+/**
+ * Before game load, check Drive for newer saves (all types) and pull them down.
+ * Requires BOTH a newer timestamp AND a higher move count to overwrite an existing local save.
+ * If there is no local version of a save, downloads unconditionally (first time on a new device).
+ * Warns via dialog when the two signals conflict.
+ * Silently no-ops on any network/auth failure — never blocks the game load.
+ */
+export async function checkDriveForNewerAutosave(gameName) {
+  if (!state.gdriveSyncEnabled || !gameName) return;
+
+  if (!state.gdriveSignedIn) {
+    const refreshed = await silentRefresh();
+    if (!refreshed) return;
+    state.gdriveSignedIn = true;
+  }
+
+  try {
+    updateStatus('Checking Drive for newer saves…', 'processing');
+
+    const driveFiles = await listFiles();
+
+    // All saves belonging to this game across all save types
+    const gameFiles = driveFiles.filter(f => {
+      const key = filenameToLocalStorageKey(f.name);
+      return key === `iftalk_autosave_${gameName}` ||
+             key === `iftalk_quicksave_${gameName}` ||
+             key.startsWith(`iftalk_customsave_${gameName}_`);
+    });
+
+    if (gameFiles.length === 0) return;
+
+    let downloadCount = 0;
+    const conflicts = [];
+
+    for (const driveFile of gameFiles) {
+      const localKey = filenameToLocalStorageKey(driveFile.name);
+      const localDataStr = localStorage.getItem(localKey);
+
+      if (!localDataStr) {
+        // No local version — download from Drive unconditionally
+        const driveData = await downloadFile(driveFile.name);
+        localStorage.setItem(localKey, JSON.stringify(driveData));
+        downloadCount++;
+        continue;
+      }
+
+      // Both exist — require Drive to win on BOTH signals to overwrite
+      const localData = JSON.parse(localDataStr);
+      const localTime = new Date(localData.timestamp).getTime();
+
+      const driveTime = driveFile.appProperties?.saveTimestamp
+        ? new Date(driveFile.appProperties.saveTimestamp).getTime()
+        : new Date(driveFile.modifiedTime).getTime();
+
+      const driveMoves = driveFile.appProperties?.moveCount != null
+        ? (n => isNaN(n) ? null : n)(parseInt(driveFile.appProperties.moveCount, 10))
+        : null;
+
+      const localMoves = (() => {
+        try {
+          const html = localData?.displayHTML?.statusBar || '';
+          const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
+          return m ? parseInt(m[1]) : null;
+        } catch { return null; }
+      })();
+
+      const driveTimestampNewer = driveTime > localTime + 1000;
+      const driveMoveCountHigher = driveMoves != null && localMoves != null && driveMoves > localMoves;
+
+      if (driveTimestampNewer && driveMoveCountHigher) {
+        const driveData = await downloadFile(driveFile.name);
+        localStorage.setItem(localKey, JSON.stringify(driveData));
+        downloadCount++;
+      } else if (driveTimestampNewer !== driveMoveCountHigher) {
+        // Signals conflict — one is newer by date, the other has more moves
+        conflicts.push(saveLabel(localKey, gameName));
+      }
+      // else: local wins both — skip silently, nothing to do
+    }
+
+    if (conflicts.length > 0) {
+      const bullet = conflicts.map(name => `• ${name}`).join('\n');
+      const { confirmDialog } = await import('../../ui/confirm-dialog.js');
+      const openSync = await confirmDialog(
+        `Drive has a newer date but fewer moves (or vice versa) for:\n\n${bullet}\n\nOpen Save Sync to resolve manually.`,
+        { title: `${displayGameName(gameName)} Save Conflict`, okText: 'Dismiss', cancelText: 'Open Save Sync' }
+      );
+      if (openSync === false) {
+        const { showSyncModal } = await import('../../ui/sync-modal.js');
+        showSyncModal(gameName || null);
+      }
+    }
+
+    if (downloadCount > 0) {
+      updateStatus(`Downloaded ${downloadCount} newer save${downloadCount !== 1 ? 's' : ''} from Drive`, 'success');
+    } else if (conflicts.length === 0) {
+      updateStatus('Local saves are up to date');
+    }
+
+  } catch {
+    // Never block game load on Drive check failure
   }
 }
 

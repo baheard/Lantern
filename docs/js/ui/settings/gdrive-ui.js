@@ -16,6 +16,7 @@ function updateGDriveUI() {
   const signInArea = document.getElementById('gdriveSignInArea');
   const accountArea = document.getElementById('gdriveAccountArea');
   const connectionInfo = document.getElementById('gdriveConnectionInfo');
+  const autoSyncRow = document.getElementById('gdriveAutoSyncRow');
 
   if (state.gdriveSignedIn) {
     signInArea?.classList.add('hidden');
@@ -30,6 +31,12 @@ function updateGDriveUI() {
   } else {
     signInArea?.classList.remove('hidden');
     accountArea?.classList.add('hidden');
+  }
+
+  // Auto-sync row: show whenever Drive has ever been connected (auth info available)
+  const hasDriveAuthInfo = state.gdriveSignedIn || !!localStorage.getItem('gdrive_email');
+  if (autoSyncRow) {
+    autoSyncRow.classList.toggle('hidden', !hasDriveAuthInfo);
   }
 }
 
@@ -145,9 +152,24 @@ export function initGDriveUI() {
     state.gdriveSyncEnabled = localStorage.getItem(AUTO_SYNC_KEY) === 'true';
     autoSyncToggle.checked = state.gdriveSyncEnabled;
 
-    autoSyncToggle.addEventListener('change', () => {
+    autoSyncToggle.addEventListener('change', async () => {
       state.gdriveSyncEnabled = autoSyncToggle.checked;
       localStorage.setItem(AUTO_SYNC_KEY, state.gdriveSyncEnabled);
+
+      if (state.gdriveSyncEnabled) {
+        const { confirmDialog } = await import('../confirm-dialog.js');
+        await confirmDialog(
+          'Auto-sync is now enabled. IFTalk will sync your saves with Google Drive now, and automatically after each save going forward.',
+          { title: 'Auto-Sync Enabled', okOnly: true }
+        );
+        // Immediately do a full bidirectional sync to establish parity
+        try {
+          const { syncAllNow } = await import('../../utils/gdrive/index.js');
+          await syncAllNow();
+        } catch (error) {
+          updateStatus('Initial sync failed: ' + error.message, 'error');
+        }
+      }
     });
   }
 

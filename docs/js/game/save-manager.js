@@ -404,8 +404,9 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             updateStatus(`Saved: ${displayName}`, 'success');
         }
 
-        // Auto-sync to Google Drive (if enabled and signed in)
-        if (state.gdriveSyncEnabled && state.gdriveSignedIn) {
+        // Auto-sync to Google Drive (if enabled)
+        // flushSyncQueue handles sign-in check and silent refresh
+        if (state.gdriveSyncEnabled) {
             const { scheduleDriveSync } = await import('../utils/gdrive/index.js');
             scheduleDriveSync(storageKey);
         }

@@ -197,6 +197,7 @@ function _storeToken(response) {
   fetchUserInfo().then(userInfo => {
     tokenData.email = userInfo.email;
     localStorage.setItem('gdrive_token', JSON.stringify(tokenData));
+    localStorage.setItem('gdrive_email', userInfo.email); // persists past token expiry
     state.gdriveEmail = userInfo.email;
     window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
   }).catch(() => {});
@@ -251,6 +252,12 @@ async function fetchUserInfo() {
 export async function signIn() {
   if (!tokenClient) throw new Error('Google Drive sync not initialized');
 
+  // Try silent refresh first — avoids popup flash when the Google session is still alive
+  if (!hasValidToken()) {
+    const refreshed = await silentRefresh();
+    if (refreshed) return;
+  }
+
   const tokenData = JSON.parse(localStorage.getItem('gdrive_token') || '{}');
   // Only force account selection on very first sign-in; after that go straight through
   const prompt = tokenData.email ? '' : 'select_account';
@@ -265,6 +272,7 @@ export async function signOut() {
   }
 
   localStorage.removeItem('gdrive_token');
+  localStorage.removeItem('gdrive_email');
   accessToken = null;
 
   const { clearAppFolderId } = await import('./gdrive-api.js');
