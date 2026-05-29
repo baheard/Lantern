@@ -344,12 +344,14 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     // when we process the marker that ENDS the chunk
     let speedModifier = 0;
     let pitchModifier = 0;
+    let isHeaderChunk = false;
     const endMarker = document.querySelector(`.chunk-marker-end[data-chunk="${i}"]`);
     if (endMarker && endMarker.dataset.glkClass) {
       const glkClass = endMarker.dataset.glkClass;
       if (glkClass === 'header' || glkClass === 'subheader') {
         speedModifier = -0.1;  // Slower for headers and subheaders
         pitchModifier = -0.1;  // Lower pitch for headers and subheaders
+        isHeaderChunk = true;
       } else if (glkClass === 'note') {
         speedModifier = 0.1;   // Faster for notes
       }
@@ -388,6 +390,11 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     }
 
     console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} done: ${(performance.now() - chunkT0).toFixed(0)}ms, interrupted=${state.chunkWasInterrupted}`);
+
+    // Brief pause after headers so the title lands before the body text begins
+    if (isHeaderChunk && !state.chunkWasInterrupted && state.isNarrating && !state.isPaused) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
 
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {

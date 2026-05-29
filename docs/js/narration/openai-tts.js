@@ -119,16 +119,20 @@ function playBlob(blob) {
 
     audio.onpause = () => {
       if (settled) return;
-      // Chrome fires pause before ended at natural completion; audio.ended is already true then.
-      // Same pattern as the MSE streamEnded guard in playStreamingFromOpenAI.
       if (audio.ended) return;
-      settled = true;
-      // Unexpected system pause (phone call, Siri, etc.) — not a user-requested stop
-      if (state.isNarrating && !state.isPaused) {
-        state.chunkWasInterrupted = true;
-      }
-      cleanup();
-      resolve();
+      // For very short clips (e.g. headers like "Kitchen") Chrome fires pause before
+      // audio.ended is set. Defer one tick so onended can win if it fires immediately
+      // after — that's natural completion. For real interruptions (phone call, Siri)
+      // onended never fires, so the deferred callback correctly sets chunkWasInterrupted.
+      setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        if (state.isNarrating && !state.isPaused) {
+          state.chunkWasInterrupted = true;
+        }
+        cleanup();
+        resolve();
+      }, 0);
     };
 
     audio.onerror = () => {
