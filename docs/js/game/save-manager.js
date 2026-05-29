@@ -501,6 +501,11 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             if (bufaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(bufaddr + 1, 1);   // text buffer length = 1
                 window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look
+                // Track the seeded address so sendInput() can also write the player's first
+                // real command there. After bootstrap restore, glkapi may use a different
+                // buffer address than the ZVM reads from — writing to both ensures correctness.
+                const { setSeededBufaddr } = await import('./voxglk-bootstrap.js');
+                setSeededBufaddr(bufaddr);
             }
             if (parseaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0

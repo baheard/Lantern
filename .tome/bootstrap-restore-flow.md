@@ -2,8 +2,8 @@
 title: Bootstrap Restore Flow
 tags: [zvm, save-restore, voxglk]
 created: 2026-04-26
-updated: 2026-05-09
-aliases: [auto-restore, bootstrap input, just-restored, char-bootstrap, disambiguation-mode]
+updated: 2026-05-28
+aliases: [auto-restore, bootstrap input, just-restored, char-bootstrap, disambiguation-mode, bufaddr mismatch, seededBufaddr]
 ---
 
 # Bootstrap Restore Flow
@@ -85,9 +85,21 @@ Theatre (Z5, char-mode intro) was previously re-executing stale commands from th
 
 ## Debugging heuristic
 
-**If the second command after autorestore works but the first always fails:** the bootstrap produced output that put the parser in a secondary mode (disambiguation, "what did you mean?", or similar). The suppress logic is working but the bootstrap's side effect on parser state is the problem — not the suppress itself.
+Two distinct failure modes after autorestore. Identify which before fixing.
 
-Procedure: add `console.log` in `voxglk.update()` before and after `checkSuppressUpdate` to log gen number, inputType, hasInput, suppressed, and the raw `arg.content` (as JSON, sliced to 400 chars). Three or four reloads with a first command will reveal the exact gen=2 content and confirm the parser state.
+**Mode A — first command shows room description (LOOK output) instead of executing:**
+The bootstrap 'l' seed is being re-read on the player's first command. This is the bufaddr mismatch bug (v1.5.367 fixed). The suppress IS working; the seed is the problem.
+
+Procedure: inject a runtime wrapper via `execute_console` (monkey-patch `window._voxglkInstance.update`) to log gen, inputType, hasInput, and `arg.content` (sliced to 600 chars). Then check `window.zvmInstance.read_data.bufaddr` at gen:2 PRE-SUPPRESS vs the saved `voxglkState.bufaddr`. If they differ, you have the mismatch. Also read address `savedBufaddr+2` — if it's `'l'`, the seed is still there.
+
+**Mode B — first command returns "I didn't understand" / disambiguation mode, second works:**
+The bootstrap sent empty input (char code 0 → length 0) and the parser entered a secondary mode. Check that `seededBufaddr` is being set and that `bufaddr+2 = 'l'` before the bootstrap fires.
+
+**General procedure:**
+Add `console.log` in `voxglk.update()` before `checkSuppressUpdate` logging gen, inputType, hasInput, `window.zvmInstance.read_data?.bufaddr`, and `arg.content` sliced to 500 chars. Also log in `sendInput()` before acceptCallback. Three or four reloads with a simple first command will reveal the pattern.
+
+**Testing a hypothesis via execute_console (no source edit needed):**
+If you suspect a specific address isn't getting the right value, write it directly via console and test: `window.zvmInstance.m.setUint8(addr+1, text.length); /* write text chars */` then submit the command normally. If that fixes it, you've confirmed the hypothesis and can then code it into sendInput/performRestore.
 
 ## checkSuppressUpdate logic (v1.5.264+)
 
@@ -101,10 +113,30 @@ export function checkSuppressUpdate(currentInputType, hasInput) {
 
 The flag is cleared only when suppressing an update that includes a new input request. This handles Anchorhead's intermediate status-bar-only update (no input) that fires before the text response — both need to be suppressed.
 
+## The glkapi/ZVM buffer address mismatch (v1.5.367 fix)
+
+After the char-bootstrap fires and LOOK executes (gen:2 suppressed), the gen:2 aread as seen by **glkapi** uses a *different* buffer address than the one **the ZVM actually reads from**.
+
+Confirmed via debug logging (2026-05-28):
+- `saveData.voxglkState.bufaddr` = 39469 (Anchorhead's standard game-loop text buffer)
+- At gen:2: `window.zvmInstance.read_data.bufaddr` = **63** (glkapi's tracked buffer for that aread)
+- Glkapi writes the player's "take flashlight" to address 63
+- ZVM reads from address 39469 (the restored aread's buffer), finds our stale 'l' seed → executes LOOK again
+
+The 'l' seed persists untouched at 39469 because glkapi never writes there for gen:2.
+
+**Fix (v1.5.367):** In `sendInput()`, when submitting the first line command after a bootstrap restore, *also* write the player's text to the seeded address (39469). This is a one-shot write tracked via `seededBufaddr` in `voxglk-bootstrap.js`:
+- `performRestore` calls `setSeededBufaddr(bufaddr)` after seeding
+- `sendInput()` calls `consumeSeededBufaddr()` (returns address, clears it) and writes the command there before calling acceptCallback
+- Subsequent commands: seededBufaddr is null → no extra writes → normal path
+
+The root cause of the bufaddr mismatch (why glkapi uses 63 vs the ZVM's 39469) is not fully understood — it may relate to Anchorhead having an intermediate aread between the bootstrap LOOK and the main game loop, or glkapi retaining stale state after restore. The fix is correct regardless: writing to both buffers ensures the ZVM sees the right command.
+
 ## Current implementation
 
-As of v1.5.231+ (bootstrap) / v1.5.268 (char-bootstrap fix), the flow lives in:
-- `docs/js/game/voxglk-bootstrap.js` — flag lifecycle, `handleAutoRestore`, `checkSuppressUpdate`
-- `docs/js/game/save-manager.js` — `performRestore` → seeds linebuf with 'l', zeros parse buffer
+As of v1.5.231+ (bootstrap) / v1.5.268 (char-bootstrap fix) / v1.5.367 (bufaddr mismatch fix):
+- `docs/js/game/voxglk-bootstrap.js` — flag lifecycle, `handleAutoRestore`, `checkSuppressUpdate`, `seededBufaddr` tracking
+- `docs/js/game/save-manager.js` — `performRestore` → seeds linebuf with 'l', zeros parse buffer, calls `setSeededBufaddr`
+- `docs/js/game/voxglk.js` — `sendInput()` calls `consumeSeededBufaddr()` and writes to it before acceptCallback
 
-Any code touching this path must preserve the order: **flag → first update → restore-via-save-manager → capture intro type → seed linebuf → send bootstrap → suppress next update**.
+Any code touching this path must preserve the order: **flag → first update → restore-via-save-manager → capture intro type → seed linebuf → set seededBufaddr → send bootstrap → suppress gen:2 → on first real line input: write to seededBufaddr → acceptCallback**.

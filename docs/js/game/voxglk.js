@@ -26,6 +26,7 @@ import {
   isJustRestored,
   clearJustRestored,
   handleAutoRestore,
+  consumeSeededBufaddr,
 } from './voxglk-bootstrap.js';
 
 /**
@@ -720,6 +721,20 @@ export function sendInput(text, type = 'line') {
         }
       }
     } catch (e) { /* ignore — e.g. window not yet created */ }
+  }
+
+  // After a bootstrap restore, glkapi may write line input to a different Z-machine
+  // buffer address than the one the VM actually reads from. Write the player's command
+  // to the saved (seeded) bufaddr too so the VM executes the correct command.
+  if (type === 'line') {
+    const seededAddr = consumeSeededBufaddr();
+    if (seededAddr && window.zvmInstance?.m) {
+      const m = window.zvmInstance.m;
+      m.setUint8(seededAddr + 1, text.length);
+      for (let i = 0; i < text.length; i++) {
+        m.setUint8(seededAddr + 2 + i, text.charCodeAt(i));
+      }
+    }
   }
 
   // Send the input event to Glk

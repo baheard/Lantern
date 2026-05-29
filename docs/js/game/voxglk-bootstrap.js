@@ -14,6 +14,10 @@
 let skipNextUpdateAfterBootstrap = false;
 let introInputType = null;
 let justRestored = false;
+// The Z-machine memory address we seeded with 'l' for the char bootstrap.
+// After restore, glkapi may use a different buffer address than the ZVM reads from.
+// voxglk.js writes the player's first real command here to ensure the ZVM sees it.
+let seededBufaddr = null;
 
 /**
  * Reset all bootstrap state (called from voxglk init for a new game)
@@ -22,6 +26,25 @@ export function resetBootstrapState() {
   skipNextUpdateAfterBootstrap = false;
   introInputType = null;
   justRestored = false;
+  seededBufaddr = null;
+}
+
+/**
+ * Record the Z-machine buffer address we seeded with 'l' for the char bootstrap.
+ * Called by save-manager.js after seeding the buffer in performRestore.
+ */
+export function setSeededBufaddr(addr) {
+  seededBufaddr = addr;
+}
+
+/**
+ * Consume and return the seeded buffer address (one-shot — clears after read).
+ * Called by voxglk.js sendInput() to also write the player's first command there.
+ */
+export function consumeSeededBufaddr() {
+  const addr = seededBufaddr;
+  seededBufaddr = null;
+  return addr;
 }
 
 /**

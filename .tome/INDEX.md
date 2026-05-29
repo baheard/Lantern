@@ -13,11 +13,13 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 - [ptt-recognition-races](ptt-recognition-races.md) — PTT/recognition async race conditions: hasProcessedResult, mute lockout, background loop, AudioContext (voice, ptt, recognition, race-condition) — updated 2026-05-11
 - [narration-module-quirks](narration-module-quirks.md) — MediaSession play must call speakTextChunked directly; skipToEnd bypasses stopNarration (narration, tts, cycles) — updated 2026-04-27
+- [openai-tts-pipeline](openai-tts-pipeline.md) — Cache API persistence, prefetch pipeline gap at chunk 1, long-chunk latency, cost tracking (narration, tts, openai, cache, prefetch) — updated 2026-05-28
 - [xss-vectors](xss-vectors.md) — Known XSS vectors: all 4 now fixed (saves + map node names) (security, xss, map) — updated 2026-04-27
 - [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26
 
 - [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26
-- [bootstrap-restore-flow](bootstrap-restore-flow.md) — two-system restore invariant, char code=line length insight, 'l' seed fix, disambiguation heuristic (zvm, save-restore, voxglk) — updated 2026-05-09
+- [bootstrap-restore-flow](bootstrap-restore-flow.md) — two-system restore invariant, char code=line length insight, 'l' seed fix, glkapi/ZVM bufaddr mismatch fix (zvm, save-restore, voxglk) — updated 2026-05-28
+- [parchment-vs-iftalk-engine](parchment-vs-iftalk-engine.md) — Parchment uses bocfel (WASM), not ifvms.js; bufaddr bug is ifvms-specific; nothing to copy from Parchment (zvm, bocfel, parchment, architecture) — updated 2026-05-28
 - [quetzal-restore-globals](quetzal-restore-globals.md) — restore_file fixes header but not game globals; perpetuation cycle; CMem decode technique (zvm, save-restore, quetzal, screen-width) — updated 2026-05-09
 - [watchdog-repair-flow](watchdog-repair-flow.md) — 5s VM-hang detection + manual REPAIR recovery flow (zvm, watchdog, recovery) — updated 2026-04-26
 - [mic-narration-coupling](mic-narration-coupling.md) — Mic state and narration state are independent; vestigial `if (false &&)` clusters (voice, narration, design) — updated 2026-04-26
