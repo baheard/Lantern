@@ -4,7 +4,8 @@
  * Calls OpenAI's /v1/audio/speech directly from the browser using the user's
  * own API key. No server proxy — the user's key, browser, and bill.
  *
- * Features: Cache API caching, sentence-boundary chunking, cost tracking.
+ * Features: Cache API caching, sentence-boundary chunking, cost tracking,
+ * MediaSource streaming (reduces first-play latency to ~100-300ms on iOS 17+ / Chrome).
  */
 
 import { state } from '../core/state.js';
@@ -27,6 +28,10 @@ export function getSessionChars() {
 export function isOpenAITTSEnabled() {
   const cfg = state.openAiTtsConfig;
   return !!(cfg?.enabled && cfg?.apiKey);
+}
+
+function supportsMediaSourceMp3() {
+  return typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg');
 }
 
 async function sha256(str) {
@@ -130,6 +135,115 @@ function playBlob(blob) {
   });
 }
 
+/**
+ * Fetch from OpenAI and play via MediaSource, streaming audio as bytes arrive.
+ * Starts playing at ~100-300ms (time-to-first-byte) instead of waiting for the
+ * full blob. Caches the complete MP3 once the stream finishes so future plays
+ * are instant cache hits. Falls back gracefully: if this throws, the caller
+ * falls back to the blob path.
+ *
+ * Requires MediaSource + audio/mpeg support (Chrome, iOS 17+, Safari 17+).
+ */
+async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
+  const response = await fetch(OPENAI_TTS_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: state.openAiTtsConfig?.model || 'tts-1',
+      voice,
+      input: text,
+      response_format: 'mp3',
+      speed
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAI TTS ${response.status}: ${errText}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    const collectedChunks = [];
+    const ms = new MediaSource();
+    const url = URL.createObjectURL(ms);
+    const audio = new Audio(url);
+    URL.revokeObjectURL(url); // Safe once audio.src is set; MediaSource stays alive via audio element
+    state.currentAudio = audio;
+    let settled = false;
+    let reader = null;
+
+    const finish = (interrupted = false) => {
+      if (settled) return;
+      settled = true;
+      if (interrupted) state.chunkWasInterrupted = true;
+      if (reader) reader.cancel();
+      if (state.currentAudio === audio) state.currentAudio = null;
+      resolve();
+    };
+
+    audio.onended = () => finish(false);
+    audio.onpause = () => finish(state.isNarrating && !state.isPaused);
+    audio.onerror = () => {
+      if (settled) return;
+      settled = true;
+      if (reader) reader.cancel();
+      if (state.currentAudio === audio) state.currentAudio = null;
+      reject(new Error('Audio playback error'));
+    };
+
+    ms.addEventListener('sourceopen', async () => {
+      const sb = ms.addSourceBuffer('audio/mpeg');
+      reader = response.body.getReader();
+
+      (async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (settled) break;
+
+            if (done) {
+              // Wait for any in-progress append before signalling end
+              if (sb.updating) {
+                await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
+              }
+              if (!settled) {
+                ms.endOfStream();
+                storeInCache(cacheKey, new Blob(collectedChunks, { type: 'audio/mpeg' })).catch(() => {});
+              }
+              break;
+            }
+
+            collectedChunks.push(value);
+            if (sb.updating) {
+              await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
+            }
+            if (!settled) sb.appendBuffer(value);
+          }
+        } catch (err) {
+          if (!settled) {
+            settled = true;
+            if (reader) reader.cancel();
+            if (state.currentAudio === audio) state.currentAudio = null;
+            reject(err);
+          }
+        }
+      })();
+
+      audio.play().catch(err => {
+        if (!settled) {
+          settled = true;
+          if (reader) reader.cancel();
+          if (state.currentAudio === audio) state.currentAudio = null;
+          reject(err);
+        }
+      });
+    });
+  });
+}
+
 async function fetchFromOpenAI(text, voice, speed, apiKey) {
   const response = await fetch(OPENAI_TTS_URL, {
     method: 'POST',
@@ -190,16 +304,23 @@ export async function playWithOpenAITTS(text, speedModifier = 0) {
     if ((!state.isNarrating && !state.ttsIsSpeaking) || state.isPaused) break;
 
     const key = await makeCacheKey(chunk, voice, speed);
-    let blob = await getCachedBlob(key);
+    const cachedBlob = await getCachedBlob(key);
 
-    if (!blob) {
-      blob = await fetchFromOpenAI(chunk, voice, speed, apiKey);
-      await storeInCache(key, blob);
-      sessionChars += chunk.length; // Only count actual API calls, not cache hits
+    if (cachedBlob) {
+      await playBlob(cachedBlob);
+    } else if (supportsMediaSourceMp3()) {
+      // Stream: audio starts at first-byte (~100-300ms). Caches on completion.
+      await playStreamingFromOpenAI(chunk, voice, speed, apiKey, key);
+      sessionChars += chunk.length;
       updateCostDisplay();
+    } else {
+      // Fallback: fetch full blob first (older Safari, non-supporting browsers)
+      const blob = await fetchFromOpenAI(chunk, voice, speed, apiKey);
+      await storeInCache(key, blob);
+      sessionChars += chunk.length;
+      updateCostDisplay();
+      await playBlob(blob);
     }
-
-    await playBlob(blob);
   }
 }
 
