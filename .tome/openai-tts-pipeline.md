@@ -38,12 +38,16 @@ For novel text (new room, never visited), even with prefetch there's an irreduci
 
 ## Interruption handling
 
-`playBlob()` in `openai-tts.js` owns `state.chunkWasInterrupted`:
+`playBlob()` and `playStreamingFromOpenAI()` in `openai-tts.js` own `state.chunkWasInterrupted`:
 - `onended` (natural completion): does not set the flag.
 - `onpause` when `state.isNarrating && !state.isPaused` (unexpected system pause — phone call, Siri, etc.): sets `chunkWasInterrupted = true`.
 - `onpause` when `state.isPaused || !state.isNarrating` (user-requested stop via `stopNarration()`): does not set the flag.
 
 The outer loop in `speakTextChunked` reads `chunkWasInterrupted` and retries the current chunk after 100ms — the same iOS recovery path used by browser TTS. **Do not clear `chunkWasInterrupted` in `tts-player.js` after OpenAI playback** — that was the original bug; let `playBlob` own it.
+
+**Buffer stall vs real pause (v1.5.374):** `playStreamingFromOpenAI` tracks a `isBufferStall` flag via `waiting`/`playing` events. A `pause` event while `isBufferStall = true` is ignored — the browser paused due to the SourceBuffer running out of data mid-stream, and the reader loop's next `appendBuffer` will resume it via a `canplay` handler. Without this, any mid-stream buffer underrun (slow network) triggered the retry loop, causing infinite looping on that chunk.
+
+**Retry limit (v1.5.374):** `speakTextChunked` caps retries per chunk at 3 (`consecutiveRetries` + `lastRetryChunk` tracking). After 3 failures the chunk is skipped rather than looping forever. This is a safety net; the root fix is the buffer stall guard above.
 
 ## Error fallback
 

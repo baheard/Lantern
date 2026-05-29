@@ -115,6 +115,9 @@ function playBlob(blob) {
 
     audio.onpause = () => {
       if (settled) return;
+      // Chrome fires pause before ended at natural completion; audio.ended is already true then.
+      // Same pattern as the MSE streamEnded guard in playStreamingFromOpenAI.
+      if (audio.ended) return;
       settled = true;
       // Unexpected system pause (phone call, Siri, etc.) — not a user-requested stop
       if (state.isNarrating && !state.isPaused) {
@@ -145,6 +148,9 @@ function playBlob(blob) {
  * Requires MediaSource + audio/mpeg support (Chrome, iOS 17+, Safari 17+).
  */
 async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
+  const t0 = performance.now();
+  console.log(`[TTS:stream] fetch start — "${text.slice(0, 60).replace(/\n/g, ' ')}"`);
+
   const response = await fetch(OPENAI_TTS_URL, {
     method: 'POST',
     headers: {
@@ -165,20 +171,24 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
     throw new Error(`OpenAI TTS ${response.status}: ${errText}`);
   }
 
+  console.log(`[TTS:stream] response received: ${(performance.now() - t0).toFixed(0)}ms`);
+
   return new Promise((resolve, reject) => {
     const collectedChunks = [];
     const ms = new MediaSource();
     const url = URL.createObjectURL(ms);
     const audio = new Audio(url);
     // Do NOT revoke url here — Safari needs it valid until sourceopen fires.
-    // Revoked in finish()/onerror once we're truly done.
+    // Revoked in finish()/fail() once we're truly done.
     state.currentAudio = audio;
     let settled = false;
     let streamEnded = false; // True once ms.endOfStream() has been called
     let reader = null;
+    let isBufferStall = false; // True when browser paused due to buffer underrun (not user action)
 
     const finish = (interrupted = false) => {
       if (settled) return;
+      console.log(`[TTS:stream] finish: interrupted=${interrupted}, elapsed=${(performance.now() - t0).toFixed(0)}ms, readyState=${audio.readyState}, currentTime=${audio.currentTime.toFixed(3)}`);
       settled = true;
       if (interrupted) state.chunkWasInterrupted = true;
       if (reader) reader.cancel();
@@ -187,23 +197,51 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
       resolve();
     };
 
-    audio.onended = () => finish(false);
-
-    audio.onpause = () => {
+    // Shared reject path — pauses audio first to prevent overlap with fallback browser TTS
+    const fail = (err) => {
       if (settled) return;
-      if (streamEnded) return; // Browser fires pause before ended after endOfStream() — ignore
-      if (audio.currentTime === 0 && !state.isPaused) return; // Pre-play buffer-empty stall — ignore
-      finish(state.isNarrating && !state.isPaused);
-    };
-
-    audio.onerror = () => {
-      if (settled) return;
+      console.log(`[TTS:stream] fail: ${err?.message}, elapsed=${(performance.now() - t0).toFixed(0)}ms, readyState=${audio.readyState}`);
       settled = true;
+      try { audio.pause(); } catch (_) {}
       if (reader) reader.cancel();
       URL.revokeObjectURL(url);
       if (state.currentAudio === audio) state.currentAudio = null;
-      reject(new Error('Audio playback error'));
+      reject(err);
     };
+
+    audio.onended = () => finish(false);
+
+    // Track buffer stalls vs real pauses. `waiting` = browser ran out of buffered data;
+    // `playing` = playback resumed (clears the stall flag).
+    audio.addEventListener('waiting', () => {
+      if (!settled) {
+        console.log(`[TTS:stream] waiting (buffer stall) at ${audio.currentTime.toFixed(3)}s, readyState=${audio.readyState}`);
+        isBufferStall = true;
+      }
+    });
+    audio.addEventListener('playing', () => {
+      if (isBufferStall) console.log(`[TTS:stream] playing (stall cleared) at ${audio.currentTime.toFixed(3)}s`);
+      isBufferStall = false;
+    });
+    // When enough data arrives after a stall, force-resume in case the browser didn't auto-resume.
+    audio.addEventListener('canplay', () => {
+      if (isBufferStall && !settled && !state.isPaused) {
+        console.log(`[TTS:stream] canplay — force-resuming after stall`);
+        isBufferStall = false;
+        audio.play().catch(() => {});
+      }
+    });
+
+    audio.onpause = () => {
+      console.log(`[TTS:stream] onpause: settled=${settled}, streamEnded=${streamEnded}, currentTime=${audio.currentTime.toFixed(3)}, readyState=${audio.readyState}, isBufferStall=${isBufferStall}, isPaused=${state.isPaused}, isNarrating=${state.isNarrating}`);
+      if (settled) return;
+      if (streamEnded) return; // Browser fires pause before ended after endOfStream() — ignore
+      if (audio.currentTime === 0 && !state.isPaused) return; // Pre-play buffer-empty stall — ignore
+      if (isBufferStall) return; // Mid-stream buffer underrun — appendBuffer loop will catch up
+      finish(state.isNarrating && !state.isPaused);
+    };
+
+    audio.onerror = () => fail(new Error('Audio playback error'));
 
     ms.addEventListener('sourceopen', async () => {
       const sb = ms.addSourceBuffer('audio/mpeg');
@@ -221,6 +259,7 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
                 await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
               }
               if (!settled) {
+                console.log(`[TTS:stream] stream done, endOfStream at ${(performance.now() - t0).toFixed(0)}ms`);
                 streamEnded = true;
                 ms.endOfStream();
                 storeInCache(cacheKey, new Blob(collectedChunks, { type: 'audio/mpeg' })).catch(() => {});
@@ -242,26 +281,13 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
               playStarted = true;
               await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
               if (!settled) {
-                audio.play().catch(err => {
-                  if (!settled) {
-                    settled = true;
-                    if (reader) reader.cancel();
-                    URL.revokeObjectURL(url);
-                    if (state.currentAudio === audio) state.currentAudio = null;
-                    reject(err);
-                  }
-                });
+                console.log(`[TTS:stream] play() called at ${(performance.now() - t0).toFixed(0)}ms (first-byte latency)`);
+                audio.play().catch(err => fail(err));
               }
             }
           }
         } catch (err) {
-          if (!settled) {
-            settled = true;
-            if (reader) reader.cancel();
-            URL.revokeObjectURL(url);
-            if (state.currentAudio === audio) state.currentAudio = null;
-            reject(err);
-          }
+          if (!settled) fail(err);
         }
       })();
     });

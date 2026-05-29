@@ -280,13 +280,22 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
   startKeepAlive();
 
   const totalChunks = state.narrationChunks.length;
+  const sessionT0 = performance.now();
+  console.log(`[TTS:player] session start — ${totalChunks} chunks from index ${startFromIndex}`);
 
   // Update nav buttons now that chunks are ready
   const { updateNavButtons } = await import('../ui/nav-buttons.js');
   updateNavButtons();
 
+  // Retry tracking — prevents infinite retry loops when a chunk consistently fails.
+  let lastRetryChunk = -1;
+  let consecutiveRetries = 0;
+
   // Start from current index
   for (let i = state.currentChunkIndex; i < totalChunks; i++) {
+    // Reset retry counter whenever we advance to a new chunk
+    if (i !== lastRetryChunk) consecutiveRetries = 0;
+
     // Check if this session is still valid (not superseded by newer narration)
     if (currentSessionId !== state.narrationSessionId) {
       // Don't remove highlight - the new session will manage it
@@ -320,7 +329,10 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     const voiceType = typeof chunk === 'object' ? chunk.voice : 'narrator';
 
     // Skip app-voice chunks (command echoes) — they were spoken when generated
-    if (voiceType === 'app') continue;
+    if (voiceType === 'app') {
+      console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} skip (app voice)`);
+      continue;
+    }
 
     // Look up speed and pitch modifiers based on marker's Glk class
     // Check the END marker of this chunk (not start), because glkClass is detected
@@ -340,6 +352,8 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
 
     // Mark when this chunk started playing
     state.currentChunkStartTime = Date.now();
+    const chunkT0 = performance.now();
+    console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} start (+${(chunkT0 - sessionT0).toFixed(0)}ms session): "${chunkText.slice(0, 60).replace(/\n/g, ' ')}"`);
 
     if (isOpenAITTSEnabled()) {
       state.ttsIsSpeaking = true;
@@ -358,6 +372,7 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
       try {
         await playWithOpenAITTS(chunkText, speedModifier);
       } catch (err) {
+        console.log(`[TTS:player] chunk ${i} OpenAI failed (${err.message}) — falling back to browser TTS`);
         updateStatus('AI TTS error — falling back to device voice');
         await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
       }
@@ -366,6 +381,8 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     } else {
       await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
     }
+
+    console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} done: ${(performance.now() - chunkT0).toFixed(0)}ms, interrupted=${state.chunkWasInterrupted}`);
 
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {
@@ -379,12 +396,19 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
       // If not manually paused, resume playing from current position
       // This handles iOS permission dialogs and other system interruptions
       if (!state.isPaused) {
-        // Small delay to let iOS settle after permission dialog
-        await new Promise(resolve => setTimeout(resolve, 100));
-        state.isNarrating = true;  // Resume narrating state
-        // Continue loop from current chunk (don't increment i)
-        i--;  // Decrement so loop increment brings us back to current chunk
-        continue;
+        consecutiveRetries++;
+        lastRetryChunk = i;
+        if (consecutiveRetries <= 3) {
+          console.log(`[TTS:player] chunk ${i} retry ${consecutiveRetries}/3`);
+          // Small delay to let iOS settle after permission dialog
+          await new Promise(resolve => setTimeout(resolve, 100));
+          state.isNarrating = true;  // Resume narrating state
+          // Continue loop from current chunk (don't increment i)
+          i--;  // Decrement so loop increment brings us back to current chunk
+          continue;
+        }
+        // Too many retries — give up on this chunk and advance to the next
+        console.log(`[TTS:player] chunk ${i} skipped after 3 retries`);
       } else {
         // User manually paused - stay paused
         state.isNarrating = false;  // Clear narrating flag so voice commands work
