@@ -7,7 +7,7 @@
 import { APP_CONFIG } from '../../config.js';
 import { state } from '../../core/state.js';
 import { updateStatus } from '../status.js';
-import { ensureAuthenticated, isSignedIn } from './gdrive-auth.js';
+import { ensureAuthenticated, isSignedIn, silentRefresh } from './gdrive-auth.js';
 import {
   uploadFile,
   downloadFile,
@@ -218,7 +218,7 @@ export async function syncAllNow(gameName = null) {
  * Errors are NEVER silent — failures show prominently in the status bar.
  */
 export function scheduleDriveSync(saveKey) {
-  if (!state.gdriveSyncEnabled || !state.gdriveSignedIn) return;
+  if (!state.gdriveSyncEnabled) return;
 
   pendingSyncQueue.add(saveKey);
 
@@ -235,9 +235,24 @@ export function scheduleDriveSync(saveKey) {
 }
 
 async function flushSyncQueue() {
-  if (!state.gdriveSyncEnabled || !state.gdriveSignedIn) {
+  if (!state.gdriveSyncEnabled) {
     pendingSyncQueue.clear();
     return;
+  }
+
+  if (!state.gdriveSignedIn) {
+    // Token may have expired — try silent refresh before giving up
+    const refreshed = await silentRefresh();
+    if (!refreshed) {
+      pendingSyncQueue.clear();
+      const msg = 'Auto-sync failed: sign in to Drive to sync saves';
+      state.gdriveError = msg;
+      updateStatus(msg, 'error');
+      window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { error: msg } }));
+      return;
+    }
+    // Silent refresh succeeded — update state and continue
+    state.gdriveSignedIn = true;
   }
 
   const keys = Array.from(pendingSyncQueue);

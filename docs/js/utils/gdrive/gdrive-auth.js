@@ -42,7 +42,7 @@ export function hasValidToken() {
  * Try to get a new token silently (no UI). Returns true if successful.
  * Works as long as the user has an active Google session in the browser.
  */
-function silentRefresh() {
+export function silentRefresh() {
   return new Promise((resolve) => {
     if (!tokenClient) { resolve(false); return; }
 
