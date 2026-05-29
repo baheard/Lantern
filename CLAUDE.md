@@ -51,6 +51,8 @@ cd /e/Project/IFTalk && npm start
 
 **Context Management:** Claude will warn when context usage reaches 85% (15% remaining). Use `/context` to check current usage.
 
+**Tome:** When implementing a feature, save non-obvious design decisions, gotchas, and architectural rationale to `.tome/` — not just on explicit request, but proactively whenever something worth remembering surfaces (e.g. a pipeline gap, a cache design, a module cycle workaround). The global instructions already say to do this; this is a project-level reminder to not skip it during feature work.
+
 ## Version Management
 
 **IMPORTANT:** Every time a new feature is added or a significant change is made:
@@ -97,7 +99,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.368
+**Current Version:** v1.5.369
 
 ## Third-Party Libraries
 

@@ -265,12 +265,12 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
   state.isNarrating = true;
 
   // Kick off fetch for the first chunk immediately — before RAF delays, highlights,
-  // and nav-button updates — so the network round-trip overlaps with setup work.
+  // and nav-button updates — so all chunk fetches overlap with setup work.
   if (isOpenAITTSEnabled()) {
     for (let j = startFromIndex; j < state.narrationChunks.length; j++) {
       const c = state.narrationChunks[j];
       const v = typeof c === 'object' ? c.voice : 'narrator';
-      if (v !== 'app') { prefetchOpenAIChunk(typeof c === 'string' ? c : c.text, getChunkSpeedModifier(j)); break; }
+      if (v !== 'app') prefetchOpenAIChunk(typeof c === 'string' ? c : c.text, getChunkSpeedModifier(j));
     }
   }
 
