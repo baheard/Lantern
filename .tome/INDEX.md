@@ -25,6 +25,6 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [quetzal-restore-globals](quetzal-restore-globals.md) — restore_file fixes header but not game globals; perpetuation cycle; CMem decode technique (zvm, save-restore, quetzal, screen-width) — updated 2026-05-09
 - [watchdog-repair-flow](watchdog-repair-flow.md) — 5s VM-hang detection + manual REPAIR recovery flow (zvm, watchdog, recovery) — updated 2026-04-26
 - [mic-narration-coupling](mic-narration-coupling.md) — Mic state and narration state are independent; vestigial `if (false &&)` clusters (voice, narration, design) — updated 2026-04-26
-- [save-system](save-system.md) — Autosave vs quicksave semantics; storage layout; bootstrap bugs all fixed (v1.5.268) (save, restore, design) — updated 2026-05-09
+- [save-system](save-system.md) — Autosave vs quicksave semantics; storage layout; restore injects HTML directly so must invalidate narration chunks (v1.5.407); restore-debug + SW-cache notes (save, restore, design) — updated 2026-05-30
 - [snapshot-pollution-pattern](snapshot-pollution-pattern.md) — `inert`+`aria-hidden` for hidden panels; why both are needed (accessibility, testing, ui-pattern) — updated 2026-04-26
 - [home-screen-and-quirks](home-screen-and-quirks.md) — Home-screen UI; F5/port/autosave-vs-quicksave gotchas (ui, gotchas) — updated 2026-04-26
