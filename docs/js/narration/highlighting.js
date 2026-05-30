@@ -136,7 +136,15 @@ export function updateTextHighlight(chunkIndex) {
   }
 
   // Use marker-based highlighting (per design spec)
-  const success = highlightUsingMarkers(chunkIndex);
+  let success = highlightUsingMarkers(chunkIndex);
+
+  // Char-mode (PAK/menu) screens have no DOM markers — their chunks are built
+  // from cleaned text, not the DOM (see handleGameOutput). Fall back to matching
+  // each chunk to a grid row and highlighting that row. The char-mode path does
+  // its own scrolling, so return early on success.
+  if (!success && state.isCharMode) {
+    if (highlightCharModeRow(chunkIndex)) return;
+  }
 
   if (!success) {
     removeHighlight();
@@ -145,6 +153,114 @@ export function updateTextHighlight(chunkIndex) {
     scrollToHighlightedText(chunkIndex);
   }
 
+}
+
+/** Strip everything but lowercase alphanumerics — used to match cleaned chunk
+ *  text (which has had >, *, =, box-drawing, etc. stripped by processTextForTTS)
+ *  against the raw grid text. */
+function normAlnum(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Highlight a char-mode (PAK/menu) chunk at grid-row granularity.
+ *
+ * Char-mode chunks carry no markers, so we re-derive which row each chunk lives
+ * on. Walking chunks 0..chunkIndex in order and advancing a cursor (row +
+ * consumed-within-row) makes two-column rows resolve to the same row and
+ * duplicate lines (e.g. repeated "(missing pages)") resolve to distinct rows.
+ *
+ * @param {number} chunkIndex - Chunk index to highlight
+ * @returns {boolean} True if a row was highlighted
+ */
+function highlightCharModeRow(chunkIndex) {
+  const container = document.getElementById('upperWindow');
+  if (!container || !CSS.highlights) return false;
+
+  const chunks = state.narrationChunks;
+  const lineEls = Array.from(container.querySelectorAll('.grid-line'));
+  if (lineEls.length === 0) return false;
+  const lineNorm = lineEls.map(el => normAlnum(el.textContent));
+
+  let row = 0;          // current row in the search
+  let consumed = 0;     // alnum chars already matched within `row`
+  let targetRow = -1;
+  for (let c = 0; c <= chunkIndex; c++) {
+    const chunk = chunks[c];
+    const needle = normAlnum(typeof chunk === 'string' ? chunk : chunk?.text);
+    if (!needle) { if (c === chunkIndex) return false; continue; }
+
+    let placed = false;
+    for (let r = row; r < lineNorm.length; r++) {
+      const hay = r === row ? lineNorm[r].slice(consumed) : lineNorm[r];
+      const idx = hay.indexOf(needle);
+      if (idx === -1) continue;
+      if (r === row) {
+        consumed += idx + needle.length;
+      } else {
+        row = r;
+        consumed = idx + needle.length;
+      }
+      targetRow = r;
+      placed = true;
+      break;
+    }
+    if (!placed && c === chunkIndex) return false;
+  }
+  if (targetRow === -1) return false;
+
+  // Build highlight ranges over the target row's non-whitespace text.
+  const textRanges = [];
+  const walker = document.createTreeWalker(lineEls[targetRow], NodeFilter.SHOW_TEXT, null);
+  let textNode;
+  while (textNode = walker.nextNode()) {
+    const text = textNode.textContent;
+    if (!text.trim()) continue;
+    const startOffset = text.search(/\S/);
+    const endOffset = text.length - (text.match(/\s*$/)?.[0].length || 0);
+    const range = new Range();
+    range.setStart(textNode, startOffset);
+    range.setEnd(textNode, endOffset);
+    textRanges.push(range);
+  }
+  if (textRanges.length === 0) return false;
+
+  // Clear + force a repaint (iOS WebKit) before applying, same as marker path.
+  CSS.highlights.delete('speaking');
+  container.classList.add('highlight-refresh');
+  void container.offsetHeight;
+  container.classList.remove('highlight-refresh');
+  CSS.highlights.set('speaking', new Highlight(...textRanges));
+
+  scrollRowIntoView(lineEls[targetRow]);
+  return true;
+}
+
+/**
+ * Scroll a grid row into the upper portion of the visible viewport.
+ * Mirrors scrollToHighlightedText's math but works from an element rect
+ * (char-mode rows have no markers to range over).
+ * @param {HTMLElement} el - Row element to reveal
+ */
+function scrollRowIntoView(el) {
+  const gameOutput = dom.gameOutput;
+  if (!gameOutput || !el) return;
+
+  const targetRect = el.getBoundingClientRect();
+  if (!targetRect || targetRect.height === 0) return;
+
+  const containerRect = gameOutput.getBoundingClientRect();
+  const targetPositionInContent = gameOutput.scrollTop + (targetRect.top - containerRect.top);
+
+  const vv = window.visualViewport;
+  const visibleHeight = vv ? vv.height : window.innerHeight;
+  const viewportOffset = vv ? vv.offsetTop : 0;
+  const bufferFromTop = Math.max(20, visibleHeight * 0.08) + viewportOffset;
+
+  const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
+  if (Math.abs(gameOutput.scrollTop - targetScroll) > 10) {
+    gameOutput.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  }
 }
 
 /**

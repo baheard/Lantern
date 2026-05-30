@@ -35,13 +35,22 @@ import {
  * joins lines with periods so TTS pauses naturally between menu items/columns.
  */
 function cleanCharModeText(text) {
-  return text
+  const result = text
     .split('\n')
-    .map(l => processTextForTTS(l.trim()))
+    .map(l => {
+      const trimmed = l.trim();
+      // Replace large horizontal gaps (PAK column separators) with ". " BEFORE
+      // processTextForTTS collapses \s+ → ' ', which would destroy the boundary.
+      // Threshold ≥8: menu column gaps are 20+ spaces; article indent is ≤4.
+      const withColumnBreaks = trimmed.replace(/ {8,}/g, '. ');
+      return processTextForTTS(withColumnBreaks);
+    })
     .filter(l => l.length > 0)
     .join('. ')
     .replace(/([.!?])\.\s*/g, '$1 ')
     .trim();
+  console.log('[PAK clean] in:', JSON.stringify(text.slice(0, 120)), '→ out:', JSON.stringify(result.slice(0, 120)));
+  return result;
 }
 
 /**
@@ -274,6 +283,7 @@ export function createVoxGlk(textOutputCallback) {
         if (arg.input) {
           const inputTypes = arg.input.map(i => i.type);
           s.inputType = inputTypes.includes('char') ? 'char' : 'line';
+          state.isCharMode = (s.inputType === 'char');
           s.inputEnabled = true;
           if (arg.input.length > 0 && arg.input[0].id !== undefined) {
             s.inputWindowId = arg.input[0].id;
@@ -869,9 +879,16 @@ export function getCharModeText() {
 }
 
 /**
- * Directly invoke the TTS output callback with arbitrary text.
- * Used by the "read all" voice command to re-narrate the full PAK screen.
+ * Re-narrate the full PAK screen on demand ("read page"/"read all" voice command).
+ * Routes the text through onTextOutput (handleGameOutput) to build the split char-mode
+ * chunks, then forces playback regardless of autoplay — an explicit read request should
+ * always speak, even when autoplay is off.
  */
-export function triggerCharModeNarration(text) {
-  if (s.onTextOutput && text.trim()) s.onTextOutput(text);
+export async function triggerCharModeNarration(text) {
+  if (!s.onTextOutput || !text.trim()) return;
+  await s.onTextOutput(text);  // builds split per-line/per-column chunks (char mode)
+  state.narrationEnabled = true;
+  state.isPaused = false;
+  const { speakTextChunked } = await import('../narration/tts-player.js');
+  speakTextChunked(null, 0);
 }

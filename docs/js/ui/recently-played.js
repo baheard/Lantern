@@ -119,6 +119,10 @@ export function showResumeDialog(gamePath, gameName) {
       if (action === 'restart') {
         localStorage.removeItem(`iftalk_autosave_${gameName}`);
         localStorage.removeItem(`iftalk_map_${gameName}`);
+        // Skip autoload on the upcoming startGame, otherwise Drive auto-sync
+        // re-downloads the cloud autosave and restores it anyway. Mirrors the
+        // "Restart Game" settings button.
+        localStorage.setItem('iftalk_skip_autoload', 'true');
       }
 
       overlay.remove();

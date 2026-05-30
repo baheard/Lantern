@@ -344,14 +344,12 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     // when we process the marker that ENDS the chunk
     let speedModifier = 0;
     let pitchModifier = 0;
-    let isHeaderChunk = false;
     const endMarker = document.querySelector(`.chunk-marker-end[data-chunk="${i}"]`);
     if (endMarker && endMarker.dataset.glkClass) {
       const glkClass = endMarker.dataset.glkClass;
       if (glkClass === 'header' || glkClass === 'subheader') {
         speedModifier = -0.1;  // Slower for headers and subheaders
         pitchModifier = -0.1;  // Lower pitch for headers and subheaders
-        isHeaderChunk = true;
       } else if (glkClass === 'note') {
         speedModifier = 0.1;   // Faster for notes
       }
@@ -391,16 +389,10 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
 
     console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} done: ${(performance.now() - chunkT0).toFixed(0)}ms, interrupted=${state.chunkWasInterrupted}`);
 
-    // Brief pause after headers so the title lands before the body text begins
-    if (isHeaderChunk && !state.chunkWasInterrupted && state.isNarrating && !state.isPaused) {
-      await new Promise(resolve => setTimeout(resolve, 400));
-    }
-
-    // Theater mode (OpenAI TTS) plays chunks with zero gap; add a small inter-chunk pause
-    // so consecutive sentences don't run together. Browser TTS has natural utterance gaps.
-    if (isOpenAITTSEnabled() && !isHeaderChunk && !state.chunkWasInterrupted && state.isNarrating && !state.isPaused) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
+    // No added pauses between chunks (header or otherwise): the TTS engine already
+    // produces a natural gap between separate utterances, so a manual delay only
+    // made narration feel sluggish. Headers still read slower/lower-pitched via the
+    // speed/pitch modifiers above.
 
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {

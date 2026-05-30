@@ -125,8 +125,11 @@ export function ensureChunksReady() {
   }
 
   // Process upper window second (if exists) - for quotes, formatted text, etc.
+  // Process upper window second (if exists) - for quotes, formatted text, etc.
+  // Always skip line breaks: keeps upper window as one big chunk, avoids running
+  // processTextForTTS on article/grid text that would corrupt it.
   if (hasUpper && upperEl) {
-    const upperMarkedHTML = insertTemporaryMarkers(upperHTML, true); // Skip line breaks for formatting
+    const upperMarkedHTML = insertTemporaryMarkers(upperHTML, true); // skip line breaks
     const upperChunksWithMarkers = createNarrationChunks(upperMarkedHTML);
     const { chunks: upperChunks, markerIDs: upperMarkerIDs } =
       extractChunksAndMarkers(upperChunksWithMarkers);

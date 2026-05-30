@@ -13,6 +13,8 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 - [ptt-recognition-races](ptt-recognition-races.md) — PTT/recognition async race conditions: hasProcessedResult, mute lockout, background loop, AudioContext (voice, ptt, recognition, race-condition) — updated 2026-05-11
 - [narration-module-quirks](narration-module-quirks.md) — MediaSession play must call speakTextChunked directly; skipToEnd bypasses stopNarration (narration, tts, cycles) — updated 2026-04-27
+- [pak-char-mode-narration](pak-char-mode-narration.md) — PAK/menu narration: cleanCharModeText column-gap split, chunks built in handleGameOutput so play/read-page get pauses, no highlighting (narration, tts, char-mode, pak) — updated 2026-05-30
+- [text-decode-corruption](text-decode-corruption.md) — OPEN: "the"→"tv2" Z-string abbreviation corruption from restore; VM-side not display; same family as quetzal-restore-globals (zvm, save-restore, corruption, open-bug) — updated 2026-05-30
 - [openai-tts-pipeline](openai-tts-pipeline.md) — Cache API persistence, prefetch pipeline gap at chunk 1, long-chunk latency, cost tracking (narration, tts, openai, cache, prefetch) — updated 2026-05-28
 - [xss-vectors](xss-vectors.md) — Known XSS vectors: all 4 now fixed (saves + map node names) (security, xss, map) — updated 2026-04-27
 - [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26

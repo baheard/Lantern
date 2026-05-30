@@ -26,6 +26,7 @@ import { processVoiceKeywords } from './voice/voice-commands.js';
 
 // Narration modules
 import { speakTextChunked, stopNarration, speakAppMessage } from './narration/tts-player.js';
+import { removeHighlight } from './narration/highlighting.js';
 import { skipToChunk, skipToStart, skipToEnd } from './narration/navigation.js';
 
 // UI modules
@@ -101,6 +102,23 @@ async function handleGameOutput(text) {
     return;
   }
 
+  // For char mode (PAK/menu screens) build the split chunks NOW, regardless of autoplay.
+  // The text arrives pre-cleaned from cleanCharModeText with ". " at every line break and
+  // big column gap. Splitting on ". " makes each line/column its own chunk so they narrate
+  // with a pause between them. Building here (not only in the autoplay branch) means the
+  // play button and "read page" also get the split chunks — otherwise speakTextChunked →
+  // ensureChunksReady would rebuild ONE mashed-together chunk from the upper-window DOM.
+  // Pieces are left bare (no trailing period) so the inter-chunk pause logic fires.
+  const { getInputType } = await import('./game/voxglk.js');
+  if (getInputType() === 'char' && text.trim()) {
+    document.querySelectorAll('.chunk-marker-start, .chunk-marker-end').forEach(el => el.remove());
+    removeHighlight();
+    const items = text.trim().split(/\.\s+/).map(t => t.trim()).filter(t => t);
+    state.narrationChunks = items.map(item => ({ text: item, voice: 'narrator' }));
+    state.chunksValid = true;
+    console.log('[PAK chunks]', state.narrationChunks.map(c => c.text));
+  }
+
   // STRICT CHECK: Auto-start narration ONLY if autoplay is explicitly enabled
   if (state.autoplayEnabled === true) {
     // Check if we have a restored chunk index from autoload
@@ -113,20 +131,7 @@ async function handleGameOutput(text) {
     state.narrationEnabled = true;
     state.isPaused = false;
 
-    // For char mode (PAK/menu screens), speak the pre-computed diff text directly.
-    // speakTextChunked → ensureChunksReady would otherwise rebuild chunks from the
-    // full upper window DOM, narrating the entire screen on every keypress instead
-    // of just the item that changed. The diff text already has ". " separators from
-    // cleanCharModeText so TTS pauses naturally between columns/lines.
-    const { getInputType } = await import('./game/voxglk.js');
-    if (getInputType() === 'char' && text.trim()) {
-      document.querySelectorAll('.chunk-marker-start, .chunk-marker-end').forEach(el => el.remove());
-      state.narrationChunks = [{ text: text.trim(), voice: 'narrator' }];
-      state.chunksValid = true;
-    }
-
-    // Start narration (chunks will be created on-demand for line mode, or are already
-    // set above for char mode)
+    // Start narration (chunks created on-demand for line mode, or already set above for char mode)
     speakTextChunked(null, startIndex);
   }
 }

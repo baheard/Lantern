@@ -44,6 +44,7 @@ const _state = {
   _autoplayEnabled: false,  // When true, new content auto-plays and nav buttons auto-start
   isNarrating: false,
   pendingNarrationText: null,
+  isCharMode: false,        // true when Z-machine is requesting char (key) input (PAK/menu screens)
   narrationChunks: [],
   chunksValid: false,
   currentChunkIndex: 0,
