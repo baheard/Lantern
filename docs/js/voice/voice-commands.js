@@ -30,14 +30,28 @@ export const BACK_N_PATTERN = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|fiv
 export const PRONUNCIATION_DICT = {
   'wet': 'west',
   'with': 'west',
+  'we': 'west',
+  'what': 'west',
   'so': 'south',
   'self': 'south',
   'quickie': 'quick save',
-  'away': 'west',  // "go away" should be "go west" (phrase-level will be "go west")
+  'quicksand': 'quick save',
+  'away': 'west',
   'murphy': 'northeast',
   'artist': 'northeast',
   'luck': 'look',
+  'breath': 'brief',
+  'town': 'down',
+  'poor': 'pour',
 };
+
+/** Direction words that interrupt narration and execute immediately (#84). */
+export const DIRECTION_COMMANDS = new Set([
+  'north', 'south', 'east', 'west', 'up', 'down', 'out',
+  'n', 's', 'e', 'w', 'u', 'd',
+  'northeast', 'northwest', 'southeast', 'southwest',
+  'ne', 'nw', 'se', 'sw',
+]);
 
 /**
  * Process voice keywords
@@ -57,6 +71,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/\bali\b/gi, 'alley');
   transcript = transcript.replace(/\ballie\b/gi, 'alley');
   transcript = transcript.replace(/\bquick\s+safe\b/gi, 'quick save');
+  transcript = transcript.replace(/\bquicks\s+save\b/gi, 'quick save');
   transcript = transcript.replace(/\bgronk\b/gi, 'grunk');
 
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
@@ -172,7 +187,13 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // During narration, allow navigation commands but block game commands
   if (state.isNarrating && !state.pausedForSound) {
     if (NAVIGATION_COMMANDS.includes(lower) || SKIP_N_PATTERN.test(lower) || BACK_N_PATTERN.test(lower)) {
-      // Let navigation commands pass through
+      return transcript;
+    }
+
+    // Directions interrupt narration immediately then execute (#84)
+    if (DIRECTION_COMMANDS.has(lower)) {
+      const { stopNarration } = await import('../narration/tts-player.js');
+      stopNarration();
       return transcript;
     }
 
@@ -249,6 +270,29 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   const printMatch = transcript.match(/^print\s+(.+)$/i);
   if (printMatch) {
     handlers.sendCommandDirect(printMatch[1]);
+    return false;
+  }
+
+  // "Mark [text]" — append a note to the current map node (#94)
+  const markMatch = transcript.match(/^mark\s+(.+)$/i);
+  if (markMatch) {
+    const note = markMatch[1].trim();
+    try {
+      const { mapState } = await import('../features/map-config.js');
+      const { saveMapForGame } = await import('../features/map-canvas.js');
+      const node = mapState.currentNodeId ? mapState.nodes.get(mapState.currentNodeId) : null;
+      if (node) {
+        node.notes = node.notes ? `${node.notes}\n${note}` : note;
+        saveMapForGame();
+        speakAppMessage(`Marked: ${note}`);
+        updateStatus(`Marked: ${note}`);
+      } else {
+        speakAppMessage('No current location to mark');
+        updateStatus('No location to mark');
+      }
+    } catch (e) {
+      speakAppMessage('Mark failed');
+    }
     return false;
   }
 
