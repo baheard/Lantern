@@ -39,10 +39,7 @@ function relTime(iso) {
 function getMoveCount(key) {
   try {
     const data = JSON.parse(localStorage.getItem(key));
-    const html = data?.displayHTML?.statusBar || '';
-    const text = html.replace(/<[^>]+>/g, ' ');
-    const m = text.match(/Moves[:\s]+(\d+)/i);
-    return m ? parseInt(m[1]) : null;
+    return data?.appMoveCount ?? null;
   } catch { return null; }
 }
 

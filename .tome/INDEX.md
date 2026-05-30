@@ -7,7 +7,7 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 ## Entries
 
 - [manage-saves-modal](manage-saves-modal.md) — Manage Saves modal design: flat rows, portal dropdown, backup expand, Drive menu states (ui, saves, modal, gdrive) — updated 2026-05-14
-- [drive-sync-design](drive-sync-design.md) — Timestamp ≠ progress; two-column sync UI; conflict defaults to skip (gdrive, sync, design) — updated 2026-05-14
+- [drive-sync-design](drive-sync-design.md) — appMoveCount for conflict detection; false-conflict fix; two-column sync UI (gdrive, sync, design, move-count) — updated 2026-05-30
 - [dev-gotchas](dev-gotchas.md) — ES module cache busting, SW unregister hazard, async console gotcha (dev, debugging, cache) — updated 2026-05-14
 - [ui-conventions](ui-conventions.md) — Sentence case for labels; 44px min touch targets for all interactive elements (ui, design, accessibility, mobile) — updated 2026-05-13
 

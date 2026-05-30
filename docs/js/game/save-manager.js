@@ -355,6 +355,7 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             timestamp: new Date().toISOString(),
             gameName: state.currentGameName,
             gameSignature: gameSignature,
+            appMoveCount: state.appMoveCount,
             quetzalData: compressedQuetzalData,
             quetzalDataCompressed: true,
             displayHTML: {
@@ -520,6 +521,9 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             if (parseaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0
             }
+            // Restore app-tracked move count
+            state.appMoveCount = saveData.appMoveCount ?? 0;
+
             // DON'T restore VoxGlk generation - keep it at 1 (current intro state)
             // After page reload, glkapi.js is at gen:1, so VoxGlk must stay at gen:1
             // The saved generation is just VM memory state, not the UI turn counter
@@ -760,6 +764,7 @@ export async function autoSave() {
     const success = await performSave(key, null, { verification });
 
     if (success) {
+        state.appMoveCount++;
         const now = Date.now();
         if (now - lastAutosaveBackupTime >= BACKUP_INTERVAL_MS) {
             lastAutosaveBackupTime = now;

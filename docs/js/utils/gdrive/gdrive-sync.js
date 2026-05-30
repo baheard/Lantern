@@ -203,8 +203,15 @@ export async function syncAllNow(gameName = null) {
           device: deviceInfo
         };
 
+        // Include appProperties so checkDriveForNewerAutosave can use saveTimestamp
+        // instead of falling back to modifiedTime (server upload time), which causes
+        // false "conflict" dialogs on the next page load.
+        const localMoves = saveData.appMoveCount ?? null;
+        const appProperties = { saveTimestamp: saveData.timestamp || '' };
+        if (localMoves !== null) appProperties.moveCount = String(localMoves);
+
         const filename = localStorageKeyToFilename(key);
-        await uploadFile(filename, enrichedData);
+        await uploadFile(filename, enrichedData, appProperties);
         uploadCount++;
       } catch (error) {
         // Failed to upload, skip
@@ -318,13 +325,7 @@ async function flushSyncQueue() {
       if (driveFile) {
         const driveMoves = driveFile.appProperties?.moveCount != null
           ? (n => isNaN(n) ? null : n)(parseInt(driveFile.appProperties.moveCount, 10)) : null;
-        const localMoves = (() => {
-          try {
-            const html = saveData?.displayHTML?.statusBar || '';
-            const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-            return m ? parseInt(m[1]) : null;
-          } catch { return null; }
-        })();
+        const localMoves = saveData.appMoveCount ?? null;
 
         const driveCompareTime = driveFile.appProperties?.saveTimestamp
           ? new Date(driveFile.appProperties.saveTimestamp).getTime()
@@ -342,15 +343,9 @@ async function flushSyncQueue() {
       }
 
       const enrichedData = { ...saveData, device: getDeviceInfo() };
-      const localMoveStr = (() => {
-        try {
-          const html = saveData?.displayHTML?.statusBar || '';
-          const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-          return m ? m[1] : null;
-        } catch { return null; }
-      })();
+      const localMoves = saveData.appMoveCount ?? null;
       const appProperties = { saveTimestamp: saveData.timestamp || '' };
-      if (localMoveStr !== null) appProperties.moveCount = localMoveStr;
+      if (localMoves !== null) appProperties.moveCount = String(localMoves);
 
       const filename = localStorageKeyToFilename(key);
       await uploadFile(filename, enrichedData, appProperties);
@@ -453,26 +448,31 @@ export async function checkDriveForNewerAutosave(gameName) {
         ? (n => isNaN(n) ? null : n)(parseInt(driveFile.appProperties.moveCount, 10))
         : null;
 
-      const localMoves = (() => {
-        try {
-          const html = localData?.displayHTML?.statusBar || '';
-          const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-          return m ? parseInt(m[1]) : null;
-        } catch { return null; }
-      })();
+      const localMoves = localData.appMoveCount ?? null;
 
+      const movesComparable = driveMoves != null && localMoves != null;
+      const driveMoveCountHigher = movesComparable && driveMoves > localMoves;
       const driveTimestampNewer = driveTime > localTime + 1000;
-      const driveMoveCountHigher = driveMoves != null && localMoves != null && driveMoves > localMoves;
 
       if (driveTimestampNewer && driveMoveCountHigher) {
+        // Both signals agree Drive is newer — download
         const driveData = await downloadFile(driveFile.name);
         localStorage.setItem(localKey, JSON.stringify(driveData));
         downloadCount++;
-      } else if (driveTimestampNewer !== driveMoveCountHigher) {
-        // Signals conflict — one is newer by date, the other has more moves
+      } else if (driveTimestampNewer && !movesComparable) {
+        // Can't compare moves (old save, no appMoveCount yet).
+        // Require >60s gap to distinguish genuine cross-device progress from upload lag (~5s).
+        if (driveTime > localTime + 60000) {
+          const driveData = await downloadFile(driveFile.name);
+          localStorage.setItem(localKey, JSON.stringify(driveData));
+          downloadCount++;
+        }
+        // else: gap is just upload lag — treat as in sync, skip silently
+      } else if (movesComparable && driveTimestampNewer !== driveMoveCountHigher) {
+        // Both signals available but disagree — genuine conflict, ask user
         conflicts.push(saveLabel(localKey, gameName));
       }
-      // else: local wins both — skip silently, nothing to do
+      // else: local wins or same — skip silently
     }
 
     if (conflicts.length > 0) {

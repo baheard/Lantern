@@ -69,12 +69,7 @@ function relativeTime(isoString) {
 }
 
 function getMoveCount(saveData) {
-  try {
-    const html = saveData?.displayHTML?.statusBar || '';
-    const text = html.replace(/<[^>]+>/g, ' ');
-    const m = text.match(/Moves[:\s]+(\d+)/i);
-    return m ? parseInt(m[1]) : null;
-  } catch { return null; }
+  return saveData?.appMoveCount ?? null;
 }
 
 // ─── Backup Helpers ──────────────────────────────────────────────────────────

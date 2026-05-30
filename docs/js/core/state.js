@@ -100,6 +100,10 @@ const _state = {
   // Autosave grace period: number of turns to skip autosave after a restore
   autosaveGraceMoves: 0,
 
+  // App-tracked move count — incremented on each successful autosave, saved/restored
+  // with save data. Game-agnostic; used for display and Drive conflict detection.
+  appMoveCount: 0,
+
   // Device tracking
   deviceId: null,
   deviceInfo: null,
