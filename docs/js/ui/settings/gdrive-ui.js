@@ -7,7 +7,21 @@
 import { state } from '../../core/state.js';
 import { updateStatus } from '../../utils/status.js';
 
-const AUTO_SYNC_KEY = 'iftalk_gdrive_autosync';
+const GLOBAL_AUTO_SYNC_KEY = 'iftalk_gdrive_autosync';
+
+function getAutoSyncKey() {
+  return state.currentGameName
+    ? `iftalk_gdrive_autosync_${state.currentGameName}`
+    : GLOBAL_AUTO_SYNC_KEY;
+}
+
+function readAutoSyncEnabled() {
+  const key = getAutoSyncKey();
+  const val = localStorage.getItem(key);
+  if (val !== null) return val === 'true';
+  // Per-game key not set yet — fall back to global default (read-only, don't persist)
+  return localStorage.getItem(GLOBAL_AUTO_SYNC_KEY) === 'true';
+}
 
 /**
  * Update Google Drive UI based on sign-in state
@@ -37,6 +51,17 @@ function updateGDriveUI() {
   const hasDriveAuthInfo = state.gdriveSignedIn || !!localStorage.getItem('gdrive_email');
   if (autoSyncRow) {
     autoSyncRow.classList.toggle('hidden', !hasDriveAuthInfo);
+  }
+
+  // Refresh toggle state and label to match current game context
+  const autoSyncToggle = document.getElementById('gdriveAutoSyncToggle');
+  const autoSyncLabel = document.getElementById('gdriveAutoSyncLabel');
+  if (autoSyncToggle) {
+    autoSyncToggle.checked = readAutoSyncEnabled();
+    state.gdriveSyncEnabled = autoSyncToggle.checked;
+  }
+  if (autoSyncLabel) {
+    autoSyncLabel.textContent = state.currentGameName ? 'Auto-sync for this game' : 'Auto-sync saves (default)';
   }
 }
 
@@ -148,13 +173,11 @@ export function initGDriveUI() {
   // Auto-sync toggle
   const autoSyncToggle = document.getElementById('gdriveAutoSyncToggle');
   if (autoSyncToggle) {
-    // Restore persisted setting
-    state.gdriveSyncEnabled = localStorage.getItem(AUTO_SYNC_KEY) === 'true';
-    autoSyncToggle.checked = state.gdriveSyncEnabled;
+    // Initial state set by updateGDriveUI(); no need to set it again here.
 
     autoSyncToggle.addEventListener('change', async () => {
       state.gdriveSyncEnabled = autoSyncToggle.checked;
-      localStorage.setItem(AUTO_SYNC_KEY, state.gdriveSyncEnabled);
+      localStorage.setItem(getAutoSyncKey(), state.gdriveSyncEnabled);
 
       if (state.gdriveSyncEnabled) {
         const { confirmDialog } = await import('../confirm-dialog.js');
@@ -175,6 +198,11 @@ export function initGDriveUI() {
 
   // Listen for auto-sync errors and surface them in Drive UI
   window.addEventListener('gdriveAutoSyncError', () => {
+    updateGDriveUI();
+  });
+
+  // Refresh toggle and label when game loads/unloads (per-game vs global context)
+  window.addEventListener('gameContextChanged', () => {
     updateGDriveUI();
   });
 

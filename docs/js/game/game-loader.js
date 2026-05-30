@@ -35,6 +35,14 @@ export async function startGame(gamePath, onOutput) {
     // Set game name for save/restore
     state.currentGameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
 
+    // Per-game auto-sync: inherit global default on first play, then use per-game value
+    const perGameSyncKey = `iftalk_gdrive_autosync_${state.currentGameName}`;
+    if (localStorage.getItem(perGameSyncKey) === null) {
+      localStorage.setItem(perGameSyncKey, localStorage.getItem('iftalk_gdrive_autosync') === 'true');
+    }
+    state.gdriveSyncEnabled = localStorage.getItem(perGameSyncKey) === 'true';
+    window.dispatchEvent(new Event('gameContextChanged'));
+
     // Update document title to show game name
     const gameDisplayName = gamePath.split('/').pop().replace(/\.[^.]+$/, '')
       .replace(/([A-Z])/g, ' $1').trim()
@@ -329,6 +337,10 @@ export function unloadGame() {
   // Update settings context to hide game-specific items (map button, etc.)
   updateSettingsContext();
   updateMobileMenuForGameState(false); // Hide game-specific mobile menu icons
+
+  // Reset gdriveSyncEnabled to global default when no game is loaded
+  state.gdriveSyncEnabled = localStorage.getItem('iftalk_gdrive_autosync') === 'true';
+  window.dispatchEvent(new Event('gameContextChanged'));
 
   // Update status
   updateStatus('Select a game to start');

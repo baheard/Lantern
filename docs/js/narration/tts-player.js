@@ -396,6 +396,12 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
       await new Promise(resolve => setTimeout(resolve, 400));
     }
 
+    // Theater mode (OpenAI TTS) plays chunks with zero gap; add a small inter-chunk pause
+    // so consecutive sentences don't run together. Browser TTS has natural utterance gaps.
+    if (isOpenAITTSEnabled() && !isHeaderChunk && !state.chunkWasInterrupted && state.isNarrating && !state.isPaused) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
     // Check if chunk was interrupted by tab switch or TTS failure
     if (state.chunkWasInterrupted) {
       state.chunkWasInterrupted = false;  // Clear the flag

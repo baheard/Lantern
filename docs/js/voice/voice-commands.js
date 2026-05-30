@@ -206,6 +206,14 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
 
   if (inputType === 'char') {
 
+    // "Read all" / "read screen" / "read menu" — re-narrate the full PAK screen
+    if (['read', 'read all', 'read screen', 'read menu', 'read page'].includes(lower)) {
+      const { getCharModeText, triggerCharModeNarration } = await import('../game/voxglk.js');
+      const text = getCharModeText();
+      if (text.trim()) triggerCharModeNarration(text);
+      return false;
+    }
+
     // Arrow keys
     if (lower === 'up') {
       sendInput('up', 'char');

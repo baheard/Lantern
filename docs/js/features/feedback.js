@@ -6,12 +6,15 @@
  * but the POST reliably lands on Google's side.
  */
 
+import { APP_CONFIG } from '../config.js';
+
 const FORM_ID        = '1FAIpQLSfdB2XXAsBC7D-aMb6z0NbquRy29VV6Qlx_soZ54EvPBwjMEA';
 const FIELD_GAME     = 'entry.1142768170';
 const FIELD_FEEDBACK = 'entry.1685903629';
 const FIELD_DEVICE   = 'entry.1513299264';
 const FIELD_CONSOLE  = 'entry.1330585358';
 const FIELD_OUTPUT   = 'entry.2119856681';
+const FIELD_VERSION  = 'entry.788116155';
 
 const OUTPUT_CHAR_LIMIT  = 800;
 const CONSOLE_CHAR_LIMIT = 800;
@@ -83,6 +86,7 @@ export async function submitFeedback(feedbackText, gameName = 'None') {
     [FIELD_DEVICE]:   getDeviceInfo(),
     [FIELD_CONSOLE]:  getConsoleLog(),
     [FIELD_OUTPUT]:   getRecentOutput(),
+    [FIELD_VERSION]:  APP_CONFIG.version,
   });
 
   try {

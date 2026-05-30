@@ -6,6 +6,7 @@
  */
 
 import { renderUpdate } from './voxglk-renderer.js';
+import { processTextForTTS } from '../utils/text-processing.js';
 import { addGameText, clearGameOutput } from '../ui/game-output.js';
 import { state } from '../core/state.js';
 import { checkLocationChange, setSceneBreak } from '../features/auto-mapper.js';
@@ -28,6 +29,20 @@ import {
   handleAutoRestore,
   consumeSeededBufaddr,
 } from './voxglk-bootstrap.js';
+
+/**
+ * Clean PAK/char-mode text for TTS — applies processTextForTTS symbol-stripping then
+ * joins lines with periods so TTS pauses naturally between menu items/columns.
+ */
+function cleanCharModeText(text) {
+  return text
+    .split('\n')
+    .map(l => processTextForTTS(l.trim()))
+    .filter(l => l.length > 0)
+    .join('. ')
+    .replace(/([.!?])\.\s*/g, '$1 ')
+    .trim();
+}
 
 /**
  * State
@@ -426,7 +441,9 @@ export function createVoxGlk(textOutputCallback) {
             let finalTextForTTS = textForTTS;
 
             if (s.inputType === 'char') {
-              // Diff against previous text to find what changed
+              // Diff against previous text to find what changed.
+              // Goal: only narrate what the user needs to hear after a keypress —
+              // typically the item the cursor just moved TO, not the one it left.
               const newLines = textForTTS.split('\n');
               const oldLines = s.lastCharModePlainText.split('\n');
 
@@ -446,12 +463,40 @@ export function createVoxGlk(textOutputCallback) {
                 lastDiffOld--;
               }
 
-              // Extract only the changed portion
               if (firstDiff <= lastDiffNew) {
-                const changedLines = newLines.slice(firstDiff, lastDiffNew + 1);
-                finalTextForTTS = changedLines.join('\n');
+                const changedNew = newLines.slice(firstDiff, lastDiffNew + 1);
+                const changedOld = oldLines.slice(firstDiff, lastDiffOld + 1);
+
+                // "Line grew" heuristic — works for any cursor character, not just '>'.
+                //
+                // When a PAK menu cursor moves:
+                //   • The line that GAINED the cursor got longer  → this is where we moved TO
+                //   • The line that LOST the cursor got shorter   → this is where we came FROM
+                //
+                // If both the "from" and "to" sets are present AND we have a 1-for-1 line
+                // mapping (same count of changed lines on each side — i.e. the screen layout
+                // didn't change, only the cursor position did), narrate only the grown lines.
+                //
+                // Fall back to narrating everything when:
+                //   • The number of changed lines differs (content was added/removed)
+                //   • No lines shrank (the change isn't a simple cursor move)
+                //   • No lines grew (shouldn't happen, but be safe)
+                let toNarrate = changedNew;
+
+                if (changedNew.length === changedOld.length) {
+                  const grownLines  = changedNew.filter((l, i) => l.length >  changedOld[i].length);
+                  const shrunkLines = changedNew.filter((l, i) => l.length <  changedOld[i].length);
+
+                  // Only apply the filter when we can clearly see a cursor transfer
+                  // (some lines grew, some shrank). Otherwise narrate all changed lines.
+                  if (grownLines.length > 0 && shrunkLines.length > 0) {
+                    toNarrate = grownLines;
+                  }
+                }
+
+                finalTextForTTS = toNarrate.join('\n');
               } else {
-                // No changes detected - don't narrate anything
+                // No changes detected — don't narrate anything
                 finalTextForTTS = '';
               }
 
@@ -464,7 +509,12 @@ export function createVoxGlk(textOutputCallback) {
             }
 
             if (finalTextForTTS.trim()) {
-              s.onTextOutput(finalTextForTTS);
+              if (s.inputType === 'char') {
+                const cleaned = cleanCharModeText(finalTextForTTS);
+                if (cleaned.trim()) s.onTextOutput(cleaned);
+              } else {
+                s.onTextOutput(finalTextForTTS);
+              }
             }
           }
 
@@ -808,4 +858,20 @@ export function updateLastStatusLine(statusHTML) {
   const tmp = document.createElement('div');
   tmp.innerHTML = statusHTML;
   s.lastStatusLine = tmp.textContent;
+}
+
+/**
+ * Return the full current PAK/char-mode screen text, cleaned for TTS.
+ * Empty string when not in char mode or no text has been received yet.
+ */
+export function getCharModeText() {
+  return cleanCharModeText(s.lastCharModePlainText);
+}
+
+/**
+ * Directly invoke the TTS output callback with arbitrary text.
+ * Used by the "read all" voice command to re-narrate the full PAK screen.
+ */
+export function triggerCharModeNarration(text) {
+  if (s.onTextOutput && text.trim()) s.onTextOutput(text);
 }

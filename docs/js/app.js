@@ -113,7 +113,20 @@ async function handleGameOutput(text) {
     state.narrationEnabled = true;
     state.isPaused = false;
 
-    // Start narration (chunks will be created on-demand)
+    // For char mode (PAK/menu screens), speak the pre-computed diff text directly.
+    // speakTextChunked → ensureChunksReady would otherwise rebuild chunks from the
+    // full upper window DOM, narrating the entire screen on every keypress instead
+    // of just the item that changed. The diff text already has ". " separators from
+    // cleanCharModeText so TTS pauses naturally between columns/lines.
+    const { getInputType } = await import('./game/voxglk.js');
+    if (getInputType() === 'char' && text.trim()) {
+      document.querySelectorAll('.chunk-marker-start, .chunk-marker-end').forEach(el => el.remove());
+      state.narrationChunks = [{ text: text.trim(), voice: 'narrator' }];
+      state.chunksValid = true;
+    }
+
+    // Start narration (chunks will be created on-demand for line mode, or are already
+    // set above for char mode)
     speakTextChunked(null, startIndex);
   }
 }

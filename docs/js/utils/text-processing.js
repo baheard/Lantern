@@ -56,6 +56,16 @@ export function sanitizeRestoredHTML(html) {
  */
 export function processTextForTTS(text) {
   let processed = text
+    // Strip characters that TTS engines read as their names rather than ignoring:
+    //   >  → "greater than"    *  → "asterisk"    |  → "pipe"
+    //   ~  → "tilde"           ^  → "caret"        #  → "hash/pound"
+    //   \  → "backslash"       _  → "underscore"
+    // These appear frequently in Z-machine IF output (menu cursors, bullets, borders)
+    // and are never meaningful to hear. We strip them globally so no TTS path ever
+    // reaches them, regardless of whether we're in line mode or char/PAK mode.
+    .replace(/[>*|~^#\\_]+/g, ' ')
+    // Also strip Unicode block/box-drawing chars that might slip through from char mode
+    .replace(/[─│┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬╭╮╯╰═║░▒▓█▄▀■▶►▸→»★☆◆◇●○▪▫]+/g, ' ')
     // Collapse spaced capitals: "A N C H O R H E A D" → "ANCHORHEAD"
     .replace(/\b([A-Z])\s+(?=[A-Z](?:\s+[A-Z]|\s*\b))/g, '$1')
     // Normalize initials: "H.P." → "H P"
