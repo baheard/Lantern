@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-05-09
+updated: 2026-05-30
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -49,6 +49,61 @@ Full details: [`bootstrap-restore-flow`](bootstrap-restore-flow.md), [`quetzal-r
 ## Game-dialog bridge: `window._customSaveFilename`
 
 When the Z-machine engine triggers a native save dialog (game's own SAVE command, not the IFTalk meta-command), `dialog-stub.js` fires an `iftalk-dialog-open` event handled by `meta-command-handlers.js:initDialogInterceptor()`. The user enters a name via the IFTalk UI. To pass that name through the Dialog callback (which has no parameter for it), the handler sets `window._customSaveFilename = targetSaveName` immediately before calling `gameDialogCallback(gameDialogRef)`. `Dialog.file_write()` reads this global to know which custom save slot to write. The global is intentional — the Dialog API doesn't support extra parameters.
+
+## Restore injects HTML directly — must invalidate narration chunks (v1.5.407)
+
+`performRestore` (save-manager.js) rebuilds the screen by writing the saved
+display HTML straight into the DOM: `statusBarEl.innerHTML`, `upperWindowEl.innerHTML`,
+and `lowerWindowEl.innerHTML = sanitizeRestoredHTML(...)`. This **bypasses
+`addGameText`**, which is the only place that normally invalidates narration chunks
+(`state.chunksValid = false`) and sets `state.currentGameTextElement`.
+
+**The bug this caused:** On the auto-restore-on-reload path the game's title screen
+renders first. For char-mode-intro games (Theatre, Anchorhead) `handleGameOutput`
+sees `inputType === 'char'` and builds title PAK chunks, setting `chunksValid = true`
+(see [[pak-char-mode-narration]]). `performRestore` then injects the restored *room*
+HTML directly — but the stale **title** chunks remained valid. So clicking Play ran
+`ensureChunksReady`, which short-circuits when `chunksValid && narrationChunks.length`,
+and narrated the title screen ("Theatre / An Interactive Night of Horror / Copyright…")
+while highlighting nothing.
+
+Confirmed ordering via console: `[PAK chunks] [Theatre…]` fires *during* restore;
+`performRestore`'s injection runs *after* it. So the title chunks are always the last
+thing built before Play.
+
+**Fix:** Immediately after the `lowerWindowEl.innerHTML` injection, invalidate the
+narration state and repoint the current element:
+```js
+state.chunksValid = false;
+state.narrationChunks = [];
+state.currentChunkIndex = 0;
+state.currentGameTextElement = <last non-system .game-text in restored lowerWindow>;
+```
+With chunks invalidated, `ensureChunksReady`'s existing fallback (grab the last
+`.game-text` when `currentGameTextElement` is null) rebuilds the room chunks correctly.
+The chunk-invalidation is the essential part; the `currentGameTextElement` repoint is
+belt-and-suspenders. Covers all restore entry points (F5 autoload, Quick Load, in-game
+RESTORE) since they all funnel through `performRestore`.
+
+**General principle:** anything that mutates `lowerWindow` outside `addGameText` must
+also invalidate narration chunks, or the next Play/highlight reads stale content.
+
+## Debugging restore narration: verify the SERVED code first
+
+Restore bugs are browser-only, so they need live testing — and that collides hard with
+the service-worker cache (see [[dev-gotchas]]). Editing `save-manager.js` and reloading
+runs the OLD cached module; a "fix" can look like it does nothing (or a real fix looks
+unverified). Before trusting any live restore test:
+- Bump `APP_CONFIG.version` (config.js), `CACHE_VERSION` (service-worker.js), CLAUDE.md.
+- In console, confirm the new code is actually loaded:
+  `navigator.serviceWorker.controller.scriptURL` ends in the new `?v=`, AND
+  `(await (await fetch('/js/game/save-manager.js')).text()).includes('<unique string from your edit>')`.
+- Do NOT unregister the SW / clear caches as a shortcut: when the node server isn't
+  running the app is served entirely from the SW cache, so clearing it makes the page
+  unreachable (ERR_CONNECTION_REFUSED) until `npm start`. Check the server is up first
+  (`Get-NetTCPConnection -LocalPort 3002`).
+- Console probes can't use top-level await/return: wrap in
+  `(async()=>{ window.__x = {...} })();` then read `window.__x` in a second call.
 
 ## Restore always reloads the page
 
