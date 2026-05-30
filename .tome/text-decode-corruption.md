@@ -1,12 +1,70 @@
 ---
-title: "the"→"tv2" Z-String Abbreviation Corruption (OPEN)
-tags: [zvm, save-restore, corruption, abbreviations, theatre, open-bug]
+title: "the"→"tv2" Z-String Abbreviation Corruption (FIXED v1.5.409)
+tags: [zvm, save-restore, corruption, abbreviations, theatre, fixed]
 created: 2026-05-30
 updated: 2026-05-30
 aliases: [tv2, abbreviation corruption, garbled text, the becomes tv2]
 ---
 
-# "the"→"tv2" Z-String Abbreviation Corruption (OPEN — not root-caused)
+# "the"→"tv2" Z-String Abbreviation Corruption (FIXED, v1.5.409)
+
+## ROOT CAUSE (found 2026-05-30, live VM probe)
+
+The first **line** command typed after a bootstrap auto-restore is written by the
+ZVM into memory at a **bogus low buffer address (observed 63 = 0x3F)** instead of
+the game's real text buffer. In Theatre that bogus buffer overlaps the **Z-string
+abbreviation table strings** at ~0x40, so the command bytes overwrite the
+abbreviations. Every abbreviated word ("the") then decodes to garbage ("tv2") on
+the next room redraw. Exiting a PAK (`read page`→`q`) isn't special — it's just
+the first redraw that re-renders an abbreviated word. ANY first line command
+corrupts it; a short `x me` reproduces it.
+
+**Why 63:** after `restore_file()`, the ZVM's in-progress `read_data` (the pending
+aread) still holds the PRE-restore intro request's `bufaddr` = 63. The restored
+continuation copies the typed line into `read_data.bufaddr` = 63. This is the same
+"63" the [[bootstrap-restore-flow]] doc's v1.5.367 section noted but couldn't
+explain — it's the stale intro buffer, inherited across the restore. v1.5.367's
+seeded dual-write made the command EXECUTE correctly (wrote it to the real buffer
+too) but never stopped the stray write to 63.
+
+Confirmed live (Theatre autosave, bufaddr should be 18183):
+- Right after restore: `read_data.bufaddr` = 63; abbrev region at 0x40 = clean
+  (`80 00 16 40 ...`, matches `origram`).
+- Type `examine me` → bytes `09/0a "examine me"` appear at addr 63-73; abbrev
+  string clobbered → "the"→"tv2" on next redraw.
+- Patch `read_data.bufaddr` = 18183 BEFORE typing → command lands at 18183, abbrev
+  region stays intact, room renders "...from the desk... the manager's office...
+  trapdoor in the floor." CLEAN. No tv2.
+
+## FIX (v1.5.409) — confirmed working live on Theatre
+
+**Location matters.** It must be applied at command-SUBMIT time, NOT at restore
+time. An earlier attempt (v1.5.408) set `read_data.bufaddr` in
+`performRestore` and FAILED on real code: when the restored aread resumes during
+the char bootstrap it re-reads its operands and resets `read_data.bufaddr` back to
+63, overwriting the patch. (The manual console test only worked because it patched
+right before typing — i.e. submit time.)
+
+The working fix lives in `voxglk.js` `sendInput()`, inside the existing
+`seededBufaddr` one-shot block (the v1.5.367 dual-write), right before
+`acceptCallback`:
+```js
+const seededAddr = consumeSeededBufaddr();
+if (seededAddr && window.zvmInstance?.m) {
+    // ...existing dual-write of text into seededAddr...
+    if (window.zvmInstance?.read_data) {
+        window.zvmInstance.read_data.bufaddr = seededAddr;  // <-- the fix
+    }
+}
+```
+This redirects the ZVM's pending aread to the saved game-loop buffer just before
+the input is processed, so the first command lands at the real buffer (18183 in
+Theatre) instead of the stale 63 that overlaps the abbreviation strings. One-shot:
+fires only for the first line input after a bootstrap restore. The dual-write of
+the text is now redundant for Theatre but kept as belt-and-suspenders for
+Anchorhead. `performRestore` carries only a comment pointing here.
+
+## ORIGINAL SYMPTOM / investigation notes (kept for context)
 
 ## Symptom
 

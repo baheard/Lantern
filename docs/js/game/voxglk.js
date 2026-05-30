@@ -794,6 +794,20 @@ export function sendInput(text, type = 'line') {
       for (let i = 0; i < text.length; i++) {
         m.setUint8(seededAddr + 2 + i, text.charCodeAt(i));
       }
+      // ROOT FIX for "the"→"tv2" abbreviation corruption (Theatre, see
+      // .tome/text-decode-corruption.md). After a bootstrap restore the ZVM's
+      // in-progress aread still holds the stale PRE-restore intro bufaddr
+      // (observed = 63), so the restored continuation copies this first typed
+      // command into memory at address 63 — which in Theatre overlaps the
+      // Z-string abbreviation table strings (~0x40), garbling every "the" on the
+      // next room redraw. Redirect read_data.bufaddr to the saved game-loop buffer
+      // BEFORE acceptCallback so the input lands where it belongs, not on the
+      // abbreviations. (Can't be done at restore time — the resuming aread resets
+      // read_data.bufaddr back to 63 during the char bootstrap.) The dual-write
+      // above is now redundant but kept as belt-and-suspenders.
+      if (window.zvmInstance?.read_data) {
+        window.zvmInstance.read_data.bufaddr = seededAddr;
+      }
     }
   }
 

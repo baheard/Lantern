@@ -499,6 +499,15 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             // Also zero the parse buffer so games that read stale tokens before
             // calling aread (e.g. Theatre) don't re-execute the previous command.
             const { bufaddr, parseaddr } = saveData.voxglkState || {};
+
+            // NOTE: read_data.bufaddr is also bogus here (stale pre-restore intro
+            // buffer, observed = 63) and causes the "the"→"tv2" abbreviation
+            // corruption, but it CANNOT be fixed here — when the restored aread
+            // resumes during the char bootstrap it re-reads its operands and resets
+            // read_data.bufaddr back to 63. The correction is applied at command-
+            // submit time in voxglk.js sendInput() via the seededBufaddr one-shot.
+            // See .tome/text-decode-corruption.md.
+
             if (bufaddr && window.zvmInstance?.m) {
                 window.zvmInstance.m.setUint8(bufaddr + 1, 1);   // text buffer length = 1
                 window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look

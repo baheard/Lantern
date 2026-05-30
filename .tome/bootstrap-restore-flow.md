@@ -132,6 +132,19 @@ The 'l' seed persists untouched at 39469 because glkapi never writes there for g
 
 The root cause of the bufaddr mismatch (why glkapi uses 63 vs the ZVM's 39469) is not fully understood — it may relate to Anchorhead having an intermediate aread between the bootstrap LOOK and the main game loop, or glkapi retaining stale state after restore. The fix is correct regardless: writing to both buffers ensures the ZVM sees the right command.
 
+**Root cause found (v1.5.409, 2026-05-30):** the "63" is the **pre-restore intro
+request's `bufaddr`**, still sitting in the ZVM's in-progress `read_data` after
+`restore_file()`. The restored aread continuation copies the typed line into
+`read_data.bufaddr` = 63. For Anchorhead, addr 63 was harmless; for **Theatre,
+addr ~0x40 holds the Z-string abbreviation table strings**, so the stray write
+garbled them → "the"→"tv2" (see [[text-decode-corruption]]). v1.5.409 fixes it by
+setting `read_data.bufaddr = seededAddr` inside the `sendInput()` seeded one-shot
+(right before acceptCallback), so the first post-restore command lands in the real
+game-loop buffer. NOTE: must be done at submit time — patching read_data in
+`performRestore` fails because the resuming aread resets bufaddr back to 63 during
+the char bootstrap (tried in v1.5.408). The dual-write is now redundant for Theatre
+but retained as belt-and-suspenders.
+
 ## Current implementation
 
 As of v1.5.231+ (bootstrap) / v1.5.268 (char-bootstrap fix) / v1.5.367 (bufaddr mismatch fix):
