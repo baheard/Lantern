@@ -559,6 +559,25 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     // Show command input immediately and scroll to bottom
                     showMessageInput();
                     scrollToBottom();
+
+                    // The restored room HTML was injected directly (not via addGameText),
+                    // so any narration chunks built from the intro/title screen during the
+                    // page-reload bootstrap are now stale but still marked valid. Invalidate
+                    // them and point currentGameTextElement at the last restored game-text so
+                    // the next Play rebuilds chunks from the restored DOM (not the title).
+                    // See bug: "refresh + play narrates the starting/title screen".
+                    state.chunksValid = false;
+                    state.narrationChunks = [];
+                    state.currentChunkIndex = 0;
+                    const restoredTexts = [...lowerWindowEl.querySelectorAll('.game-text')];
+                    let lastRestoredText = null;
+                    for (let i = restoredTexts.length - 1; i >= 0; i--) {
+                        if (!restoredTexts[i].querySelector('.system-message') && restoredTexts[i].textContent.trim()) {
+                            lastRestoredText = restoredTexts[i];
+                            break;
+                        }
+                    }
+                    state.currentGameTextElement = lastRestoredText;
                 }
             }
 
