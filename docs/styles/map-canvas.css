@@ -1527,3 +1527,27 @@ body.map-resizing .map-canvas-overlay * {
     width: 100%;
   }
 }
+
+/* Anomaly badge on map quick menu button */
+#quickMenuMapBtn {
+  position: relative;
+}
+
+.map-anomaly-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  background: #f59e0b;
+  border-radius: 50%;
+  border: 1.5px solid var(--bg-primary, #1a1a2e);
+  pointer-events: none;
+  animation: map-badge-pulse 2.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes map-badge-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}

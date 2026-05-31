@@ -1532,6 +1532,7 @@ function loadMapForGame(gameName) {
   syncFromAutoMapper();
 
   updateNodeCount();
+  updateMapBadge();
   if (isVisible) render();
 }
 
@@ -1698,6 +1699,7 @@ function saveMapImmediately() {
       currentNodeId: mapState.currentNodeId
     };
     localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify(dataToSave));
+    updateMapBadge();
     return true;
   } catch (e) {
     console.error('Map save failed:', e);
@@ -1853,6 +1855,55 @@ function resetMap() {
   mapState.undoStack = [];
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
+}
+
+// ============================================================================
+// ANOMALY DETECTION
+// ============================================================================
+
+/**
+ * Detect map anomalies that need user review.
+ * Returns the count of anomalies found.
+ */
+function detectAnomalies() {
+  let count = 0;
+
+  for (const node of mapState.nodes.values()) {
+    if (node.isDuplicate) count++;
+  }
+
+  for (const edge of mapState.edges.values()) {
+    if (!mapState.nodes.has(edge.from) || !mapState.nodes.has(edge.to)) count++;
+  }
+
+  return count;
+}
+
+/**
+ * Update the anomaly warning badge on map trigger buttons.
+ * Shows an amber dot when anomalies exist, removes it when none.
+ */
+function updateMapBadge() {
+  const count = detectAnomalies();
+  const buttons = [
+    document.getElementById('quickMenuMapBtn')
+  ];
+
+  for (const btn of buttons) {
+    if (!btn) continue;
+    let badge = btn.querySelector('.map-anomaly-badge');
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'map-anomaly-badge';
+        badge.setAttribute('aria-hidden', 'true');
+        btn.appendChild(badge);
+      }
+      badge.title = `${count} map anomal${count === 1 ? 'y' : 'ies'} — open map to review`;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
 }
 
 // ============================================================================

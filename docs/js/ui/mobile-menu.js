@@ -233,7 +233,7 @@ export function updateMobileMenuForGameState(inGame) {
 
   // Toggle-controlled menu items
   const menuItems = [
-    { id: 'mobileMapIcon', pref: 'map', gameOnly: true },
+    { id: 'quickMenuMapBtn', pref: 'map', gameOnly: true },
     { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
     { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
     { id: 'mobileManageSavesIcon', pref: 'managesaves', gameOnly: true },
