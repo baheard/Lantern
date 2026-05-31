@@ -95,7 +95,8 @@ export const mapState = {
   selectedNode: null,
   currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
   autoMapEnabled: true,  // Enabled by default - user can disable if needed
-  undoStack: [],  // Stack of undo actions
+  undoStack: [],  // Stack of pre-edit state snapshots (undo)
+  redoStack: [],  // Stack of state snapshots popped by undo (redo); cleared on any new edit
   hasUnsavedChanges: false,  // Track if map has user changes since last game save
   // Interaction state
   isDragging: false,

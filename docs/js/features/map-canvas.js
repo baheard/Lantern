@@ -74,14 +74,15 @@ function setupCallbacks() {
     hideMap,
     enterAddNodeMode,
     centerOnCurrentLocation,
-    pushUndo
+    captureUndoSnapshot: captureSnapshot,
+    commitUndoSnapshot
   });
 
   // Pass callbacks to sheet module
   setSheetCallbacks({
     showHint,
     saveMapForGame,
-    pushUndo,
+    snapshotForUndo,
     startConnectionFromSheetCallback: (nodeId) => {
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = nodeId;
@@ -144,6 +145,9 @@ function createMapUI() {
         <div class="map-fab-container">
           <button class="map-fab map-fab-undo" id="mapUndoBtn" title="Undo" aria-label="Undo" disabled>
             <span class="material-icons">undo</span>
+          </button>
+          <button class="map-fab map-fab-redo" id="mapRedoBtn" title="Redo" aria-label="Redo" disabled>
+            <span class="material-icons">redo</span>
           </button>
           <button class="map-fab map-fab-center" id="mapCenterBtn" title="Center on current location" aria-label="Center on current location">
             <span class="material-icons">my_location</span>
@@ -209,6 +213,7 @@ function setupEventListeners() {
   // Toolbar
   document.getElementById('mapCloseBtn').addEventListener('click', hideMap);
   document.getElementById('mapUndoBtn').addEventListener('click', performUndo);
+  document.getElementById('mapRedoBtn').addEventListener('click', performRedo);
   document.getElementById('mapZoomInBtn').addEventListener('click', () => {
     const dpr = window.devicePixelRatio;
     const centerX = canvas.width / (2 * dpr);
@@ -546,6 +551,7 @@ function toggleAutoMap() {
       mapState.protectedNodes.add(currentLocationName);
       mapState.currentNodeId = currentLocationName;
       mapState.selectedNode = currentLocationName;
+      invalidateUndoHistory();  // Auto-map added a node outside the snapshot system
       render();
       centerOnCurrentLocation();
     }
@@ -633,6 +639,11 @@ function handleLocationChange(e) {
 
   // Safety: Never add deleted nodes
   if (mapState.deletedNodes.has(locationName)) return;
+
+  // Auto-mapping is about to (possibly) mutate the map outside the snapshot
+  // system; any pending undo/redo snapshots predate this change and are no
+  // longer safe to restore. (Scene break above is already handled by resetMap.)
+  invalidateUndoHistory();
 
   // If node exists and is protected, just select it and maybe add edge
   if (existingNode && mapState.protectedNodes.has(locationName)) {
@@ -993,6 +1004,7 @@ export function addNodeAtPosition(x, y) {
     return;
   }
 
+  snapshotForUndo();
   const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const position = findAvailablePosition({ x, y });
   const node = { id, name: 'New Location', x: position.x, y: position.y, type: 'room', notes: '', isManual: true, isEdited: false, isSmall: false };
@@ -1490,8 +1502,9 @@ export function centerOnCurrentLocation() {
 
 function loadMapForGame(gameName) {
   mapState.gameName = gameName;
-  // Always reset undo stack, selection, and unsaved changes when loading a game
+  // Always reset undo/redo stacks, selection, and unsaved changes when loading a game
   mapState.undoStack = [];
+  mapState.redoStack = [];
   mapState.selectedNode = null;
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
@@ -1853,6 +1866,7 @@ function resetMap() {
   const automapPref = localStorage.getItem('iftalk_automap_default');
   mapState.autoMapEnabled = automapPref !== null ? automapPref === 'true' : true; // Default: enabled
   mapState.undoStack = [];
+  mapState.redoStack = [];
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
 }
@@ -1911,64 +1925,121 @@ function updateMapBadge() {
 // ============================================================================
 
 function updateUndoButton() {
-  const btn = document.getElementById('mapUndoBtn');
-  if (btn) btn.disabled = mapState.undoStack.length === 0;
+  const undoBtn = document.getElementById('mapUndoBtn');
+  if (undoBtn) undoBtn.disabled = mapState.undoStack.length === 0;
+  const redoBtn = document.getElementById('mapRedoBtn');
+  if (redoBtn) redoBtn.disabled = mapState.redoStack.length === 0;
 }
 
-export function pushUndo(action) {
-  mapState.undoStack.push(action);
-  if (mapState.undoStack.length > 50) mapState.undoStack.shift();  // Limit stack size
+const MAX_UNDO = 50;  // Stack depth limit
+
+/**
+ * Discard all undo/redo history.
+ *
+ * Snapshots are whole-map captures, so restoring one reverts EVERYTHING that
+ * changed since it was taken. That is fine for user edits (the only mutations
+ * the undo system manages), but the auto-mapper mutates the same collections
+ * outside the snapshot system as the player moves. If an undo snapshot predates
+ * an auto-mapped node, restoring it would silently wipe that node. So whenever
+ * auto-mapping changes the map, we drop the now-unsafe history rather than risk
+ * clobbering gameplay-created rooms on a later undo. No-op (and free) when the
+ * stacks are already empty, which is the case during normal play with no pending
+ * edits.
+ */
+function invalidateUndoHistory() {
+  if (mapState.undoStack.length === 0 && mapState.redoStack.length === 0) return;
+  mapState.undoStack = [];
+  mapState.redoStack = [];
+  updateUndoButton();
+}
+
+/**
+ * Build a full snapshot of the mutable map collections (does not push it anywhere).
+ *
+ * Node/edge values are plain objects with only primitive fields, so a shallow
+ * `{...v}` clone per value is enough; the live objects are mutated in place
+ * elsewhere, so we must clone (not alias) them here. Sets hold string ids/keys,
+ * so `new Set(...)` copies suffice. Snapshots live in memory only —
+ * `saveMapForGame` never serializes the undo/redo stacks.
+ */
+function captureSnapshot() {
+  return {
+    nodes: new Map(Array.from(mapState.nodes, ([k, v]) => [k, { ...v }])),
+    edges: new Map(Array.from(mapState.edges, ([k, v]) => [k, { ...v }])),
+    protectedNodes: new Set(mapState.protectedNodes),
+    protectedEdges: new Set(mapState.protectedEdges),
+    deletedNodes: new Set(mapState.deletedNodes),
+    deletedEdges: new Set(mapState.deletedEdges),
+    selectedNode: mapState.selectedNode
+  };
+}
+
+/**
+ * Swap the snapshotted collections in wholesale. Nothing aliases these containers
+ * (all access is via mapState.<collection>), so reassignment is safe.
+ */
+function restoreSnapshot(snapshot) {
+  mapState.nodes = snapshot.nodes;
+  mapState.edges = snapshot.edges;
+  mapState.protectedNodes = snapshot.protectedNodes;
+  mapState.protectedEdges = snapshot.protectedEdges;
+  mapState.deletedNodes = snapshot.deletedNodes;
+  mapState.deletedEdges = snapshot.deletedEdges;
+  mapState.selectedNode = snapshot.selectedNode;
+}
+
+/**
+ * Push an already-captured snapshot onto the undo stack as a new edit, and clear
+ * the redo future (a new edit branches off it). Split out from snapshotForUndo so
+ * the node-drag handler can capture a pending snapshot on the first movement but
+ * only commit it on pointer-up if the node actually moved — a drag that returns
+ * to its origin commits nothing, leaving the undo/redo stacks untouched.
+ */
+function commitUndoSnapshot(snapshot) {
+  mapState.undoStack.push(snapshot);
+  if (mapState.undoStack.length > MAX_UNDO) mapState.undoStack.shift();
+  mapState.redoStack = [];  // New edit branches off; redo history no longer valid
   mapState.hasUnsavedChanges = true;  // Mark that user has made changes
   updateUndoButton();
 }
 
-function performUndo() {
-  if (mapState.undoStack.length === 0) return;
-  const action = mapState.undoStack.pop();
+/**
+ * Snapshot the current state for undo, BEFORE a user edit mutates it.
+ *
+ * Snapshot-based (not delta-based) by design: undo/redo just restore whole
+ * snapshots, so new map operations are undoable for free — no per-operation
+ * inverse logic. Call exactly once per logical operation, before the first
+ * mutation, so the stack stays in LIFO order with other operations (see
+ * map-sheet.js edit handlers, which snapshot lazily on the first change of an
+ * edit session).
+ */
+export function snapshotForUndo() {
+  commitUndoSnapshot(captureSnapshot());
+}
 
-  switch (action.type) {
-    case 'deleteNode':
-      mapState.nodes.set(action.node.id, action.node);
-      mapState.deletedNodes.delete(action.node.id);
-      if (action.wasProtected) mapState.protectedNodes.add(action.node.id);
-      // Restore edges
-      for (const edge of action.edges) {
-        mapState.edges.set(edge.key, edge.data);
-        mapState.deletedEdges.delete(edge.key);
-        if (edge.wasProtected) mapState.protectedEdges.add(edge.key);
-      }
-      break;
-    case 'deleteEdge':
-      mapState.edges.set(action.key, action.edge);
-      mapState.deletedEdges.delete(action.key);
-      if (action.wasProtected) mapState.protectedEdges.add(action.key);
-      break;
-    case 'moveNode':
-      const node = mapState.nodes.get(action.nodeId);
-      if (node) {
-        node.x = action.oldX;
-        node.y = action.oldY;
-        node.isEdited = action.wasEdited || false;
-        if (!node.isEdited) mapState.protectedNodes.delete(action.nodeId);
-      }
-      break;
-    case 'editNode':
-      const editedNode = mapState.nodes.get(action.nodeId);
-      if (editedNode) {
-        editedNode.name = action.oldName;
-        editedNode.notes = action.oldNotes;
-        editedNode.type = action.oldType;
-        editedNode.isSmall = action.oldIsSmall;
-        editedNode.isEdited = action.wasEdited;
-        if (!editedNode.isEdited) mapState.protectedNodes.delete(action.nodeId);
-      }
-      break;
-  }
-
+// Shared tail for undo/redo: mark dirty, refresh UI, persist the restored state.
+function finishRestore() {
+  mapState.hasUnsavedChanges = true;
   updateUndoButton();
   updateNodeCount();
   render();
-  saveMapForGame(true);  // Immediate save for undo operations
+  saveMapForGame(true);  // Immediate save for undo/redo operations
+}
+
+function performUndo() {
+  if (mapState.undoStack.length === 0) return;
+  mapState.redoStack.push(captureSnapshot());  // Save current state so redo can return to it
+  if (mapState.redoStack.length > MAX_UNDO) mapState.redoStack.shift();
+  restoreSnapshot(mapState.undoStack.pop());
+  finishRestore();
+}
+
+function performRedo() {
+  if (mapState.redoStack.length === 0) return;
+  mapState.undoStack.push(captureSnapshot());  // Save current state so undo can return to it
+  if (mapState.undoStack.length > MAX_UNDO) mapState.undoStack.shift();
+  restoreSnapshot(mapState.redoStack.pop());
+  finishRestore();
 }
 
 /**

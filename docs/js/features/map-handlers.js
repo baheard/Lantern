@@ -21,12 +21,18 @@ let callbacks = {
   hideMap: () => {},
   enterAddNodeMode: () => {},
   centerOnCurrentLocation: () => {},
-  pushUndo: () => {}
+  captureUndoSnapshot: () => null,
+  commitUndoSnapshot: () => {}
 };
 
 export function setHandlerCallbacks(cbs) {
   callbacks = { ...callbacks, ...cbs };
 }
+
+// Undo snapshot captured on the first movement of a node drag, held until
+// pointer-up. Committed only if the node actually ended up moved, so a pure tap
+// (or a drag that returns to its origin) leaves the undo/redo stacks untouched.
+let pendingMoveSnapshot = null;
 
 // ============================================================================
 // POINTER HANDLERS
@@ -72,7 +78,8 @@ export function handlePointerDown(e) {
 
   if (hitNode) {
     mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
-    touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y, wasEdited: hitNode.isEdited };  // Track for undo
+    touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };  // Track for tap-vs-move detection
+    pendingMoveSnapshot = null;  // Captured lazily on first actual movement
   } else {
     mapState.isDragging = true; mapState.dragStart = { x, y }; mapState.hasDragged = false;
     touchState.touchStartTime = Date.now();
@@ -95,6 +102,9 @@ export function handlePointerMove(e) {
   } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge && !mapState.isMerging) {
     const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
     if (Math.sqrt(dx * dx + dy * dy) > 3) {  // Fine control for alignment
+      // Capture pre-move state once, before the first position change. Held
+      // pending and committed on pointer-up only if the node actually moves.
+      if (!pendingMoveSnapshot) pendingMoveSnapshot = callbacks.captureUndoSnapshot();
       mapState.dragNode.x += dx / mapState.viewport.scale;
       mapState.dragNode.y += dy / mapState.viewport.scale;
       mapState.dragNode.isEdited = true;
@@ -119,20 +129,17 @@ export function handlePointerUp(e) {
       (mapState.dragNode.x !== touchState.nodeStartPos.x || mapState.dragNode.y !== touchState.nodeStartPos.y);
 
     if (wasMoved) {
-      // Push undo for the move
-      callbacks.pushUndo({
-        type: 'moveNode',
-        nodeId: mapState.dragNode.id,
-        oldX: touchState.nodeStartPos.x,
-        oldY: touchState.nodeStartPos.y,
-        wasEdited: touchState.nodeStartPos.wasEdited
-      });
+      // Commit the snapshot captured on the first movement (in handlePointerMove)
+      if (pendingMoveSnapshot) callbacks.commitUndoSnapshot(pendingMoveSnapshot);
       mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       callbacks.saveMapForGame();
     } else if (Date.now() - touchState.touchStartTime < 250) {
       // Tapped on a node - open the sheet
       openNodeSheet(mapState.dragNode);
     }
+    // Drag ended (or it was a tap): drop any pending snapshot. If the node moved
+    // and returned to its exact origin, wasMoved is false and nothing is committed.
+    pendingMoveSnapshot = null;
   } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode && !mapState.isMerging) {
     // Check for question mark tap on uncertain portal connections
     const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);

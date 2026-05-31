@@ -15,14 +15,25 @@ let callbacks = {
   saveMapForGame: () => {},
   startConnectionFromSheetCallback: () => {},
   startMergeFromSheetCallback: () => {},
-  pushUndo: () => {}
+  snapshotForUndo: () => {}
 };
 
-// Track node state when sheet opens (for undo on close)
-let initialNodeState = null;
+// Whether the current edit session has already captured an undo snapshot.
+// Reset when the sheet opens; the first field change of a session snapshots
+// once (lazily), so an open/close with no change adds nothing to the stack.
+let editSnapshotTaken = false;
 
 export function setSheetCallbacks(cbs) {
   callbacks = { ...callbacks, ...cbs };
+}
+
+// Snapshot once per edit session, on the first field change. Subsequent changes
+// in the same session fold into that one snapshot, so one undo reverts them all.
+function captureEditSnapshot() {
+  if (!editSnapshotTaken) {
+    callbacks.snapshotForUndo();
+    editSnapshotTaken = true;
+  }
 }
 
 // ============================================================================
@@ -129,15 +140,8 @@ export function createNodeEditSheet() {
 export function openNodeSheet(node) {
   mapState.selectedNode = node.id;
 
-  // Capture initial state for undo on close
-  initialNodeState = {
-    nodeId: node.id,
-    name: node.name,
-    notes: node.notes || '',
-    type: node.type || 'location',
-    isSmall: node.isSmall || false,
-    wasEdited: node.isEdited || false
-  };
+  // Start a fresh edit session; first field change will snapshot for undo.
+  editSnapshotTaken = false;
 
   const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
@@ -228,31 +232,8 @@ export function closeNodeSheet() {
   mapState.sheetClosing = true;
   setTimeout(() => { mapState.sheetClosing = false; }, 500);
 
-  // Push undo entry if node was edited
-  if (initialNodeState) {
-    const node = mapState.nodes.get(initialNodeState.nodeId);
-    if (node) {
-      // Check if any editable properties changed
-      const nameChanged = node.name !== initialNodeState.name;
-      const notesChanged = (node.notes || '') !== initialNodeState.notes;
-      const typeChanged = (node.type || 'location') !== initialNodeState.type;
-      const sizeChanged = (node.isSmall || false) !== initialNodeState.isSmall;
-
-      if (nameChanged || notesChanged || typeChanged || sizeChanged) {
-        callbacks.pushUndo({
-          type: 'editNode',
-          nodeId: initialNodeState.nodeId,
-          oldName: initialNodeState.name,
-          oldNotes: initialNodeState.notes,
-          oldType: initialNodeState.type,
-          oldIsSmall: initialNodeState.isSmall,
-          wasEdited: initialNodeState.wasEdited
-        });
-      }
-    }
-    initialNodeState = null; // Clear captured state
-  }
-
+  // Undo for edits is captured lazily on the first field change (see edit
+  // handlers below), so there is nothing to push on close.
   callbacks.saveMapForGame();
 }
 
@@ -382,6 +363,7 @@ function populateConnectionsList(node) {
   list.querySelectorAll('.connection-type-picker').forEach(sel => sel.addEventListener('change', (e) => {
     const edge = mapState.edges.get(e.target.dataset.edge);
     if (edge) {
+      callbacks.snapshotForUndo();
       edge.connectionType = e.target.value;
       edge.isEdited = true;
       mapState.protectedEdges.add(e.target.dataset.edge);
@@ -413,6 +395,7 @@ export function startMergeFromSheet() {
 export function handleNodeNameChange(e) {
   const node = mapState.nodes.get(mapState.selectedNode);
   if (!node) return;
+  captureEditSnapshot();
   node.name = e.target.value; node.isEdited = true;
   mapState.protectedNodes.add(node.id);
   mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
@@ -425,6 +408,7 @@ export function handleNodeNameChange(e) {
 export function handleNodeNotesChange(e) {
   const node = mapState.nodes.get(mapState.selectedNode);
   if (node) {
+    captureEditSnapshot();
     node.notes = e.target.value;
     node.isEdited = true;
     mapState.protectedNodes.add(node.id);
@@ -435,6 +419,7 @@ export function handleNodeNotesChange(e) {
 export function handleNodeTypeChange(type) {
   const node = mapState.nodes.get(mapState.selectedNode);
   if (!node) return;
+  captureEditSnapshot();
   node.type = type; node.isEdited = true;
   mapState.protectedNodes.add(node.id);
   mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
@@ -451,6 +436,7 @@ export function handleNodeTypeChange(type) {
 export function handleNodeSmallToggle() {
   const node = mapState.nodes.get(mapState.selectedNode);
   if (!node) return;
+  captureEditSnapshot();
   node.isSmall = !node.isSmall;
   node.isEdited = true;
   mapState.protectedNodes.add(node.id);
@@ -468,23 +454,15 @@ export function handleNodeDelete() {
   const nodeId = mapState.selectedNode, node = mapState.nodes.get(nodeId);
   if (!nodeId || !node) return;
 
-  // Collect edges for undo
-  const deletedEdges = [];
+  // Snapshot before deleting the node and its connected edges
+  callbacks.snapshotForUndo();
+
   for (const [key, edge] of mapState.edges) {
     if (edge.from === nodeId || edge.to === nodeId) {
-      deletedEdges.push({ key, data: { ...edge }, wasProtected: mapState.protectedEdges.has(key) });
       mapState.edges.delete(key);
       mapState.deletedEdges.add(key);
     }
   }
-
-  // Push undo before deleting
-  callbacks.pushUndo({
-    type: 'deleteNode',
-    node: { ...node },
-    wasProtected: mapState.protectedNodes.has(nodeId),
-    edges: deletedEdges
-  });
 
   mapState.nodes.delete(nodeId);
   mapState.deletedNodes.add(nodeId);
@@ -503,6 +481,7 @@ export function handleNodeDelete() {
 export function createManualEdge(fromId, toId) {
   const key = `${fromId}-${toId}`;
   if (mapState.edges.has(key)) { callbacks.showHint('Connection already exists'); return; }
+  callbacks.snapshotForUndo();
   mapState.edges.set(key, { from: fromId, to: toId, command: '', isManual: true, isEdited: false });
   mapState.protectedEdges.add(key);
   mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
@@ -512,14 +491,8 @@ export function createManualEdge(fromId, toId) {
 
 export function deleteEdge(key) {
   const edge = mapState.edges.get(key);
-  if (edge) {
-    callbacks.pushUndo({
-      type: 'deleteEdge',
-      key,
-      edge: { ...edge },
-      wasProtected: mapState.protectedEdges.has(key)
-    });
-  }
+  if (!edge) return;
+  callbacks.snapshotForUndo();
   mapState.edges.delete(key);
   mapState.deletedEdges.add(key);
   mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
@@ -581,6 +554,9 @@ export function handleNodeMerge() {
     return;
   }
 
+  // Snapshot before any mutations
+  callbacks.snapshotForUndo();
+
   // Transfer all connections from duplicate to original
   transferEdges(nodeId, originalId);
 
@@ -614,6 +590,9 @@ export function handleNodeMerge() {
 function promoteToPrimary(node) {
   const oldId = node.id;
   const newId = node.name;  // Use the location name as the new ID
+
+  // Snapshot before any mutations
+  callbacks.snapshotForUndo();
 
   // Update the node
   node.id = newId;
@@ -669,6 +648,9 @@ export function handleNodeNotDuplicate() {
     return;
   }
 
+  // Snapshot before any mutations
+  callbacks.snapshotForUndo();
+
   const originalId = node.originalNodeId;
   const originalNode = mapState.nodes.get(originalId);
 
@@ -712,6 +694,9 @@ export function performManualMerge(sourceId, targetId) {
     callbacks.showHint('Cannot merge - node not found');
     return;
   }
+
+  // Snapshot before any mutations
+  callbacks.snapshotForUndo();
 
   // Transfer all connections from source to target
   transferEdges(sourceId, targetId);

@@ -392,17 +392,20 @@ body.map-resizing .map-canvas-overlay * {
   color: #ffffff;
 }
 
-.map-fab-undo {
+.map-fab-undo,
+.map-fab-redo {
   background: #334155;
   color: #94a3b8;
 }
 
-.map-fab-undo:hover:not(:disabled) {
+.map-fab-undo:hover:not(:disabled),
+.map-fab-redo:hover:not(:disabled) {
   background: #475569;
   color: #ffffff;
 }
 
-.map-fab-undo:disabled {
+.map-fab-undo:disabled,
+.map-fab-redo:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: none;
