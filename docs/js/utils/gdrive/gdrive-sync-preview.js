@@ -124,14 +124,8 @@ export async function compareSaves(gameName, direction) {
         // Timestamps match — synced
         status = 'Synced';
       } else if (timeDiff < CONFLICT_THRESHOLD_MS) {
-        // Close timestamps — use move count as tiebreaker before declaring conflict
-        const localMoves = (() => {
-          try {
-            const html = localData?.displayHTML?.statusBar || '';
-            const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-            return m ? parseInt(m[1]) : null;
-          } catch { return null; }
-        })();
+        // Close timestamps — use appMoveCount as tiebreaker before declaring conflict
+        const localMoves = localData?.appMoveCount ?? null;
         const driveMoves = driveFile.appProperties?.moveCount != null
           ? parseInt(driveFile.appProperties.moveCount) : null;
 
