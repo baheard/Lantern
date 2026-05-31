@@ -175,7 +175,7 @@ export function showConfirmedTranscript(text, isNavCommand = false, confidence =
 
   // Determine mode for visual feedback
   const mode = isNavCommand ? 'nav' : 'confirmed';
-  const isLowConfidence = confidence !== null && confidence === 0;
+  const isLowConfidence = confidence !== null && confidence < LOW_CONFIDENCE_THRESHOLD;
   const lockMode = isLowConfidence ? 'low-confidence' : (isNavCommand ? 'nav-command' : 'confirmed');
 
   // Update both DOM transcript and keyboard indicator
