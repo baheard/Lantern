@@ -73,6 +73,9 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/\bquick\s+safe\b/gi, 'quick save');
   transcript = transcript.replace(/\bquicks\s+save\b/gi, 'quick save');
   transcript = transcript.replace(/\bpoor\b/gi, 'pour');
+  // "Marc [x]" → "mark [x]" — recognition hears "Marc" (name) instead of verb "mark"
+  transcript = transcript.replace(/^marc\b/i, 'mark');
+  transcript = transcript.replace(/\bschauer\b/gi, 'shower');
   transcript = transcript.replace(/\bgronk\b/gi, 'grunk');
 
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
