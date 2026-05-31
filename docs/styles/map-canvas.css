@@ -834,6 +834,18 @@ body.map-resizing .map-canvas-overlay * {
   text-overflow: ellipsis;
 }
 
+.sheet-current-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  vertical-align: middle;
+}
+
 /* Node Badge */
 .sheet-node-badge {
   padding: 3px 8px;

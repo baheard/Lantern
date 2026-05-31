@@ -158,7 +158,17 @@ export function openNodeSheet(node) {
     badge.className = 'sheet-node-badge auto';
   }
 
-  document.getElementById('sheetNodeName').textContent = node.name || 'Edit Location';
+  const isCurrent = node.id === mapState.currentNodeId;
+  const nameEl = document.getElementById('sheetNodeName');
+  nameEl.textContent = node.name || 'Edit Location';
+  const existingTag = nameEl.querySelector('.sheet-current-tag');
+  if (existingTag) existingTag.remove();
+  if (isCurrent) {
+    const tag = document.createElement('span');
+    tag.className = 'sheet-current-tag';
+    tag.textContent = 'Current';
+    nameEl.appendChild(tag);
+  }
   document.getElementById('nodeNameInput').value = node.name || '';
   document.getElementById('nodeNotesInput').value = node.notes || '';
 
@@ -231,6 +241,9 @@ export function closeNodeSheet() {
   // Prevent viewport resize re-center while keyboard is dismissing from this sheet close
   mapState.sheetClosing = true;
   setTimeout(() => { mapState.sheetClosing = false; }, 500);
+
+  mapState.selectedNode = null;
+  render();
 
   // Undo for edits is captured lazily on the first field change (see edit
   // handlers below), so there is nothing to push on close.

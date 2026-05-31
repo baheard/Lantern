@@ -174,6 +174,11 @@ function drawNodes() {
     // Never used for metadata or warnings
     ctx.lineWidth = isSmall ? 1.5 : 2;
     if (isCurrent) {
+      // White outer halo when also selected, then green ring on top
+      if (isSelected) {
+        ctx.beginPath(); ctx.arc(node.x, node.y, radius + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = isSmall ? 1.5 : 2; ctx.stroke();
+      }
       // Strong green ring for current location
       ctx.beginPath(); ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
       ctx.strokeStyle = '#22c55e'; ctx.lineWidth = isSmall ? 2.5 : 3.5; ctx.stroke();
