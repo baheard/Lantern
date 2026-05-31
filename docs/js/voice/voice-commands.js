@@ -41,8 +41,8 @@ export const PRONUNCIATION_DICT = {
   'artist': 'northeast',
   'luck': 'look',
   'breath': 'brief',
+  'breathe': 'brief',
   'town': 'down',
-  'poor': 'pour',
 };
 
 /** Direction words that interrupt narration and execute immediately (#84). */
@@ -72,6 +72,7 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/\ballie\b/gi, 'alley');
   transcript = transcript.replace(/\bquick\s+safe\b/gi, 'quick save');
   transcript = transcript.replace(/\bquicks\s+save\b/gi, 'quick save');
+  transcript = transcript.replace(/\bpoor\b/gi, 'pour');
   transcript = transcript.replace(/\bgronk\b/gi, 'grunk');
 
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
