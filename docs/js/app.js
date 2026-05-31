@@ -87,7 +87,6 @@ export { voiceCommandHandlers, pausePlayback, resumePlayback };
 // Handle game output from GlkOte
 async function handleGameOutput(text) {
   state.narrationT0 = performance.now();
-  console.log('[TTS:timing] handleGameOutput T0');
 
   // Store for potential narration
   // Note: Don't stop narration here - speakTextChunked() handles stopping the old session

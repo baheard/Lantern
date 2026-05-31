@@ -142,7 +142,6 @@ export async function playWithBrowserTTS(text, voiceType = 'narrator', speedModi
         startTimeout = null;
       }
       if (state.narrationT0) {
-        console.log(`[TTS:timing] browser TTS onstart: ${(performance.now() - state.narrationT0).toFixed(0)}ms from handleGameOutput`);
         state.narrationT0 = null;
       }
     };

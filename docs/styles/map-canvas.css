@@ -756,7 +756,7 @@ body.map-resizing .map-canvas-overlay * {
   display: flex;
   flex-direction: column;
   z-index: var(--z-map-edit-sheet);
-  animation: sheetSlideUp 0.3s ease-out;
+  animation: sheetSlideUp 0.15s ease-out;
 }
 
 .node-edit-sheet.hidden {

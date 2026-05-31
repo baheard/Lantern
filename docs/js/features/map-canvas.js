@@ -30,10 +30,10 @@ import {
   handleKeyDown, showFab, setHandlerCallbacks
 } from './map-handlers.js';
 import {
-  createNodeEditSheet, openNodeSheet, closeNodeSheet,
+  createNodeEditSheet, openNodeSheet, closeNodeSheet, dismissNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
   handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
-  setupSheetDragHandlers
+  setupSheetDragHandlers, getSheetTopForViewport
 } from './map-sheet.js';
 
 // ============================================================================
@@ -260,7 +260,7 @@ function setupEventListeners() {
   canvasEl.addEventListener('touchcancel', handleTouchEnd);
 
   // Sheet
-  document.getElementById('sheetCloseBtn').addEventListener('click', closeNodeSheet);
+  document.getElementById('sheetCloseBtn').addEventListener('click', dismissNodeSheet);
   document.getElementById('nodeNameInput').addEventListener('input', handleNodeNameChange);
   document.getElementById('nodeNameInput').addEventListener('focus', (e) => {
     e.target.select();
@@ -293,36 +293,25 @@ function setupEventListeners() {
   // Visual viewport resize (keyboard open/close detection)
   if (window.visualViewport) {
     let lastHeight = window.visualViewport.height;
-    let recenterTimer = null;
     window.visualViewport.addEventListener('resize', () => {
       const currentHeight = window.visualViewport.height;
 
-      // Adjust node edit sheet height to fit within visible viewport
+      // Adjust node edit sheet top to fit within visible viewport
       const nodeSheet = document.getElementById('nodeEditSheet');
       if (nodeSheet && !nodeSheet.classList.contains('hidden')) {
-        // Use visual viewport height to constrain sheet (leave 80px margin at top)
-        const topGap = 80;
-        const maxSheetHeight = Math.max(currentHeight - topGap, 300); // Min 300px for usability
-        nodeSheet.style.maxHeight = `${maxSheetHeight}px`;
-
-        // Note: sheet-content uses flexbox and will size automatically
+        nodeSheet.style.top = `${getSheetTopForViewport(currentHeight)}px`;
 
         // Ensure focused input is visible after keyboard appears
         requestAnimationFrame(() => {
           const focusedElement = document.activeElement;
           if (focusedElement && (focusedElement.tagName === 'INPUT' || focusedElement.tagName === 'TEXTAREA')) {
-            // Check if focused element is inside the sheet
             if (nodeSheet.contains(focusedElement)) {
-              // Scroll within the sheet-content only, not the whole viewport
               const sheetContent = nodeSheet.querySelector('.sheet-content');
               if (sheetContent) {
                 const inputRect = focusedElement.getBoundingClientRect();
                 const contentRect = sheetContent.getBoundingClientRect();
-
-                // Only scroll if input is below the visible area
                 if (inputRect.bottom > contentRect.bottom - 20) {
-                  const scrollOffset = inputRect.bottom - contentRect.bottom + 60; // Add 60px padding
-                  sheetContent.scrollBy({ top: scrollOffset, behavior: 'smooth' });
+                  sheetContent.scrollBy({ top: inputRect.bottom - contentRect.bottom + 60, behavior: 'smooth' });
                 }
               }
             }
@@ -333,15 +322,6 @@ function setupEventListeners() {
       // Hide toolbar and FAB buttons when keyboard is up (to maximize canvas space)
       updateUIVisibilityForKeyboard();
 
-      // Only recenter if map is visible and height changed significantly (keyboard appearing/disappearing)
-      // Skip re-center if the node sheet was just closed (the keyboard close is from the sheet, not user navigation)
-      if (isVisible && Math.abs(currentHeight - lastHeight) > 100 && !mapState.sheetClosing) {
-        // Delay recentering to wait for keyboard animation and scroll settling (150-200ms)
-        clearTimeout(recenterTimer);
-        recenterTimer = setTimeout(() => {
-          centerOnCurrentLocation();
-        }, 200);
-      }
       lastHeight = currentHeight;
     });
   }

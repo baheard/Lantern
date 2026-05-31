@@ -200,23 +200,23 @@ export function openNodeSheet(node) {
   document.getElementById('nodeEditBackdrop').classList.remove('hidden');
   sheet.classList.remove('hidden');
 
-  // Reset sheet height to default when opening
-  sheet.style.maxHeight = '';
-  const sheetContent = sheet.querySelector('.sheet-content');
-  if (sheetContent) {
-    sheetContent.style.maxHeight = '';
-  }
-
-  // Immediately adjust height if visual viewport is constrained (keyboard already open)
-  if (window.visualViewport) {
-    const currentHeight = window.visualViewport.height;
-    const topGap = 80;
-    const maxSheetHeight = Math.max(currentHeight - topGap, 300);
-    sheet.style.maxHeight = `${maxSheetHeight}px`;
-    // Note: sheet-content uses flexbox and will size automatically
-  }
+  // Restore saved height preference, constrained to visible viewport
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  sheet.style.top = `${getSheetTopForViewport(viewportHeight)}px`;
 
   render();
+}
+
+export function dismissNodeSheet() {
+  const sheet = document.getElementById('nodeEditSheet');
+  if (!sheet || sheet.classList.contains('hidden')) return;
+  sheet.style.transition = 'transform 0.15s ease-out';
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    sheet.style.transition = '';
+    sheet.style.transform = '';
+    closeNodeSheet();
+  }, 150);
 }
 
 export function closeNodeSheet() {
@@ -227,13 +227,6 @@ export function closeNodeSheet() {
   // Prevent viewport resize re-center while keyboard is dismissing from this sheet close
   mapState.sheetClosing = true;
   setTimeout(() => { mapState.sheetClosing = false; }, 500);
-
-  // Reset sheet height to default when closing
-  sheet.style.maxHeight = '';
-  const sheetContent = sheet.querySelector('.sheet-content');
-  if (sheetContent) {
-    sheetContent.style.maxHeight = '';
-  }
 
   // Push undo entry if node was edited
   if (initialNodeState) {
@@ -267,7 +260,8 @@ export function closeNodeSheet() {
 // SHEET DRAG-TO-DISMISS
 // ============================================================================
 
-let sheetDragState = { isDragging: false, startY: 0, currentY: 0 };
+const SHEET_TOP_KEY = 'iftalk_map_sheet_top_percent';
+let sheetDragState = { isDragging: false, startY: 0, startTop: 0 };
 
 export function setupSheetDragHandlers() {
   const sheet = document.getElementById('nodeEditSheet');
@@ -276,12 +270,14 @@ export function setupSheetDragHandlers() {
 
   // Tap backdrop to close (stop propagation to prevent map overlay from also closing)
   backdrop.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent map overlay backdrop from receiving this click
-    closeNodeSheet();
+    e.stopPropagation();
+    dismissNodeSheet();
   });
 
-  // Drag to dismiss
-  handleArea.addEventListener('touchstart', onSheetDragStart, { passive: true });
+  // Stop handle clicks/touches from bubbling to the map backdrop
+  handleArea.addEventListener('click', (e) => e.stopPropagation());
+
+  handleArea.addEventListener('touchstart', onSheetDragStart, { passive: false });
   handleArea.addEventListener('mousedown', onSheetDragStart);
 
   document.addEventListener('touchmove', onSheetDragMove, { passive: false });
@@ -297,8 +293,10 @@ function onSheetDragStart(e) {
 
   sheetDragState.isDragging = true;
   sheetDragState.startY = e.touches ? e.touches[0].clientY : e.clientY;
-  sheetDragState.currentY = 0;
+  sheetDragState.startTop = sheet.getBoundingClientRect().top;
   sheet.style.transition = 'none';
+  e.stopPropagation();
+  e.preventDefault();
 }
 
 function onSheetDragMove(e) {
@@ -306,14 +304,10 @@ function onSheetDragMove(e) {
 
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   const deltaY = clientY - sheetDragState.startY;
-
-  // Only allow dragging down
-  if (deltaY > 0) {
-    sheetDragState.currentY = deltaY;
-    const sheet = document.getElementById('nodeEditSheet');
-    sheet.style.transform = `translateY(${deltaY}px)`;
-    e.preventDefault();
-  }
+  const newTop = Math.max(80, sheetDragState.startTop + deltaY);
+  const sheet = document.getElementById('nodeEditSheet');
+  sheet.style.top = `${newTop}px`;
+  e.preventDefault();
 }
 
 function onSheetDragEnd() {
@@ -321,21 +315,34 @@ function onSheetDragEnd() {
 
   sheetDragState.isDragging = false;
   const sheet = document.getElementById('nodeEditSheet');
-  sheet.style.transition = 'transform 0.2s ease-out';
+  sheet.style.transition = '';
 
-  // If dragged more than 100px, close the sheet
-  if (sheetDragState.currentY > 100) {
-    sheet.style.transform = 'translateY(100%)';
-    setTimeout(() => {
-      sheet.style.transform = '';
-      sheet.style.transition = '';
-      closeNodeSheet();
-    }, 200);
+  const viewportHeight = window.innerHeight;
+  const currentTop = parseFloat(sheet.style.top) || sheetDragState.startTop;
+
+  // Dismiss if sheet covers less than 20% of screen height
+  if (currentTop > viewportHeight * 0.8) {
+    sheet.style.top = '';
+    dismissNodeSheet();
   } else {
-    // Snap back
-    sheet.style.transform = '';
-    setTimeout(() => { sheet.style.transition = ''; }, 200);
+    // Save height preference as % of screen
+    try {
+      localStorage.setItem(SHEET_TOP_KEY, ((currentTop / viewportHeight) * 100).toString());
+    } catch (err) {}
   }
+}
+
+export function getSheetTopForViewport(viewportHeight) {
+  const topGap = 80;
+  const minTopForKeyboard = window.innerHeight - viewportHeight + topGap;
+  try {
+    const saved = parseFloat(localStorage.getItem(SHEET_TOP_KEY) || '');
+    if (!isNaN(saved)) {
+      const savedPx = (saved / 100) * window.innerHeight;
+      return Math.max(savedPx, minTopForKeyboard, topGap);
+    }
+  } catch (err) {}
+  return Math.max(minTopForKeyboard, topGap);
 }
 
 function populateConnectionsList(node) {

@@ -143,7 +143,6 @@ function playBlob(blob) {
     };
 
     if (state.narrationT0) {
-      console.log(`[TTS:timing] audio play() cache-hit: ${(performance.now() - state.narrationT0).toFixed(0)}ms from handleGameOutput`);
       state.narrationT0 = null;
     }
     audio.play().catch(err => { if (!settled) reject(err); });
@@ -293,9 +292,6 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
               playStarted = true;
               await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
               if (!settled) {
-                const streamLatency = (performance.now() - t0).toFixed(0);
-                const e2eLatency = state.narrationT0 ? (performance.now() - state.narrationT0).toFixed(0) : '?';
-                console.log(`[TTS:stream] play() called at ${streamLatency}ms (first-byte); [TTS:timing] streaming e2e: ${e2eLatency}ms from handleGameOutput`);
                 state.narrationT0 = null;
                 audio.play().catch(err => fail(err));
               }
