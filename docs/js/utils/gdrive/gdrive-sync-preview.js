@@ -311,6 +311,7 @@ export async function syncSaveFile(item, direction) {
 
     // Store save metadata as appProperties so it can be read without downloading the file
     const moveCount = (() => {
+      if (saveData?.appMoveCount != null) return String(saveData.appMoveCount);
       try {
         const html = saveData?.displayHTML?.statusBar || '';
         const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
@@ -340,7 +341,18 @@ export async function syncSaveFile(item, direction) {
     // Without this, if appProperties.saveTimestamp is absent the comparison falls
     // back to modifiedTime (upload time) which differs from the local timestamp.
     const driveCompareTime = item.driveFile.appProperties?.saveTimestamp || item.driveFile.modifiedTime;
-    const dataToStore = { ...driveData, _driveSyncTime: driveCompareTime };
+    // Inject appMoveCount from appProperties if the blob doesn't have it (old saves)
+    const appMoveCountFromDrive = (() => {
+      const mc = item.driveFile.appProperties?.moveCount;
+      if (mc == null) return undefined;
+      const n = parseInt(mc, 10);
+      return isNaN(n) ? undefined : n;
+    })();
+    const dataToStore = {
+      ...driveData,
+      _driveSyncTime: driveCompareTime,
+      ...(appMoveCountFromDrive !== undefined && driveData.appMoveCount == null ? { appMoveCount: appMoveCountFromDrive } : {})
+    };
     localStorage.setItem(item.key, JSON.stringify(dataToStore));
   }
 

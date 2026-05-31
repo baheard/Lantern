@@ -58,7 +58,11 @@ function defaultArrow(item) {
   const lm = getMoveCount(item.key);
   const dm = item.driveMoveCount ?? null;
   if (lm !== null && dm !== null && lm !== dm) {
-    return lm > dm ? 'upload' : 'download';
+    const moveDir = lm > dm ? 'upload' : 'download';
+    const tsDir = item.status === 'Newer' ? 'upload' : item.status === 'Older' ? 'download' : null;
+    // When moves and timestamp disagree, skip — isUncertain in makeRow shows ? button
+    if (tsDir && moveDir !== tsDir) return 'skip';
+    return moveDir;
   }
   if (item.status === 'Newer') return 'upload';
   if (item.status === 'Older') return 'download';
@@ -131,8 +135,10 @@ function makeRow(item) {
 
   // Show ? badge when timestamp and move count point in opposite directions
   const timestampDir = item.status === 'Newer' ? 'upload' : item.status === 'Older' ? 'download' : null;
-  const moveDir = localMoves && driveMoves && localMoves !== driveMoves
-    ? (localMoves > driveMoves ? 'upload' : 'download') : null;
+  const rawLm = item.localTimestamp ? getMoveCount(item.key) : null;
+  const rawDm = item.driveMoveCount ?? null;
+  const moveDir = rawLm !== null && rawDm !== null && rawLm !== rawDm
+    ? (rawLm > rawDm ? 'upload' : 'download') : null;
   const isUncertain = !!timestampDir && !!moveDir && timestampDir !== moveDir;
 
   const hasLocal = !!item.localTimestamp;

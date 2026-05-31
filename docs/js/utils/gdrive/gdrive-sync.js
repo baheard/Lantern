@@ -390,6 +390,9 @@ async function flushSyncQueue() {
   }
 }
 
+// Conflicts acknowledged this session (not persisted — cleared on page reload)
+const sessionAckedConflicts = new Set();
+
 /**
  * Before game load, check Drive for newer saves (all types) and pull them down.
  * Requires BOTH a newer timestamp AND a higher move count to overwrite an existing local save.
@@ -470,13 +473,18 @@ export async function checkDriveForNewerAutosave(gameName) {
         // else: gap is just upload lag — treat as in sync, skip silently
       } else if (movesComparable && driveTimestampNewer !== driveMoveCountHigher) {
         // Both signals available but disagree — genuine conflict, ask user
-        conflicts.push(saveLabel(localKey, gameName));
+        const ackKey = `iftalk_conflict_ack_${localKey}`;
+        const sessionKey = `${localKey}_${localTime}_${driveTime}`;
+        const ack = (() => { try { return JSON.parse(localStorage.getItem(ackKey)); } catch { return null; } })();
+        if (sessionAckedConflicts.has(sessionKey)) continue;
+        if (ack && ack.localTime === localTime && ack.driveTime === driveTime) continue;
+        conflicts.push({ label: saveLabel(localKey, gameName), ackKey, sessionKey, localTime, driveTime });
       }
       // else: local wins or same — skip silently
     }
 
     if (conflicts.length > 0) {
-      const bullet = conflicts.map(name => `• ${name}`).join('\n');
+      const bullet = conflicts.map(c => `• ${c.label}`).join('\n');
       const { confirmDialog } = await import('../../ui/confirm-dialog.js');
       const openSync = await confirmDialog(
         `Drive has a newer date but fewer moves (or vice versa) for:\n\n${bullet}\n\nOpen Save Sync to resolve manually.`,
@@ -485,6 +493,12 @@ export async function checkDriveForNewerAutosave(gameName) {
       if (openSync === false) {
         const { showSyncModal } = await import('../../ui/sync-modal.js');
         showSyncModal(gameName || null);
+      } else {
+        // User dismissed — suppress for this session and across reloads (until data changes)
+        for (const c of conflicts) {
+          sessionAckedConflicts.add(c.sessionKey);
+          localStorage.setItem(c.ackKey, JSON.stringify({ localTime: c.localTime, driveTime: c.driveTime }));
+        }
       }
     }
 
