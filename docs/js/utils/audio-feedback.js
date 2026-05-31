@@ -157,7 +157,7 @@ export async function playLowConfidence() {
 }
 
 /** Confidence threshold (0.0 - 1.0) */
-export const LOW_CONFIDENCE_THRESHOLD = 0.50;
+export const LOW_CONFIDENCE_THRESHOLD = 0.40;
 
 /**
  * Play tone for blocked/failed command (loud buzz - audible during narration)
