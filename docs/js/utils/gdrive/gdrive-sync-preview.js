@@ -310,16 +310,8 @@ export async function syncSaveFile(item, direction) {
     };
 
     // Store save metadata as appProperties so it can be read without downloading the file
-    const moveCount = (() => {
-      if (saveData?.appMoveCount != null) return String(saveData.appMoveCount);
-      try {
-        const html = saveData?.displayHTML?.statusBar || '';
-        const m = html.replace(/<[^>]+>/g, ' ').match(/Moves[:\s]+(\d+)/i);
-        return m ? m[1] : null;
-      } catch { return null; }
-    })();
     const appProperties = { saveTimestamp: saveData.timestamp || '' };
-    if (moveCount !== null) appProperties.moveCount = moveCount;
+    if (saveData?.appMoveCount != null) appProperties.moveCount = String(saveData.appMoveCount);
 
     const filename = localStorageKeyToFilename(item.key);
     await uploadFile(filename, enrichedData, appProperties);
