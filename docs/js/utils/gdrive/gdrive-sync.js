@@ -337,7 +337,7 @@ async function flushSyncQueue() {
           (driveCompareTime > localTime + 1000);
 
         if (driveIsNewer) {
-          skipped.push(key);
+          skipped.push({ key, localTime, driveTime: driveCompareTime });
           continue;
         }
       }
@@ -360,20 +360,49 @@ async function flushSyncQueue() {
   localStorage.setItem('iftalk_lastSyncTime', syncTime);
 
   if (skipped.length > 0) {
-    const skippedGameName = state.currentGameName || skipped[0]?.split('_')[2] || '';
-    const bullet = skipped.map(k => `• ${saveLabel(k, skippedGameName)}`).join('\n');
+    const skippedGameName = state.currentGameName || skipped[0]?.key?.split('_')[2] || '';
+
+    // Still surface the status-bar error every run, but only show the blocking
+    // dialog for conflicts the user hasn't already dismissed this session (or
+    // across reloads, until the underlying timestamps change). Otherwise the
+    // dialog re-fires on every auto-sync while Drive stays newer.
     const msg = `Auto-sync skipped (Drive is newer) — open Save Sync to resolve`;
     state.gdriveError = msg;
     updateStatus(msg, 'error');
     window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { skipped } }));
-    const { confirmDialog } = await import('../../ui/confirm-dialog.js');
-    const openSync = await confirmDialog(
-      `Drive has a newer version than your local save for:\n\n${bullet}\n\nOpen Save Sync to review and resolve.`,
-      { title: `${displayGameName(skippedGameName)} Save Conflict`, okText: 'Dismiss', cancelText: 'Open Save Sync' }
-    );
-    if (openSync === false) {
-      const { showSyncModal } = await import('../../ui/sync-modal.js');
-      showSyncModal(skippedGameName || null);
+
+    // Suppression is keyed on the DRIVE version only (driveTime), not localTime.
+    // Autosave bumps localTime after every move, so including it here would make
+    // the ack never match and the dialog re-fire on every sync. The conflict the
+    // user dismissed is "Drive has this newer version" — re-surface only when the
+    // Drive side actually changes. Session suppression is per-save-key so a single
+    // dismissal silences that save for the rest of the session unconditionally.
+    const unacked = skipped.filter(s => {
+      if (sessionAckedConflicts.has(`autosync_skip_${s.key}`)) return false;
+      const ackKey = `iftalk_conflict_ack_${s.key}`;
+      const ack = (() => { try { return JSON.parse(localStorage.getItem(ackKey)); } catch { return null; } })();
+      if (ack && ack.driveTime === s.driveTime) return false;
+      return true;
+    });
+
+    if (unacked.length > 0) {
+      const bullet = unacked.map(s => `• ${saveLabel(s.key, skippedGameName)}`).join('\n');
+      const { confirmDialog } = await import('../../ui/confirm-dialog.js');
+      const openSync = await confirmDialog(
+        `Drive has a newer version than your local save for:\n\n${bullet}\n\nOpen Save Sync to review and resolve.`,
+        { title: `${displayGameName(skippedGameName)} Save Conflict`, okText: 'Dismiss', cancelText: 'Open Save Sync' }
+      );
+      if (openSync === false) {
+        const { showSyncModal } = await import('../../ui/sync-modal.js');
+        showSyncModal(skippedGameName || null);
+      } else {
+        // User dismissed — silence this save for the session, and across reloads
+        // until the Drive version changes.
+        for (const s of unacked) {
+          sessionAckedConflicts.add(`autosync_skip_${s.key}`);
+          localStorage.setItem(`iftalk_conflict_ack_${s.key}`, JSON.stringify({ driveTime: s.driveTime }));
+        }
+      }
     }
   } else if (failures.length > 0) {
     const names = failures.map(f => f.key.split('_').slice(2).join('_') || f.key).join(', ');
