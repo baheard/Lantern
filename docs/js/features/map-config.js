@@ -54,6 +54,15 @@ export const COMMAND_DIRECTIONS = {
   'exit': 'exit', 'go out': 'exit', 'out': 'exit'
 };
 
+// Reverse directions — used to infer approach direction from return direction
+export const DIRECTION_OPPOSITES = {
+  north: 'south', south: 'north', east: 'west', west: 'east',
+  northeast: 'southwest', southwest: 'northeast',
+  northwest: 'southeast', southeast: 'northwest',
+  up: 'down', down: 'up',
+  enter: 'exit', exit: 'enter', in: 'out', out: 'in'
+};
+
 export const NODE_ICONS = {
   // Default is blank (no icon) - most common for locations
   location: '',           // Blank - default

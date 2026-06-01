@@ -179,8 +179,19 @@ async function getOptimizedMapData(gameName) {
 
     if (mapCanvas) {
         // Save both: map canvas (positions/notes/edits) + auto-mapper journey
-        // (new moves since last map open; cleared when map is opened next)
-        return { mapCanvas, autoMapper: { journey: autoMapperData.journey } };
+        // (new moves since last map open; cleared when map is opened next).
+        // Prepend a seed entry with the canvas's current node so syncFromAutoMapper
+        // can anchor delta replay to the right canvas position on restore.
+        let journeyToSave = autoMapperData.journey;
+        if (journeyToSave.length > 0) {
+            const currentNodeId = mapCanvas.v === 2
+                ? mapCanvas.maps?.[mapCanvas.activeMapId]?.currentNodeId
+                : mapCanvas.currentNodeId;
+            if (currentNodeId) {
+                journeyToSave = [{ locationName: currentNodeId, command: null }, ...journeyToSave];
+            }
+        }
+        return { mapCanvas, autoMapper: { journey: journeyToSave } };
     }
 
     if (autoMapperData?.journey?.length > 0) {
@@ -202,11 +213,14 @@ async function restoreMapData(optimizedMapData, gameName) {
 
     if (optimizedMapData.autoMapper) {
         try {
-            const { initAutoMapper } = await import('../features/auto-mapper.js');
+            const { initAutoMapper, setSuppressNextJourneyClear } = await import('../features/auto-mapper.js');
             // Store temporarily so initAutoMapper can pick it up on game load
             localStorage.setItem(`iftalk_automapper_restore_${gameName}`, JSON.stringify(optimizedMapData.autoMapper));
             // Immediately restore to memory (gameLoaded event doesn't fire on quickload/restore)
             initAutoMapper(gameName);
+            // Suppress the first scene-break journey clear after restore — the game's
+            // post-restore screen clear would otherwise wipe the just-loaded journey.
+            setSuppressNextJourneyClear(true);
         } catch (error) {
             console.error('Failed to restore auto-mapper data:', error);
         }
@@ -220,14 +234,15 @@ async function restoreMapData(optimizedMapData, gameName) {
             // Sync auto-mapper location to match the restored canvas position.
             // Prefer journey's last entry (more recent than currentNodeId, which
             // may be stale if autosave ran before the map save flushed).
-            const { setCurrentLocation, clearJourney } = await import('../features/auto-mapper.js');
+            // Do NOT clear the journey here — syncFromAutoMapper replays it when the
+            // map next opens and clears it itself after a successful save.
+            const { setCurrentLocation } = await import('../features/auto-mapper.js');
             const lastJourneyLocation = optimizedMapData.autoMapper?.journey?.at(-1)?.locationName ?? null;
             const mc = optimizedMapData.mapCanvas;
             const canvasCurrentNodeId = mc?.v === 2
               ? mc.maps?.[mc.activeMapId]?.currentNodeId
               : mc?.currentNodeId;
             setCurrentLocation(lastJourneyLocation || canvasCurrentNodeId, gameName);
-            clearJourney();
         } catch (error) {
             console.error('Failed to restore map canvas data:', error);
         }

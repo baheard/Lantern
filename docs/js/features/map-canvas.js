@@ -19,7 +19,7 @@ import { getCurrentLocation, getLastLocationName, getMapData, clearJourney, setS
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
-  GRID_SIZE, DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
+  GRID_SIZE, DIRECTION_OFFSETS, DIRECTION_OPPOSITES, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
   NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
@@ -1851,11 +1851,13 @@ function syncFromAutoMapper() {
   // Replay journey to create nodes/edges with proper positions
   let previousNode = null;
   const recentDirections = []; // Track last 10 directional commands (excluding portals)
+  const journey = autoMapperData.journey;
 
   // Portal commands that use recent direction for placement
   const portalCommands = ['in', 'out', 'enter', 'exit'];
 
-  for (const visit of autoMapperData.journey) {
+  for (let i = 0; i < journey.length; i++) {
+    const visit = journey[i];
     const locationName = visit.locationName;
 
     // Skip if location was deleted by user
@@ -1865,16 +1867,30 @@ function syncFromAutoMapper() {
       continue;
     }
 
+    // Resolve the best command to use for positioning.
+    // positionCommand (new saves): the actual direction typed, even if a scene break nulled `command`.
+    // Fallback — look at the next entry's return direction and reverse it (old saves without positionCommand).
+    let navCommand = visit.positionCommand || visit.command;
+    if (!navCommand && previousNode) {
+      const next = journey[i + 1];
+      if (next && next.locationName === previousNode.id) {
+        const returnDir = getDirectionFromCommand(next.positionCommand || next.command);
+        if (returnDir && DIRECTION_OPPOSITES[returnDir]) {
+          navCommand = DIRECTION_OPPOSITES[returnDir];
+        }
+      }
+    }
+
     // Check if node already exists
     let currentNode = mapState.nodes.get(locationName);
 
     if (!currentNode) {
       // Calculate position from direction command
       let x = 0, y = 0;
-      if (previousNode && visit.command) {
-        const cmd = visit.command.toLowerCase();
+      if (previousNode && navCommand) {
+        const cmd = navCommand.toLowerCase();
 
-        const canonicalDir = getDirectionFromCommand(visit.command);
+        const canonicalDir = getDirectionFromCommand(navCommand);
         const offset = canonicalDir ? DIRECTION_OFFSETS[canonicalDir] : null;
 
         // Portal commands use most recent directional command
@@ -1903,7 +1919,7 @@ function syncFromAutoMapper() {
           y = previousNode.y + fallbackOffset.y;
         }
       } else if (previousNode) {
-        // No command - use "up" as default
+        // No command at all - use "up" as default
         x = previousNode.x + DIRECTION_OFFSETS['up'].x;
         y = previousNode.y + DIRECTION_OFFSETS['up'].y;
       }
@@ -1927,14 +1943,17 @@ function syncFromAutoMapper() {
       mapState.protectedNodes.add(locationName);
     }
 
-    // Create edge from previous to current
-    // Skip if command is null — scene break/restart, not directional travel
-    if (previousNode && previousNode.id !== locationName && visit.command !== null) {
+    // Create edge from previous to current.
+    // Use navCommand for edge (handles scene-break entries where command is null but
+    // positionCommand or look-ahead inference recovered the real direction).
+    // Only skip if there's truly no directional info (genuine teleport/scene restart).
+    const edgeCommand = navCommand && getDirectionFromCommand(navCommand) ? navCommand : visit.command;
+    if (previousNode && previousNode.id !== locationName && edgeCommand !== null) {
       const edgeKey = `${previousNode.id}-${locationName}`;
 
       // Skip if edge was deleted by user or already exists
       if (!mapState.deletedEdges.has(edgeKey) && !mapState.edges.has(edgeKey)) {
-        const command = visit.command || '';
+        const command = edgeCommand || '';
         const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
 
         const newEdge = {

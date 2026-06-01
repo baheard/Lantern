@@ -10,6 +10,18 @@ import {
   timers
 } from './map-config.js';
 
+// Split a node label into 1 or 2 lines at a word boundary.
+// Each line is limited to maxChars; the second line is truncated with "…" if needed.
+function splitNodeLabel(name, maxChars) {
+  if (name.length <= maxChars) return [name];
+  const splitAt = name.lastIndexOf(' ', maxChars);
+  if (splitAt <= 0) return [name.substring(0, maxChars - 1) + '…'];
+  const line1 = name.substring(0, splitAt).trim();
+  let line2 = name.substring(splitAt + 1).trim();
+  if (line2.length > maxChars) line2 = line2.substring(0, maxChars - 1) + '…';
+  return [line1, line2];
+}
+
 // ============================================================================
 // CANVAS RESIZE
 // ============================================================================
@@ -204,19 +216,28 @@ function drawNodes() {
       ctx.fillText(iconChar, node.x, node.y);
     }
 
-    // Label
+    // Label — up to 2 lines, same width limit per line as before
     const fontSize = isSmall ? 9 : 11;
     ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    let name = (node.name || '').trim() || 'Unknown';
-    if (name.length > 20) name = name.substring(0, 17) + '...';
-    const tw = ctx.measureText(name).width;
-    const labelHeight = isSmall ? 12 : 14;
-    const ly = node.y + radius + (isSmall ? 6 : 8) + labelHeight / 2;
+    const rawName = (node.name || '').trim() || 'Unknown';
+    const maxChars = isSmall ? 13 : 20;
+    const lines = splitNodeLabel(rawName, maxChars);
+    const lineH = isSmall ? 12 : 14;
+    const lineGap = 2;
+    const boxPadH = 4;
+    const boxPadV = 4;
+    const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const totalTextH = lines.length * lineH + (lines.length - 1) * lineGap;
+    const boxH = totalTextH + boxPadV;
+    const topY = node.y + radius + (isSmall ? 6 : 8);
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath(); ctx.roundRect(node.x - tw / 2 - 4, ly - labelHeight / 2, tw + 8, labelHeight, 4); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.fillText(name, node.x, ly);
+    ctx.beginPath(); ctx.roundRect(node.x - maxLineW / 2 - boxPadH, topY, maxLineW + boxPadH * 2, boxH, 4); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((line, i) => {
+      ctx.fillText(line, node.x, topY + boxPadV / 2 + i * (lineH + lineGap) + lineH / 2);
+    });
 
     // ========================================
     // BADGE = Player-relevant info (one at a time)

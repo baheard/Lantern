@@ -23,8 +23,10 @@ let lastCommand = null;
 let startCheckTimeout = null;
 let pendingSceneBreak = false; // Set when a screen clear happens — next location change gets no edge
 let suppressJourneyClear = false; // Set by map-canvas while a new-area hint is pending
+let suppressNextJourneyClear = false; // One-shot: suppress the single scene-break clear after restore
 
 export function setSuppressJourneyClear(val) { suppressJourneyClear = val; }
+export function setSuppressNextJourneyClear(val) { suppressNextJourneyClear = val; }
 
 /**
  * Get current location from status bar text
@@ -96,7 +98,15 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
 
   const locationChanged = location.name !== lastLocationName;
 
-  if (locationChanged) {
+  if (!locationChanged) {
+    // Same location — consume any pending scene break so it doesn't bleed into the next
+    // real move. This happens after restore: the screen clears but the status bar still
+    // shows the same room, so the break should be discarded here rather than carried forward.
+    if (pendingSceneBreak) pendingSceneBreak = false;
+    return;
+  }
+
+  {
     const previousLocationName = lastLocationName;
     lastLocationName = location.name;
 
@@ -107,14 +117,22 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
 
     // Scene break — discard the old journey so syncFromAutoMapper sees a clean slate.
     // Suppressed while map-canvas is holding a new-area decision (accumulates across breaks).
-    if (effectiveCommand === null && !suppressJourneyClear) {
-      mapData.journey = [];
+    // Also suppressed once after restore so the restore's screen-clear doesn't wipe the
+    // just-loaded journey (suppressNextJourneyClear is a one-shot flag).
+    if (effectiveCommand === null) {
+      if (!suppressJourneyClear && !suppressNextJourneyClear) {
+        mapData.journey = [];
+      }
+      suppressNextJourneyClear = false;
     }
 
     // Add to journey (that's all we need!)
+    // positionCommand preserves the actual direction typed even when effectiveCommand is
+    // null (scene break). syncFromAutoMapper uses it so nodes stay spatially correct.
     mapData.journey.push({
       locationName: location.name,
-      command: effectiveCommand
+      command: effectiveCommand,
+      positionCommand: lastCommand || null
     });
 
     // Dispatch event for other modules to listen
