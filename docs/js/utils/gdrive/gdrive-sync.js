@@ -389,7 +389,7 @@ async function flushSyncQueue() {
       const bullet = unacked.map(s => `• ${saveLabel(s.key, skippedGameName)}`).join('\n');
       const { confirmDialog } = await import('../../ui/confirm-dialog.js');
       const openSync = await confirmDialog(
-        `Drive has a newer version than your local save for:\n\n${bullet}\n\nOpen Save Sync to review and resolve.`,
+        `Drive has a newer version than your local save for:\n\n${bullet}\n\nOpen Save Sync to review and resolve.\n\nTo stop these alerts, turn off Auto-sync in Settings → Google Drive.`,
         { title: `${displayGameName(skippedGameName)} Save Conflict`, okText: 'Dismiss', cancelText: 'Open Save Sync' }
       );
       if (openSync === false) {
