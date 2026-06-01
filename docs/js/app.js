@@ -43,7 +43,7 @@ import { initScrollDownButton, updateButtonVisibility } from './ui/scroll-down-b
 
 // Game modules
 import { sendCommandDirect, initDialogInterceptor } from './game/commands/index.js';
-import { quickSave, quickLoad } from './game/save-manager.js';
+import { quickSave } from './game/save-manager.js';
 import { initGameSelection } from './game/game-loader.js';
 
 // Features
@@ -846,10 +846,11 @@ function wireKeyboardShortcuts() {
       return;
     }
 
-    // Ctrl+R - Quick restore/load
+    // Ctrl+R - Open Manage Saves (restore is a deliberate "find the right save" action)
     if (e.key === 'r' && e.ctrlKey) {
       e.preventDefault();
-      await quickLoad();
+      const { openManageSavesModal } = await import('./ui/manage-saves-modal.js');
+      openManageSavesModal();
       return;
     }
 
