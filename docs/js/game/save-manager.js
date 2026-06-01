@@ -222,11 +222,18 @@ async function restoreMapData(optimizedMapData, gameName) {
             // may be stale if autosave ran before the map save flushed).
             const { setCurrentLocation, clearJourney } = await import('../features/auto-mapper.js');
             const lastJourneyLocation = optimizedMapData.autoMapper?.journey?.at(-1)?.locationName ?? null;
-            setCurrentLocation(lastJourneyLocation || optimizedMapData.mapCanvas.currentNodeId, gameName);
+            const mc = optimizedMapData.mapCanvas;
+            const canvasCurrentNodeId = mc?.v === 2
+              ? mc.maps?.[mc.activeMapId]?.currentNodeId
+              : mc?.currentNodeId;
+            setCurrentLocation(lastJourneyLocation || canvasCurrentNodeId, gameName);
             clearJourney();
         } catch (error) {
             console.error('Failed to restore map canvas data:', error);
         }
+    } else {
+        // Save had no canvas data — clear localStorage so stale edits don't persist
+        localStorage.removeItem(`iftalk_map_${gameName}`);
     }
 }
 
@@ -594,19 +601,25 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 }
             }
 
-            // Restore map data if present
-            if (saveData.mapData && saveData.gameName) {
-                let mapDataStr = saveData.mapData;
-                if (saveData.mapDataCompressed) {
-                    mapDataStr = decompressString(saveData.mapData);
-                }
-                if (mapDataStr) {
-                    try {
-                        const optimizedMapData = JSON.parse(mapDataStr);
-                        await restoreMapData(optimizedMapData, saveData.gameName);
-                    } catch (error) {
-                        console.error('Failed to restore map data:', error);
+            // Restore map data if present; clear canvas if save had none (avoid showing stale edits)
+            if (saveData.gameName) {
+                if (saveData.mapData) {
+                    let mapDataStr = saveData.mapData;
+                    if (saveData.mapDataCompressed) {
+                        mapDataStr = decompressString(saveData.mapData);
                     }
+                    if (mapDataStr) {
+                        try {
+                            const optimizedMapData = JSON.parse(mapDataStr);
+                            await restoreMapData(optimizedMapData, saveData.gameName);
+                        } catch (error) {
+                            console.error('Failed to restore map data:', error);
+                        }
+                    }
+                } else {
+                    // Old save with no map data — clear canvas so stale edits don't persist
+                    localStorage.removeItem(`iftalk_map_${saveData.gameName}`);
+                    localStorage.removeItem(`iftalk_automapper_restore_${saveData.gameName}`);
                 }
             }
 
@@ -720,6 +733,14 @@ export async function customSave(saveName) {
     }
 
     const key = `iftalk_customsave_${state.currentGameName}_${saveName}`;
+
+    // Before overwriting an existing named save, keep a single backup of its prior
+    // contents so the previous state can be recovered. Each named save keeps exactly
+    // ONE backup — the most recent overwritten state replaces any earlier one. This is
+    // distinct from the capped autosave/quicksave backup chain (createBackup); autosave
+    // and quicksave are intentionally excluded from this single-backup rule.
+    backupNamedSaveBeforeOverwrite(saveName);
+
     return await performSave(key, saveName, { saveName: saveName });
 }
 
@@ -973,6 +994,31 @@ export async function createBackup(saveType, exemptFromLimit = false) {
     }
 
     return true;
+}
+
+/**
+ * Keep a single backup of a named (custom) save's current contents before it is
+ * overwritten, so the prior state can be recovered. Uses a fixed key per named save
+ * (no timestamp suffix), so writing simply replaces any earlier backup — guaranteeing
+ * exactly ONE backup per named save. Does nothing if the save doesn't exist yet (the
+ * first save of a name has no prior state to preserve).
+ *
+ * The fixed-key scheme also avoids the underscore-delimiter ambiguity of the
+ * timestamped chain: save names may contain underscores, so a prefix scan for
+ * "name_<ts>" could match a different save (e.g. "foo" vs "foo_bar"). Exact-key
+ * access sidesteps that entirely.
+ *
+ * @param {string} saveName - Name of the custom save being overwritten
+ */
+function backupNamedSaveBeforeOverwrite(saveName) {
+    if (!state.currentGameName || !saveName) return;
+
+    const saveKey = `iftalk_customsave_${state.currentGameName}_${saveName}`;
+    const existing = getJSON(saveKey);
+    if (!existing) return; // first save of this name — nothing to back up
+
+    const backupKey = `iftalk_backup_customsave_${state.currentGameName}_${saveName}`;
+    setJSON(backupKey, existing);
 }
 
 /**

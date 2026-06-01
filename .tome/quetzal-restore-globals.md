@@ -2,7 +2,7 @@
 title: Quetzal Restore — Game Globals vs Z-Machine Header
 tags: [zvm, save-restore, quetzal, screen-width, anchorhead]
 created: 2026-05-09
-updated: 2026-05-09
+updated: 2026-05-31
 aliases: [screen_width, restore globals, quetzal decode, perpetuation cycle]
 ---
 
@@ -80,3 +80,13 @@ glkapi groups grid cells into runs by matching attributes. The split between roo
 
 With correct width (80): room name at 0–10, gap of expanded cells at 11–72, right side at 73–79 → 3 runs → clean split.
 With wrong width (15): room name at 0–7, right side overwrites at 8–14 (both `undefined`) → 1 run → concatenated.
+
+## Unrelated Concatenation: chunk-delimiter Span (v1.5.444)
+
+There is a second, independent way to get `"Master Bedroom, day one, evening"` from the status bar that has nothing to do with screen_width.
+
+`renderStatusBar` (voxglk-renderer.js) wraps the left/right parts in a `<span class="chunk-delimiter">, </span>` for TTS pacing. That span is hidden by CSS but IS included in `element.textContent`. So reading `statusBarEl.textContent` always concatenates left `, ` right regardless of screen_width.
+
+**Affected callers:** `initAutoMapper` and `map-canvas.js` both read `statusBarEl.textContent` directly at init/open time (not from the voxglk `statusBarText` pipeline). Fix: read `statusBarEl.querySelector('.status-left')?.textContent` and fall back to the full element only if `.status-left` is absent.
+
+`getCurrentLocation` (auto-mapper.js) also has a `/,\s+[a-z].*$/` backstop that strips the suffix as a last resort, covering both this case and any wrong-width concatenation that reaches it via `extractPlainText`.

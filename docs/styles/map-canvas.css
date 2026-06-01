@@ -9,7 +9,7 @@
   --z-map-backdrop: 1;            /* Backdrop within overlay */
   --z-map-panel: 2;               /* Map panel above backdrop */
   --z-map-resize-handle: 3;       /* Resize handle above panel */
-  --z-map-toolbar: 4;             /* Toolbar header */
+  --z-map-toolbar: 7;             /* Toolbar header — must be above legend toggle (6) so dropdown shows in front */
   --z-map-legend: 5;              /* Legend floating element */
   --z-map-legend-toggle: 6;       /* Legend toggle above legend */
   --z-map-fab: 10;                /* Floating action buttons */
@@ -170,18 +170,166 @@ body.map-resizing .map-canvas-overlay * {
   flex-direction: column;
   margin-left: 8px;
   min-width: 0;
+  position: relative;
 }
 
-.map-title-text {
+.map-name-btn {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.map-node-count {
-  font-size: 11px;
+.map-name-btn:hover .map-chevron,
+.map-name-btn:focus .map-chevron {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.map-chevron {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+
+.map-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  min-width: 160px;
+  max-width: 240px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.map-picker-row {
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-picker-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.map-picker-row.active .map-picker-item {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.map-picker-item {
+  flex: 1;
+  padding: 10px 4px 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  /* Clamp to 4 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.map-picker-item:focus {
+  outline: none;
+}
+
+.map-picker-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.map-picker-edit:hover,
+.map-picker-edit:focus {
+  color: #ffffff;
+  outline: none;
+}
+
+.map-picker-edit .material-icons {
+  font-size: 16px;
+}
+
+.map-picker-confirm {
+  color: #4ade80;
+}
+
+.map-picker-confirm:hover,
+.map-picker-confirm:focus {
+  color: #86efac;
+}
+
+.map-picker-rename-input {
+  flex: 1;
+  font-size: 14px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.6);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 4px 0 4px 16px;
+  min-height: 36px;
+  outline: none;
+}
+
+.map-picker-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
+.map-picker-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
   color: #94a3b8;
-  margin-top: 2px;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-picker-add:hover,
+.map-picker-add:focus {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  outline: none;
+}
+
+.map-picker-add .material-icons {
+  font-size: 18px;
 }
 
 .map-toolbar-actions {
@@ -476,7 +624,7 @@ body.map-resizing .map-canvas-overlay * {
   display: none;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 10px 28px 10px 12px; /* right padding for close button */
   background: rgba(15, 23, 42, 0.9);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -489,7 +637,34 @@ body.map-resizing .map-canvas-overlay * {
   display: flex;
 }
 
-/* Legend close hint */
+.legend-close-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legend-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.legend-close-btn .material-icons {
+  font-size: 14px;
+}
+
+/* Legacy — no longer used, kept for reference */
 .legend-close {
   display: none;
 }
@@ -632,6 +807,23 @@ body.map-resizing .map-canvas-overlay * {
 .map-hint-close:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+}
+
+.map-hint-action {
+  flex-shrink: 0;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.5);
+  border-radius: 6px;
+  color: #60a5fa;
+  font-size: 13px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-hint-action:hover {
+  background: rgba(96, 165, 250, 0.25);
 }
 
 @keyframes hintFadeIn {
@@ -1259,7 +1451,7 @@ body.map-resizing .map-canvas-overlay * {
     padding: 6px 10px;
   }
 
-  .map-title-text {
+  .map-name-btn {
     font-size: 14px;
   }
 

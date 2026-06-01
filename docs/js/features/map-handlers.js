@@ -262,10 +262,13 @@ export function scheduleFabShow() { clearTimeout(timers.fabHideTimer); timers.fa
 
 export function getNodeAtPoint(x, y) {
   const hitRadius = Math.max(NODE_RADIUS, TOUCH_TARGET / 2 / mapState.viewport.scale);
+  // Return the last matching node — nodes render in insertion order, so the last
+  // match is the topmost (most recently drawn) one, which is what the user sees.
+  let result = null;
   for (const node of mapState.nodes.values()) {
-    if (Math.sqrt((node.x - x) ** 2 + (node.y - y) ** 2) <= hitRadius) return node;
+    if (Math.sqrt((node.x - x) ** 2 + (node.y - y) ** 2) <= hitRadius) result = node;
   }
-  return null;
+  return result;
 }
 
 // ============================================================================

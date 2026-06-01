@@ -75,8 +75,20 @@ function getMoveCount(saveData) {
 // ─── Backup Helpers ──────────────────────────────────────────────────────────
 
 function getBackupsForSave(save) {
+  const gameName = save.saveData.gameName || state.currentGameName;
+
+  // Named (custom) saves keep a single backup of the last overwritten state at a
+  // fixed key (no timestamp suffix). Look it up directly — see backupNamedSaveBeforeOverwrite.
+  if (save.type === 'customsave') {
+    const key = `iftalk_backup_customsave_${gameName}_${save.name}`;
+    const saveData = getJSON(key);
+    if (!saveData) return [];
+    const ts = saveData.timestamp ? Date.parse(saveData.timestamp) : Date.now();
+    return [{ key, ts, saveData }];
+  }
+
   if (save.type !== 'autosave' && save.type !== 'quicksave') return [];
-  const prefix = `iftalk_backup_${save.type}_${save.saveData.gameName || state.currentGameName}_`;
+  const prefix = `iftalk_backup_${save.type}_${gameName}_`;
   const results = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -189,6 +201,12 @@ function collectSaves(gameName) {
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 async function saveToSlot(save) {
+  const confirmed = await confirmDialog(
+    `Overwrite "${escapeHtml(save.name)}" with the current game state?`,
+    { title: 'Overwrite Save?', okText: 'Overwrite' }
+  );
+  if (!confirmed) return;
+
   const { autoSave, quickSave, customSave } = await import('../game/save-manager.js');
   let success = false;
   if (save.type === 'autosave') success = await autoSave();
@@ -222,6 +240,12 @@ function exportSave(save) {
 }
 
 async function loadSave(save) {
+  const confirmed = await confirmDialog(
+    `Load "${escapeHtml(save.name)}"?\n\nAny unsaved progress will be lost.`,
+    { title: 'Load Save?', okText: 'Load' }
+  );
+  if (!confirmed) return;
+
   closeManageSavesModal();
   if (save.type === 'autosave') {
     window.location.reload();
@@ -242,6 +266,11 @@ async function deleteSave(save, rowEl) {
   if (!confirmed) return;
 
   removeItem(save.key);
+  // Named saves carry a single overwrite-backup at a fixed key — remove it too so it
+  // doesn't linger orphaned in localStorage once the save itself is gone.
+  if (save.type === 'customsave') {
+    removeItem(`iftalk_backup_customsave_${save.saveData.gameName || state.currentGameName}_${save.name}`);
+  }
   updateStatus(`Deleted: ${save.name}`);
 
   if (state.gdriveSignedIn) {

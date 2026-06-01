@@ -22,6 +22,9 @@ let lastLocationName = null;
 let lastCommand = null;
 let startCheckTimeout = null;
 let pendingSceneBreak = false; // Set when a screen clear happens — next location change gets no edge
+let suppressJourneyClear = false; // Set by map-canvas while a new-area hint is pending
+
+export function setSuppressJourneyClear(val) { suppressJourneyClear = val; }
 
 /**
  * Get current location from status bar text
@@ -44,7 +47,8 @@ export function getCurrentLocation(statusBarText) {
     /\s+Moves:\s*\d+.*/i,
     /\s+Time:\s*.*/i,
     /\s+Turns:\s*\d+.*/i,
-    /\s{3,}.*$/,  // Multiple spaces often separate location from stats
+    /\s{3,}.*$/,           // Multiple spaces often separate location from stats
+    /,\s+[a-z].*$/,        // Comma + lowercase = status suffix (e.g. "Room, day one, evening")
   ];
 
   for (const pattern of suffixPatterns) {
@@ -101,8 +105,9 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
     const effectiveCommand = pendingSceneBreak ? null : lastCommand;
     pendingSceneBreak = false;
 
-    // Scene break — discard the old journey so syncFromAutoMapper sees a clean slate
-    if (effectiveCommand === null) {
+    // Scene break — discard the old journey so syncFromAutoMapper sees a clean slate.
+    // Suppressed while map-canvas is holding a new-area decision (accumulates across breaks).
+    if (effectiveCommand === null && !suppressJourneyClear) {
       mapData.journey = [];
     }
 
@@ -230,7 +235,10 @@ export function initAutoMapper(gameName) {
   let attempts = 0;
   const checkStartingLocation = () => {
     const statusBarEl = document.getElementById('statusBar');
-    const statusText = statusBarEl?.textContent?.trim();
+    // Prefer the left span (room name only) — textContent includes the chunk-delimiter span (", ")
+    // which would concatenate left+right into e.g. "Master Bedroom, day one, evening"
+    const leftEl = statusBarEl?.querySelector('.status-left');
+    const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
     if (statusText && statusText.length > 0) {
       checkLocationChange(statusText, 0);
       startCheckTimeout = null;

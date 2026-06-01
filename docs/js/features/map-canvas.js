@@ -15,11 +15,11 @@
  * - map-canvas.js   : Core orchestrator (this file)
  */
 
-import { getCurrentLocation, getLastLocationName, getMapData, clearJourney } from './auto-mapper.js';
+import { getCurrentLocation, getLastLocationName, getMapData, clearJourney, setSuppressJourneyClear } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
-  DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
+  GRID_SIZE, DIRECTION_OFFSETS, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
   NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
@@ -42,6 +42,14 @@ import {
 
 // Store resize state for cleanup
 let resizeState = null;
+
+// In-memory cache of all maps' raw data for the current game (keyed by mapId).
+// Active map data is always the live mapState fields; this holds the rest.
+let _allMapsData = {};
+
+// Set when a scene break arrives in a non-empty map and the new location is unknown.
+// Cleared when the hint is shown, the user adds a map, or the game resets.
+let _pendingNewAreaHint = false;
 
 export function initMapCanvas() {
   createMapUI();
@@ -115,8 +123,11 @@ function createMapUI() {
       <div class="map-resize-handle" id="mapResizeHandle"></div>
       <div class="map-toolbar">
         <div class="map-title">
-          <span class="map-title-text">Game Map</span>
-          <span class="map-node-count" id="mapNodeCount"></span>
+          <button class="map-name-btn" id="mapNameBtn" aria-haspopup="listbox" aria-label="Select map">
+            <span id="mapNameText">Map 1</span>
+            <span class="material-icons map-chevron">arrow_drop_down</span>
+          </button>
+          <div class="map-picker-dropdown hidden" id="mapPickerDropdown" role="listbox"></div>
         </div>
         <div class="map-toolbar-actions">
           <div class="map-zoom-controls">
@@ -162,7 +173,10 @@ function createMapUI() {
         <button class="map-legend-toggle" id="mapLegendToggle" aria-label="Show legend" title="Legend">
           <span class="material-icons">help_outline</span>
         </button>
-        <div class="map-legend" id="mapLegend" title="Click to close">
+        <div class="map-legend" id="mapLegend">
+          <button class="legend-close-btn" aria-label="Close legend">
+            <span class="material-icons">close</span>
+          </button>
           <div class="legend-section">Nodes</div>
           <div class="legend-item"><span class="legend-dot legend-auto"></span><span>Auto-mapped</span></div>
           <div class="legend-item"><span class="legend-dot legend-user"></span><span>Player-created</span></div>
@@ -228,6 +242,12 @@ function setupEventListeners() {
   });
   document.getElementById('mapAutoToggle').addEventListener('click', toggleAutoMap);
   document.getElementById('mapClearBtn').addEventListener('click', clearMapWithConfirm);
+  document.getElementById('mapNameBtn').addEventListener('click', toggleMapPicker);
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#mapNameBtn') && !e.target.closest('#mapPickerDropdown')) {
+      closeMapPicker();
+    }
+  }, true);
 
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
@@ -523,7 +543,8 @@ function toggleAutoMap() {
   if (mapState.autoMapEnabled) {
     // Actively check the status bar for current location (don't just rely on cached lastLocationName)
     const statusBarEl = document.getElementById('statusBar');
-    const statusText = statusBarEl?.textContent?.trim();
+    const leftEl = statusBarEl?.querySelector('.status-left');
+    const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
 
     let currentLocationName = getLastLocationName();
 
@@ -561,20 +582,13 @@ function toggleAutoMap() {
 }
 
 function clearMapWithConfirm() {
-  if (mapState.nodes.size === 0) {
-    showHint('Map is already empty');
-    return;
-  }
-  if (confirm('Clear entire map? This cannot be undone.')) {
-    // Clear any visible toasts (without marking as dismissed)
+  if (mapState.nodes.size === 0) { showHint('Map is already empty'); return; }
+  if (confirm('Clear this map? This cannot be undone.')) {
     clearAllToasts();
-    resetMap();
-    // Clear auto-mapper journey so it doesn't repopulate the map on next open
+    clearActiveMapData();
     clearJourney();
-    if (mapState.gameName) {
-      localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
-    }
-    saveMapForGame(true);  // Immediate save for critical operation
+    if (mapState.gameName) localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
+    saveMapForGame(true);
     render();
     showHint('Map cleared');
   }
@@ -627,11 +641,20 @@ function handleLocationChange(e) {
     return;
   }
 
-  // Scene break — wipe the canvas and start fresh for the new scene
-  if (command === null && mapState.nodes.size > 0) {
-    resetMap();
-    saveMapForGame(true);
+  // Scene break into an unmapped area: buffer all new locations until the user decides
+  // where they belong. Return early so nothing gets added to the current map.
+  if (command === null && mapState.nodes.size > 0
+      && !mapState.nodes.has(locationName) && !mapState.deletedNodes.has(locationName)) {
+    if (!_pendingNewAreaHint) {
+      _pendingNewAreaHint = true;
+      setSuppressJourneyClear(true);  // prevent subsequent scene breaks from wiping the buffer
+      if (isVisible) showNewAreaHint();
+    }
+    return;
   }
+
+  // While hint is pending, keep buffering (journey accumulates in auto-mapper)
+  if (_pendingNewAreaHint) return;
 
   // locationId is now the location NAME (name-based tracking)
   // Check if we already have a node with this name
@@ -683,8 +706,8 @@ function handleLocationChange(e) {
         // 3. If direction info exists but position doesn't match, create duplicate
         const hasDirectionInfo = expectedPos !== null;
         const positionMatches = hasDirectionInfo &&
-          Math.abs(expectedPos.x - existingNode.x) <= 120 &&
-          Math.abs(expectedPos.y - existingNode.y) <= 120;
+          Math.abs(expectedPos.x - existingNode.x) <= GRID_SIZE &&
+          Math.abs(expectedPos.y - existingNode.y) <= GRID_SIZE;
 
         // Same room if: no direction info OR position matches
         if (!hasDirectionInfo || positionMatches) {
@@ -1033,10 +1056,39 @@ export function hideHint() {
   domRefs.hint?.classList.add('hidden');
 }
 
-function updateNodeCount() {
-  const el = document.getElementById('mapNodeCount');
-  if (el) el.textContent = mapState.nodes.size > 0 ? `${mapState.nodes.size} location${mapState.nodes.size !== 1 ? 's' : ''}` : '';
+function showNewAreaHint() {
+  if (!domRefs.hint) return;
+  clearTimeout(timers.hintTimeout);  // no auto-hide — user must decide
+
+  const textEl = domRefs.hint.querySelector('.map-hint-text');
+  if (textEl) textEl.textContent = 'Looks like a new area.';
+
+  domRefs.hint.querySelector('.map-hint-action')?.remove();
+  const addBtn = document.createElement('button');
+  addBtn.className = 'map-hint-action';
+  addBtn.textContent = 'Add map';
+  addBtn.addEventListener('click', () => {
+    setSuppressJourneyClear(false);
+    addMap();
+    syncFromAutoMapper();  // replay buffered journey into the new map
+    hideHint();
+  });
+  domRefs.hint.querySelector('.map-hint-close').before(addBtn);
+
+  // Dismissing (X) flushes the buffered journey into the current map
+  const closeBtn = domRefs.hint.querySelector('.map-hint-close');
+  function onDismiss() {
+    _pendingNewAreaHint = false;
+    setSuppressJourneyClear(false);
+    syncFromAutoMapper();
+    closeBtn.removeEventListener('click', onDismiss);
+  }
+  closeBtn.addEventListener('click', onDismiss, { once: true });
+
+  domRefs.hint.classList.remove('hidden');
 }
+
+function updateNodeCount() { /* node count display removed */ }
 
 // ============================================================================
 // TOAST NOTIFICATION SYSTEM
@@ -1380,7 +1432,8 @@ export function showMap() {
   }
 
   resizeCanvas(); updateNodeCount(); centerOnCurrentLocation();
-  showOnboardingOrHint();
+  if (_pendingNewAreaHint) { showNewAreaHint(); }
+  else { showOnboardingOrHint(); }
 
   // Check keyboard state and hide UI elements if keyboard is up
   setTimeout(() => {
@@ -1393,8 +1446,8 @@ export async function hideMap() {
   setIsVisible(false);
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
-  // Clear any visible toasts (without marking as dismissed)
   clearAllToasts();
+  closeMapPicker();
   exitAddMode();
 
   // Reset FAB and toolbar visibility (from keyboard handling)
@@ -1497,55 +1550,285 @@ export function centerOnCurrentLocation() {
 }
 
 // ============================================================================
-// PERSISTENCE
+// MAP MANAGEMENT
 // ============================================================================
 
-function loadMapForGame(gameName) {
-  mapState.gameName = gameName;
-  // Always reset undo/redo stacks, selection, and unsaved changes when loading a game
+function generateMapId() { return 'map_' + Date.now(); }
+
+function getCurrentMapName() {
+  const entry = mapState.mapOrder.find(m => m.id === mapState.activeMapId);
+  return entry ? entry.name : 'Map 1';
+}
+
+function extractMapData() {
+  return {
+    nodes: Array.from(mapState.nodes.values()),
+    edges: Array.from(mapState.edges.values()),
+    protectedNodes: Array.from(mapState.protectedNodes),
+    protectedEdges: Array.from(mapState.protectedEdges),
+    deletedEdges: Array.from(mapState.deletedEdges),
+    deletedNodes: Array.from(mapState.deletedNodes),
+    viewport: { ...mapState.viewport },
+    autoMapEnabled: mapState.autoMapEnabled,
+    currentNodeId: mapState.currentNodeId
+  };
+}
+
+function applyMapData(data) {
+  const validNodes = (data.nodes || []).filter(n => n && n.id && n.name).map(n => ({
+    ...n,
+    x: typeof n.x === 'number' && !isNaN(n.x) ? n.x : 0,
+    y: typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0,
+    isSmall: n.isSmall === true
+  }));
+  mapState.nodes = new Map(validNodes.map(n => [n.id, n]));
+  mapState.edges = new Map((data.edges || []).map(e => [`${e.from}-${e.to}`, e]));
+  mapState.protectedNodes = new Set(data.protectedNodes || []);
+  mapState.protectedEdges = new Set(data.protectedEdges || []);
+  mapState.deletedEdges = new Set(data.deletedEdges || []);
+  mapState.deletedNodes = new Set(data.deletedNodes || []);
+  if (data.viewport && typeof data.viewport.x === 'number' && !isNaN(data.viewport.x) &&
+      typeof data.viewport.y === 'number' && !isNaN(data.viewport.y) &&
+      typeof data.viewport.scale === 'number' && !isNaN(data.viewport.scale) && data.viewport.scale > 0) {
+    mapState.viewport = data.viewport;
+  } else {
+    mapState.viewport = { x: 0, y: 0, scale: 1 };
+  }
+  if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
+  mapState.currentNodeId = data.currentNodeId || null;
+}
+
+function clearActiveMapData() {
+  mapState.nodes = new Map(); mapState.edges = new Map();
+  mapState.protectedNodes = new Set(); mapState.protectedEdges = new Set();
+  mapState.deletedEdges = new Set(); mapState.deletedNodes = new Set();
+  mapState.viewport = { x: 0, y: 0, scale: 1 };
+  mapState.selectedNode = null; mapState.currentNodeId = null;
+  const automapPref = localStorage.getItem('iftalk_automap_default');
+  mapState.autoMapEnabled = automapPref !== null ? automapPref === 'true' : true;
+  mapState.undoStack = [];
+  mapState.redoStack = [];
+  mapState.hasUnsavedChanges = false;
+  updateUndoButton();
+}
+
+function initFirstMap() {
+  const mapId = 'map_1';
+  mapState.activeMapId = mapId;
+  mapState.mapOrder = [{ id: mapId, name: 'Map 1' }];
+  _allMapsData = {};
+  clearActiveMapData();
+}
+
+function switchMap(mapId) {
+  if (mapId === mapState.activeMapId) return;
+  if (!mapState.mapOrder.find(m => m.id === mapId)) return;
+
+  _allMapsData[mapState.activeMapId] = extractMapData();
+  mapState.activeMapId = mapId;
   mapState.undoStack = [];
   mapState.redoStack = [];
   mapState.selectedNode = null;
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
 
+  const data = _allMapsData[mapId];
+  if (data) { applyMapData(data); }
+  else { clearActiveMapData(); }
+
+  saveMapForGame(true);
+  updateMapNameDisplay();
+  updateNodeCount();
+  updateMapBadge();
+  if (isVisible) { render(); centerOnCurrentLocation(); }
+}
+
+function addMap() {
+  _pendingNewAreaHint = false;
+  setSuppressJourneyClear(false);
+  _allMapsData[mapState.activeMapId] = extractMapData();
+
+  const mapId = generateMapId();
+  const name = `Map ${mapState.mapOrder.length + 1}`;
+  mapState.mapOrder.push({ id: mapId, name });
+  _allMapsData[mapId] = {
+    nodes: [], edges: [], protectedNodes: [], protectedEdges: [],
+    deletedEdges: [], deletedNodes: [],
+    viewport: { x: 0, y: 0, scale: 1 },
+    autoMapEnabled: mapState.autoMapEnabled,
+    currentNodeId: null
+  };
+  mapState.activeMapId = mapId;
+  mapState.undoStack = [];
+  mapState.redoStack = [];
+  mapState.selectedNode = null;
+  mapState.hasUnsavedChanges = false;
+  updateUndoButton();
+  applyMapData(_allMapsData[mapId]);
+
+  saveMapForGame(true);
+  updateMapNameDisplay();
+  updateNodeCount();
+  updateMapBadge();
+  if (isVisible) render();
+}
+
+function renameCurrentMap(name) {
+  const entry = mapState.mapOrder.find(m => m.id === mapState.activeMapId);
+  if (entry) { entry.name = name; saveMapForGame(true); }
+}
+
+// ============================================================================
+// MAP PICKER UI
+// ============================================================================
+
+function updateMapNameDisplay() {
+  const el = document.getElementById('mapNameText');
+  if (el) el.textContent = getCurrentMapName();
+}
+
+function buildPickerDropdown() {
+  const dropdown = document.getElementById('mapPickerDropdown');
+  if (!dropdown) return;
+  dropdown.innerHTML = '';
+
+  for (const { id, name } of mapState.mapOrder) {
+    const row = document.createElement('div');
+    row.className = 'map-picker-row' + (id === mapState.activeMapId ? ' active' : '');
+    row.dataset.mapId = id;
+
+    const nameBtn = document.createElement('button');
+    nameBtn.className = 'map-picker-item';
+    nameBtn.textContent = name;
+    nameBtn.addEventListener('click', () => { switchMap(id); closeMapPicker(); });
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'map-picker-edit';
+    editBtn.title = 'Rename';
+    editBtn.setAttribute('aria-label', 'Rename map');
+    editBtn.innerHTML = '<span class="material-icons">edit</span>';
+    editBtn.addEventListener('click', (e) => { e.stopPropagation(); startMapRenameInRow(row, id, name); });
+
+    row.appendChild(nameBtn);
+    row.appendChild(editBtn);
+    dropdown.appendChild(row);
+  }
+
+  const divider = document.createElement('div');
+  divider.className = 'map-picker-divider';
+  dropdown.appendChild(divider);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'map-picker-add';
+  addBtn.innerHTML = '<span class="material-icons">add</span> Add map';
+  addBtn.addEventListener('click', () => { addMap(); closeMapPicker(); });
+  dropdown.appendChild(addBtn);
+}
+
+function startMapRenameInRow(row, mapId, currentName) {
+  const nameBtn = row.querySelector('.map-picker-item');
+  const editBtn = row.querySelector('.map-picker-edit');
+  if (!nameBtn || !editBtn) return;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'map-picker-rename-input';
+  input.value = currentName;
+  input.maxLength = 30;
+
+  nameBtn.replaceWith(input);
+  editBtn.innerHTML = '<span class="material-icons">check</span>';
+  editBtn.classList.add('map-picker-confirm');
+  input.focus();
+  input.select();
+
+  function commit() {
+    input.removeEventListener('keydown', onKeyDown);
+    const newName = input.value.trim() || currentName;
+    const entry = mapState.mapOrder.find(m => m.id === mapId);
+    if (entry) { entry.name = newName; saveMapForGame(true); }
+    nameBtn.textContent = newName;
+    input.replaceWith(nameBtn);
+    editBtn.innerHTML = '<span class="material-icons">edit</span>';
+    editBtn.classList.remove('map-picker-confirm');
+    if (mapId === mapState.activeMapId) updateMapNameDisplay();
+  }
+  function onKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = currentName; input.blur(); }
+  }
+  editBtn.onclick = (e) => { e.stopPropagation(); input.blur(); };
+  input.addEventListener('keydown', onKeyDown);
+  input.addEventListener('blur', commit, { once: true });
+}
+
+function toggleMapPicker() {
+  const dropdown = document.getElementById('mapPickerDropdown');
+  if (!dropdown) return;
+  if (dropdown.classList.contains('hidden')) {
+    buildPickerDropdown();
+    dropdown.classList.remove('hidden');
+  } else {
+    dropdown.classList.add('hidden');
+  }
+}
+
+function closeMapPicker() {
+  document.getElementById('mapPickerDropdown')?.classList.add('hidden');
+}
+
+
+// ============================================================================
+// PERSISTENCE
+// ============================================================================
+
+function loadMapForGame(gameName) {
+  mapState.gameName = gameName;
+  mapState.undoStack = [];
+  mapState.redoStack = [];
+  mapState.selectedNode = null;
+  mapState.hasUnsavedChanges = false;
+  updateUndoButton();
+  _allMapsData = {};
+  _pendingNewAreaHint = false;
+  setSuppressJourneyClear(false);
+
   const saved = localStorage.getItem(`iftalk_map_${gameName}`);
   if (saved) {
     try {
-      const data = JSON.parse(saved);
-      // Filter out invalid nodes (no id or name) and fix corrupted coordinates
-      const validNodes = (data.nodes || []).filter(n => n && n.id && n.name).map(n => ({
-        ...n,
-        x: typeof n.x === 'number' && !isNaN(n.x) ? n.x : 0,
-        y: typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0,
-        isSmall: n.isSmall === true
-      }));
-      mapState.nodes = new Map(validNodes.map(n => [n.id, n]));
-      mapState.edges = new Map((data.edges || []).map(e => [`${e.from}-${e.to}`, e]));
-      mapState.protectedNodes = new Set(data.protectedNodes || []);
-      mapState.protectedEdges = new Set(data.protectedEdges || []);
-      mapState.deletedEdges = new Set(data.deletedEdges || []);
-      mapState.deletedNodes = new Set(data.deletedNodes || []);
-      // Validate viewport - reset if corrupted
-      if (data.viewport &&
-          typeof data.viewport.x === 'number' && !isNaN(data.viewport.x) &&
-          typeof data.viewport.y === 'number' && !isNaN(data.viewport.y) &&
-          typeof data.viewport.scale === 'number' && !isNaN(data.viewport.scale) &&
-          data.viewport.scale > 0) {
-        mapState.viewport = data.viewport;
+      const parsed = JSON.parse(saved);
+      let v2;
+      if (parsed.v === 2 && parsed.maps) {
+        v2 = parsed;
+      } else if (parsed.nodes !== undefined || parsed.edges !== undefined) {
+        // Migrate v1 single-map format
+        const mapId = 'map_1';
+        v2 = { v: 2, activeMapId: mapId, mapOrder: [{ id: mapId, name: 'Map 1' }], maps: { [mapId]: parsed } };
       } else {
-        mapState.viewport = { x: 0, y: 0, scale: 1 };
+        v2 = null;
       }
-      if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
-      if (data.currentNodeId) mapState.currentNodeId = data.currentNodeId;
-    } catch (e) { resetMap(); }
-  } else { resetMap(); }
 
-  // Sync any locations tracked by auto-mapper that aren't in the map yet
+      if (v2) {
+        mapState.activeMapId = v2.activeMapId;
+        mapState.mapOrder = v2.mapOrder || [];
+        for (const [id, data] of Object.entries(v2.maps || {})) {
+          _allMapsData[id] = data;
+        }
+        const activeData = _allMapsData[mapState.activeMapId];
+        if (activeData) { applyMapData(activeData); }
+        else { clearActiveMapData(); }
+      } else {
+        initFirstMap();
+      }
+    } catch (e) { initFirstMap(); }
+  } else {
+    initFirstMap();
+  }
+
   syncFromAutoMapper();
-
   updateNodeCount();
   updateMapBadge();
+  updateMapNameDisplay();
   if (isVisible) render();
 }
 
@@ -1591,7 +1874,7 @@ function syncFromAutoMapper() {
       if (previousNode && visit.command) {
         const cmd = visit.command.toLowerCase();
 
-        const canonicalDir = COMMAND_DIRECTIONS[cmd];
+        const canonicalDir = getDirectionFromCommand(visit.command);
         const offset = canonicalDir ? DIRECTION_OFFSETS[canonicalDir] : null;
 
         // Portal commands use most recent directional command
@@ -1626,12 +1909,13 @@ function syncFromAutoMapper() {
       }
       // else: first node stays at (0, 0)
 
-      // Create new node with spatial position
+      // Create new node with spatial position; apply collision avoidance same as live play
+      const position = findAvailablePosition({ x, y });
       currentNode = {
         id: locationName,
         name: locationName,
-        x: x,
-        y: y,
+        x: position.x,
+        y: position.y,
         type: 'room',
         notes: '',
         isManual: false,
@@ -1651,15 +1935,7 @@ function syncFromAutoMapper() {
       // Skip if edge was deleted by user or already exists
       if (!mapState.deletedEdges.has(edgeKey) && !mapState.edges.has(edgeKey)) {
         const command = visit.command || '';
-
-        // Determine connection type from command
-        let connectionType = 'cardinal';
-        const cmd = command.toLowerCase();
-        if (cmd === 'up' || cmd === 'down' || cmd === 'u' || cmd === 'd') {
-          connectionType = 'vertical';
-        } else if (cmd === 'in' || cmd === 'out' || cmd === 'enter' || cmd === 'exit') {
-          connectionType = 'portal';
-        }
+        const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
 
         const newEdge = {
           from: previousNode.id,
@@ -1698,18 +1974,14 @@ function syncFromAutoMapper() {
  * @returns {boolean} True if save succeeded, false otherwise
  */
 function saveMapImmediately() {
-  if (!mapState.gameName) return false;
+  if (!mapState.gameName || !mapState.activeMapId) return false;
   try {
+    _allMapsData[mapState.activeMapId] = extractMapData();
     const dataToSave = {
-      nodes: Array.from(mapState.nodes.values()),
-      edges: Array.from(mapState.edges.values()),
-      protectedNodes: Array.from(mapState.protectedNodes),
-      protectedEdges: Array.from(mapState.protectedEdges),
-      deletedEdges: Array.from(mapState.deletedEdges),
-      deletedNodes: Array.from(mapState.deletedNodes),
-      viewport: mapState.viewport,
-      autoMapEnabled: mapState.autoMapEnabled,
-      currentNodeId: mapState.currentNodeId
+      v: 2,
+      activeMapId: mapState.activeMapId,
+      mapOrder: mapState.mapOrder,
+      maps: _allMapsData
     };
     localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify(dataToSave));
     updateMapBadge();
@@ -1764,18 +2036,7 @@ export function flushMapSave() {
  * @param {string} gameName
  * @returns {Object|null} Optimized map data ready for embedding in a save file
  */
-export function exportMapState(gameName) {
-  if (!gameName) return null;
-
-  // Flush pending debounced save so the read reflects the latest move
-  flushMapSave();
-
-  const raw = localStorage.getItem(`iftalk_map_${gameName}`);
-  if (!raw) return null;
-
-  let mapData;
-  try { mapData = JSON.parse(raw); } catch { return null; }
-
+function optimizeMapData(mapData) {
   const nodes = (mapData.nodes || []).map(node => {
     const opt = { id: node.id, name: node.name, x: node.x, y: node.y };
     if (node.type && node.type !== 'room') opt.type = node.type;
@@ -1785,7 +2046,6 @@ export function exportMapState(gameName) {
     if (node.isSmall === true) opt.isSmall = true;
     return opt;
   });
-
   const edges = (mapData.edges || []).map(edge => {
     const opt = { from: edge.from, to: edge.to, cmd: edge.command || edge.cmd };
     if (edge.connectionType && edge.connectionType !== 'cardinal') opt.connectionType = edge.connectionType;
@@ -1793,82 +2053,92 @@ export function exportMapState(gameName) {
     if (edge.isEdited === true) opt.isEdited = true;
     return opt;
   });
-
-  const result = {
-    nodes,
-    edges,
-    protectedNodes: mapData.protectedNodes || [],
-    protectedEdges: mapData.protectedEdges || []
-  };
-
+  const result = { nodes, edges, protectedNodes: mapData.protectedNodes || [], protectedEdges: mapData.protectedEdges || [] };
   if (mapData.deletedEdges?.length > 0) result.deletedEdges = mapData.deletedEdges;
   if (mapData.deletedNodes?.length > 0) result.deletedNodes = mapData.deletedNodes;
   if (mapData.viewport) result.viewport = mapData.viewport;
   if (mapData.currentNodeId) result.currentNodeId = mapData.currentNodeId;
   if (typeof mapData.autoMapEnabled === 'boolean') result.autoMapEnabled = mapData.autoMapEnabled;
-
   return result;
 }
 
+function expandMapData(opt) {
+  const nodes = (opt.nodes || []).map(n => ({
+    id: n.id, name: n.name, x: n.x, y: n.y,
+    type: n.type || 'room', notes: n.notes || '',
+    isManual: n.isManual || false, isEdited: n.isEdited || false, isSmall: n.isSmall || false
+  }));
+  const edges = (opt.edges || []).map(e => ({
+    from: e.from, to: e.to, command: e.cmd || e.command,
+    connectionType: e.connectionType || 'cardinal',
+    isManual: e.isManual || false, isEdited: e.isEdited || false
+  }));
+  return {
+    nodes, edges,
+    protectedNodes: opt.protectedNodes || [], protectedEdges: opt.protectedEdges || [],
+    deletedEdges: opt.deletedEdges || [], deletedNodes: opt.deletedNodes || [],
+    viewport: opt.viewport || { x: 0, y: 0, scale: 1 },
+    currentNodeId: opt.currentNodeId || null,
+    autoMapEnabled: opt.autoMapEnabled !== undefined ? opt.autoMapEnabled : true
+  };
+}
+
+export function exportMapState(gameName) {
+  if (!gameName) return null;
+  flushMapSave();
+
+  const raw = localStorage.getItem(`iftalk_map_${gameName}`);
+  if (!raw) return null;
+
+  let stored;
+  try { stored = JSON.parse(raw); } catch { return null; }
+
+  if (stored.v === 2 && stored.maps) {
+    const optimizedMaps = {};
+    for (const [mapId, data] of Object.entries(stored.maps)) {
+      optimizedMaps[mapId] = optimizeMapData(data);
+    }
+    return { v: 2, activeMapId: stored.activeMapId, mapOrder: stored.mapOrder, maps: optimizedMaps };
+  }
+
+  // Migrate v1 — wrap as v2
+  const mapId = 'map_1';
+  return {
+    v: 2, activeMapId: mapId,
+    mapOrder: [{ id: mapId, name: 'Map 1' }],
+    maps: { [mapId]: optimizeMapData(stored) }
+  };
+}
+
 /**
- * Restore map canvas state from an optimized save format.
- * Expands stripped defaults and writes to the map's localStorage key.
- * Does not update in-memory mapState — the next loadMapForGame() call picks it up.
- * @param {Object} optimizedData - Data produced by exportMapState
- * @param {string} gameName
+ * Restore map state from exportMapState format into localStorage.
+ * Does not update in-memory mapState — next loadMapForGame() call picks it up.
  */
 export function importMapState(optimizedData, gameName) {
   if (!optimizedData || !gameName) return;
 
-  const nodes = (optimizedData.nodes || []).map(node => ({
-    id: node.id,
-    name: node.name,
-    x: node.x,
-    y: node.y,
-    type: node.type || 'room',
-    notes: node.notes || '',
-    isManual: node.isManual || false,
-    isEdited: node.isEdited || false,
-    isSmall: node.isSmall || false
-  }));
+  let v2;
+  if (optimizedData.v === 2 && optimizedData.maps) {
+    const maps = {};
+    for (const [mapId, data] of Object.entries(optimizedData.maps)) {
+      maps[mapId] = expandMapData(data);
+    }
+    v2 = { v: 2, activeMapId: optimizedData.activeMapId, mapOrder: optimizedData.mapOrder, maps };
+  } else {
+    // Migrate v1
+    const mapId = 'map_1';
+    v2 = { v: 2, activeMapId: mapId, mapOrder: [{ id: mapId, name: 'Map 1' }], maps: { [mapId]: expandMapData(optimizedData) } };
+  }
 
-  const edges = (optimizedData.edges || []).map(edge => ({
-    from: edge.from,
-    to: edge.to,
-    command: edge.cmd || edge.command,
-    connectionType: edge.connectionType || 'cardinal',
-    isManual: edge.isManual || false,
-    isEdited: edge.isEdited || false
-  }));
-
-  const mapData = {
-    nodes,
-    edges,
-    protectedNodes: optimizedData.protectedNodes || [],
-    protectedEdges: optimizedData.protectedEdges || [],
-    deletedEdges: optimizedData.deletedEdges || [],
-    deletedNodes: optimizedData.deletedNodes || [],
-    viewport: optimizedData.viewport || { x: 0, y: 0, scale: 1 },
-    currentNodeId: optimizedData.currentNodeId || null,
-    autoMapEnabled: optimizedData.autoMapEnabled !== undefined ? optimizedData.autoMapEnabled : true
-  };
-
-  localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify(mapData));
+  localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify(v2));
 }
 
 function resetMap() {
-  mapState.nodes = new Map(); mapState.edges = new Map();
-  mapState.protectedNodes = new Set(); mapState.protectedEdges = new Set();
-  mapState.deletedEdges = new Set(); mapState.deletedNodes = new Set();
-  mapState.viewport = { x: 0, y: 0, scale: 1 };
-  mapState.selectedNode = null; mapState.currentNodeId = null;
-  // Check for user's default preference (only used for new games without saved map data)
-  const automapPref = localStorage.getItem('iftalk_automap_default');
-  mapState.autoMapEnabled = automapPref !== null ? automapPref === 'true' : true; // Default: enabled
-  mapState.undoStack = [];
-  mapState.redoStack = [];
-  mapState.hasUnsavedChanges = false;
-  updateUndoButton();
+  clearActiveMapData();
+  const mapId = 'map_1';
+  mapState.activeMapId = mapId;
+  mapState.mapOrder = [{ id: mapId, name: 'Map 1' }];
+  _allMapsData = {};
 }
 
 // ============================================================================

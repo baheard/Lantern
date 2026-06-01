@@ -4,7 +4,7 @@
 
 import {
   canvas, ctx, container, mapState,
-  NODE_RADIUS, NODE_RADIUS_SMALL, SMALL_NODE_FADE_SCALE,
+  GRID_SIZE, NODE_RADIUS, NODE_RADIUS_SMALL, SMALL_NODE_FADE_SCALE,
   NODE_COLORS, NODE_ICONS,
   CONNECTION_STYLES, DIRECTION_TO_TYPE, COMMAND_DIRECTIONS,
   timers
@@ -56,7 +56,7 @@ export function render() {
 // ============================================================================
 
 function drawGrid(width, height) {
-  const gridSize = 120 * mapState.viewport.scale;
+  const gridSize = GRID_SIZE * mapState.viewport.scale;
   const offsetX = ((mapState.viewport.x + width / 2) % gridSize + gridSize) % gridSize;
   const offsetY = ((mapState.viewport.y + height / 2) % gridSize + gridSize) % gridSize;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -82,7 +82,9 @@ function drawEdges() {
 
     // Player-created: purple with type dash pattern. Auto-mapped: blue with type dash pattern
     const edgeColor = isUser ? '#8b5cf6' : style.color;
-    const edgeDash = style.dash;  // Respect connection type for both user and auto edges
+    // Scale dash values by 1/viewport.scale so dashes are constant size on screen
+    const s = mapState.viewport.scale;
+    const edgeDash = style.dash.length ? style.dash.map(v => v / s) : [];
 
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = edgeColor;

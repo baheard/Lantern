@@ -6,15 +6,17 @@
 // CONSTANTS
 // ============================================================================
 
+export const GRID_SIZE = 160;
+
 export const DIRECTION_OFFSETS = {
-  // Cardinal directions - 120px (1 grid line at 120px spacing)
-  north: { x: 0, y: -120 }, south: { x: 0, y: 120 },
-  east: { x: 120, y: 0 }, west: { x: -120, y: 0 },
-  // Diagonals: NW = N + W style (120px in each direction)
-  northeast: { x: 120, y: -120 }, northwest: { x: -120, y: -120 },
-  southeast: { x: 120, y: 120 }, southwest: { x: -120, y: 120 },
-  // Vertical - 180px vertical (1.5 grid lines), offset 60px horizontal (0.5 grid lines)
-  up: { x: 60, y: -180 }, down: { x: -60, y: 180 }
+  // Cardinal directions - 1 grid cell
+  north: { x: 0, y: -GRID_SIZE }, south: { x: 0, y: GRID_SIZE },
+  east: { x: GRID_SIZE, y: 0 }, west: { x: -GRID_SIZE, y: 0 },
+  // Diagonals - 1 grid cell each axis
+  northeast: { x: GRID_SIZE, y: -GRID_SIZE }, northwest: { x: -GRID_SIZE, y: -GRID_SIZE },
+  southeast: { x: GRID_SIZE, y: GRID_SIZE }, southwest: { x: -GRID_SIZE, y: GRID_SIZE },
+  // Vertical - 1.5 grid cells up, 0.5 grid cell horizontal
+  up: { x: GRID_SIZE * 0.5, y: -(GRID_SIZE * 1.5) }, down: { x: -(GRID_SIZE * 0.5), y: GRID_SIZE * 1.5 }
   // Portal/special exits (enter, exit, in, out) - NO OFFSETS
   // These will use the last cardinal direction traveled (fallback logic in map-canvas.js)
 };
@@ -46,7 +48,8 @@ export const COMMAND_DIRECTIONS = {
   'e': 'east', 'east': 'east', 'w': 'west', 'west': 'west',
   'ne': 'northeast', 'northeast': 'northeast', 'nw': 'northwest', 'northwest': 'northwest',
   'se': 'southeast', 'southeast': 'southeast', 'sw': 'southwest', 'southwest': 'southwest',
-  'u': 'up', 'up': 'up', 'd': 'down', 'down': 'down',
+  'u': 'up', 'up': 'up', 'upstairs': 'up', 'go upstairs': 'up',
+  'd': 'down', 'down': 'down', 'downstairs': 'down', 'go downstairs': 'down',
   'enter': 'enter', 'go in': 'enter', 'in': 'enter',
   'exit': 'exit', 'go out': 'exit', 'out': 'exit'
 };
@@ -85,6 +88,8 @@ export const EDGE_COUNT_MAX = 1000;      // Hard limit for edges
 
 export const mapState = {
   gameName: null,
+  activeMapId: null,       // ID of the currently active map
+  mapOrder: [],            // [{id, name}, ...] ordered list of maps for this game
   nodes: new Map(),
   edges: new Map(),
   protectedNodes: new Set(),

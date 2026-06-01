@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-05-30
+updated: 2026-06-01
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -31,7 +31,31 @@ Two independent save mechanisms; users frequently confuse them.
 ## Storage layout (localStorage keys)
 - `iftalk_autosave_<gameName>` — current autosave
 - `iftalk_quicksave_<gameName>` — current quicksave
-- `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — backup chain; `_exempt` means it skips the count limit
+- `iftalk_customsave_<gameName>_<saveName>` — named/custom save slot
+- `iftalk_backup_<type>_<gameName>_<timestamp>[_exempt]` — capped backup chain (autosave/quicksave); `_exempt` skips the count limit
+- `iftalk_backup_customsave_<gameName>_<saveName>` — single overwrite-backup per named save (see below)
+
+## Single-backup-per-named-save on overwrite (v1.5.450)
+
+When a named/custom save is overwritten, its prior contents are first copied to a
+backup so the previous state can be recovered. Each named save keeps exactly **ONE**
+backup — the most recent overwritten state replaces any earlier one. Autosave and
+quicksave are deliberately **excluded** (autosave continuously overwrites itself;
+quicksave is a single manual slot); they keep using the capped `createBackup` chain.
+
+- Created in `save-manager.js:backupNamedSaveBeforeOverwrite(saveName)`, called from
+  `customSave()` *before* `performSave()` overwrites the slot. No-ops if the named save
+  doesn't exist yet (first save of a name has no prior state).
+- **Fixed key, no timestamp suffix:** `iftalk_backup_customsave_<gameName>_<saveName>`.
+  Writing simply replaces the prior backup → guaranteed single backup. This also dodges
+  the underscore-delimiter ambiguity of the timestamped chain: save names can contain
+  underscores, so a prefix scan for `name_<ts>` could match a *different* save
+  (e.g. "foo" vs "foo_bar"). Exact-key access avoids that.
+- **Surfaced in the modal:** `getBackupsForSave()` (manage-saves-modal.js) special-cases
+  `customsave` and looks up the fixed key directly, deriving the display `ts` from the
+  backup's `saveData.timestamp`. The existing Show/Hide backups UI then works unchanged.
+- **Cleanup:** `deleteSave()` removes the fixed backup key too when a named save is
+  deleted, so it doesn't linger orphaned.
 
 ## Custom save limit (regression note)
 
@@ -104,6 +128,12 @@ unverified). Before trusting any live restore test:
   (`Get-NetTCPConnection -LocalPort 3002`).
 - Console probes can't use top-level await/return: wrap in
   `(async()=>{ window.__x = {...} })();` then read `window.__x` in a second call.
+
+## Map data restore semantics (v1.5.440)
+
+Map data is saved alongside the game save as `mapData` (compressed). On restore, `restoreMapData()` writes it back to localStorage and re-initializes the auto-mapper. **Important:** if the save has no `mapData` (saved before the map was ever opened, or before the map feature existed), the restore must explicitly clear `iftalk_map_<gameName>` and `iftalk_automapper_restore_<gameName>` from localStorage — otherwise the player sees whatever map edits they made after the save point, not the map state at save time.
+
+The rule: restore always wins. If the save had no map, the map resets to empty.
 
 ## Restore always reloads the page
 
