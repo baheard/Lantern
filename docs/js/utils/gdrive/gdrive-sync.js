@@ -247,15 +247,22 @@ export async function syncAllNow(gameName = null) {
  * otherwise schedules a flush at the 30s mark so saves batch within the window.
  * Errors are NEVER silent — failures show prominently in the status bar.
  */
-export function scheduleDriveSync(saveKey) {
+export function scheduleDriveSync(saveKey, immediate = false) {
   if (!state.gdriveSyncEnabled) return;
 
   pendingSyncQueue.add(saveKey);
 
+  // User-initiated saves (custom, quicksave) upload immediately.
+  // Cancel any pending batch timer so they don't wait up to 30s.
+  if (immediate && syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+
   if (syncTimer) return; // Already scheduled for this window
 
   const elapsed = Date.now() - lastFlushTime;
-  const delay = elapsed >= SYNC_INTERVAL_MS ? 0 : SYNC_INTERVAL_MS - elapsed;
+  const delay = immediate || elapsed >= SYNC_INTERVAL_MS ? 0 : SYNC_INTERVAL_MS - elapsed;
 
   syncTimer = setTimeout(async () => {
     syncTimer = null;
@@ -404,13 +411,16 @@ async function flushSyncQueue() {
         }
       }
     }
-  } else if (failures.length > 0) {
+  }
+
+  // Surface upload failures independently — they were previously swallowed when skipped.length > 0
+  if (failures.length > 0) {
     const names = failures.map(f => f.key.split('_').slice(2).join('_') || f.key).join(', ');
     const msg = `Auto-sync failed for: ${names}`;
     state.gdriveError = msg;
     updateStatus(msg, 'error');
     window.dispatchEvent(new CustomEvent('gdriveAutoSyncError', { detail: { failures } }));
-  } else {
+  } else if (skipped.length === 0) {
     state.gdriveError = null;
     if (uploadCount > 0) {
       updateStatus(`Auto-synced ${uploadCount} save${uploadCount !== 1 ? 's' : ''} to Drive`, 'success');

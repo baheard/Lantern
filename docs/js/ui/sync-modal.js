@@ -79,7 +79,7 @@ function cellHtml(timestamp, name, side, localKey, driveMoves) {
     </div>`;
   }
   const moves = side === 'local' && localKey ? getMoveCount(localKey) : (side === 'drive' ? driveMoves : null);
-  const movesHtml = moves !== null && moves > 0 ? `<div class="sm-cell-moves">${moves} moves</div>` : '';
+  const movesHtml = moves !== null ? `<div class="sm-cell-moves">${moves === 0 ? 'zero' : moves} moves</div>` : '';
   return `<div class="sm-cell" data-side="${side}">
     <div class="sm-cell-name">${name}</div>
     <div class="sm-cell-time">${relTime(timestamp)}</div>

@@ -431,7 +431,7 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         // flushSyncQueue handles sign-in check and silent refresh
         if (state.gdriveSyncEnabled) {
             const { scheduleDriveSync } = await import('../utils/gdrive/index.js');
-            scheduleDriveSync(storageKey);
+            scheduleDriveSync(storageKey, !!displayName); // immediate for user-initiated saves
         }
 
         return true;
