@@ -122,7 +122,13 @@ export const mapState = {
   currentPointer: null,
   isAddingNode: false,
   isMerging: false,
-  mergeSourceNode: null
+  mergeSourceNode: null,
+  // Multi-select
+  selectedNodes: new Set(),
+  isSelectMode: false,
+  isRectSelecting: false,
+  rectSelectStart: null,
+  rectSelectEnd: null
 };
 
 // Canvas & DOM references (set by map-canvas.js)

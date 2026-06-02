@@ -30,3 +30,4 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [snapshot-pollution-pattern](snapshot-pollution-pattern.md) — `inert`+`aria-hidden` for hidden panels; why both are needed (accessibility, testing, ui-pattern) — updated 2026-04-26
 - [home-screen-and-quirks](home-screen-and-quirks.md) — Home-screen UI; F5/port/autosave-vs-quicksave gotchas (ui, gotchas) — updated 2026-04-26
 - [map-undo-snapshots](map-undo-snapshots.md) — Map undo/redo is full-state snapshots (not deltas); memory-only, never serialized; lazy-first-change capture to keep LIFO order; auto-mapper intentionally excluded (map-canvas, undo, redo, design) — updated 2026-05-31
+- [map-multiselect](map-multiselect.md) — Multi-select design: selectedNodes vs selectedNode, select mode, rect-select, group drag, wasSelectAction flag (map-canvas, multi-select, design) — updated 2026-06-01

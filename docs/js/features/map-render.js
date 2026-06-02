@@ -61,6 +61,7 @@ export function render() {
   ctx.restore();
 
   if (mapState.isAddingNode) drawAddModeCrosshair(width, height);
+  if (mapState.isRectSelecting && mapState.rectSelectStart && mapState.rectSelectEnd) drawRectSelect(width, height);
 }
 
 // ============================================================================
@@ -162,6 +163,7 @@ function drawNodes() {
     const radius = isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
 
     const isSelected = mapState.selectedNode === node.id;
+    const isInSelection = mapState.selectedNodes.has(node.id);
     // Current location check - use explicit currentNodeId for precise tracking
     // This handles duplicates correctly: the specific node the player is at is marked current
     const isCurrent = mapState.currentNodeId === node.id;
@@ -176,6 +178,13 @@ function drawNodes() {
     // Blue = auto-mapped, Purple = player-created
     // Never changes for current location, duplicates, or edits
     const fillColor = node.isManual ? NODE_COLORS.user : NODE_COLORS.auto;
+
+    // Amber dashed ring for multi-selected nodes — drawn before fill so it sits under halos
+    if (isInSelection) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, radius + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = isSmall ? 1.5 : 2;
+      ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+    }
 
     // Shadow & fill
     ctx.beginPath(); ctx.arc(node.x + 2, node.y + 2, radius, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
@@ -282,6 +291,24 @@ function drawAddModeCrosshair(width, height) {
   ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
   ctx.beginPath(); ctx.arc(x, y, NODE_RADIUS, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawRectSelect(width, height) {
+  const start = mapState.rectSelectStart, end = mapState.rectSelectEnd;
+  if (!start || !end) return;
+  const s = mapState.viewport.scale;
+  const cx = width / 2 + mapState.viewport.x, cy = height / 2 + mapState.viewport.y;
+  const x1 = start.x * s + cx, y1 = start.y * s + cy;
+  const x2 = end.x * s + cx, y2 = end.y * s + cy;
+  const rx = Math.min(x1, x2), ry = Math.min(y1, y2);
+  const rw = Math.abs(x2 - x1), rh = Math.abs(y2 - y1);
+  ctx.fillStyle = 'rgba(251,191,36,0.08)';
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.rect(rx, ry, rw, rh);
+  ctx.fill(); ctx.stroke();
   ctx.setLineDash([]);
 }
 

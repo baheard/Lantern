@@ -163,6 +163,9 @@ function createMapUI() {
           <button class="map-fab map-fab-center" id="mapCenterBtn" title="Center on current location" aria-label="Center on current location">
             <span class="material-icons">my_location</span>
           </button>
+          <button class="map-fab map-fab-select" id="mapSelectBtn" title="Select nodes" aria-label="Select nodes">
+            <span class="material-icons">select_all</span>
+          </button>
           <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
             <span class="material-icons">timeline</span>
           </button>
@@ -252,6 +255,7 @@ function setupEventListeners() {
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
+  document.getElementById('mapSelectBtn').addEventListener('click', enterSelectMode);
   document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
 
@@ -602,6 +606,15 @@ export function enterAddNodeMode() {
   showHint('Tap anywhere on the map to add a new location');
 }
 
+export function enterSelectMode() {
+  mapState.isSelectMode = true;
+  mapState.selectedNodes.clear();
+  domRefs.modeIndicator.classList.remove('hidden');
+  domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap nodes to select, drag canvas to box-select';
+  document.getElementById('mapSelectBtn')?.classList.add('active');
+  canvas.style.cursor = 'default';
+}
+
 function enterAddEdgeMode() {
   if (mapState.nodes.size < 2) { showHint('Add at least 2 locations first'); return; }
   mapState.isCreatingEdge = true;
@@ -618,6 +631,11 @@ export function exitAddMode() {
   mapState.edgeStartNode = null;
   mapState.isMerging = false;
   mapState.mergeSourceNode = null;
+  mapState.isSelectMode = false;
+  mapState.isRectSelecting = false;
+  mapState.rectSelectStart = null;
+  mapState.rectSelectEnd = null;
+  document.getElementById('mapSelectBtn')?.classList.remove('active');
   domRefs.modeIndicator?.classList.add('hidden');
   canvas.style.cursor = 'grab';
   hideHint();
@@ -1123,8 +1141,8 @@ function showToast(message, id, persistent = false, index = null) {
     return;
   }
 
-  // Determine if this is the last toast (5/5)
-  const isLastToast = index && index.includes('5/5');
+  // Determine if this is the last toast (N/N)
+  const isLastToast = index && (() => { const [a, b] = index.split('/'); return a && b && a === b; })();
   // Determine if this is an onboarding toast (has index like "1/5")
   const isOnboardingToast = index && index.match(/\d+\/\d+/);
 
@@ -1221,7 +1239,7 @@ function cancelOnboarding(toastEl) {
   toastQueue = [];
 
   // Mark all onboarding toasts as dismissed
-  const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5'];
+  const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5', 'map-intro-6'];
   const dismissed = getDismissedToasts();
   onboardingIds.forEach(id => {
     if (!dismissed.includes(id)) {
@@ -1277,7 +1295,7 @@ function markToastDismissed(id) {
     }
 
     // Check if all onboarding toasts have been dismissed
-    const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5'];
+    const onboardingIds = ['map-intro-1', 'map-intro-2', 'map-intro-3', 'map-intro-4', 'map-intro-5', 'map-intro-6'];
     const allDismissed = onboardingIds.every(id => dismissed.includes(id));
 
     if (allDismissed && !dismissed.includes('dont-show-onboarding')) {
@@ -1365,7 +1383,13 @@ function showOnboardingToasts() {
       id: 'map-intro-5',
       message: '<strong>Clear Map:</strong> Use the <span class="material-icons" style="font-size:16px;vertical-align:middle">delete_sweep</span> Clear Map button to reset the map data for this game.',
       persistent: true,
-      index: '5/5'
+      index: '5/6'
+    },
+    {
+      id: 'map-intro-6',
+      message: '<strong>Multi-select:</strong> Tap the <span class="material-icons" style="font-size:16px;vertical-align:middle">select_all</span> Select button to pick multiple nodes, then drag any to move them together. On desktop, shift-click nodes directly.',
+      persistent: true,
+      index: '6/6'
     }
   ];
 

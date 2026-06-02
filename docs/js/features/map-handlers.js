@@ -34,6 +34,9 @@ export function setHandlerCallbacks(cbs) {
 // (or a drag that returns to its origin) leaves the undo/redo stacks untouched.
 let pendingMoveSnapshot = null;
 
+// Set when pointer-down was a select-mode toggle, so pointer-up skips sheet open.
+let wasSelectAction = false;
+
 // ============================================================================
 // POINTER HANDLERS
 // ============================================================================
@@ -53,6 +56,7 @@ export function handlePointerDown(e) {
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
   timers.isInteracting = true;
+  wasSelectAction = false;  // Reset before any early-return path
   // Controls stay visible during panning - no hideFab() call
 
   if (mapState.isAddingNode && !hitNode) { callbacks.addNodeAtPosition(canvasPoint.x, canvasPoint.y); callbacks.exitAddMode(); return; }
@@ -76,6 +80,26 @@ export function handlePointerDown(e) {
     return;
   }
 
+  // Multi-select: shift-click (desktop) or select mode (mobile/touch)
+  if ((e.shiftKey || mapState.isSelectMode) && !mapState.isAddingNode && !mapState.isCreatingEdge && !mapState.isMerging) {
+    wasSelectAction = true;
+    if (hitNode) {
+      if (mapState.selectedNodes.has(hitNode.id)) mapState.selectedNodes.delete(hitNode.id);
+      else mapState.selectedNodes.add(hitNode.id);
+      // Set up for potential drag so user can move right after selecting
+      mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
+      touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };
+      pendingMoveSnapshot = null;
+      render();
+    } else {
+      // Drag on empty canvas → rect-select
+      mapState.isRectSelecting = true;
+      mapState.rectSelectStart = { ...canvasPoint };
+      mapState.rectSelectEnd = { ...canvasPoint };
+    }
+    return;
+  }
+
   if (hitNode) {
     mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
     touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };  // Track for tap-vs-move detection
@@ -92,6 +116,12 @@ export function handlePointerMove(e) {
   const x = e.clientX - rect.left, y = e.clientY - rect.top;
   mapState.currentPointer = { x, y };
 
+  if (mapState.isRectSelecting && mapState.rectSelectStart) {
+    mapState.rectSelectEnd = screenToCanvas(x, y);
+    render();
+    return;
+  }
+
   if (mapState.isDragging && mapState.dragStart) {
     const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) mapState.hasDragged = true;
@@ -105,10 +135,24 @@ export function handlePointerMove(e) {
       // Capture pre-move state once, before the first position change. Held
       // pending and committed on pointer-up only if the node actually moves.
       if (!pendingMoveSnapshot) pendingMoveSnapshot = callbacks.captureUndoSnapshot();
-      mapState.dragNode.x += dx / mapState.viewport.scale;
-      mapState.dragNode.y += dy / mapState.viewport.scale;
-      mapState.dragNode.isEdited = true;
-      mapState.protectedNodes.add(mapState.dragNode.id);
+      const scaledDx = dx / mapState.viewport.scale;
+      const scaledDy = dy / mapState.viewport.scale;
+      if (mapState.selectedNodes.size > 1 && mapState.selectedNodes.has(mapState.dragNode.id)) {
+        // Group drag: move all selected nodes by the same delta
+        for (const id of mapState.selectedNodes) {
+          const node = mapState.nodes.get(id);
+          if (!node) continue;
+          node.x += scaledDx;
+          node.y += scaledDy;
+          node.isEdited = true;
+          mapState.protectedNodes.add(id);
+        }
+      } else {
+        mapState.dragNode.x += scaledDx;
+        mapState.dragNode.y += scaledDy;
+        mapState.dragNode.isEdited = true;
+        mapState.protectedNodes.add(mapState.dragNode.id);
+      }
       mapState.dragStart = { x, y };
       render();
     }
@@ -123,6 +167,29 @@ export function handlePointerUp(e) {
   const canvasPoint = screenToCanvas(x, y);
   const hitNode = getNodeAtPoint(canvasPoint.x, canvasPoint.y);
 
+  // Finalize rect-select
+  if (mapState.isRectSelecting) {
+    const start = mapState.rectSelectStart, end = mapState.rectSelectEnd;
+    if (start && end) {
+      const minX = Math.min(start.x, end.x), maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y), maxY = Math.max(start.y, end.y);
+      if (maxX - minX > 10 || maxY - minY > 10) {
+        for (const node of mapState.nodes.values()) {
+          if (node.x >= minX && node.x <= maxX && node.y >= minY && node.y <= maxY) {
+            mapState.selectedNodes.add(node.id);
+          }
+        }
+      }
+    }
+    mapState.isRectSelecting = false;
+    mapState.rectSelectStart = null;
+    mapState.rectSelectEnd = null;
+    mapState.isDragging = false; mapState.dragStart = null; mapState.dragNode = null; mapState.hasDragged = false;
+    canvas.style.cursor = mapState.isSelectMode ? 'default' : (mapState.isAddingNode ? 'crosshair' : 'grab');
+    scheduleFabShow(); render();
+    return;
+  }
+
   if (mapState.dragNode && !mapState.isDragging) {
     // Check if node was moved (not just tapped)
     const wasMoved = touchState.nodeStartPos &&
@@ -134,13 +201,16 @@ export function handlePointerUp(e) {
       mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       callbacks.saveMapForGame();
     } else if (Date.now() - touchState.touchStartTime < 250) {
-      // Tapped on a node - open the sheet
-      openNodeSheet(mapState.dragNode);
+      if (!wasSelectAction) {
+        // Tapped on a node - open the sheet
+        openNodeSheet(mapState.dragNode);
+      }
+      // wasSelectAction: toggle already happened in pointer-down; just skip the sheet
     }
     // Drag ended (or it was a tap): drop any pending snapshot. If the node moved
     // and returned to its exact origin, wasMoved is false and nothing is committed.
     pendingMoveSnapshot = null;
-  } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode && !mapState.isMerging) {
+  } else if (!hitNode && !mapState.hasDragged && !mapState.isCreatingEdge && !mapState.isAddingNode && !mapState.isMerging && !wasSelectAction) {
     // Check for question mark tap on uncertain portal connections
     const hitQuestionMark = getQuestionMarkAtPoint(canvasPoint.x, canvasPoint.y);
     if (hitQuestionMark) {
@@ -149,12 +219,18 @@ export function handlePointerUp(e) {
     } else if (mapState.selectedNode) {
       // Tapped on empty canvas - unselect any selected node
       mapState.selectedNode = null;
+      if (!mapState.isSelectMode && mapState.selectedNodes.size > 0) mapState.selectedNodes.clear();
+      render();
+    } else if (!mapState.isSelectMode && mapState.selectedNodes.size > 0) {
+      // Tap on empty canvas outside select mode clears multi-selection
+      mapState.selectedNodes.clear();
       render();
     }
   }
 
+  wasSelectAction = false;
   mapState.isDragging = false; mapState.dragStart = null; mapState.dragNode = null; mapState.hasDragged = false;
-  canvas.style.cursor = mapState.isAddingNode ? 'crosshair' : 'grab';
+  canvas.style.cursor = mapState.isSelectMode ? 'default' : (mapState.isAddingNode ? 'crosshair' : 'grab');
   scheduleFabShow(); render();
 }
 
@@ -238,8 +314,10 @@ export function handleKeyDown(e) {
   const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
 
   if (e.key === 'Escape') {
-    if (mapState.isAddingNode || mapState.isCreatingEdge || mapState.isMerging) callbacks.exitAddMode();
-    else if (!document.getElementById('nodeEditSheet').classList.contains('hidden')) closeNodeSheet();
+    if (mapState.isAddingNode || mapState.isCreatingEdge || mapState.isMerging || mapState.isSelectMode) {
+      callbacks.exitAddMode();
+      mapState.selectedNodes.clear();
+    } else if (!document.getElementById('nodeEditSheet').classList.contains('hidden')) closeNodeSheet();
     else callbacks.hideMap();
     e.preventDefault();
   }

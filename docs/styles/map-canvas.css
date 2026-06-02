@@ -569,6 +569,28 @@ body.map-resizing .map-canvas-overlay * {
   color: #ffffff;
 }
 
+.map-fab-select {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.map-fab-select:hover {
+  background: #475569;
+  color: #ffffff;
+}
+
+.map-fab-select.active {
+  background: #92400e;
+  color: #fbbf24;
+}
+
+/* Hide select FAB on desktop — shift-click is the desktop affordance */
+@media (hover: hover) and (pointer: fine) {
+  .map-fab-select {
+    display: none;
+  }
+}
+
 /* FAB auto-hide during interaction */
 .map-fab-container.fab-hidden {
   opacity: 0;
