@@ -1,19 +1,22 @@
 /**
  * PWA Updater
  *
- * Service worker registration, update notification UI, install prompt handling,
+ * Service worker registration, silent background updates, install prompt handling,
  * and standalone/iOS detection. Extracted from app.js — see code-review Tier 2 Batch 1.
+ *
+ * Update model (v1.5.476+): the SW serves JS/CSS network-first, so the running page
+ * already loads fresh code on a normal reload. A newly-installed worker is therefore
+ * activated SILENTLY — no "update available" toast, no forced reload. Activation just
+ * lets the new worker clean up old version caches and re-precache for offline; the next
+ * natural reload picks up everything. See tome `service-worker-update-model`.
  */
 
 import { APP_CONFIG } from '../config.js';
 
-let waitingWorker = null;
-let newVersionNumber = null;
-let lastNotificationTime = 0;
 let deferredPwaPrompt = null;
 
 // Read the latest IFTalk core cache version from the SW cache list.
-// Used to compare the running app version against what the SW just installed.
+// Used by the manual "Check for updates" button to report the installed version.
 async function getLatestCacheVersion() {
   try {
     const cacheNames = await caches.keys();
@@ -35,122 +38,40 @@ async function getLatestCacheVersion() {
   }
 }
 
-async function showUpdateNotification() {
-  // Suppress if we just applied an update (prevents duplicate notification after reload).
-  const justUpdated = sessionStorage.getItem('iftalk_just_updated');
-  if (justUpdated) {
-    if (Date.now() - parseInt(justUpdated) < 5000) return;
-    sessionStorage.removeItem('iftalk_just_updated');
-  }
-
-  // Debounce: don't show twice within 2s.
-  const now = Date.now();
-  if (now - lastNotificationTime < 2000) return;
-  lastNotificationTime = now;
-
-  // If the running version already matches what the SW reports, nothing to show.
-  try {
-    const currentVersion = `v${APP_CONFIG.version}`;
-    const newVersion = newVersionNumber || await getLatestCacheVersion();
-    if (newVersion && currentVersion === newVersion) return;
-  } catch (err) {
-    // If version check fails, fall through and show — better than silently missing a real update.
-  }
-
-  document.getElementById('updateNotification')?.remove();
-
-  const notification = document.createElement('div');
-  notification.id = 'updateNotification';
-  notification.className = 'update-notification';
-  notification.innerHTML = `
-    <div class="update-content">
-      <div class="update-text">
-        <div class="update-title">Update available</div>
-        <div class="update-description">Refreshing in <span id="updateCountdown">5</span>s...</div>
-      </div>
-      <button class="update-button" id="updateButton">
-        Refresh Now
-      </button>
-      <button class="update-dismiss" id="updateDismiss">
-        <span class="material-icons">close</span>
-      </button>
-    </div>
-  `;
-  document.body.appendChild(notification);
-  setTimeout(() => notification.classList.add('visible'), 100);
-
-  // Auto-refresh countdown.
-  let countdown = 5;
-  const countdownEl = document.getElementById('updateCountdown');
-  const autoRefreshTimer = setInterval(() => {
-    countdown--;
-    if (countdownEl) countdownEl.textContent = countdown;
-    if (countdown <= 0) {
-      clearInterval(autoRefreshTimer);
-      if (waitingWorker) {
-        sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
-        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-      }
-      notification.classList.remove('visible');
-      setTimeout(() => notification.remove(), 300);
-    }
-  }, 1000);
-
-  document.getElementById('updateButton').addEventListener('click', () => {
-    clearInterval(autoRefreshTimer);
-    if (waitingWorker) {
-      sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-    }
-    notification.classList.remove('visible');
-    setTimeout(() => notification.remove(), 300);
-  });
-
-  document.getElementById('updateDismiss').addEventListener('click', () => {
-    clearInterval(autoRefreshTimer);
-    notification.classList.remove('visible');
-    setTimeout(() => notification.remove(), 300);
-  });
-}
-
 function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'NEW_VERSION_ACTIVATED') {
-      newVersionNumber = event.data.version;
-    }
-  });
-
-  window.addEventListener('load', async () => {
+  window.addEventListener('load', () => {
     // Cache-bust the SW URL with the app version so browsers refetch on bump.
     const cacheBust = APP_CONFIG.version.replace(/\./g, '');
     navigator.serviceWorker.register(`./service-worker.js?v=${cacheBust}`)
-      .then(async (registration) => {
+      .then((registration) => {
         registration.update();
 
         // Check for updates every 30s while the page is open.
         setInterval(() => registration.update(), 30000);
 
+        // Silently activate a freshly-installed worker. Network-first asset serving means
+        // the page is already running fresh code, so there's nothing to prompt or reload —
+        // we just let the new worker take over (it deletes superseded version caches and
+        // finishes precaching for offline use). No controllerchange→reload: a forced reload
+        // would be redundant and disruptive.
+        const activate = (worker) => { if (worker) worker.postMessage({ type: 'SKIP_WAITING' }); };
+
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          newWorker.addEventListener('statechange', async () => {
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            // Only when there's already a controller (i.e. this is an update, not the very
+            // first install) — a first install activates and claims on its own.
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              waitingWorker = newWorker;
-              await showUpdateNotification();
+              activate(newWorker);
             }
           });
         });
 
-        // Already-waiting worker (e.g., SW updated while page was loading).
-        if (registration.waiting) {
-          waitingWorker = registration.waiting;
-          await showUpdateNotification();
-        }
-
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          window.location.reload();
-        });
+        // Worker that finished installing while the page was loading.
+        if (registration.waiting) activate(registration.waiting);
       })
       .catch(error => {
         console.error('[PWA] Service worker registration failed:', error);
@@ -180,7 +101,8 @@ function initInstallPrompt() {
 }
 
 function initUpdateButton() {
-  // Manual "Check for updates" button in settings.
+  // Manual "Check for updates" button in settings. This is an explicit user action, so a
+  // confirming reload here is expected (unlike the automatic path, which stays silent).
   window.addEventListener('load', () => {
     const updatePwaBtn = document.getElementById('updatePwaBtn');
     if (!updatePwaBtn) return;
@@ -199,7 +121,6 @@ function initUpdateButton() {
         if (registration.waiting) {
           const newVersion = await getLatestCacheVersion() || 'latest';
           alert(`Update found!\n\nUpdating to version ${newVersion}.\n\nThe page will reload now.`);
-          sessionStorage.setItem('iftalk_just_updated', Date.now().toString());
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
           setTimeout(() => window.location.reload(), 500);
         } else {
