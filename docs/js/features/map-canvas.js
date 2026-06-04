@@ -256,7 +256,7 @@ function setupEventListeners() {
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
   document.getElementById('mapSelectBtn').addEventListener('click', enterSelectMode);
-  document.getElementById('mapCenterBtn').addEventListener('click', centerOnCurrentLocation);
+  document.getElementById('mapCenterBtn').addEventListener('click', () => centerOnCurrentLocation());
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
 
   // Hint close button
@@ -659,20 +659,26 @@ function handleLocationChange(e) {
     return;
   }
 
-  // Scene break into an unmapped area: buffer all new locations until the user decides
-  // where they belong. Return early so nothing gets added to the current map.
+  // Remember the heading from this move so portal/unknown moves can still be placed after
+  // the journey buffer is cleared (scene break, or transfer-to-canvas on map open).
+  rememberDirection(getDirectionFromCommand(command));
+
+  // Scene break into an unmapped area: when map is hidden, buffer until the user decides
+  // which map to put the new area on. When map is visible, fall through and add node without
+  // an edge so the user sees it immediately; hint still offers to create a new map.
   if (command === null && mapState.nodes.size > 0
       && !mapState.nodes.has(locationName) && !mapState.deletedNodes.has(locationName)) {
     if (!_pendingNewAreaHint) {
       _pendingNewAreaHint = true;
-      setSuppressJourneyClear(true);  // prevent subsequent scene breaks from wiping the buffer
+      setSuppressJourneyClear(true);
       if (isVisible) showNewAreaHint();
     }
-    return;
+    if (!isVisible) return;
+    // Map is visible — fall through and add the node (no edge since command is null)
   }
 
-  // While hint is pending, keep buffering (journey accumulates in auto-mapper)
-  if (_pendingNewAreaHint) return;
+  // While hint is pending and map is hidden, keep buffering
+  if (_pendingNewAreaHint && !isVisible) return;
 
   // locationId is now the location NAME (name-based tracking)
   // Check if we already have a node with this name
@@ -755,6 +761,10 @@ function handleLocationChange(e) {
         }
       }
     } else {
+      // Upgrade an unedited portal edge if the real direction is now known
+      if (previousLocationId && command) {
+        tryUpgradePortalEdge(previousLocationId, locationName, command);
+      }
       mapState.selectedNode = locationName;
       mapState.currentNodeId = locationName;
     }
@@ -780,9 +790,12 @@ function handleLocationChange(e) {
       const offset = DIRECTION_OFFSETS[direction];
       position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
     } else if (parentNode) {
-      // Unknown direction - use last known direction, or portal offset as fallback
+      // Portal/unknown direction (enter/exit/in/out have no offset): place using the last
+      // cardinal/vertical direction traveled, falling back to 'up'. Mirrors the replay path
+      // in syncFromAutoMapper. Note: DIRECTION_OFFSETS has no 'enter' key, so guard against
+      // an undefined offset rather than reading offset.x off it.
       const lastDir = getLastDirectionFromHistory();
-      const offset = (lastDir && DIRECTION_OFFSETS[lastDir]) ? DIRECTION_OFFSETS[lastDir] : DIRECTION_OFFSETS['enter'];
+      const offset = (lastDir && DIRECTION_OFFSETS[lastDir]) || DIRECTION_OFFSETS['up'];
       position = findAvailablePosition({ x: parentNode.x + offset.x, y: parentNode.y + offset.y });
     } else if (mapState.nodes.size > 0) {
       // No parent node - place near origin
@@ -973,17 +986,89 @@ function getConnectionTypeFromCommand(command) {
 }
 
 /**
- * Get the most recent cardinal direction from command history.
+ * If an unedited portal edge exists between fromId→toId and newCommand reveals a real
+ * direction (cardinal or vertical), upgrade it in-place. Also upgrades the reverse portal
+ * edge (toId→fromId) using the opposite direction if one exists. Returns true if any upgrade made.
+ */
+function tryUpgradePortalEdge(fromId, toId, newCommand) {
+  if (isGoToCommand(newCommand)) return false;
+  const newType = getConnectionTypeFromCommand(newCommand);
+  if (newType === 'portal') return false;
+
+  let upgraded = false;
+
+  const newDir = getDirectionFromCommand(newCommand);
+  const oppositeDir = newDir && DIRECTION_OPPOSITES[newDir];
+
+  // Forward edge — also reposition the destination node if auto-created
+  const edge = mapState.edges.get(`${fromId}-${toId}`);
+  if (edge && !edge.isEdited && edge.connectionType === 'portal') {
+    edge.connectionType = newType;
+    edge.command = newCommand;
+    const fromNode = mapState.nodes.get(fromId);
+    const toNode = mapState.nodes.get(toId);
+    if (fromNode && toNode && !toNode.isManual && newDir && DIRECTION_OFFSETS[newDir]) {
+      const offset = DIRECTION_OFFSETS[newDir];
+      const pos = findAvailablePosition({ x: fromNode.x + offset.x, y: fromNode.y + offset.y }, toId);
+      toNode.x = pos.x;
+      toNode.y = pos.y;
+    }
+    upgraded = true;
+  }
+
+  // Reverse edge — also reposition the source node (fromId) relative to toId
+  if (oppositeDir) {
+    const reverseEdge = mapState.edges.get(`${toId}-${fromId}`);
+    if (reverseEdge && !reverseEdge.isEdited && reverseEdge.connectionType === 'portal') {
+      reverseEdge.connectionType = DIRECTION_TO_TYPE[oppositeDir] || 'cardinal';
+      reverseEdge.command = oppositeDir;
+      const fromNode = mapState.nodes.get(fromId);
+      const toNode = mapState.nodes.get(toId);
+      if (fromNode && toNode && !fromNode.isManual && DIRECTION_OFFSETS[oppositeDir]) {
+        const offset = DIRECTION_OFFSETS[oppositeDir];
+        const pos = findAvailablePosition({ x: toNode.x + offset.x, y: toNode.y + offset.y }, fromId);
+        fromNode.x = pos.x;
+        fromNode.y = pos.y;
+      }
+      upgraded = true;
+    }
+  }
+
+  return upgraded;
+}
+
+/**
+ * Record a placeable heading (cardinal/vertical) into mapState.recentDirections so it
+ * survives journey-buffer clears. No-op for portal pseudo-directions (enter/exit/in/out)
+ * and unknown commands, which have no DIRECTION_OFFSETS entry.
+ */
+function rememberDirection(direction) {
+  if (!direction || !DIRECTION_OFFSETS[direction]) return;
+  mapState.recentDirections.push(direction);
+  if (mapState.recentDirections.length > 10) mapState.recentDirections.shift();
+}
+
+/**
+ * Get the most recent placeable direction (cardinal/vertical) the player traveled.
  * @returns {string|null} Most recent direction, or null if none found
  */
 function getLastDirectionFromHistory() {
+  // Prefer the live journey (most current), searching backwards for a direction we can
+  // actually place by — i.e. one with a DIRECTION_OFFSETS entry. Skip portal pseudo-directions
+  // (enter/exit/in/out), which resolve via getDirectionFromCommand but have no offset.
   const mapData = getMapData();
-  if (!mapData.journey || mapData.journey.length === 0) return null;
+  if (mapData.journey) {
+    for (let i = mapData.journey.length - 1; i >= 0; i--) {
+      const dir = getDirectionFromCommand(mapData.journey[i].command);
+      if (dir && DIRECTION_OFFSETS[dir]) return dir;
+    }
+  }
 
-  // Search backwards for most recent directional command
-  for (let i = mapData.journey.length - 1; i >= 0; i--) {
-    const dir = getDirectionFromCommand(mapData.journey[i].command);
-    if (dir) return dir;
+  // Journey may have been cleared (scene break, or transferred to the canvas when the map
+  // was opened). Fall back to the retained heading so portal/unknown moves are still placed
+  // by the last real direction instead of defaulting to 'up'.
+  for (let i = mapState.recentDirections.length - 1; i >= 0; i--) {
+    if (DIRECTION_OFFSETS[mapState.recentDirections[i]]) return mapState.recentDirections[i];
   }
   return null;
 }
@@ -994,11 +1079,14 @@ function getLastDirectionFromHistory() {
  * @param {Object} preferred - Preferred {x, y} position
  * @returns {Object} Available {x, y} position
  */
-function findAvailablePosition(preferred) {
+function findAvailablePosition(preferred, excludeId = null) {
   const MIN_DISTANCE = NODE_RADIUS * 3;
+  const nodes = excludeId
+    ? [...mapState.nodes.values()].filter(n => n.id !== excludeId)
+    : [...mapState.nodes.values()];
 
   // Quick check: is preferred position already free?
-  const hasCollision = [...mapState.nodes.values()].some(n =>
+  const hasCollision = nodes.some(n =>
     Math.sqrt((n.x - preferred.x) ** 2 + (n.y - preferred.y) ** 2) < MIN_DISTANCE
   );
   if (!hasCollision) return preferred;
@@ -1014,14 +1102,14 @@ function findAvailablePosition(preferred) {
     const angleStep = (Math.PI * 2) / ANGLES_PER_RING;
 
     for (let i = 0; i < ANGLES_PER_RING; i++) {
-      const angle = i * angleStep;
+      const angle = -Math.PI / 4 + i * angleStep;  // start top-right (NE in canvas)
       const candidate = {
         x: preferred.x + Math.cos(angle) * radius,
         y: preferred.y + Math.sin(angle) * radius
       };
 
       // Check if this position is valid (no collisions)
-      const valid = ![...mapState.nodes.values()].some(n =>
+      const valid = !nodes.some(n =>
         Math.sqrt((n.x - candidate.x) ** 2 + (n.y - candidate.y) ** 2) < MIN_DISTANCE
       );
 
@@ -1455,7 +1543,7 @@ export function showMap() {
     resizeState = setupResizeHandle();
   }
 
-  resizeCanvas(); updateNodeCount(); centerOnCurrentLocation();
+  resizeCanvas(); updateNodeCount(); centerOnCurrentLocation({ instant: true });
   if (_pendingNewAreaHint) { showNewAreaHint(); }
   else { showOnboardingOrHint(); }
 
@@ -1473,6 +1561,8 @@ export async function hideMap() {
   clearAllToasts();
   closeMapPicker();
   exitAddMode();
+  mapState.selectedNode = null;
+  mapState.selectedNodes.clear();
 
   // Reset FAB and toolbar visibility (from keyboard handling)
   const fabContainer = container?.querySelector('.map-fab-container');
@@ -1524,13 +1614,61 @@ export async function hideMap() {
 export function toggleMap() { isVisible ? hideMap() : showMap(); }
 export function isMapVisible() { return isVisible; }
 
-export function centerOnCurrentLocation() {
+// ---- Viewport pan animation ----------------------------------------------
+// Smoothly eases viewport.x/y toward a target instead of jump-cutting. Single RAF
+// loop that runs only while a pan is in flight, then idles (keeps the canvas's
+// one-shot, zero-idle-cost render model). Scale and node positions are untouched.
+const PAN_DURATION_MS = 220;
+let panAnim = null;     // { startX, startY, targetX, targetY, startTime }
+let panRaf = null;
+
+function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Pan the viewport to (targetX, targetY). Animates by default; jumps instantly when
+// `instant` is set, the map isn't visible, or the user prefers reduced motion.
+function panViewportTo(targetX, targetY, instant) {
+  if (instant || !isVisible || prefersReducedMotion()) {
+    if (panRaf) { cancelAnimationFrame(panRaf); panRaf = null; }
+    panAnim = null;
+    mapState.viewport.x = targetX;
+    mapState.viewport.y = targetY;
+    render();
+    return;
+  }
+  // Interruptible: a new target re-anchors the tween from wherever we are right now.
+  panAnim = {
+    startX: mapState.viewport.x, startY: mapState.viewport.y,
+    targetX, targetY, startTime: performance.now()
+  };
+  if (!panRaf) panRaf = requestAnimationFrame(stepPan);
+}
+
+function stepPan(now) {
+  if (!panAnim) { panRaf = null; return; }
+  const t = Math.min(1, (now - panAnim.startTime) / PAN_DURATION_MS);
+  const e = easeInOutQuad(t);
+  mapState.viewport.x = panAnim.startX + (panAnim.targetX - panAnim.startX) * e;
+  mapState.viewport.y = panAnim.startY + (panAnim.targetY - panAnim.startY) * e;
+  render();
+  if (t < 1) {
+    panRaf = requestAnimationFrame(stepPan);
+  } else {
+    panAnim = null;
+    panRaf = null;
+  }
+}
+
+export function centerOnCurrentLocation(options = {}) {
   // Use last known location name (from status bar tracking)
   const currentName = getLastLocationName();
   let target = currentName ? mapState.nodes.get(currentName) : null;
   if (!target && mapState.nodes.size > 0) target = mapState.nodes.values().next().value;
   if (target) {
     const canvasHeight = canvas.height / window.devicePixelRatio;
+    let targetX, targetY;
 
     // Use visual viewport to account for keyboard
     if (window.visualViewport) {
@@ -1555,12 +1693,12 @@ export function centerOnCurrentLocation() {
       // So: viewport.y = targetCanvasY - height/2 - node.y * scale
       const verticalOffset = targetCanvasY - canvasHeight / 2;
 
-      mapState.viewport.x = -target.x * mapState.viewport.scale;
-      mapState.viewport.y = -target.y * mapState.viewport.scale + verticalOffset;
+      targetX = -target.x * mapState.viewport.scale;
+      targetY = -target.y * mapState.viewport.scale + verticalOffset;
     } else {
       // No visual viewport API - just center normally
-      mapState.viewport.x = -target.x * mapState.viewport.scale;
-      mapState.viewport.y = -target.y * mapState.viewport.scale;
+      targetX = -target.x * mapState.viewport.scale;
+      targetY = -target.y * mapState.viewport.scale;
     }
 
     // Only update selectedNode if the node edit sheet is not open
@@ -1569,7 +1707,7 @@ export function centerOnCurrentLocation() {
     if (!nodeSheet || nodeSheet.classList.contains('hidden')) {
       mapState.selectedNode = target.id;
     }
-    render();
+    panViewportTo(targetX, targetY, options.instant);
   }
 }
 
@@ -1664,7 +1802,7 @@ function switchMap(mapId) {
   updateMapNameDisplay();
   updateNodeCount();
   updateMapBadge();
-  if (isVisible) { render(); centerOnCurrentLocation(); }
+  if (isVisible) { render(); centerOnCurrentLocation({ instant: true }); }
 }
 
 function addMap() {
@@ -1810,6 +1948,7 @@ function loadMapForGame(gameName) {
   mapState.gameName = gameName;
   mapState.undoStack = [];
   mapState.redoStack = [];
+  mapState.recentDirections = [];  // reset heading memory per game; re-seeded by syncFromAutoMapper below
   mapState.selectedNode = null;
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
@@ -1975,26 +2114,36 @@ function syncFromAutoMapper() {
     if (previousNode && previousNode.id !== locationName && edgeCommand !== null) {
       const edgeKey = `${previousNode.id}-${locationName}`;
 
-      // Skip if edge was deleted by user or already exists
-      if (!mapState.deletedEdges.has(edgeKey) && !mapState.edges.has(edgeKey)) {
+      if (!mapState.deletedEdges.has(edgeKey)) {
         const command = edgeCommand || '';
-        const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
-
-        const newEdge = {
-          from: previousNode.id,
-          to: locationName,
-          command: command,
-          connectionType: connectionType,
-          isManual: false,
-          isEdited: false
-        };
-
-        mapState.edges.set(edgeKey, newEdge);
-        mapState.protectedEdges.add(edgeKey);
+        // Upgrade an unedited portal edge (forward OR reverse) if this move reveals a real
+        // direction. Mirrors the live handleLocationChange path; must run even when the
+        // forward edge doesn't exist yet, so a reverse portal edge (e.g. an earlier
+        // "enter gate") gets upgraded and its node repositioned during journey replay.
+        tryUpgradePortalEdge(previousNode.id, locationName, command);
+        if (!mapState.edges.has(edgeKey)) {
+          const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
+          mapState.edges.set(edgeKey, {
+            from: previousNode.id,
+            to: locationName,
+            command: command,
+            connectionType: connectionType,
+            isManual: false,
+            isEdited: false
+          });
+          mapState.protectedEdges.add(edgeKey);
+        }
       }
     }
 
     previousNode = currentNode;
+  }
+
+  // Retain the headings gathered during replay so live portal/unknown moves can still be
+  // placed after the journey is cleared below. Only overwrite when this replay actually
+  // produced directions, so a no-op resync doesn't wipe a previously retained heading.
+  if (recentDirections.length > 0) {
+    mapState.recentDirections = recentDirections.slice(-10);
   }
 
   // Set current location (last in journey)

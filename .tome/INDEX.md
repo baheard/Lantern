@@ -6,6 +6,7 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 
 ## Entries
 
+- [gdrive-auth-strategy](gdrive-auth-strategy.md) — Lazy on-demand token refresh; proactive timer removed (v1.5.470) because it flickered & relied on the same long-lived session cookie anyway (gdrive, auth, oauth, design) — updated 2026-06-03
 - [manage-saves-modal](manage-saves-modal.md) — Manage Saves modal design: flat rows, portal dropdown, backup expand, Drive menu states (ui, saves, modal, gdrive) — updated 2026-05-14
 - [drive-sync-design](drive-sync-design.md) — appMoveCount for conflict detection; false-conflict fix; two-column sync UI (gdrive, sync, design, move-count) — updated 2026-05-30
 - [dev-gotchas](dev-gotchas.md) — ES module cache busting, SW unregister hazard, async console gotcha (dev, debugging, cache) — updated 2026-05-14
@@ -31,3 +32,5 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [home-screen-and-quirks](home-screen-and-quirks.md) — Home-screen UI; F5/port/autosave-vs-quicksave gotchas (ui, gotchas) — updated 2026-04-26
 - [map-undo-snapshots](map-undo-snapshots.md) — Map undo/redo is full-state snapshots (not deltas); memory-only, never serialized; lazy-first-change capture to keep LIFO order; auto-mapper intentionally excluded (map-canvas, undo, redo, design) — updated 2026-05-31
 - [map-multiselect](map-multiselect.md) — Multi-select design: selectedNodes vs selectedNode, select mode, rect-select, group drag, wasSelectAction flag (map-canvas, multi-select, design) — updated 2026-06-01
+- [automap-two-build-paths](automap-two-build-paths.md) — Auto-map builds via two paths (live handleLocationChange vs syncFromAutoMapper replay) that must stay in parity; reverse-portal-upgrade bug (v1.5.471); lazy-load means no live mapping before first map open (map-canvas, auto-mapper, architecture, gotcha) — updated 2026-06-03
+- [automap-never-overrides-user-edits](automap-never-overrides-user-edits.md) — Hard invariant: auto-mapping can add/adjust untouched nodes/edges but must never override a user edit; enforced via isEdited + protectedEdges/deletedEdges; new bent-path code must guard the same way in both build paths (map-canvas, auto-mapper, invariant) — updated 2026-06-03

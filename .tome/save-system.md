@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-06-01
+updated: 2026-06-02
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -128,6 +128,20 @@ unverified). Before trusting any live restore test:
   (`Get-NetTCPConnection -LocalPort 3002`).
 - Console probes can't use top-level await/return: wrap in
   `(async()=>{ window.__x = {...} })();` then read `window.__x` in a second call.
+
+## Journey restore + scene-break interaction (v1.5.456)
+
+Three bugs that compounded to lose pre-restore map journey entries:
+
+1. **`clearJourney()` in `restoreMapData`** — when a save contained both canvas + delta journey (moves since last map open), `restoreMapData` called `clearJourney()` after importing the canvas, discarding the delta before `syncFromAutoMapper` could replay it. **Fix:** removed the call; `syncFromAutoMapper` clears the journey itself after successful replay.
+
+2. **Restore screen-clear leaking into first post-restore command** — the restore fires a screen clear → `setSceneBreak()` → `pendingSceneBreak = true`. The status bar then updates to the same room (no location change), so `checkLocationChange` returned early WITHOUT consuming `pendingSceneBreak`. The user's first real command then got `effectiveCommand = null`, losing its direction and producing wrong map positioning. **Fix:** the `!locationChanged` early-return path now consumes `pendingSceneBreak`.
+
+3. **Restored journey wiped by restore's screen-clear** — same screen-clear sets `pendingSceneBreak = true`, and if a location change DID fire (different room), the journey clear logic would run and wipe the just-restored journey. **Fix:** `suppressNextJourneyClear` one-shot flag set after restore suppresses exactly one such clear.
+
+**Gotcha:** `positionCommand` (actual direction typed) is now stored separately from `command` (null if scene break) in journey entries. `syncFromAutoMapper` uses `positionCommand` for spatial placement even when `command` is null. Old saves without `positionCommand` use look-ahead inference: if entry N has null command and entry N+1 returns to the same previous node, the approach direction is inferred as the reverse of entry N+1's direction (via `DIRECTION_OPPOSITES` in map-config.js).
+
+**Seed entry:** when saving canvas + delta journey, `getOptimizedMapData` prepends a seed entry `{locationName: currentNodeId, command: null}` so `syncFromAutoMapper` can anchor delta replay to the existing canvas node rather than placing new nodes from (0,0).
 
 ## Map data restore semantics (v1.5.440)
 

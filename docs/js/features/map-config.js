@@ -108,6 +108,9 @@ export const mapState = {
   viewport: { x: 0, y: 0, scale: 1 },
   selectedNode: null,
   currentNodeId: null,  // Tracks which specific node player is at (for duplicates)
+  recentDirections: [],  // Last placeable directions (cardinal/vertical); survives journey
+                         // clears (scene break, transfer-on-map-open) so portal/unknown
+                         // moves can still be positioned by the last known heading
   autoMapEnabled: true,  // Enabled by default - user can disable if needed
   undoStack: [],  // Stack of pre-edit state snapshots (undo)
   redoStack: [],  // Stack of state snapshots popped by undo (redo); cleared on any new edit

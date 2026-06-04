@@ -291,10 +291,21 @@ See Settings → Voice Commands for complete reference.
     case 'quick load':
     case 'quickload':
     case 'quick restore':
-    case 'quickrestore':
+    case 'quickrestore': {
       playAppCommand();
-      voiceCommandHandlers.quickLoad();
+      if (!state.currentGameName) { updateStatus('No game loaded', 'error'); return true; }
+      if (!localStorage.getItem(`iftalk_quicksave_${state.currentGameName}`)) {
+        updateStatus('No quick save found - Use Quick Save button first', 'error');
+        return true;
+      }
+      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+        type: 'quicksave',
+        key: state.currentGameName,
+        gameName: state.currentGameName
+      }));
+      window.location.reload();
       return true;
+    }
 
     case 'load game':
     case 'restore game':

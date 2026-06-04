@@ -6,7 +6,11 @@
  * Auth strategy:
  * - First sign-in: full flow with prompt:'select_account'
  * - Subsequent: silent refresh (prompt:'none') — no UI if Google session is live
- * - Proactive refresh 5 min before expiry so syncs never interrupt gameplay
+ * - Refresh is lazy: the access token is only renewed on demand when a sync
+ *   actually needs it (via ensureAuthenticated). No background timer — a
+ *   proactive refresh loop produced visible popup flicker while idle and gained
+ *   nothing, since on-demand silent refresh relies on the long-lived Google
+ *   session cookie, not the short-lived access token.
  */
 
 import { APP_CONFIG } from '../../config.js';
@@ -15,12 +19,8 @@ import { updateStatus } from '../status.js';
 
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
-// How many ms before expiry to proactively refresh
-const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
-
 let tokenClient = null;
 let accessToken = null;
-let refreshTimer = null;
 
 
 export function getAccessToken() {
@@ -143,7 +143,6 @@ export async function initGDriveSync() {
         state.gdriveSignedIn = true;
         state.gdriveEmail = tokenData.email || null;
         window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
-        scheduleProactiveRefresh(tokenData.expiresAt);
       } else {
         localStorage.removeItem('gdrive_token');
         accessToken = null;
@@ -191,7 +190,6 @@ function _storeToken(response) {
   state.gdriveSignedIn = true;
   state.gdriveError = null;
   window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
-  scheduleProactiveRefresh(expiresAt);
 
   // Fetch email in background
   fetchUserInfo().then(userInfo => {
@@ -209,32 +207,6 @@ function handleAuthCallback(response) {
     return;
   }
   _storeToken(response);
-}
-
-/**
- * Schedule a proactive silent refresh before the token expires.
- */
-function scheduleProactiveRefresh(expiresAt) {
-  if (refreshTimer) clearTimeout(refreshTimer);
-
-  const delay = expiresAt - Date.now() - REFRESH_BUFFER_MS;
-  if (delay <= 0) {
-    // Already within buffer window — refresh now
-    silentRefresh();
-    return;
-  }
-
-  refreshTimer = setTimeout(async () => {
-    const refreshed = await silentRefresh();
-    if (!refreshed) {
-      // Silent refresh failed (user logged out of Google) — just update UI state
-      // Don't interrupt the user; they'll be prompted next time they sync
-      state.gdriveSignedIn = false;
-      accessToken = null;
-      localStorage.removeItem('gdrive_token');
-      window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
-    }
-  }, delay);
 }
 
 async function fetchUserInfo() {
@@ -265,8 +237,6 @@ export async function signIn() {
 }
 
 export async function signOut() {
-  if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
-
   if (accessToken) {
     google.accounts.oauth2.revoke(accessToken, () => {});
   }
