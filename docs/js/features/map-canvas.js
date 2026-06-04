@@ -764,6 +764,9 @@ function handleLocationChange(e) {
       // Upgrade an unedited portal edge if the real direction is now known
       if (previousLocationId && command) {
         tryUpgradePortalEdge(previousLocationId, locationName, command);
+        // Walking back along an existing connection: record this end's heading so a
+        // bent (non-reciprocal) path is detected and rendered as a curve.
+        recordReverseCommand(previousLocationId, locationName, command);
       }
       mapState.selectedNode = locationName;
       mapState.currentNodeId = locationName;
@@ -1035,6 +1038,32 @@ function tryUpgradePortalEdge(fromId, toId, newCommand) {
   }
 
   return upgraded;
+}
+
+/**
+ * Record the *return* direction of a connection when a move retraces an existing edge.
+ *
+ * A move fromId→toId that already has an edge in the opposite orientation
+ * (`toId-fromId`) is the player walking back along that connection. We store the
+ * command as that edge's `reverseCommand` so the destination end of the connection
+ * knows its real exit heading instead of assuming the reciprocal.
+ *
+ * - Only cardinal↔cardinal connections get a reverseCommand (per the cardinal-only design).
+ * - Never overrides a user edit (`isEdited`). See [[automap-never-overrides-user-edits]].
+ * - When the return heading is NOT the opposite of the forward heading, the connection is
+ *   "bent" and renders as a curve (see drawEdges); reciprocal returns just fill in the
+ *   heading and still render straight.
+ */
+function recordReverseCommand(fromId, toId, command) {
+  const dir = getDirectionFromCommand(command);
+  if (!dir || DIRECTION_TO_TYPE[dir] !== 'cardinal') return;
+  const fwdEdge = mapState.edges.get(`${toId}-${fromId}`);
+  if (!fwdEdge || fwdEdge.isEdited) return;
+  const fwdDir = getDirectionFromCommand(fwdEdge.command);
+  if (!fwdDir || DIRECTION_TO_TYPE[fwdDir] !== 'cardinal') return;
+  if (fwdEdge.reverseCommand !== command) {
+    fwdEdge.reverseCommand = command;
+  }
 }
 
 /**
@@ -2113,6 +2142,7 @@ function syncFromAutoMapper() {
     const edgeCommand = navCommand && getDirectionFromCommand(navCommand) ? navCommand : visit.command;
     if (previousNode && previousNode.id !== locationName && edgeCommand !== null) {
       const edgeKey = `${previousNode.id}-${locationName}`;
+      const reverseKey = `${locationName}-${previousNode.id}`;
 
       if (!mapState.deletedEdges.has(edgeKey)) {
         const command = edgeCommand || '';
@@ -2121,7 +2151,11 @@ function syncFromAutoMapper() {
         // forward edge doesn't exist yet, so a reverse portal edge (e.g. an earlier
         // "enter gate") gets upgraded and its node repositioned during journey replay.
         tryUpgradePortalEdge(previousNode.id, locationName, command);
-        if (!mapState.edges.has(edgeKey)) {
+        // Retracing an existing connection: record the return heading (bent-path detection)
+        // and do NOT create a second opposite-orientation edge — keeps replay in parity with
+        // live, where a there-and-back yields a single edge carrying both headings.
+        recordReverseCommand(previousNode.id, locationName, command);
+        if (!mapState.edges.has(edgeKey) && !mapState.edges.has(reverseKey)) {
           const connectionType = isGoToCommand(command) ? 'portal' : getConnectionTypeFromCommand(command);
           mapState.edges.set(edgeKey, {
             from: previousNode.id,
@@ -2241,6 +2275,7 @@ function optimizeMapData(mapData) {
   const edges = (mapData.edges || []).map(edge => {
     const opt = { from: edge.from, to: edge.to, cmd: edge.command || edge.cmd };
     if (edge.connectionType && edge.connectionType !== 'cardinal') opt.connectionType = edge.connectionType;
+    if (edge.reverseCommand) opt.reverseCommand = edge.reverseCommand;
     if (edge.isManual === true) opt.isManual = true;
     if (edge.isEdited === true) opt.isEdited = true;
     return opt;
@@ -2263,6 +2298,7 @@ function expandMapData(opt) {
   const edges = (opt.edges || []).map(e => ({
     from: e.from, to: e.to, command: e.cmd || e.command,
     connectionType: e.connectionType || 'cardinal',
+    ...(e.reverseCommand ? { reverseCommand: e.reverseCommand } : {}),
     isManual: e.isManual || false, isEdited: e.isEdited || false
   }));
   return {

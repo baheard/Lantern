@@ -4,7 +4,9 @@
 
 import {
   container, mapState, domRefs,
-  NODE_ICONS, CONNECTION_TYPES
+  NODE_ICONS, CONNECTION_TYPES,
+  CARDINAL_DIRECTIONS, DIRECTION_SHORT_LABELS, DIRECTION_COMMAND_TOKENS,
+  COMMAND_DIRECTIONS, DIRECTION_TO_TYPE
 } from './map-config.js';
 import { render } from './map-render.js';
 import { escapeHtml } from '../utils/text-processing.js';
@@ -100,7 +102,7 @@ export function createNodeEditSheet() {
           </div>
         </div>
         <div class="sheet-field" id="nodeConnectionsField">
-          <label>Connections</label>
+          <label>Exits</label>
           <div class="node-connections-list" id="nodeConnectionsList"></div>
         </div>
         <div class="sheet-merge-section hidden" id="nodeMergeSection">
@@ -346,15 +348,35 @@ function populateConnectionsList(node) {
     if (edge.from === node.id) { const n = mapState.nodes.get(edge.to); if (n) conns.push({ dir: '→', node: n, edge, key }); }
     else if (edge.to === node.id) { const n = mapState.nodes.get(edge.from); if (n) conns.push({ dir: '←', node: n, edge, key }); }
   }
-  if (!conns.length) { list.innerHTML = '<div class="no-connections">No connections yet</div>'; return; }
+  if (!conns.length) { list.innerHTML = '<div class="no-connections">No exits yet</div>'; return; }
 
   const typeLabels = { cardinal: 'Solid', vertical: 'Dashed', portal: 'Dotted' };
 
+  // The cardinal heading of this connection from THIS node's perspective: the forward
+  // command for an outgoing edge, the reverse command for an incoming one. '' = unknown
+  // (the return move hasn't been observed yet) → shown as '?'.
+  const dirTokenForNode = (edge) => {
+    const cmd = edge.from === node.id ? edge.command : edge.reverseCommand;
+    const canonical = cmd ? COMMAND_DIRECTIONS[cmd.toLowerCase().trim()] : null;
+    if (!canonical || DIRECTION_TO_TYPE[canonical] !== 'cardinal') return '';
+    return DIRECTION_COMMAND_TOKENS[canonical] || '';
+  };
+  const dirOptions = (selected) => ['<option value="" ' + (selected ? '' : 'selected') + '>?</option>']
+    .concat(CARDINAL_DIRECTIONS.map(dir => {
+      const tok = DIRECTION_COMMAND_TOKENS[dir];
+      return `<option value="${tok}" ${selected === tok ? 'selected' : ''}>${DIRECTION_SHORT_LABELS[dir]}</option>`;
+    })).join('');
+
   list.innerHTML = conns.map(c => {
     const currentType = c.edge.connectionType || 'cardinal';
+    // Direction is only meaningful for cardinal connections (vertical/portal have no heading).
+    const dirPicker = currentType === 'cardinal'
+      ? `<select class="connection-dir-picker" data-edge="${c.key}" data-side="${c.dir === '→' ? 'from' : 'to'}" title="Direction">${dirOptions(dirTokenForNode(c.edge))}</select>`
+      : '';
     return `
       <div class="connection-item ${c.edge.isManual || c.edge.isEdited ? 'user' : 'auto'}">
         <span class="connection-name">${escapeHtml(c.node.name)}</span>
+        ${dirPicker}
         <select class="connection-type-picker" data-edge="${c.key}" title="Connection type">
           ${Object.keys(CONNECTION_TYPES).map(t =>
             `<option value="${t}" ${currentType === t ? 'selected' : ''}>${typeLabels[t]}</option>`
@@ -364,6 +386,27 @@ function populateConnectionsList(node) {
       </div>
     `;
   }).join('');
+
+  // Direction change handlers — write the heading for this node's end of the connection.
+  // Outgoing edits set edge.command; incoming edits set edge.reverseCommand (or clear it).
+  list.querySelectorAll('.connection-dir-picker').forEach(sel => sel.addEventListener('change', (e) => {
+    const edge = mapState.edges.get(e.target.dataset.edge);
+    if (!edge) return;
+    callbacks.snapshotForUndo();
+    const token = e.target.value;
+    if (e.target.dataset.side === 'from') {
+      if (token) edge.command = token;
+    } else if (token) {
+      edge.reverseCommand = token;
+    } else {
+      delete edge.reverseCommand;
+    }
+    edge.isEdited = true;
+    mapState.protectedEdges.add(e.target.dataset.edge);
+    mapState.hasUnsavedChanges = true;
+    render();
+    callbacks.saveMapForGame();
+  }));
 
   // Delete handlers
   list.querySelectorAll('.connection-delete').forEach(btn => btn.addEventListener('click', (e) => {
@@ -383,6 +426,7 @@ function populateConnectionsList(node) {
       mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       render();
       callbacks.saveMapForGame();
+      populateConnectionsList(node); // refresh so the direction picker shows/hides for the new type
     }
   }));
 }

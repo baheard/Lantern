@@ -7,8 +7,29 @@ import {
   GRID_SIZE, NODE_RADIUS, NODE_RADIUS_SMALL, SMALL_NODE_FADE_SCALE,
   NODE_COLORS, NODE_ICONS,
   CONNECTION_STYLES, DIRECTION_TO_TYPE, COMMAND_DIRECTIONS,
+  DIRECTION_OFFSETS, DIRECTION_OPPOSITES,
   timers
 } from './map-config.js';
+
+// If an edge is a "bent" cardinal connection — both ends have a known cardinal heading and
+// they are NOT opposites (e.g. Anchorhead: leave SE, return SW) — return the two end
+// headings so it can be drawn as a curve. Reciprocal or single-ended connections → null (straight).
+function edgeBentDirections(edge) {
+  const fwd = COMMAND_DIRECTIONS[(edge.command || '').toLowerCase().trim()];
+  const rev = COMMAND_DIRECTIONS[(edge.reverseCommand || '').toLowerCase().trim()];
+  if (!fwd || !rev) return null;
+  if (DIRECTION_TO_TYPE[fwd] !== 'cardinal' || DIRECTION_TO_TYPE[rev] !== 'cardinal') return null;
+  if (rev === DIRECTION_OPPOSITES[fwd]) return null;
+  return { fromDir: fwd, toDir: rev };
+}
+
+// Unit vector for a canonical direction, derived from its grid offset.
+function dirUnit(dir) {
+  const o = DIRECTION_OFFSETS[dir];
+  if (!o) return { x: 0, y: 0 };
+  const len = Math.hypot(o.x, o.y) || 1;
+  return { x: o.x / len, y: o.y / len };
+}
 
 // Split a node label into 1 or 2 lines at a word boundary.
 // Each line is limited to maxChars; the second line is truncated with "…" if needed.
@@ -103,7 +124,26 @@ function drawEdges() {
     ctx.strokeStyle = edgeColor;
     ctx.setLineDash(edgeDash);
     ctx.globalAlpha = 0.8;
-    ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+    // Bent cardinal connections (e.g. leave SE, return SW) curve so each end leaves its node
+    // along its own heading; everything else draws as a straight line.
+    const bent = edgeBentDirections(edge);
+    ctx.beginPath();
+    if (bent) {
+      const u1 = dirUnit(bent.fromDir), u2 = dirUnit(bent.toDir);
+      const r1 = from.isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
+      const r2 = to.isSmall ? NODE_RADIUS_SMALL : NODE_RADIUS;
+      // Anchor each end at the node's rim along its own heading, so the curve visibly leaves
+      // the edge of the circle in that direction — not from the hidden, distorted center.
+      const sx = from.x + u1.x * r1, sy = from.y + u1.y * r1;
+      const ex = to.x + u2.x * r2, ey = to.y + u2.y * r2;
+      const dist = Math.hypot(ex - sx, ey - sy);
+      const k = Math.min(dist * 0.45, GRID_SIZE * 0.6); // gentle control-point reach
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(sx + u1.x * k, sy + u1.y * k, ex + u2.x * k, ey + u2.y * k, ex, ey);
+    } else {
+      ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y);
+    }
+    ctx.stroke();
     ctx.globalAlpha = 1; ctx.setLineDash([]);
 
     // Track portal edges where neither node has been edited

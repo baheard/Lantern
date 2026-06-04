@@ -63,6 +63,23 @@ export const DIRECTION_OPPOSITES = {
   enter: 'exit', exit: 'enter', in: 'out', out: 'in'
 };
 
+// Cardinal directions only — bent paths and the per-connection direction picker
+// are cardinal-only by design (vertical/portal connections have no editable heading).
+export const CARDINAL_DIRECTIONS = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+
+// Canonical direction → short compass label (for the connections/exits list)
+export const DIRECTION_SHORT_LABELS = {
+  north: 'N', northeast: 'NE', east: 'E', southeast: 'SE',
+  south: 'S', southwest: 'SW', west: 'W', northwest: 'NW',
+  up: 'U', down: 'D', enter: 'In', exit: 'Out', in: 'In', out: 'Out'
+};
+
+// Canonical direction → canonical short command token stored in edge.command/reverseCommand
+export const DIRECTION_COMMAND_TOKENS = {
+  north: 'n', northeast: 'ne', east: 'e', southeast: 'se',
+  south: 's', southwest: 'sw', west: 'w', northwest: 'nw'
+};
+
 export const NODE_ICONS = {
   // Default is blank (no icon) - most common for locations
   location: '',           // Blank - default
