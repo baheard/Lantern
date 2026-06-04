@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.474';
+const CACHE_VERSION = 'v1.5.476';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -217,6 +217,45 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// How long to wait for the network before falling back to cache for CSS/JS.
+const NETWORK_TIMEOUT_MS = 1500;
+
+/**
+ * Network-first with a timeout fallback to cache. Used for CSS/JS so a single online
+ * reload serves the newest code, but a slow or offline network falls back to the cached
+ * copy quickly instead of hanging. `cache: 'no-cache'` forces a server revalidation
+ * (etag/last-modified), defeating any stale HTTP cache while still allowing a fast 304.
+ */
+function networkFirstWithTimeout(request, timeoutMs) {
+  return caches.match(request).then(cached => new Promise(resolve => {
+    let settled = false;
+    const finish = (resp) => { if (!settled && resp) { settled = true; resolve(resp); } };
+
+    // If the network is slow, serve the cached copy (when we have one) after the timeout.
+    const timer = setTimeout(() => finish(cached), timeoutMs);
+
+    fetch(request, { cache: 'no-cache' }).then(networkResponse => {
+      clearTimeout(timer);
+      if (networkResponse && networkResponse.status === 200) {
+        // Refresh the cache so the offline/slow-path fallback stays current.
+        const copy = networkResponse.clone();
+        caches.open(CACHE_NAMES.core).then(cache => cache.put(request, copy));
+        if (settled) return;            // timeout already served cache; cache is now updated
+        settled = true; resolve(networkResponse);
+      } else {
+        // Non-200 (e.g. 404): prefer cache if present, else hand back the response as-is.
+        if (settled) return;
+        settled = true; resolve(cached || networkResponse);
+      }
+    }).catch(() => {
+      // Offline / network error — fall back to cache (may be undefined → network-error to page).
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true; resolve(cached);
+    });
+  }));
+}
+
 // Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -259,28 +298,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for CSS and JS (fast + auto-updates)
+  // Network-first with timeout for CSS and JS. A single online reload picks up the
+  // newest code (the network copy wins), while slow/offline connections fall back to
+  // cache within NETWORK_TIMEOUT_MS so startup never stalls. The cache is refreshed
+  // whenever the network responds, so the fallback stays current for next time.
   if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
-    event.respondWith(
-      caches.match(request).then(cachedResponse => {
-        const fetchPromise = fetch(request).then(networkResponse => {
-          // Update cache in background
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAMES.core).then(cache => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Network failed - return cached version if we have it
-          return cachedResponse;
-        });
-
-        // Return cached version immediately, or wait for network if no cache
-        return cachedResponse || fetchPromise;
-      })
-    );
+    event.respondWith(networkFirstWithTimeout(request, NETWORK_TIMEOUT_MS));
     return;
   }
 
