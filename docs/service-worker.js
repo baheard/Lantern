@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.476';
+const CACHE_VERSION = 'v1.5.477';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -195,17 +195,6 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       // Take control of all pages immediately
       return self.clients.claim();
-    }).then(() => {
-      // Notify all clients that a new version is active
-      return self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'NEW_VERSION_ACTIVATED',
-            version: CACHE_VERSION
-          });
-        });
-      });
-    }).then(() => {
     })
   );
 });
