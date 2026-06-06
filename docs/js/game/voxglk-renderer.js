@@ -579,7 +579,43 @@ function renderGridWindow(content, window) {
   const lineCount = lines.length;
   const isSingleLine = lineCount === 1;
 
-  let html = `<div class="grid-status ${isSingleLine ? 'single-line' : 'multiline'}">`;
+  // Emit actual content width as --grid-cols so the CSS grid sizes to real content
+  // (not a hardcoded 100ch). Lets narrow screens fit without huge horizontal overflow,
+  // and gives fitUpperWindow() an accurate natural width to scale from.
+  const gridCols = Math.max(maxWidth, 1);
+
+  // Build a per-column track template so only EMPTY columns shrink on narrow screens.
+  // A column is "occupied" if any line has a non-space char there → fixed 1ch (never
+  // shrinks). Empty columns (the gap between e.g. room name and compass) become
+  // minmax(0, 1ch) → they absorb all the squeeze, collapsing toward 0 while every
+  // character cell stays full size. Shared across all lines, so vertical alignment
+  // (the compass rose) is preserved. See .tome/upper-window-fit.md
+  const occupied = new Array(gridCols).fill(false);
+  lines.forEach(runs => {
+    runs.forEach(run => {
+      for (let i = 0; i < run.text.length; i++) {
+        if (run.text[i].trim() !== '') {
+          const col = run.start + i;
+          if (col >= 0 && col < gridCols) occupied[col] = true;
+        }
+      }
+    });
+  });
+  // Run-length encode into repeat() segments (keeps one track per column so the
+  // spans' grid-column indices still map exactly).
+  let gridTemplate = '';
+  let c = 0;
+  while (c < gridCols) {
+    const val = occupied[c];
+    let end = c;
+    while (end < gridCols && occupied[end] === val) end++;
+    const count = end - c;
+    gridTemplate += val ? `repeat(${count}, 1ch) ` : `repeat(${count}, minmax(0, 1ch)) `;
+    c = end;
+  }
+  gridTemplate = gridTemplate.trim();
+
+  let html = `<div class="grid-status ${isSingleLine ? 'single-line' : 'multiline'}" style="--grid-cols: ${gridCols}; --grid-template: ${gridTemplate};">`;
 
   lines.forEach((runs, lineIndex) => {
     // Check if this line has any non-whitespace content
@@ -607,7 +643,7 @@ function renderGridWindow(content, window) {
 
     runs.forEach(run => {
       const styleClass = STYLE_TO_CLASS[run.style] || 'glk-normal';
-      const classes = [styleClass];
+      const baseClasses = [styleClass];
 
       // Only apply reverse video if explicitly sent by ifvms
       // Check: 1. Run has reverse property, 2. Style is 'reverse', 3. Window stylehints specify reverse
@@ -621,15 +657,37 @@ function renderGridWindow(content, window) {
       }
 
       if (shouldReverse) {
-        classes.push('reverse');
+        baseClasses.push('reverse');
       }
 
-      // Mark spans containing only whitespace for mobile CSS hiding
-      if (run.text.trim().length === 0) {
-        classes.push('whitespace-only');
-      }
+      // ifvms often sends a whole upper-window line as ONE run (room name + a long run
+      // of spaces + compass), so we can't rely on whitespace being its own run. Split
+      // the run at columns that are GLOBALLY empty (empty in every line — i.e. the big
+      // separator gap, never the compass internals). Occupied segments keep their text
+      // (holding their 1ch tracks); empty-gap segments carry no text so their
+      // minmax(0,1ch) tracks can collapse on narrow screens. See .tome/upper-window-fit.md
+      let seg = 0;
+      while (seg < run.text.length) {
+        const isOcc = !!occupied[run.start + seg];
+        let segEnd = seg;
+        while (segEnd < run.text.length && !!occupied[run.start + segEnd] === isOcc) {
+          segEnd++;
+        }
+        const gridColStart = run.start + seg + 1;
+        const gridColEnd = run.start + segEnd + 1;
 
-      html += `<span class="${classes.join(' ')}" style="grid-column: ${run.start + 1} / ${run.end + 1};">${escapeHtml(run.text)}</span>`;
+        if (isOcc) {
+          // Occupied: emit the characters at a fixed-width (1ch) region.
+          html += `<span class="${baseClasses.join(' ')}" style="grid-column: ${gridColStart} / ${gridColEnd};">${escapeHtml(run.text.slice(seg, segEnd))}</span>`;
+        } else if (shouldReverse) {
+          // Globally-empty but reverse-video: keep an empty span so the colored bar
+          // still renders, but with no text so the gap can shrink.
+          html += `<span class="${baseClasses.join(' ')} whitespace-only" style="grid-column: ${gridColStart} / ${gridColEnd};"></span>`;
+        }
+        // else: globally-empty, non-reverse → emit nothing; the gap tracks collapse.
+
+        seg = segEnd;
+      }
     });
 
     html += `</div>`;

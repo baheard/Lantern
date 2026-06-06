@@ -575,6 +575,10 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     upperWindowEl.innerHTML = sanitizeRestoredHTML(saveData.displayHTML.upperWindow || '');
                     if (saveData.displayHTML.upperWindow && saveData.displayHTML.upperWindow.trim()) {
                         upperWindowEl.style.display = '';
+                        // Scale restored grid to fit the current width (font-scale fallback;
+                        // new-format saves also gap-shrink via CSS). See upper-window-fit.
+                        const voxglkMod = await import('./voxglk.js');
+                        voxglkMod.fitUpperWindow?.();
                     } else {
                         upperWindowEl.style.display = 'none';
                     }

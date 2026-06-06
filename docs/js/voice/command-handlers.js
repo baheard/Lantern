@@ -137,8 +137,10 @@ export const voiceCommandHandlers = {
   },
   status: () => {
     const statusText = dom.statusBar?.textContent?.trim();
-    if (statusText) {
-      speakAppMessage(statusText);
+    const upperText = document.getElementById('upperWindow')?.textContent?.trim();
+    const combined = [statusText, upperText].filter(Boolean).join('. ');
+    if (combined) {
+      speakAppMessage(combined);
       updateStatus('Reading status');
     } else {
       speakAppMessage('No status presently shown');

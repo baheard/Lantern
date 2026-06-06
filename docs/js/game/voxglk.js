@@ -179,7 +179,34 @@ function handleResize() {
       gen: s.generation,
       metrics: metrics
     });
+
+    // Re-fit the upper window grid for the new viewport width
+    fitUpperWindow();
   }, 250); // Wait 250ms after resize stops
+}
+
+/**
+ * Scale multiline upper-window grids (compass, maps) down to fit the available
+ * width, preserving their 2D monospace layout. Single-line status bars reflow via
+ * CSS instead and are left alone. Deterministic: measures real grid width vs.
+ * available width, so it works with any font/zoom without magic factors.
+ * See .tome/upper-window-fit.md for the why.
+ */
+export function fitUpperWindow() {
+  const upperEl = document.getElementById('upperWindow');
+  if (!upperEl || upperEl.style.display === 'none') return;
+
+  upperEl.querySelectorAll('.grid-status.multiline').forEach(grid => {
+    grid.style.fontSize = '';            // reset to natural size before measuring
+    const available = grid.clientWidth;  // content width we must fit into
+    if (!available) return;
+    const natural = grid.scrollWidth;    // intrinsic grid width (cols * 1ch)
+    if (natural > available + 1) {
+      const base = parseFloat(getComputedStyle(grid).fontSize);
+      // Font scaling shrinks 1ch proportionally, so one pass fits exactly.
+      grid.style.fontSize = (base * available / natural) + 'px';
+    }
+  });
 }
 
 /**
@@ -247,6 +274,12 @@ export function createVoxGlk(textOutputCallback) {
 
       // Set up window resize listener
       window.addEventListener('resize', handleResize);
+
+      // Re-fit the upper window once the monospace font loads — initial measurement
+      // may use a fallback font with a different character width.
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(fitUpperWindow);
+      }
 
       // Tell Glk we're ready - this will trigger VM.start()
       if (s.acceptCallback) {
@@ -377,6 +410,7 @@ export function createVoxGlk(textOutputCallback) {
                 upperWindowEl.setAttribute('data-last-content', upperWindowHTML);
               }
               upperWindowEl.style.display = ''; // Show upper window
+              fitUpperWindow();                 // Scale grid to fit current width
 
             } else if (upperWindowEl) {
               // Explicitly clear upper window only if clear flag set or content is explicitly empty

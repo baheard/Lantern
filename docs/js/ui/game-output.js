@@ -125,10 +125,11 @@ export function ensureChunksReady() {
   }
 
   // Process upper window second (if exists) - for quotes, formatted text, etc.
-  // Process upper window second (if exists) - for quotes, formatted text, etc.
+  // Gate on shouldIncludeStatus: multi-line grid windows (e.g. Bronze's 2-row status bar)
+  // live here and update every turn. Without the gate they'd be re-narrated on every move.
   // Always skip line breaks: keeps upper window as one big chunk, avoids running
   // processTextForTTS on article/grid text that would corrupt it.
-  if (hasUpper && upperEl) {
+  if (hasUpper && upperEl && shouldIncludeStatus) {
     const upperMarkedHTML = insertTemporaryMarkers(upperHTML, true); // skip line breaks
     const upperChunksWithMarkers = createNarrationChunks(upperMarkedHTML);
     const { chunks: upperChunks, markerIDs: upperMarkerIDs } =

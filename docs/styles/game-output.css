@@ -250,6 +250,23 @@ body.tap-to-examine-enabled .game-text {
 
 /* Three-primitive Z-machine window model */
 
+/* Sticky header wrapper — holds statusBar + upperWindow so both stick together */
+.game-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Only show the separator when the header has visible content */
+.game-header:has(#statusBar:not([style*="display: none"])),
+.game-header:has(#upperWindow:not([style*="display: none"])) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 /* Status bar - exactly 1 line, VM-owned (location/score) */
 #statusBar {
   font-family: var(--font-serif);
@@ -257,11 +274,6 @@ body.tap-to-examine-enabled .game-text {
   color: var(--color-game-system);
   line-height: 1.4;
   width: 100%;
-  flex-shrink: 0; /* Don't shrink when space is tight */
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg-surface);
 }
 
 /* Simple status bar layout - left and right aligned text */
@@ -294,14 +306,13 @@ body.tap-to-examine-enabled .game-text {
 }
 
 /* Upper window - fixed, non-scrolling, arbitrary height (quotes, maps, etc.) */
+/* Sticks with statusBar via .game-header wrapper */
 #upperWindow {
   font-family: var(--font-mono);
   font-size: var(--font-m);
   color: var(--text-primary);
   line-height: 1.4;
   width: 100%;
-  flex-shrink: 0; /* Don't shrink when space is tight */
-  /* Container will be styled by .grid-status.multiline */
 }
 
 /* Lower window - scrolling main story text */
@@ -410,7 +421,9 @@ body.tap-to-examine-enabled #lowerWindow {
 
 .grid-status .grid-line {
   display: grid;
-  grid-template-columns: repeat(100, 1ch); /* 100 character columns */
+  /* Per-column template: occupied cols are fixed 1ch, empty cols are minmax(0,1ch)
+     so only the gaps shrink on narrow screens. Falls back to a uniform grid. */
+  grid-template-columns: var(--grid-template, repeat(var(--grid-cols, 100), 1ch));
   min-height: 1.4em;
   position: relative;
 }
@@ -461,9 +474,6 @@ body.force-mobile .game-output {
 }
 
 body.force-mobile #statusBar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   background: var(--bg-primary);
   white-space: normal !important;
   text-align: center;
@@ -485,13 +495,10 @@ body.force-mobile #lowerWindow {
   padding: 0 8px 16px;
 }
 
-body.force-mobile .grid-status.multiline {
-  display: block !important;
-  text-align: left;
-  word-wrap: break-word;
-}
-
-body.force-mobile .grid-status .grid-line {
+/* Single-line status bar: collapse the monospace grid to reflowing text on mobile.
+   Multiline grids (compass, maps) keep their 2D layout and are scaled to fit by
+   fitUpperWindow() in voxglk.js — see .tome/upper-window-fit.md */
+body.force-mobile .grid-status.single-line .grid-line {
   display: block !important;
   text-align: left;
   margin: 0;
@@ -499,27 +506,27 @@ body.force-mobile .grid-status .grid-line {
   word-spacing: normal !important;
 }
 
-body.force-mobile .grid-status .grid-line.empty-line-single {
+body.force-mobile .grid-status.single-line .grid-line.empty-line-single {
   display: none !important;
 }
 
-body.force-mobile .grid-status .grid-line.empty-line-continuation {
+body.force-mobile .grid-status.single-line .grid-line.empty-line-continuation {
   display: none !important;
 }
 
-body.force-mobile .grid-status .grid-line.empty-line-first {
+body.force-mobile .grid-status.single-line .grid-line.empty-line-first {
   display: block !important;
   height: 1em;
   line-height: 1em;
 }
 
-body.force-mobile .grid-status span[style*="grid-column"] {
+body.force-mobile .grid-status.single-line span[style*="grid-column"] {
   display: inline !important;
   grid-column: unset !important;
   white-space: normal !important;
 }
 
-body.force-mobile .grid-status span.whitespace-only {
+body.force-mobile .grid-status.single-line span.whitespace-only {
   display: none !important;
 }
 

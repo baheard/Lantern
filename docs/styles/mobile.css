@@ -347,12 +347,11 @@
     overflow-x: hidden;
   }
 
-  /* Status bar: fixed to top on mobile */
+  /* Status bar: sticky handled by .game-header wrapper */
   #statusBar {
-    position: sticky;
   }
 
-  /* Upper window: scrolls with content */
+  /* Upper window: sticks with statusBar via .game-header wrapper */
   #upperWindow {
     font-size: var(--font-xs);
     white-space: normal !important;
@@ -376,13 +375,10 @@
   }
 
   /* Convert grid layout to normal flow on mobile */
-  .grid-status.multiline {
-    display: block !important;
-    text-align: left;
-    word-wrap: break-word;
-  }
-
-  .grid-status .grid-line {
+  /* Single-line status bar: collapse the monospace grid to reflowing text.
+     Multiline grids (compass, maps) keep their 2D layout and are scaled to fit
+     by fitUpperWindow() in voxglk.js — see .tome/upper-window-fit.md */
+  .grid-status.single-line .grid-line {
     display: block !important;
     text-align: left;
     margin: 0;
@@ -391,29 +387,29 @@
   }
 
   /* Hide single line breaks (ignore), keep double line breaks (paragraph spacing) */
-  .grid-status .grid-line.empty-line-single {
+  .grid-status.single-line .grid-line.empty-line-single {
     display: none !important;
   }
 
-  .grid-status .grid-line.empty-line-continuation {
+  .grid-status.single-line .grid-line.empty-line-continuation {
     display: none !important;
   }
 
-  .grid-status .grid-line.empty-line-first {
+  .grid-status.single-line .grid-line.empty-line-first {
     display: block !important;
     height: 1em;
     line-height: 1em;
   }
 
   /* Grid-positioned spans: remove grid, flow as inline text */
-  .grid-status span[style*="grid-column"] {
+  .grid-status.single-line span[style*="grid-column"] {
     display: inline !important;
     grid-column: unset !important;
     white-space: normal !important;
   }
 
   /* Hide spans that are purely whitespace (trims leading whitespace) */
-  .grid-status span.whitespace-only {
+  .grid-status.single-line span.whitespace-only {
     display: none !important;
   }
 
