@@ -28,7 +28,7 @@ import {
  * @param {string} gamePath - Path to game file
  * @param {Function} onOutput - Callback for game output (for TTS)
  */
-export async function startGame(gamePath, onOutput) {
+export async function startGame(gamePath, onOutput, { skipDriveCheck = false } = {}) {
 
   try {
     state.currentGamePath = gamePath;
@@ -189,7 +189,7 @@ export async function startGame(gamePath, onOutput) {
 
     // If auto-sync is enabled, check Drive for a newer autosave before loading local.
     // This lets a save from another device appear seamlessly on first load here.
-    if (state.gdriveSyncEnabled && !skipAutoload && !pendingRestoreJson) {
+    if (state.gdriveSyncEnabled && !skipAutoload && !pendingRestoreJson && !skipDriveCheck) {
       const { checkDriveForNewerAutosave } = await import('../utils/gdrive/index.js');
       await checkDriveForNewerAutosave(state.currentGameName);
     }
@@ -347,6 +347,36 @@ export function unloadGame() {
 }
 
 /**
+ * Check Drive for a newer autosave, then show resume/restart dialog if one exists,
+ * then start the game. Call this from click handlers instead of startGame() directly
+ * so the dialog sees any cloud saves before deciding what to show.
+ */
+async function launchGame(gamePath, gameName, onOutput, { trackFn = null } = {}) {
+  // Drive check first — downloads any cloud save into localStorage before we look
+  if (state.gdriveSyncEnabled) {
+    const { checkDriveForNewerAutosave } = await import('../utils/gdrive/index.js');
+    await checkDriveForNewerAutosave(gameName);
+  }
+
+  const autosaveKey = `iftalk_autosave_${gameName}`;
+  const hasAutosave = localStorage.getItem(autosaveKey) !== null;
+
+  if (hasAutosave) {
+    const choice = await showResumeDialog(gamePath, gameName);
+    if (choice === 'resume' || choice === 'restart') {
+      showLoadingOverlay();
+      if (trackFn) trackFn();
+      startGame(gamePath, onOutput, { skipDriveCheck: true });
+    }
+    // null = cancelled, do nothing
+  } else {
+    showLoadingOverlay();
+    if (trackFn) trackFn();
+    startGame(gamePath, onOutput, { skipDriveCheck: true });
+  }
+}
+
+/**
  * Initialize game selection handlers
  * @param {Function} onOutput - Callback for game output (for TTS)
  */
@@ -356,31 +386,10 @@ export function initGameSelection(onOutput) {
 
   gameCards.forEach((card, index) => {
     card.addEventListener('click', async (e) => {
-      // Close settings panel if open
       closeSettings();
-
       const gamePath = card.dataset.game;
       const gameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
-      const autosaveKey = `iftalk_autosave_${gameName}`;
-      const hasAutosave = localStorage.getItem(autosaveKey) !== null;
-
-      if (hasAutosave) {
-        // Show resume/restart dialog
-        const choice = await showResumeDialog(gamePath, gameName);
-        if (choice === 'resume') {
-          showLoadingOverlay();
-          startGame(gamePath, onOutput);
-        } else if (choice === 'restart') {
-          // Autosave already deleted by showResumeDialog
-          showLoadingOverlay();
-          startGame(gamePath, onOutput);
-        }
-        // If choice is null (cancelled), do nothing
-      } else {
-        // No autosave, just start the game
-        showLoadingOverlay();
-        startGame(gamePath, onOutput);
-      }
+      await launchGame(gamePath, gameName, onOutput);
     });
 
     // Check for autosave and update badge
@@ -475,32 +484,9 @@ export function initGameSelection(onOutput) {
       const fileName = urlPath.split('/').pop() || 'custom-game';
       const gameName = fileName.replace(/\.[^.]+$/, '').toLowerCase();
 
-      // Check for existing autosave
-      const autosaveKey = `iftalk_autosave_${gameName}`;
-      const hasAutosave = localStorage.getItem(autosaveKey) !== null;
-
-      if (hasAutosave) {
-        const choice = await showResumeDialog(url, gameName);
-        if (choice === 'resume') {
-          showLoadingOverlay();
-          trackCustomGame(url, gameName);
-          startGame(url, onOutput);
-        } else if (choice === 'restart') {
-          localStorage.setItem('iftalk_skip_autoload', 'true');
-          showLoadingOverlay();
-          trackCustomGame(url, gameName);
-          startGame(url, onOutput);
-        } else if (choice === 'delete') {
-          // Delete autosave and remove from custom games
-          localStorage.removeItem(autosaveKey);
-          removeCustomGame(gameName);
-          renderRecentlyPlayedSection(onOutput, startGame);
-        }
-      } else {
-        showLoadingOverlay();
-        trackCustomGame(url, gameName);
-        startGame(url, onOutput);
-      }
+      await launchGame(url, gameName, onOutput, {
+        trackFn: () => trackCustomGame(url, gameName)
+      });
     });
   }
 
