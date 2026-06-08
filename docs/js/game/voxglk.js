@@ -571,9 +571,9 @@ export function createVoxGlk(textOutputCallback) {
           }
 
           // Check for location change (for auto-mapping)
-          // Pass status bar text for name-based location tracking
-          // Pass current turn's input type (not previous turn's)
-          checkLocationChange(statusBarText, s.generation, currentTurnInputType);
+          // Fall back to upperWindowText for games with multi-line upper windows (e.g. Bronze)
+          // where the status content renders as a grid instead of the single-line status bar.
+          checkLocationChange(statusBarText || upperWindowText, s.generation, currentTurnInputType);
         }
 
         // Handle special input requests (file dialogs for save/restore)

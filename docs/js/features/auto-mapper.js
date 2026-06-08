@@ -39,9 +39,12 @@ export function getCurrentLocation(statusBarText) {
     return null;
   }
 
-  // Status bar typically has format: "Location Name    Score: X  Moves: Y"
-  // Extract the location name (left part before score/moves)
+  // Multi-line upper windows (e.g. Bronze map display): use only the first line,
+  // which always contains the room name.
   let locationName = statusBarText.trim();
+  if (locationName.includes('\n')) {
+    locationName = locationName.split('\n')[0];
+  }
 
   // Remove common suffixes like "Score:", "Moves:", "Time:", etc.
   const suffixPatterns = [
