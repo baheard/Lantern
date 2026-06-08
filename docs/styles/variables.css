@@ -14,6 +14,11 @@
   --link-color: #60a5fa;        /* Accessible link blue — 7.25:1 on dark backgrounds */
   --link-color-hover: #93c5fd;  /* Lighter on hover */
 
+  /* Upper window grid (status-bar-style treatment, blue variant) */
+  --upper-window-bg-start: #141c2c;
+  --upper-window-bg-end: #1f293b;
+  --upper-window-text: #7ab5fc;
+
   --text-primary: #e6e4e0;
   --text-secondary: #a8a5a0;
   --text-muted: #bbb;

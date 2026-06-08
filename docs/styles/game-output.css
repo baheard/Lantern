@@ -260,7 +260,9 @@ body.tap-to-examine-enabled .game-text {
   flex-shrink: 0;
 }
 
-/* Only show the separator when the header has visible content */
+/* Single separator shadow for the whole header — sits at the bottom of whichever
+   grid window(s) (status bar, upper window, or both stacked) are currently visible,
+   separating the header region from the main content below */
 .game-header:has(#statusBar:not([style*="display: none"])),
 .game-header:has(#upperWindow:not([style*="display: none"])) {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -284,7 +286,6 @@ body.tap-to-examine-enabled .game-text {
   padding: 8px 11px;
   width: 100%;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   border-left: 4px solid var(--accent-warm);
 }
 
@@ -310,9 +311,11 @@ body.tap-to-examine-enabled .game-text {
 #upperWindow {
   font-family: var(--font-mono);
   font-size: var(--font-m);
-  color: var(--text-primary);
+  color: var(--upper-window-text);
   line-height: 1.4;
   width: 100%;
+  background: linear-gradient(135deg, var(--upper-window-bg-start) 0%, var(--upper-window-bg-end) 100%);
+  border-left: 4px solid var(--accent-primary);
 }
 
 /* Lower window - scrolling main story text */
