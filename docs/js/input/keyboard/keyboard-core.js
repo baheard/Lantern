@@ -725,8 +725,10 @@ export function updateInputVisibility() {
       messageInputRowEl.classList.remove('hidden');
 
       // Toggle between text input and voice indicator based on mute state
-      if (isMuted || isSystemEntryMode()) {
-        // Muted or system entry - show text input, send button, and clear button
+      // (system entry mode follows the same toggle — see #113: voice prompts
+      // like "name your save" should show the voice indicator, not a text box)
+      if (isMuted) {
+        // Muted - show text input, send button, and clear button
         if (messageInputEl) {
           messageInputEl.classList.remove('hidden');
           // Re-enable input and restore normal placeholder (in case coming from char mode)
