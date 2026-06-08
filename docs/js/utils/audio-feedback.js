@@ -17,7 +17,32 @@ import { getItem } from './storage/storage-api.js';
 
 let audioCtx = null;
 
+// Tiny silent WAV (0.1s, 8-bit PCM mono, all-silence samples) as a data URI.
+// iOS (all browsers — they're all WebKit under the hood) routes raw Web Audio
+// API output through an audio session that ignores the Ring/Silent switch and
+// the volume buttons. Looping a real <audio> element — even one that's
+// silent — forces the page into the standard "media" audio session, which
+// then governs Web Audio output too. See .tome/ for the issue this fixes.
+const SILENT_WAV_DATA_URI = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+
+let silentLoopAudio = null;
+
+/**
+ * Start a looping silent <audio> element to coerce iOS into the standard
+ * media audio session (see SILENT_WAV_DATA_URI comment above). Must be
+ * called from a user-gesture context to satisfy autoplay policies — getContext()
+ * is only ever reached via button-press handlers, so this rides along on that.
+ */
+function ensureSilentAudioLoop() {
+  if (silentLoopAudio) return;
+  silentLoopAudio = new Audio(SILENT_WAV_DATA_URI);
+  silentLoopAudio.loop = true;
+  silentLoopAudio.play().catch(() => {});
+}
+
 async function getContext() {
+  ensureSilentAudioLoop();
+
   // Recreate if missing or closed (iOS closes AudioContext after extended background)
   if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -35,6 +60,11 @@ async function getContext() {
  */
 export function initAudioContext() {
   getContext();
+
+  // Resume the silent loop if iOS paused it while backgrounded
+  if (silentLoopAudio && silentLoopAudio.paused) {
+    silentLoopAudio.play().catch(() => {});
+  }
 }
 
 /**
