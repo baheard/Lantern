@@ -605,6 +605,16 @@ function handleKeyPress(e) {
       return;
     }
 
+    // Don't capture if user is typing into another text field — e.g. the
+    // feedback modal's textarea, which can be opened over a char-mode (PAK)
+    // screen and was previously having its keystrokes swallowed and routed
+    // into the game instead of the textarea
+    if (e.target.isContentEditable ||
+        e.target.tagName === 'TEXTAREA' ||
+        (e.target.tagName === 'INPUT' && e.target !== hiddenKeyInputEl)) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
