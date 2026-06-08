@@ -12,7 +12,8 @@ export const APP_COMMANDS = {
   // Navigation commands
   REPEAT: ['repeat'],
   BACK: ['back'],
-  PAUSE: ['pause', 'stop'],
+  PAUSE: ['pause'],
+  STOP: ['stop'],
   PLAY: ['play', 'resume'],
   SKIP: ['skip'],
   SKIP_ALL: ['skip all', 'skip to end', 'skip to the end', 'end'],
