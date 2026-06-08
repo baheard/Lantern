@@ -160,7 +160,6 @@ function playBlob(blob) {
  */
 async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
   const t0 = performance.now();
-  console.log(`[TTS:stream] fetch start — "${text.slice(0, 60).replace(/\n/g, ' ')}"`);
 
   const response = await fetch(OPENAI_TTS_URL, {
     method: 'POST',
@@ -182,8 +181,6 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
     throw new Error(`OpenAI TTS ${response.status}: ${errText}`);
   }
 
-  console.log(`[TTS:stream] response received: ${(performance.now() - t0).toFixed(0)}ms`);
-
   return new Promise((resolve, reject) => {
     const collectedChunks = [];
     const ms = new MediaSource();
@@ -199,7 +196,7 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
 
     const finish = (interrupted = false) => {
       if (settled) return;
-      console.log(`[TTS:stream] finish: interrupted=${interrupted}, elapsed=${(performance.now() - t0).toFixed(0)}ms, readyState=${audio.readyState}, currentTime=${audio.currentTime.toFixed(3)}`);
+      if (interrupted) console.log(`[TTS:stream] interrupted at ${audio.currentTime.toFixed(3)}s, elapsed=${(performance.now() - t0).toFixed(0)}ms`);
       settled = true;
       if (interrupted) state.chunkWasInterrupted = true;
       if (reader) reader.cancel();
@@ -244,7 +241,6 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
     });
 
     audio.onpause = () => {
-      console.log(`[TTS:stream] onpause: settled=${settled}, streamEnded=${streamEnded}, currentTime=${audio.currentTime.toFixed(3)}, readyState=${audio.readyState}, isBufferStall=${isBufferStall}, isPaused=${state.isPaused}, isNarrating=${state.isNarrating}`);
       if (settled) return;
       if (streamEnded) return; // Browser fires pause before ended after endOfStream() — ignore
       if (audio.currentTime === 0 && !state.isPaused) return; // Pre-play buffer-empty stall — ignore
@@ -270,7 +266,6 @@ async function playStreamingFromOpenAI(text, voice, speed, apiKey, cacheKey) {
                 await new Promise(r => sb.addEventListener('updateend', r, { once: true }));
               }
               if (!settled) {
-                console.log(`[TTS:stream] stream done, endOfStream at ${(performance.now() - t0).toFixed(0)}ms`);
                 streamEnded = true;
                 ms.endOfStream();
                 storeInCache(cacheKey, new Blob(collectedChunks, { type: 'audio/mpeg' })).catch(() => {});
@@ -384,7 +379,6 @@ export async function playWithOpenAITTS(text, speedModifier = 0) {
     } else if (pendingFetches.has(key)) {
       // Prefetch already in-flight — await it instead of firing a duplicate request.
       // One API call serves both prefetch and playback.
-      console.log(`[TTS:stream] awaiting in-flight prefetch — "${chunk.slice(0, 40).replace(/\n/g, ' ')}"`);
       const blob = await pendingFetches.get(key);
       if ((!state.isNarrating && !state.ttsIsSpeaking) || state.isPaused) break;
       sessionChars += chunk.length;

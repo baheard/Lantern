@@ -117,13 +117,41 @@ function processRow(row) {
   const outputTxt = (row[COLS.output]   || '').toString().trim();
   const version   = (row[COLS.version]  || '').toString().trim();
 
-  if (!feedback) return true; // empty row — delete silently
+  if (!feedback) return true;           // empty row — delete silently
+  if (isGarbage(feedback)) return true; // noise/accidental submission
+  if (isNearDuplicate(game, device)) {
+    Logger.log('Near-duplicate suppressed: ' + feedback.slice(0, 60));
+    return true;
+  }
 
   const labels  = detectLabels(feedback);
   const title   = buildTitle(feedback, game);
   const body    = buildBody({ timestamp, game, feedback, device, consoleTxt, outputTxt, version });
 
   return createGithubIssue(title, body, labels);
+}
+
+// ── Noise / duplicate guards ──────────────────────────────────────────────────
+
+const NOISE_PHRASES = /^(never\s?mind|cancel|nothing|n\/a|na|ok|okay|hi+|hello|asdf|qwerty|test(ing)?|oops|sorry|quit|exit|back|disregard|ignore|forget\s?it)\s*[.!?]?$/i;
+
+function isGarbage(feedback) {
+  if (feedback.length < 10) return true;
+  if (NOISE_PHRASES.test(feedback)) return true;
+  return false;
+}
+
+/**
+ * Returns true if an issue for the same game+device was already created within
+ * the last 90 seconds — catches rapid re-submissions from the same voice session.
+ * Uses Apps Script's CacheService (in-memory, scoped to the script).
+ */
+function isNearDuplicate(game, device) {
+  const cache = CacheService.getScriptCache();
+  const key = ('dedup:' + game + ':' + device).replace(/[^a-zA-Z0-9:_-]/g, '_');
+  if (cache.get(key)) return true;
+  cache.put(key, '1', 90);
+  return false;
 }
 
 // ── Label detection ───────────────────────────────────────────────────────────
@@ -142,7 +170,7 @@ function detectLabels(text) {
 
 function buildTitle(feedback, game) {
   const prefix = game && game !== 'None' ? `[${game}] ` : '';
-  const short  = feedback.length > 80 ? feedback.slice(0, 77) + '…' : feedback;
+  const short  = feedback.length > 120 ? feedback.slice(0, 117) + '…' : feedback;
   return `Feedback: ${prefix}${short}`;
 }
 

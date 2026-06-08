@@ -284,8 +284,6 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
   startKeepAlive();
 
   const totalChunks = state.narrationChunks.length;
-  const sessionT0 = performance.now();
-  console.log(`[TTS:player] session start — ${totalChunks} chunks from index ${startFromIndex}`);
 
   // Update nav buttons now that chunks are ready
   const { updateNavButtons } = await import('../ui/nav-buttons.js');
@@ -334,7 +332,6 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
 
     // Skip app-voice chunks (command echoes) — they were spoken when generated
     if (voiceType === 'app') {
-      console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} skip (app voice)`);
       continue;
     }
 
@@ -354,10 +351,7 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
       }
     }
 
-    // Mark when this chunk started playing
     state.currentChunkStartTime = Date.now();
-    const chunkT0 = performance.now();
-    console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} start (+${(chunkT0 - sessionT0).toFixed(0)}ms session): "${chunkText.slice(0, 60).replace(/\n/g, ' ')}"`);
 
     if (isOpenAITTSEnabled()) {
       state.ttsIsSpeaking = true;
@@ -385,8 +379,6 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
     } else {
       await playWithBrowserTTS(chunkText, voiceType, speedModifier, pitchModifier);
     }
-
-    console.log(`[TTS:player] chunk ${i}/${totalChunks - 1} done: ${(performance.now() - chunkT0).toFixed(0)}ms, interrupted=${state.chunkWasInterrupted}`);
 
     // No added pauses between chunks (header or otherwise): the TTS engine already
     // produces a natural gap between separate utterances, so a manual delay only
