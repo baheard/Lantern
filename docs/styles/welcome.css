@@ -43,22 +43,12 @@
   font-size: 24px;
 }
 
-.welcome h2 {
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  margin-top: 24px;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.welcome > p {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-style: italic;
-  color: var(--text-muted);
-  line-height: 1.6;
+.welcome-logo {
+  width: min(700px, 100%);
+  height: auto;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  border-radius: 6px;
 }
 
 .game-list {
