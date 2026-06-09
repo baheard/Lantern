@@ -53,7 +53,7 @@ let mapModule = null;
 
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
-import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility } from './utils/lock-screen.js';
+import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility, updateConvModeButton } from './utils/lock-screen.js';
 import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
 import { initPWA } from './utils/pwa-updater.js';
 import { scrollToBottom } from './utils/scroll.js';
@@ -812,6 +812,21 @@ function wireEventListeners() {
           stopPushToTalk(e);
         }
         // In continuous mode, keyup does nothing (toggle happened on keydown)
+      }
+    });
+  }
+
+  // Conversation mode button: one tap starts narration + mic; second tap stops both
+  if (dom.convModeBtn) {
+    dom.convModeBtn.addEventListener('click', async () => {
+      const isConvMode = state.autoplayEnabled && !state.isMuted;
+      if (isConvMode) {
+        pausePlayback();
+        voiceCommandHandlers.mute();
+      } else {
+        if (state.isMuted) await voiceCommandHandlers.unmute();
+        if (!state.autoplayEnabled) await resumePlayback();
+        updateConvModeButton();
       }
     });
   }

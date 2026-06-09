@@ -233,33 +233,52 @@ export function isScreenLocked() {
 }
 
 /**
- * Update lock button visibility
- * - Always visible when screen is locked (for unlocking)
- * - Otherwise, visible on mobile when voice recognition is enabled (regardless of mute state)
+ * Update lock/conv button visibility.
+ * - Screen locked: show lock button (for unlocking), hide conv button.
+ * - Screen unlocked: show conv button (if recognition available on mobile), hide lock button.
  */
 export function updateLockButtonVisibility() {
   if (!lockBtn) return;
+  const convBtn = document.getElementById('convModeBtn');
 
-  // Always show lock button when screen is locked (so user can unlock)
   if (state.isScreenLocked) {
     lockBtn.classList.remove('lock-btn-hidden');
     lockBtn.classList.add('lock-btn-visible');
+    if (convBtn) {
+      convBtn.classList.remove('conv-btn-visible');
+      convBtn.classList.add('conv-btn-hidden');
+    }
     return;
   }
 
-  // When not locked: Show on mobile when voice recognition is enabled AND mic is active (not muted)
+  // Not locked: show conv button when recognition is available; lock button stays hidden.
   const isMobile = window.innerWidth <= 768 ||
                    (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
   const isRecognitionEnabled = state.recognition !== null && state.recognition !== undefined;
-  const isMicActive = !state.isMuted;
 
-  if (isMobile && isRecognitionEnabled && isMicActive) {
-    lockBtn.classList.remove('lock-btn-hidden');
-    lockBtn.classList.add('lock-btn-visible');
-  } else {
-    lockBtn.classList.remove('lock-btn-visible');
-    lockBtn.classList.add('lock-btn-hidden');
+  lockBtn.classList.remove('lock-btn-visible');
+  lockBtn.classList.add('lock-btn-hidden');
+
+  if (convBtn) {
+    if (isMobile && isRecognitionEnabled) {
+      convBtn.classList.remove('conv-btn-hidden');
+      convBtn.classList.add('conv-btn-visible');
+    } else {
+      convBtn.classList.remove('conv-btn-visible');
+      convBtn.classList.add('conv-btn-hidden');
+    }
   }
+}
+
+/**
+ * Update conv mode button active highlight.
+ * Active = narration playing + mic on.
+ */
+export function updateConvModeButton() {
+  const convBtn = document.getElementById('convModeBtn');
+  if (!convBtn) return;
+  const isConvMode = state.autoplayEnabled && !state.isMuted;
+  convBtn.classList.toggle('conv-mode-active', isConvMode);
 }
 
 /**

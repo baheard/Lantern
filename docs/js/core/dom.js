@@ -70,6 +70,7 @@ export function initDOM() {
   // Status and controls
   dom.status = document.getElementById('status');
   dom.muteBtn = document.getElementById('muteBtn');
+  dom.convModeBtn = document.getElementById('convModeBtn');
   dom.pausePlayBtn = document.getElementById('pausePlayBtn');
 
   // Voice settings

@@ -16,7 +16,7 @@ import { updateNavButtons } from '../ui/nav-buttons.js';
 import { quickSave, quickLoad } from '../game/save-manager.js';
 import { startVoiceMeter, stopVoiceMeter } from './voice-meter.js';
 import { playMuteTone, playUnmuteTone } from '../utils/audio-feedback.js';
-import { updateLockScreenMicStatus, updateLockButtonVisibility } from '../utils/lock-screen.js';
+import { updateLockScreenMicStatus, updateLockButtonVisibility, updateConvModeButton } from '../utils/lock-screen.js';
 import { updateVoiceTranscript } from '../input/keyboard/voice-ui.js';
 import { sendCommandDirect } from '../game/commands/index.js';
 
@@ -29,6 +29,7 @@ export function pausePlayback() {
   stopNarration(true);  // Preserve highlight when pausing
   updateStatus('Autoplay off');
   updateNavButtons();
+  updateConvModeButton();
 }
 
 export async function resumePlayback() {
@@ -58,6 +59,7 @@ export async function resumePlayback() {
 
   updateStatus('Autoplay on');
   updateNavButtons();
+  updateConvModeButton();
 }
 
 export const voiceCommandHandlers = {
@@ -202,6 +204,7 @@ export const voiceCommandHandlers = {
     updateNavButtons();
     updateLockScreenMicStatus();
     updateLockButtonVisibility();
+    updateConvModeButton();
 
     if (dom.userInput) dom.userInput.placeholder = 'Say command...';
 
@@ -226,6 +229,7 @@ export const voiceCommandHandlers = {
         updateNavButtons();
         updateLockScreenMicStatus();
         updateLockButtonVisibility();
+        updateConvModeButton();
 
         if (dom.userInput) dom.userInput.placeholder = 'Type a command...';
       }
@@ -252,6 +256,7 @@ export const voiceCommandHandlers = {
     updateNavButtons();
     updateLockScreenMicStatus();
     updateLockButtonVisibility();
+    updateConvModeButton();
 
     if (dom.userInput) dom.userInput.placeholder = 'Type a command...';
 

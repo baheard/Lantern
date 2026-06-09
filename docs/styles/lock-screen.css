@@ -221,13 +221,55 @@
   display: none;
 }
 
+/* Shared slot for conv mode + lock buttons — one visible at a time, same space */
+.btn-conv-lock-slot {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  display: none; /* mobile-only */
+}
+
+.btn-conv-lock-slot button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Conv mode button visibility */
+#convModeBtn.conv-btn-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#convModeBtn.conv-btn-visible {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Active state: both narration and mic are on */
+#convModeBtn.conv-mode-active {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
 @media screen and (max-width: 768px),
        screen and (hover: none) and (pointer: coarse) {
   .mobile-only-control {
     display: flex;
   }
 
-  /* Lock button visibility control (keeps in layout, uses visibility) */
+  .btn-conv-lock-slot {
+    display: flex;
+  }
+
+  /* Lock button visibility control */
   #lockBtn.lock-btn-hidden {
     visibility: hidden;
     opacity: 0;
@@ -240,10 +282,5 @@
     opacity: 1;
     pointer-events: all;
     transition: opacity 0.2s ease, visibility 0.2s ease;
-  }
-
-  /* Ensure lock button stays in flex layout even when hidden */
-  #lockBtn {
-    display: flex !important;
   }
 }
