@@ -99,7 +99,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.498
+**Current Version:** v1.5.499
 
 ## Third-Party Libraries
 

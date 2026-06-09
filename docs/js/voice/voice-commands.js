@@ -43,6 +43,8 @@ export const PRONUNCIATION_DICT = {
   'breath': 'brief',
   'breathe': 'brief',
   'town': 'down',
+  'cell': 'south',
+  'safe': 'save',
 };
 
 /** Direction words that interrupt narration and execute immediately (#84). */
