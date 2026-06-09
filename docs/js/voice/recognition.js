@@ -12,7 +12,7 @@ import { isEchoOfSpokenText } from './echo-detection.js';
 import { updateVoiceTranscript } from '../input/keyboard/index.js';
 import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand, LOW_CONFIDENCE_THRESHOLD } from '../utils/audio-feedback.js';
 import { scrollToBottom } from '../utils/scroll.js';
-import { PRONUNCIATION_DICT, NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN } from './voice-commands.js';
+import { PRONUNCIATION_DICT, NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN, DIRECTION_COMMANDS } from './voice-commands.js';
 
 // Stored at module scope so dispatchPTTFallback can reach it from outside initVoiceRecognition
 let _processVoiceKeywords = null;
@@ -50,7 +50,8 @@ export async function dispatchPTTFallback() {
 const INSTANT_NO_WAIT = [
   'stop',
   'repeat',
-  'freeze', 'unfreeze'
+  'freeze', 'unfreeze',
+  'up', 'down', 'u', 'd',  // no compound forms — fire immediately
 ];
 
 /**
@@ -63,9 +64,9 @@ const INSTANT_COMMANDS = [
   'skip', 'end',  // "back" moved to patterns, "stop" and "repeat" moved to no-wait list
   'mute',
   'status',
-  // Directions
-  'north', 'south', 'east', 'west', 'up', 'down',
-  'n', 's', 'e', 'w', 'u', 'd',
+  // Directions (up/down/u/d moved to INSTANT_NO_WAIT — no compound forms)
+  'north', 'south', 'east', 'west',
+  'n', 's', 'e', 'w',
   'northeast', 'northwest', 'southeast', 'southwest',
   'ne', 'nw', 'se', 'sw',
   'out',  // 'in' removed - conflicts with "inventory"
@@ -506,7 +507,9 @@ export function initVoiceRecognition(processVoiceKeywords) {
         const capturedTranscript = interimTranscript;
 
         // Determine delay: use longer delay for extendable directions (south -> southwest, etc.)
-        const isExtendableDirection = EXTENDABLE_DIRECTIONS.includes(interimLower);
+        // Also applies to "go north/south/east/west" which can extend to "go northwest" etc.
+        const isExtendableDirection = EXTENDABLE_DIRECTIONS.includes(interimLower) ||
+            /^go\s+(?:north|south|east|west|n|s|e|w)$/i.test(interimLower);
         const delay = isExtendableDirection ? INTERIM_WAIT_DIRECTION_MS : INTERIM_WAIT_MS;
 
         // Start new timeout to wait for potential continuation
@@ -616,13 +619,15 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
       // Check for echo (but skip for navigation commands - they should always work)
       try {
-        // Check if this is a navigation command first
+        // Check if this is a navigation or direction command first
         const finalLower = finalTranscript.toLowerCase().trim();
         const isNavigationCommand = NAVIGATION_COMMANDS.includes(finalLower) ||
+                                     DIRECTION_COMMANDS.has(finalLower) ||
+                                     /^go\s+(?:north|south|east|west|up|down|out|ne|nw|se|sw|northeast|northwest|southeast|southwest|n|s|e|w|u|d)$/i.test(finalLower) ||
                                      SKIP_N_PATTERN.test(finalLower) ||
                                      BACK_N_PATTERN.test(finalLower);
 
-        // Only check for echo if NOT a navigation command
+        // Only check for echo if NOT a navigation/direction command
         if (!isNavigationCommand && isEchoOfSpokenText(finalTranscript)) {
           // Echo detected: play BUZZ (blocked) and show as blocked
           playBlockedCommand();

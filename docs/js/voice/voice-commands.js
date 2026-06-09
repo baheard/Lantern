@@ -194,8 +194,9 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
       return transcript;
     }
 
-    // Directions interrupt narration immediately then execute (#84)
-    if (DIRECTION_COMMANDS.has(lower)) {
+    // Directions (and "go <direction>") interrupt narration immediately then execute (#84, #130)
+    if (DIRECTION_COMMANDS.has(lower) ||
+        /^go\s+(?:north|south|east|west|up|down|out|ne|nw|se|sw|northeast|northwest|southeast|southwest|n|s|e|w|u|d)$/i.test(lower)) {
       const { stopNarration } = await import('../narration/tts-player.js');
       stopNarration();
       return transcript;
