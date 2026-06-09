@@ -51,19 +51,12 @@ function initServiceWorker() {
         // Check for updates every 30s while the page is open.
         setInterval(() => registration.update(), 30000);
 
-        // Silently activate a freshly-installed worker. Network-first asset serving means
-        // the page is already running fresh code, so there's nothing to prompt or reload —
-        // we just let the new worker take over (it deletes superseded version caches and
-        // finishes precaching for offline use). No controllerchange→reload: a forced reload
-        // would be redundant and disruptive.
         const activate = (worker) => { if (worker) worker.postMessage({ type: 'SKIP_WAITING' }); };
 
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (!newWorker) return;
           newWorker.addEventListener('statechange', () => {
-            // Only when there's already a controller (i.e. this is an update, not the very
-            // first install) — a first install activates and claims on its own.
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               activate(newWorker);
             }
@@ -72,6 +65,11 @@ function initServiceWorker() {
 
         // Worker that finished installing while the page was loading.
         if (registration.waiting) activate(registration.waiting);
+
+        // Reload when the new SW takes control so the page runs fresh code.
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        });
       })
       .catch(error => {
         console.error('[PWA] Service worker registration failed:', error);
@@ -117,12 +115,30 @@ function initUpdateButton() {
           alert('Service worker not registered.\n\nPlease reload the app and try again.');
           return;
         }
-        await registration.update();
+
+        // If a worker is already waiting, activate it now.
         if (registration.waiting) {
-          const newVersion = await getLatestCacheVersion() || 'latest';
-          alert(`Update found!\n\nUpdating to version ${newVersion}.\n\nThe page will reload now.`);
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          setTimeout(() => window.location.reload(), 500);
+          return; // controllerchange listener will reload
+        }
+
+        // Kick off a fresh update check, then wait up to 15s for a new worker to install.
+        await registration.update();
+        const newWorker = await new Promise((resolve) => {
+          if (registration.waiting) { resolve(registration.waiting); return; }
+          const timer = setTimeout(() => resolve(null), 15000);
+          registration.addEventListener('updatefound', () => {
+            const w = registration.installing;
+            if (!w) return;
+            w.addEventListener('statechange', () => {
+              if (w.state === 'installed') { clearTimeout(timer); resolve(w); }
+            });
+          }, { once: true });
+        });
+
+        if (newWorker) {
+          newWorker.postMessage({ type: 'SKIP_WAITING' });
+          // controllerchange listener will reload
         } else {
           alert(`No updates found.\n\nYou're already on the latest version (${APP_CONFIG.version}).`);
         }
