@@ -91,6 +91,13 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
     return await handleDeleteResponse(saveName, allSaves);
   }
 
+  const feedbackMatch = originalCmd.match(/^feedback\s+(.+)$/i);
+  if (feedbackMatch) {
+    const message = feedbackMatch[1].trim();
+    playAppCommand();
+    return await handleFeedbackResponse(message);
+  }
+
   // Match "skip N" or "skip forward N"
   const skipNMatch = cmd.match(/^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i);
   if (skipNMatch) {
@@ -365,6 +372,11 @@ async function handleDeleteResponse(saveName, saves) {
   // Simulate entering delete mode and immediately providing the name
   setAwaitingMetaInput('delete');
   return await handleMetaResponse(saveName);
+}
+
+async function handleFeedbackResponse(message) {
+  setAwaitingMetaInput('feedback');
+  return await handleMetaResponse(message);
 }
 
 /**

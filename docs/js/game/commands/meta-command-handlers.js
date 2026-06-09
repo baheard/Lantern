@@ -99,7 +99,7 @@ export async function handleDeleteCommand() {
  * Handle FEEDBACK command
  */
 export async function handleFeedbackCommand() {
-  respondAsGame('<div class="system-message"><b>What feedback would you like to leave?</b></div>');
+  respondAsGame('<div class="system-message"><b>Listening for feedback — say or type your message, or say "cancel".</b></div>');
   awaitingMetaInput = 'feedback';
   enterSystemEntryMode('Enter your feedback');
   return true;
