@@ -158,7 +158,9 @@ export async function handleMetaResponse(input) {
   const mode = awaitingMetaInput;
   awaitingMetaInput = null; // Reset state
 
-  if (!input || input.trim() === '') {
+  const trimmedLower = input?.trim().toLowerCase() ?? '';
+  const isCancelPhrase = trimmedLower === 'cancel' || trimmedLower === 'never mind' || trimmedLower === 'nevermind';
+  if (!input || trimmedLower === '' || isCancelPhrase) {
     // User cancelled - exit system entry mode
     exitSystemEntryMode();
 
