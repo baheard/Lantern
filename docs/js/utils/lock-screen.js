@@ -235,7 +235,7 @@ export function isScreenLocked() {
 /**
  * Update lock/conv button visibility.
  * - Screen locked: show lock button (for unlocking), hide conv button.
- * - Screen unlocked: show conv button (if recognition available on mobile), hide lock button.
+ * - Screen unlocked: show conv button (if recognition available), hide lock button.
  */
 export function updateLockButtonVisibility() {
   if (!lockBtn) return;
@@ -252,15 +252,13 @@ export function updateLockButtonVisibility() {
   }
 
   // Not locked: show conv button when recognition is available; lock button stays hidden.
-  const isMobile = window.innerWidth <= 768 ||
-                   (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
   const isRecognitionEnabled = state.recognition !== null && state.recognition !== undefined;
 
   lockBtn.classList.remove('lock-btn-visible');
   lockBtn.classList.add('lock-btn-hidden');
 
   if (convBtn) {
-    if (isMobile && isRecognitionEnabled) {
+    if (isRecognitionEnabled) {
       convBtn.classList.remove('conv-btn-hidden');
       convBtn.classList.add('conv-btn-visible');
     } else {

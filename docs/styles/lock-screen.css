@@ -227,7 +227,7 @@
   width: 45px;
   height: 45px;
   flex-shrink: 0;
-  display: none; /* mobile-only */
+  display: flex;
 }
 
 .btn-conv-lock-slot button {
@@ -262,10 +262,6 @@
 @media screen and (max-width: 768px),
        screen and (hover: none) and (pointer: coarse) {
   .mobile-only-control {
-    display: flex;
-  }
-
-  .btn-conv-lock-slot {
     display: flex;
   }
 
