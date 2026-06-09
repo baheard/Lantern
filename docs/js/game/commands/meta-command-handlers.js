@@ -18,10 +18,11 @@ function normalizeInput(input) {
 }
 
 // State tracking for interactive meta-commands
-let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', 'save-confirm', or null
+let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', 'save-confirm', 'feedback', 'feedback-confirm', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
 let gameDialogRef = null; // File reference for in-game dialogs
 let pendingSaveTarget = null; // Save name pending confirmation when overwriting by slot
+let pendingFeedbackText = null; // Feedback text pending read-back confirmation
 
 /**
  * Handle SAVE command
@@ -237,6 +238,21 @@ export async function handleMetaResponse(input) {
     case 'feedback':
       return await handleFeedbackResponse(input.trim());
 
+    case 'feedback-confirm': {
+      const feedbackText = pendingFeedbackText;
+      pendingFeedbackText = null;
+      const yes = ['yes', 'y', 'send', 'confirm', 'ok'].includes(normalizedInput.toLowerCase());
+      if (!yes) {
+        respondAsGame('<div class="system-message"><i>Cancelled.</i></div>');
+        return true;
+      }
+      const { submitFeedback } = await import('../../features/feedback.js');
+      const gameName = state.currentGameName || 'None';
+      await submitFeedback(feedbackText, gameName);
+      respondAsGame('<div class="system-message">Thanks for your feedback!</div>');
+      return true;
+    }
+
     default:
       return false;
   }
@@ -421,13 +437,18 @@ async function handleRepairResponse(input) {
 }
 
 /**
- * Handle feedback text submission (voice/typed command path)
+ * Handle feedback text — read it back via TTS and ask for confirmation before submitting.
  */
 async function handleFeedbackResponse(notes) {
-  const { submitFeedback } = await import('../../features/feedback.js');
-  const gameName = state.currentGameName || 'None';
-  await submitFeedback(notes, gameName);
-  respondAsGame('<div class="system-message">Thanks for your feedback!</div>');
+  pendingFeedbackText = notes;
+  awaitingMetaInput = 'feedback-confirm';
+
+  respondAsGame(`<div class="system-message">Your feedback: "<b>${notes}</b>"<br>Send it? (yes / cancel)</div>`);
+  enterSystemEntryMode('yes or cancel');
+
+  const { speakAppMessage } = await import('../../narration/tts-player.js');
+  speakAppMessage(`Your feedback: ${notes}. Send it?`);
+
   return true;
 }
 
