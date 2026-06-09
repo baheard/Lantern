@@ -277,6 +277,8 @@ export function updateConvModeButton() {
   if (!convBtn) return;
   const isConvMode = state.autoplayEnabled && !state.isMuted;
   convBtn.classList.toggle('conv-mode-active', isConvMode);
+  const icon = convBtn.querySelector('.material-icons');
+  if (icon) icon.textContent = isConvMode ? 'lock' : 'record_voice_over';
 }
 
 /**

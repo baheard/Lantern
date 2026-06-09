@@ -252,31 +252,31 @@
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* Active state: both narration and mic are on */
+/* Active state: icon swaps to lock in JS; warm accent matches locked-screen lock button */
 #convModeBtn.conv-mode-active {
-  background: rgba(45, 212, 191, 0.15);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+  background: rgba(196, 163, 90, 0.2);
+  border-color: var(--accent-warm);
+  color: var(--accent-warm);
+}
+
+/* Lock button visibility control (applies on all screen sizes) */
+#lockBtn.lock-btn-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#lockBtn.lock-btn-visible {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 @media screen and (max-width: 768px),
        screen and (hover: none) and (pointer: coarse) {
   .mobile-only-control {
     display: flex;
-  }
-
-  /* Lock button visibility control */
-  #lockBtn.lock-btn-hidden {
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-  }
-
-  #lockBtn.lock-btn-visible {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: all;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
   }
 }
