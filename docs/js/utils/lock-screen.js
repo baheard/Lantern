@@ -234,51 +234,52 @@ export function isScreenLocked() {
 
 /**
  * Update lock/conv button visibility.
- * - Screen locked: show lock button (for unlocking), hide conv button.
- * - Screen unlocked: show conv button (if recognition available), hide lock button.
+ * Desktop: conv button always visible, lock button never.
+ * Mobile: lock button when mic active or screen locked; conv button otherwise.
  */
 export function updateLockButtonVisibility() {
   if (!lockBtn) return;
   const convBtn = document.getElementById('convModeBtn');
 
-  if (state.isScreenLocked) {
-    lockBtn.classList.remove('lock-btn-hidden');
-    lockBtn.classList.add('lock-btn-visible');
-    if (convBtn) {
-      convBtn.classList.remove('conv-btn-visible');
-      convBtn.classList.add('conv-btn-hidden');
-    }
+  const isMobile = window.innerWidth <= 768 ||
+                   (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+  const isRecognitionEnabled = state.recognition !== null && state.recognition !== undefined;
+
+  const showLock = (on) => {
+    lockBtn.classList.toggle('lock-btn-hidden', !on);
+    lockBtn.classList.toggle('lock-btn-visible', on);
+  };
+  const showConv = (on) => {
+    if (!convBtn) return;
+    convBtn.classList.toggle('conv-btn-hidden', !on);
+    convBtn.classList.toggle('conv-btn-visible', on);
+  };
+
+  if (!isRecognitionEnabled) {
+    showLock(false);
+    showConv(false);
     return;
   }
 
-  // Not locked: show conv button when recognition is available; lock button stays hidden.
-  const isRecognitionEnabled = state.recognition !== null && state.recognition !== undefined;
-
-  lockBtn.classList.remove('lock-btn-visible');
-  lockBtn.classList.add('lock-btn-hidden');
-
-  if (convBtn) {
-    if (isRecognitionEnabled) {
-      convBtn.classList.remove('conv-btn-hidden');
-      convBtn.classList.add('conv-btn-visible');
-    } else {
-      convBtn.classList.remove('conv-btn-visible');
-      convBtn.classList.add('conv-btn-hidden');
-    }
+  if (isMobile) {
+    const wantLock = state.isScreenLocked || !state.isMuted;
+    showLock(wantLock);
+    showConv(!wantLock);
+  } else {
+    // Desktop: conv button only
+    showLock(false);
+    showConv(true);
   }
 }
 
 /**
- * Update conv mode button active highlight.
- * Active = narration playing + mic on.
+ * Update conv mode button active highlight (desktop only — on mobile the lock button takes over).
  */
 export function updateConvModeButton() {
   const convBtn = document.getElementById('convModeBtn');
   if (!convBtn) return;
   const isConvMode = state.autoplayEnabled && !state.isMuted;
   convBtn.classList.toggle('conv-mode-active', isConvMode);
-  const icon = convBtn.querySelector('.material-icons');
-  if (icon) icon.textContent = isConvMode ? 'lock' : 'record_voice_over';
 }
 
 /**

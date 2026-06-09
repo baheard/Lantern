@@ -252,11 +252,11 @@
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* Active state: icon swaps to lock in JS; warm accent matches locked-screen lock button */
+/* Active state: narration + mic both on (desktop visual feedback) */
 #convModeBtn.conv-mode-active {
-  background: rgba(196, 163, 90, 0.2);
-  border-color: var(--accent-warm);
-  color: var(--accent-warm);
+  background: rgba(45, 212, 191, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 /* Lock button visibility control (applies on all screen sizes) */
