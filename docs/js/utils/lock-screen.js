@@ -236,6 +236,8 @@ export function isScreenLocked() {
  * Update lock/conv button visibility.
  * Desktop: conv button always visible, lock button never.
  * Mobile: lock button when mic active or screen locked; conv button otherwise.
+ * In push-to-talk mode, "mic active" is momentary (only while held), so it
+ * must not drive lock-button visibility — only an actual screen lock should.
  */
 export function updateLockButtonVisibility() {
   if (!lockBtn) return;
@@ -262,7 +264,8 @@ export function updateLockButtonVisibility() {
   }
 
   if (isMobile) {
-    const wantLock = state.isScreenLocked || !state.isMuted;
+    const micActive = !state.isMuted && !state.pushToTalkMode;
+    const wantLock = state.isScreenLocked || micActive;
     showLock(wantLock);
     showConv(!wantLock);
   } else {

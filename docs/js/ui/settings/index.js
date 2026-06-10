@@ -8,6 +8,7 @@
 import { initSettings } from './settings-panel.js';
 import { initVoiceSelection } from './voice-selection.js';
 import { initPronunciationUI } from './pronunciation-ui.js';
+import { initSttSubstitutionsUI } from './stt-substitutions-ui.js';
 import { initDataManagementUI } from './data-management-ui.js';
 import { initGDriveUI } from './gdrive-ui.js';
 import { initSyncPreview } from '../sync-preview-modal.js';
@@ -36,6 +37,11 @@ export {
   initPronunciationUI
 } from './pronunciation-ui.js';
 
+// STT Substitutions UI
+export {
+  initSttSubstitutionsUI
+} from './stt-substitutions-ui.js';
+
 // Data Management UI
 export {
   initDataManagementUI
@@ -54,6 +60,7 @@ export function initAllSettings() {
   initSettings();
   initVoiceSelection();
   initPronunciationUI();
+  initSttSubstitutionsUI();
   initDataManagementUI();
   initGDriveUI();
   initSyncPreview();

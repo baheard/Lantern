@@ -291,6 +291,15 @@ export function clearAllAppData() {
     totalRemoved += keys.length;
   });
 
+  // Reset narrator pronunciation and STT substitution dictionaries to defaults
+  // (stored under unprefixed keys, not covered by the prefixes above)
+  ['pronunciationMap', 'sttSubstitutionsAdded', 'sttSubstitutionsDeleted'].forEach(key => {
+    if (hasItem(key)) {
+      removeItem(key);
+      totalRemoved++;
+    }
+  });
+
   return totalRemoved;
 }
 

@@ -295,6 +295,25 @@
               </div>
             </div>
           </div>
+
+          <!-- STT Substitutions -->
+          <div class="settings-section collapsible collapsed" id="sttSubstitutionsSection">
+            <h4 class="section-header">Voice Recognition Substitutions</h4>
+            <div class="section-content">
+              <p class="setting-description">Fix single words the microphone often mishears (e.g., "wet" → "west")</p>
+              <div id="sttSubstitutionsList" class="pronunciation-list"></div>
+              <div class="add-pronunciation">
+                <input type="text" id="newSttHeard" placeholder="Heard as (e.g., wet)" class="pronunciation-input">
+                <input type="text" id="newSttCommand" placeholder="Use instead (e.g., west)" class="pronunciation-input">
+                <button id="addSttSubstitutionBtn" class="btn-small btn-primary">
+                  <span class="material-icons">add</span> Add
+                </button>
+              </div>
+              <button id="resetSttSubstitutionsBtn" class="compact-btn" style="margin-top:8px;">
+                <span class="material-icons">restore</span> Reset to Defaults
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       

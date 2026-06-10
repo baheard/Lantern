@@ -44,7 +44,10 @@ export const dom = {
   addPronunciationBtn: null,
   pronunciationList: null,
   pronounceWordInput: null,
-  pronounceAsInput: null
+  pronounceAsInput: null,
+  addSttSubstitutionBtn: null,
+  sttSubstitutionsList: null,
+  resetSttSubstitutionsBtn: null
 };
 
 /**
@@ -92,6 +95,9 @@ export function initDOM() {
   dom.pronunciationList = document.getElementById('pronunciationList');
   dom.pronounceWordInput = document.getElementById('newWord');
   dom.pronounceAsInput = document.getElementById('newPronunciation');
+  dom.addSttSubstitutionBtn = document.getElementById('addSttSubstitutionBtn');
+  dom.sttSubstitutionsList = document.getElementById('sttSubstitutionsList');
+  dom.resetSttSubstitutionsBtn = document.getElementById('resetSttSubstitutionsBtn');
 
   // Validate critical elements exist
   validateDOM();

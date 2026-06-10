@@ -1,45 +1,82 @@
 ---
 title: Service Worker Update Model
-tags: [pwa, service-worker, update, cache, design]
+tags: [pwa, service-worker, update, cache, design, ios, alert]
 created: 2026-06-04
-updated: 2026-06-04
-aliases: [sw-update, pwa-update, silent-activate]
+updated: 2026-06-09
+aliases: [sw-update, pwa-update, silent-activate, controllerchange, check-for-updates]
 ---
 
-# Service Worker Update Model (v1.5.476+)
+# Service Worker Update Model (v1.5.510+)
 
 ## The key insight
 
-Freshness is governed by the **fetch strategy**, not SW activation. The SW serves JS/CSS with **network-first + 1.5s timeout** (`cache: 'no-cache'`), so a normal page reload already gets fresh code — even while an older worker controls the page. This makes the traditional "update available → reload" toast redundant.
+Freshness is governed by **both** the fetch strategy and SW activation. The SW serves
+JS/CSS with **network-first + 1.5s timeout** (`cache: 'no-cache'`), so a reload after a
+new SW takes control gets fresh code. But the page's already-loaded JS modules (ES
+modules) don't re-fetch themselves — only a reload does that. So a `controllerchange →
+reload` is needed for the running page to pick up new code, not just future reloads.
 
-## What the old model did (removed v1.5.476)
+v1.5.476 removed the reload (see "What v1.5.476 did" below) on the theory that "the next
+natural reload picks up everything" — but that left the OLD pwa-updater.js permanently
+running in memory until the user closed/reopened the app, including on iOS PWAs that may
+stay backgrounded/alive for a long time. v1.5.510 restored `controllerchange → reload`.
+
+## What v1.5.476 did (superseded by v1.5.510)
 
 1. New SW installed → `waiting` state
-2. `showUpdateNotification()` → "Update available, reloading in 5s…" toast
-3. User confirms (or auto-timeout) → `SKIP_WAITING` message → `controllerchange` event → `window.location.reload()`
+2. `activate(worker)` → `SKIP_WAITING` immediately, silently
+3. New worker activates: deletes superseded version caches, finishes precaching for offline
+4. Next natural reload picks up everything — no toast, no forced reload, no `controllerchange → reload`
 
-Problems: disruptive mid-session, redundant (page already has fresh code), caused double-reload noise.
+**First-install guard** (still true): only auto-activate when `navigator.serviceWorker.controller`
+is already set (i.e. this is an update, not the very first install). First install
+activates and claims on its own via `clients.claim()` in the SW.
 
-## What the new model does
+## Current model (v1.5.510+)
 
-1. New SW installed → `waiting` state  
-2. `activate(worker)` → `SKIP_WAITING` immediately, silently  
-3. New worker activates: deletes superseded version caches, finishes precaching for offline  
-4. Next natural reload picks up everything
-
-No toast. No forced reload. No `controllerchange → reload`.
-
-**First-install guard:** only auto-activate when `navigator.serviceWorker.controller` is already set (i.e. this is an update, not the very first install). First install activates and claims on its own via `clients.claim()` in the SW.
+1. New SW installed → `waiting` state
+2. `activate(worker)` → `SKIP_WAITING` immediately, silently
+3. New worker activates (`clients.claim()`) → fires `controllerchange` on
+   `navigator.serviceWorker`
+4. `pwa-updater.js`'s `controllerchange` listener calls `window.location.reload()` —
+   the page picks up fresh code immediately, not "next time"
 
 ## Manual "Check for updates" button
 
-Still does a forced reload — that's an explicit user action, so a reload there is expected and fine.
+As of v1.5.515, instead of `registration.update()`, the button calls
+`navigator.serviceWorker.register('./service-worker.js?v=' + Date.now())` — a
+never-before-used URL, guaranteed to bypass any HTTP cache. `registration.update()`'s
+SW-script fetch can be served from iOS's HTTP cache, reporting "no update" even when the
+server has a newer version; the fresh-URL re-register forces a real network fetch every
+time. Re-registering with a different scriptURL for the same scope updates the existing
+registration (doesn't create a duplicate) — the browser still compares script BYTES to
+decide whether to install a new worker.
+
+Then it waits up to 15s for `updatefound` → `installed`, then sends `SKIP_WAITING`. As
+of v1.5.512, after sending `SKIP_WAITING` it also sets a 3s fallback
+`setTimeout(() => location.reload())` in case `controllerchange` doesn't fire (seen as a
+possibility on some iOS WebKit versions) — belt-and-suspenders so the explicit user
+action always results in either a reload or a dialog.
+
+## Gotcha: alert()/confirm() are no-ops in iOS standalone PWAs
+
+**Found/fixed v1.5.512.** The "Check for Updates" button used raw `alert()` for every
+outcome, including the correct "you're already up to date" case. On an installed iOS
+home-screen PWA, `alert()`/`confirm()`/`prompt()` are silently swallowed — no dialog, no
+error. So the button looked completely broken/unresponsive even when it was working
+exactly as designed and correctly reporting "no update found" (because 1.5.510 — the
+version the user was already on — was in fact the latest deployed version at the time).
+Fixed by switching to `confirmDialog()` (see [[ui-conventions]]). This is a general
+convention now, not just a PWA-updater fix — see ui-conventions.md.
 
 ## Forward-looking limitation
 
-This model only applies once a v476+ SW *controls* the page. Users on an older SW get one update cycle (old model or natural expiry) before landing on the new behavior. No action needed — it's self-resolving.
+Users on a pre-v1.5.510 SW get one update cycle (old silent-activate model, no reload)
+before landing on the new controllerchange→reload behavior. Self-resolving once they
+relaunch/reload once.
 
 ## Files
 
-- `docs/js/utils/pwa-updater.js` — SW registration + silent activate logic
+- `docs/js/utils/pwa-updater.js` — SW registration, controllerchange→reload, Check for Updates button
 - `docs/service-worker.js` — `networkFirstWithTimeout` fetch handler for JS/CSS (commit bb39947)
+- `docs/js/ui/confirm-dialog.js` — `confirmDialog()`, the alert()/confirm() replacement

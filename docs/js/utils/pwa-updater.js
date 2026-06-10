@@ -4,39 +4,15 @@
  * Service worker registration, silent background updates, install prompt handling,
  * and standalone/iOS detection. Extracted from app.js — see code-review Tier 2 Batch 1.
  *
- * Update model (v1.5.476+): the SW serves JS/CSS network-first, so the running page
- * already loads fresh code on a normal reload. A newly-installed worker is therefore
- * activated SILENTLY — no "update available" toast, no forced reload. Activation just
- * lets the new worker clean up old version caches and re-precache for offline; the next
- * natural reload picks up everything. See tome `service-worker-update-model`.
+ * Update model (v1.5.510+): the SW serves JS/CSS network-first, and a newly-installed
+ * worker is activated as soon as it's ready (SKIP_WAITING). When it takes control,
+ * `controllerchange` fires and the page reloads to run the fresh code. See tome
+ * `service-worker-update-model`.
  */
 
 import { APP_CONFIG } from '../config.js';
 
 let deferredPwaPrompt = null;
-
-// Read the latest IFTalk core cache version from the SW cache list.
-// Used by the manual "Check for updates" button to report the installed version.
-async function getLatestCacheVersion() {
-  try {
-    const cacheNames = await caches.keys();
-    const versions = cacheNames
-      .filter(name => name.startsWith('iftalk-core-v'))
-      .map(name => name.replace('iftalk-core-v', ''))
-      .sort((a, b) => {
-        const aParts = a.split('.').map(Number);
-        const bParts = b.split('.').map(Number);
-        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-          const diff = (bParts[i] || 0) - (aParts[i] || 0);
-          if (diff !== 0) return diff;
-        }
-        return 0;
-      });
-    return versions[0] ? `v${versions[0]}` : null;
-  } catch (err) {
-    return null;
-  }
-}
 
 function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
@@ -68,6 +44,7 @@ function initServiceWorker() {
 
         // Reload when the new SW takes control so the page runs fresh code.
         navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[PWA] controllerchange — reloading');
           window.location.reload();
         });
       })
@@ -101,34 +78,49 @@ function initInstallPrompt() {
 function initUpdateButton() {
   // Manual "Check for updates" button in settings. This is an explicit user action, so a
   // confirming reload here is expected (unlike the automatic path, which stays silent).
+  //
+  // Uses confirmDialog instead of alert() — alert()/confirm() are silently swallowed in
+  // iOS standalone (home-screen) PWAs, which made this button appear completely
+  // unresponsive even when it ran successfully (e.g. the "no updates found" case).
   window.addEventListener('load', () => {
     const updatePwaBtn = document.getElementById('updatePwaBtn');
     if (!updatePwaBtn) return;
     updatePwaBtn.addEventListener('click', async () => {
+      const { confirmDialog } = await import('../ui/confirm-dialog.js');
+      const notify = (message, title) => confirmDialog(message, { title, okOnly: true });
+
       if (!('serviceWorker' in navigator)) {
-        alert('Service worker not supported.\n\nYour browser may not support offline features.');
+        await notify('Service worker not supported.\n\nYour browser may not support offline features.', 'Update Check');
         return;
       }
       try {
         const registration = await navigator.serviceWorker.getRegistration();
         if (!registration) {
-          alert('Service worker not registered.\n\nPlease reload the app and try again.');
+          await notify('Service worker not registered.\n\nPlease reload the app and try again.', 'Update Check');
           return;
         }
 
         // If a worker is already waiting, activate it now.
         if (registration.waiting) {
+          console.log('[PWA] Check for updates: worker already waiting, activating');
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          return; // controllerchange listener will reload
+          // controllerchange listener will reload; fall back to a manual reload in
+          // case controllerchange doesn't fire (seen on some iOS WebKit versions).
+          setTimeout(() => window.location.reload(), 3000);
+          return;
         }
 
-        // Kick off a fresh update check, then wait up to 15s for a new worker to install.
-        await registration.update();
+        // Force a real network fetch of the SW script with a never-before-used URL.
+        // registration.update() can be served from iOS's HTTP cache for the SW script,
+        // reporting "no update" even when the server has a newer version — a fresh
+        // ?v= query string has never been cached, so this always hits the network.
+        console.log('[PWA] Check for updates: forcing fresh registration check');
+        const freshRegistration = await navigator.serviceWorker.register(`./service-worker.js?v=${Date.now()}`);
         const newWorker = await new Promise((resolve) => {
-          if (registration.waiting) { resolve(registration.waiting); return; }
+          if (freshRegistration.waiting) { resolve(freshRegistration.waiting); return; }
           const timer = setTimeout(() => resolve(null), 15000);
-          registration.addEventListener('updatefound', () => {
-            const w = registration.installing;
+          freshRegistration.addEventListener('updatefound', () => {
+            const w = freshRegistration.installing;
             if (!w) return;
             w.addEventListener('statechange', () => {
               if (w.state === 'installed') { clearTimeout(timer); resolve(w); }
@@ -137,14 +129,18 @@ function initUpdateButton() {
         });
 
         if (newWorker) {
+          console.log('[PWA] Check for updates: new worker installed, activating');
           newWorker.postMessage({ type: 'SKIP_WAITING' });
-          // controllerchange listener will reload
+          // controllerchange listener will reload; fall back to a manual reload in
+          // case controllerchange doesn't fire (seen on some iOS WebKit versions).
+          setTimeout(() => window.location.reload(), 3000);
         } else {
-          alert(`No updates found.\n\nYou're already on the latest version (${APP_CONFIG.version}).`);
+          console.log('[PWA] Check for updates: no update found');
+          await notify(`No updates found.\n\nYou're already on the latest version (${APP_CONFIG.version}).`, 'Up to Date');
         }
       } catch (err) {
         console.error('Update check error:', err);
-        alert(`Update check failed.\n\nError: ${err.message}\n\nPlease check your connection and try again.`);
+        await notify(`Update check failed.\n\nError: ${err.message}\n\nPlease check your connection and try again.`, 'Update Check Failed');
       }
     });
   });

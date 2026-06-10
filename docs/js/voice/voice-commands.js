@@ -15,37 +15,13 @@ import { updateStatus } from '../utils/status.js';
 import { speakAppMessage } from '../narration/tts-player.js';
 import { displayBlockedCommand } from '../ui/game-output.js';
 import { playBlockedCommand } from '../utils/audio-feedback.js';
+import { getSttSubstitutionsMap } from '../utils/stt-substitutions.js';
 
 /** Navigation commands that are always allowed, even during narration or echo suppression. */
 export const NAVIGATION_COMMANDS = ['stop', 'pause', 'play', 'resume', 'skip', 'back', 'repeat',
                                     'end', 'skip all', 'skip to end', 'skip to the end'];
 export const SKIP_N_PATTERN = /^skip(?:\s+forward)?\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
 export const BACK_N_PATTERN = /^(?:back|go\s+back)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
-
-/**
- * Pronunciation dictionary for common misrecognitions.
- * Only applies to single-word commands to avoid false positives.
- * Exported so recognition.js can apply corrections before confidence checks.
- */
-export const PRONUNCIATION_DICT = {
-  'wet': 'west',
-  'with': 'west',
-  'we': 'west',
-  'what': 'west',
-  'so': 'south',
-  'self': 'south',
-  'quickie': 'quick save',
-  'quicksand': 'quick save',
-  'away': 'west',
-  'murphy': 'northeast',
-  'artist': 'northeast',
-  'luck': 'look',
-  'breath': 'brief',
-  'breathe': 'brief',
-  'town': 'down',
-  'cell': 'south',
-  'safe': 'save',
-};
 
 /** Direction words that interrupt narration and execute immediately (#84). */
 export const DIRECTION_COMMANDS = new Set([
@@ -88,11 +64,12 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
 
   lower = transcript.toLowerCase().trim();
 
-  // Apply pronunciation corrections (only for single-word transcripts, using lowercase comparison)
+  // Apply STT substitutions (only for single-word transcripts, using lowercase comparison)
   const words = transcript.trim().split(/\s+/);
   const singleWordLower = words.length === 1 ? words[0].toLowerCase() : null;
-  if (singleWordLower && PRONUNCIATION_DICT[singleWordLower]) {
-    transcript = PRONUNCIATION_DICT[singleWordLower];
+  const sttSubstitutions = getSttSubstitutionsMap();
+  if (singleWordLower && sttSubstitutions[singleWordLower]) {
+    transcript = sttSubstitutions[singleWordLower];
     lower = transcript.toLowerCase();
   }
 

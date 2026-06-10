@@ -12,7 +12,8 @@ import { isEchoOfSpokenText } from './echo-detection.js';
 import { updateVoiceTranscript } from '../input/keyboard/index.js';
 import { playCommandSent, playAppCommand, playLowConfidence, playBlockedCommand, LOW_CONFIDENCE_THRESHOLD } from '../utils/audio-feedback.js';
 import { scrollToBottom } from '../utils/scroll.js';
-import { PRONUNCIATION_DICT, NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN, DIRECTION_COMMANDS } from './voice-commands.js';
+import { NAVIGATION_COMMANDS, SKIP_N_PATTERN, BACK_N_PATTERN, DIRECTION_COMMANDS } from './voice-commands.js';
+import { getSttSubstitutionsMap } from '../utils/stt-substitutions.js';
 
 // Stored at module scope so dispatchPTTFallback can reach it from outside initVoiceRecognition
 let _processVoiceKeywords = null;
@@ -647,11 +648,11 @@ export function initVoiceRecognition(processVoiceKeywords) {
         // Echo detection error (final) - silently ignored
       }
 
-      // Apply single-word pronunciation corrections before confidence checks
+      // Apply single-word STT substitutions before confidence checks
       // (e.g., "wet" → "west") so corrected commands are recognized as instant
       const corrWords = finalTranscript.trim().split(/\s+/);
       if (corrWords.length === 1) {
-        const corrected = PRONUNCIATION_DICT[corrWords[0].toLowerCase()];
+        const corrected = getSttSubstitutionsMap()[corrWords[0].toLowerCase()];
         if (corrected) finalTranscript = corrected;
       }
 
@@ -846,6 +847,12 @@ export function initVoiceRecognition(processVoiceKeywords) {
     if (wasPushToTalkRelease && !state.isMuted && !state.pushToTalkActive) {
       state.isMuted = true;
       updateStatus('Hold mic button to speak');
+
+      // Refresh conv/lock buttons in case conv-mode unmuted the mic while
+      // push-to-talk mode was active — their state must follow isMuted back.
+      const { updateConvModeButton, updateLockButtonVisibility } = await import('../utils/lock-screen.js');
+      updateConvModeButton();
+      updateLockButtonVisibility();
     }
 
     // Don't restart if muted, or if page is hidden — the visibilitychange handler will
