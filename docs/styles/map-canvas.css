@@ -876,6 +876,15 @@ body.map-resizing .map-canvas-overlay * {
   font-weight: 500;
   z-index: var(--z-map-mode-indicator);
   animation: hintFadeIn 0.2s ease-out;
+  /* width:auto on an absolutely-positioned element with left:50% caps shrink-to-fit
+     at half the containing block's width, squeezing long messages into a tall,
+     near-vertical column. Size to content instead, capped to fit the viewport. */
+  width: max-content;
+  max-width: calc(100% - 32px);
+}
+
+.map-mode-indicator .mode-cancel-btn {
+  flex-shrink: 0;
 }
 
 .map-mode-indicator.hidden {

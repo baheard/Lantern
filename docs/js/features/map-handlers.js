@@ -37,6 +37,12 @@ let pendingMoveSnapshot = null;
 // Set when pointer-down was a select-mode toggle, so pointer-up skips sheet open.
 let wasSelectAction = false;
 
+// Set on pointer-down when an already-selected node is tapped in select mode.
+// Deselecting is deferred to pointer-up (and only applied if no drag occurred),
+// so tapping a selected node and immediately dragging moves the whole group
+// instead of dropping that node out of the selection first.
+let pendingDeselectNode = null;
+
 // ============================================================================
 // POINTER HANDLERS
 // ============================================================================
@@ -57,6 +63,7 @@ export function handlePointerDown(e) {
 
   timers.isInteracting = true;
   wasSelectAction = false;  // Reset before any early-return path
+  pendingDeselectNode = null;
   // Controls stay visible during panning - no hideFab() call
 
   if (mapState.isAddingNode && !hitNode) { callbacks.addNodeAtPosition(canvasPoint.x, canvasPoint.y); callbacks.exitAddMode(); return; }
@@ -84,8 +91,14 @@ export function handlePointerDown(e) {
   if ((e.shiftKey || mapState.isSelectMode) && !mapState.isAddingNode && !mapState.isCreatingEdge && !mapState.isMerging) {
     wasSelectAction = true;
     if (hitNode) {
-      if (mapState.selectedNodes.has(hitNode.id)) mapState.selectedNodes.delete(hitNode.id);
-      else mapState.selectedNodes.add(hitNode.id);
+      if (mapState.selectedNodes.has(hitNode.id)) {
+        // Already selected — defer deselection to pointer-up so a tap-and-drag
+        // on a selected node moves the whole group instead of dropping out of
+        // it first.
+        pendingDeselectNode = hitNode.id;
+      } else {
+        mapState.selectedNodes.add(hitNode.id);
+      }
       // Set up for potential drag so user can move right after selecting
       mapState.dragNode = hitNode; mapState.dragStart = { x, y }; touchState.touchStartTime = Date.now();
       touchState.nodeStartPos = { x: hitNode.x, y: hitNode.y };
@@ -132,6 +145,8 @@ export function handlePointerMove(e) {
   } else if (mapState.dragNode && mapState.dragStart && !mapState.isCreatingEdge && !mapState.isMerging) {
     const dx = x - mapState.dragStart.x, dy = y - mapState.dragStart.y;
     if (Math.sqrt(dx * dx + dy * dy) > 3) {  // Fine control for alignment
+      // A real drag occurred — keep the node selected rather than deselecting it.
+      pendingDeselectNode = null;
       // Capture pre-move state once, before the first position change. Held
       // pending and committed on pointer-up only if the node actually moves.
       if (!pendingMoveSnapshot) pendingMoveSnapshot = callbacks.captureUndoSnapshot();
@@ -200,6 +215,10 @@ export function handlePointerUp(e) {
       if (pendingMoveSnapshot) callbacks.commitUndoSnapshot(pendingMoveSnapshot);
       mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
       callbacks.saveMapForGame();
+    } else if (pendingDeselectNode) {
+      // Tapped (no drag) on an already-selected node — toggle it off now.
+      mapState.selectedNodes.delete(pendingDeselectNode);
+      render();
     } else if (Date.now() - touchState.touchStartTime < 250) {
       if (!wasSelectAction) {
         // Tapped on a node - open the sheet
@@ -229,6 +248,7 @@ export function handlePointerUp(e) {
   }
 
   wasSelectAction = false;
+  pendingDeselectNode = null;
   mapState.isDragging = false; mapState.dragStart = null; mapState.dragNode = null; mapState.hasDragged = false;
   canvas.style.cursor = mapState.isSelectMode ? 'default' : (mapState.isAddingNode ? 'crosshair' : 'grab');
   scheduleFabShow(); render();
