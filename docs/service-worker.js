@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.510';
+const CACHE_VERSION = 'v1.5.515';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -18,6 +18,7 @@ const CORE_ASSETS = [
   './manifest.json',
   './favicon.png',
   './images/lantern-hero.png',
+  './images/lantern-hero-mobile.jpg',
   // CSS files
   './styles/base.css',
   './styles/controls.css',
