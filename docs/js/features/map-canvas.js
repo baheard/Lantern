@@ -143,9 +143,6 @@ function createMapUI() {
             <span class="material-icons">auto_fix_high</span>
             <span class="toggle-label">Auto</span>
           </button>
-          <button class="map-btn" id="mapClearBtn" title="Clear map" aria-label="Clear map">
-            <span class="material-icons">delete_sweep</span>
-          </button>
         </div>
         <button class="map-btn map-close-btn" id="mapCloseBtn" aria-label="Close map">
           <span class="material-icons">close</span>
@@ -244,7 +241,6 @@ function setupEventListeners() {
     zoom(0.7, centerX, centerY);
   });
   document.getElementById('mapAutoToggle').addEventListener('click', toggleAutoMap);
-  document.getElementById('mapClearBtn').addEventListener('click', clearMapWithConfirm);
   document.getElementById('mapNameBtn').addEventListener('click', toggleMapPicker);
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#mapNameBtn') && !e.target.closest('#mapPickerDropdown')) {
@@ -255,7 +251,7 @@ function setupEventListeners() {
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
-  document.getElementById('mapSelectBtn').addEventListener('click', enterSelectMode);
+  document.getElementById('mapSelectBtn').addEventListener('click', toggleSelectMode);
   document.getElementById('mapCenterBtn').addEventListener('click', () => centerOnCurrentLocation());
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
 
@@ -545,57 +541,53 @@ function toggleAutoMap() {
 
   // When turning automap ON, immediately map the current location if not already mapped
   if (mapState.autoMapEnabled) {
-    // Actively check the status bar for current location (don't just rely on cached lastLocationName)
-    const statusBarEl = document.getElementById('statusBar');
-    const leftEl = statusBarEl?.querySelector('.status-left');
-    const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
-
-    let currentLocationName = getLastLocationName();
-
-    // If we have status bar text, try to extract the current location from it
-    if (statusText && statusText.length > 0) {
-      const location = getCurrentLocation(statusText);
-      if (location?.name) {
-        currentLocationName = location.name;
-      }
-    }
-
-    if (currentLocationName && !mapState.nodes.has(currentLocationName) && !mapState.deletedNodes.has(currentLocationName)) {
-      // Add the current location at origin (0, 0) since we have no context
-      mapState.nodes.set(currentLocationName, {
-        id: currentLocationName,
-        name: currentLocationName,
-        x: 0,
-        y: 0,
-        type: 'room',
-        notes: '',
-        isManual: false,
-        isEdited: false,
-        isSmall: false
-      });
-      mapState.protectedNodes.add(currentLocationName);
-      mapState.currentNodeId = currentLocationName;
-      mapState.selectedNode = currentLocationName;
-      invalidateUndoHistory();  // Auto-map added a node outside the snapshot system
-      render();
-      centerOnCurrentLocation();
-    }
+    seedCurrentLocation();
   }
 
   saveMapForGame();
 }
 
-function clearMapWithConfirm() {
-  if (mapState.nodes.size === 0) { showHint('Map is already empty'); return; }
-  if (confirm('Clear this map? This cannot be undone.')) {
-    clearAllToasts();
-    clearActiveMapData();
-    clearJourney();
-    if (mapState.gameName) localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
-    saveMapForGame(true);
-    render();
-    showHint('Map cleared');
+// Add the current game location as a node at origin if automap is on and it isn't
+// already mapped. Used when toggling automap on and when a fresh default map is
+// created (e.g. after deleting the last map). Returns true if a node was added.
+function seedCurrentLocation() {
+  // Actively check the status bar for current location (don't just rely on cached lastLocationName)
+  const statusBarEl = document.getElementById('statusBar');
+  const leftEl = statusBarEl?.querySelector('.status-left');
+  const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
+
+  let currentLocationName = getLastLocationName();
+
+  // If we have status bar text, try to extract the current location from it
+  if (statusText && statusText.length > 0) {
+    const location = getCurrentLocation(statusText);
+    if (location?.name) {
+      currentLocationName = location.name;
+    }
   }
+
+  if (currentLocationName && !mapState.nodes.has(currentLocationName) && !mapState.deletedNodes.has(currentLocationName)) {
+    // Add the current location at origin (0, 0) since we have no context
+    mapState.nodes.set(currentLocationName, {
+      id: currentLocationName,
+      name: currentLocationName,
+      x: 0,
+      y: 0,
+      type: 'room',
+      notes: '',
+      isManual: false,
+      isEdited: false,
+      isSmall: false
+    });
+    mapState.protectedNodes.add(currentLocationName);
+    mapState.currentNodeId = currentLocationName;
+    mapState.selectedNode = currentLocationName;
+    invalidateUndoHistory();  // Auto-map added a node outside the snapshot system
+    render();
+    centerOnCurrentLocation();
+    return true;
+  }
+  return false;
 }
 
 export function enterAddNodeMode() {
@@ -606,7 +598,8 @@ export function enterAddNodeMode() {
   showHint('Tap anywhere on the map to add a new location');
 }
 
-export function enterSelectMode() {
+export function toggleSelectMode() {
+  if (mapState.isSelectMode) { exitAddMode(); return; }
   mapState.isSelectMode = true;
   mapState.selectedNodes.clear();
   domRefs.modeIndicator.classList.remove('hidden');
@@ -632,6 +625,7 @@ export function exitAddMode() {
   mapState.isMerging = false;
   mapState.mergeSourceNode = null;
   mapState.isSelectMode = false;
+  mapState.selectedNodes.clear();
   mapState.isRectSelecting = false;
   mapState.rectSelectStart = null;
   mapState.rectSelectEnd = null;
@@ -1544,8 +1538,9 @@ function updateUIVisibilityForKeyboard() {
 
   // More aggressive keyboard detection for iPhone
   // Check if viewport height is significantly reduced OR if an input is focused
-  const hasActiveInput = document.activeElement &&
-    (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+  const active = document.activeElement;
+  const hasActiveInput = active &&
+    (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
   const heightReduced = currentHeight < window.innerHeight - 50; // Reduced threshold from 100 to 50
   const isKeyboardUp = heightReduced || hasActiveInput;
 
@@ -1553,7 +1548,13 @@ function updateUIVisibilityForKeyboard() {
     fabContainer.style.display = isKeyboardUp ? 'none' : '';
   }
   if (toolbar) {
-    toolbar.style.display = isKeyboardUp ? 'none' : '';
+    // Keep the toolbar visible when the focused field lives inside it (the map
+    // rename input in the picker dropdown). Hiding the toolbar would hide the
+    // very input being edited, blurring it and reverting the rename — the
+    // "flash and return" seen only on touch, where focusing the input opens the
+    // keyboard and triggers this keyboard-visibility pass.
+    const editingInToolbar = hasActiveInput && toolbar.contains(active);
+    toolbar.style.display = (isKeyboardUp && !editingInToolbar) ? 'none' : '';
   }
 }
 
@@ -1869,6 +1870,53 @@ function renameCurrentMap(name) {
   if (entry) { entry.name = name; saveMapForGame(true); }
 }
 
+async function deleteMapWithConfirm(mapId, mapName) {
+  const { confirmDialog } = await import('../ui/confirm-dialog.js');
+  const ok = await confirmDialog(`Delete "${mapName}"? This cannot be undone.`, {
+    title: 'Delete Map', okText: 'Delete', cancelText: 'Cancel'
+  });
+  if (!ok) return;
+  deleteMap(mapId);
+  closeMapPicker();
+}
+
+function deleteMap(mapId) {
+  const idx = mapState.mapOrder.findIndex(m => m.id === mapId);
+  if (idx === -1) return;
+
+  delete _allMapsData[mapId];
+  mapState.mapOrder.splice(idx, 1);
+
+  if (mapState.mapOrder.length === 0) {
+    // Deleted the last map — reset to a fresh default "Map 1", seeding the
+    // current location if automap is on (like any other new map).
+    const newId = 'map_1';
+    mapState.activeMapId = newId;
+    mapState.mapOrder = [{ id: newId, name: 'Map 1' }];
+    _allMapsData = {};
+    clearActiveMapData();          // resets nodes/viewport and restores the automap pref
+    if (mapState.gameName) localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
+    clearJourney();
+    if (mapState.autoMapEnabled) seedCurrentLocation();
+  } else if (mapState.activeMapId === mapId) {
+    // Active (but not last) map deleted — switch to the previous remaining map.
+    const fallback = mapState.mapOrder[Math.max(0, idx - 1)];
+    mapState.activeMapId = fallback.id;
+    mapState.undoStack = []; mapState.redoStack = [];
+    mapState.selectedNode = null; mapState.hasUnsavedChanges = false;
+    updateUndoButton();
+    const data = _allMapsData[fallback.id];
+    if (data) { applyMapData(data); } else { clearActiveMapData(); }
+  }
+
+  saveMapForGame(true);
+  updateMapNameDisplay();
+  updateNodeCount();
+  updateMapBadge();
+  if (isVisible) { render(); centerOnCurrentLocation({ instant: true }); }
+  showHint(`Deleted "${mapName}"`);
+}
+
 // ============================================================================
 // MAP PICKER UI
 // ============================================================================
@@ -1902,6 +1950,15 @@ function buildPickerDropdown() {
 
     row.appendChild(nameBtn);
     row.appendChild(editBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'map-picker-edit map-picker-delete';
+    deleteBtn.title = 'Delete map';
+    deleteBtn.setAttribute('aria-label', 'Delete map');
+    deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
+    deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteMapWithConfirm(id, name); });
+    row.appendChild(deleteBtn);
+
     dropdown.appendChild(row);
   }
 
@@ -1943,6 +2000,9 @@ function startMapRenameInRow(row, mapId, currentName) {
     editBtn.innerHTML = '<span class="material-icons">edit</span>';
     editBtn.classList.remove('map-picker-confirm');
     if (mapId === mapState.activeMapId) updateMapNameDisplay();
+    // Close the picker after a rename so a stray second tap on the pencil
+    // can't land on the just-committed row and revert it.
+    closeMapPicker();
   }
   function onKeyDown(e) {
     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }

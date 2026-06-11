@@ -217,6 +217,7 @@ body.map-resizing .map-canvas-overlay * {
 .map-picker-row {
   display: flex;
   align-items: center;
+  padding-right: 6px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -286,8 +287,14 @@ body.map-resizing .map-canvas-overlay * {
   color: #86efac;
 }
 
+.map-picker-delete:hover,
+.map-picker-delete:focus {
+  color: #f87171;
+}
+
 .map-picker-rename-input {
   flex: 1;
+  min-width: 0; /* Allow the input to shrink so the confirm button stays inside the dropdown */
   font-size: 14px;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
