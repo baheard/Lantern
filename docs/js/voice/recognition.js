@@ -345,6 +345,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
     state.isListening = true;
     state.isRecognitionActive = true;
     state.hasProcessedResult = false;
+    state.notAllowedErrorCount = 0;
 
     // Button was released before we got here — stop immediately so the browser
     // processes whatever audio was captured and fires onresult (final) + onend.
@@ -781,6 +782,42 @@ export function initVoiceRecognition(processVoiceKeywords) {
 
     if (event.error === 'no-speech') {
       // Ignore no-speech errors
+    } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      // 'not-allowed' usually means mic permission was denied/revoked, but on some
+      // browsers it can fire spuriously right after a restart and self-heal on retry.
+      // Let the normal restart loop retry a couple of times before giving up; only
+      // treat it as a real denial after repeated consecutive failures.
+      state.notAllowedErrorCount++;
+
+      if (state.notAllowedErrorCount >= 3) {
+        // Stop the restart loop — without this, onend would keep calling
+        // recognition.start() forever, erroring immediately each time with
+        // no feedback to the user.
+        state.listeningEnabled = false;
+        state.isMuted = true;
+        state.pushToTalkActive = false;
+        updateStatus('⚠️ Microphone permission denied - enable mic access in browser settings');
+        playBlockedCommand();
+
+        const icon = dom.muteBtn?.querySelector('.material-icons');
+        if (icon) icon.textContent = 'mic_off';
+        if (dom.muteBtn) {
+          dom.muteBtn.classList.add('muted');
+          dom.muteBtn.classList.remove('listening', 'push-to-talk-active');
+          dom.muteBtn.style.setProperty('--mic-intensity', '0');
+        }
+        if (dom.userInput) dom.userInput.placeholder = 'Type a command...';
+
+        const { stopVoiceMeter } = await import('./voice-meter.js');
+        const { updateLockScreenMicStatus, updateLockButtonVisibility, updateConvModeButton } = await import('../utils/lock-screen.js');
+        const { updateNavButtons } = await import('../ui/nav-buttons.js');
+        stopVoiceMeter();
+        updateNavButtons();
+        updateLockScreenMicStatus();
+        updateLockButtonVisibility();
+        updateConvModeButton();
+      }
+      // else: stay quiet and let the restart loop in onend retry
     } else {
       updateStatus('Voice error: ' + event.error);
     }

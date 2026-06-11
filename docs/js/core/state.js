@@ -32,6 +32,7 @@ const _state = {
   pttPendingTranscript: null,  // Final transcript captured during PTT hold; dispatched on button release
   pttPendingConfidence: null,  // Confidence for pttPendingTranscript
   pttReleasePending: false,    // Button released before onstart fired; stop recognition as soon as it starts
+  notAllowedErrorCount: 0,     // Consecutive 'not-allowed'/'service-not-allowed' errors; reset on successful onstart
   pttStopTimeout: null,        // Delayed recognition.stop() after PTT release (gives buffered audio time to transcribe)
   isSpellingLetters: false,  // True when interim shows 3+ consecutive single letters being spelled
   spellingInterimTranscript: null,  // Saved interim when spelling detected (to override final's word interpretation)

@@ -20,6 +20,7 @@ export const DEFAULT_STT_SUBSTITUTIONS = {
   'wet': 'west',
   'with': 'west',
   'we': 'west',
+  'wes': 'west',
   'what': 'west',
   'so': 'south',
   'self': 'south',
