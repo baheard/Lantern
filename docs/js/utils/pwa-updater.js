@@ -29,9 +29,11 @@ function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
   window.addEventListener('load', () => {
-    // Cache-bust the SW URL with the app version so browsers refetch on bump.
-    const cacheBust = APP_CONFIG.version.replace(/\./g, '');
-    navigator.serviceWorker.register(`./service-worker.js?v=${cacheBust}`)
+    // Always register the same URL. A version-stamped query string (?v=NNN) made every
+    // update reload twice: the reloaded page registered a new URL, which the browser
+    // treats as a brand-new worker → second activation → second reload. HTTP staleness
+    // is handled by updateViaCache:'none' (SW script always fetched from network).
+    navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
       .then((registration) => {
         registration.update();
 
@@ -121,22 +123,23 @@ function initUpdateButton() {
           return;
         }
 
-        // Force a real network fetch of the SW script with a never-before-used URL.
-        // registration.update() can be served from iOS's HTTP cache for the SW script,
-        // reporting "no update" even when the server has a newer version — a fresh
-        // ?v= query string has never been cached, so this always hits the network.
-        console.log('[PWA] Check for updates: forcing fresh registration check');
-        const freshRegistration = await navigator.serviceWorker.register(`./service-worker.js?v=${Date.now()}`);
+        // The registration uses updateViaCache:'none', so update() always fetches the SW
+        // script from the network — no need for a cache-busting ?v= URL (re-registering a
+        // different URL created a brand-new worker every time, reloading even with no update).
+        console.log('[PWA] Check for updates: running registration.update()');
+        await registration.update();
         const newWorker = await new Promise((resolve) => {
-          if (freshRegistration.waiting) { resolve(freshRegistration.waiting); return; }
+          if (registration.waiting) { resolve(registration.waiting); return; }
           const timer = setTimeout(() => resolve(null), 15000);
-          freshRegistration.addEventListener('updatefound', () => {
-            const w = freshRegistration.installing;
+          const watch = (w) => {
             if (!w) return;
             w.addEventListener('statechange', () => {
               if (w.state === 'installed') { clearTimeout(timer); resolve(w); }
             });
-          }, { once: true });
+          };
+          // installing may be set already, or appear shortly after update() resolves.
+          watch(registration.installing);
+          registration.addEventListener('updatefound', () => watch(registration.installing), { once: true });
         });
 
         if (newWorker) {
