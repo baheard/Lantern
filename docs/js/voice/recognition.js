@@ -847,12 +847,6 @@ export function initVoiceRecognition(processVoiceKeywords) {
     if (wasPushToTalkRelease && !state.isMuted && !state.pushToTalkActive) {
       state.isMuted = true;
       updateStatus('Hold mic button to speak');
-
-      // Refresh conv/lock buttons in case conv-mode unmuted the mic while
-      // push-to-talk mode was active — their state must follow isMuted back.
-      const { updateConvModeButton, updateLockButtonVisibility } = await import('../utils/lock-screen.js');
-      updateConvModeButton();
-      updateLockButtonVisibility();
     }
 
     // Don't restart if muted, or if page is hidden — the visibilitychange handler will

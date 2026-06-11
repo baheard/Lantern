@@ -445,6 +445,9 @@ function initUIComponents() {
           }
         }
       }
+
+      // Conv mode button is hidden in push-to-talk mode — refresh visibility now.
+      updateLockButtonVisibility();
     });
   }
 
