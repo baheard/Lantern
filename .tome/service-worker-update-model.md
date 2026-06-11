@@ -2,8 +2,8 @@
 title: Service Worker Update Model
 tags: [pwa, service-worker, update, cache, design, ios, alert]
 created: 2026-06-04
-updated: 2026-06-09
-aliases: [sw-update, pwa-update, silent-activate, controllerchange, check-for-updates]
+updated: 2026-06-11
+aliases: [sw-update, pwa-update, silent-activate, controllerchange, check-for-updates, double-reload]
 ---
 
 # Service Worker Update Model (v1.5.510+)
@@ -57,6 +57,24 @@ of v1.5.512, after sending `SKIP_WAITING` it also sets a 3s fallback
 `setTimeout(() => location.reload())` in case `controllerchange` doesn't fire (seen as a
 possibility on some iOS WebKit versions) — belt-and-suspenders so the explicit user
 action always results in either a reload or a dialog.
+
+## Bug: double reload + blank flash (fixed v1.5.523)
+
+The 3s fallback timeout above raced with the automatic `controllerchange` listener in
+`initServiceWorker()`. Normal sequence after `SKIP_WAITING`: the new SW activates and
+calls `clients.claim()` almost immediately, firing `controllerchange` → `reload()`
+(reload #1, near-instant). But the 3s fallback `setTimeout` set by the update button was
+*also* still pending — once it fired, it called `reload()` again (reload #2), landing
+mid- or post-navigation from #1 and producing a visible blank-screen flash between the
+two reloads.
+
+Fix: a module-level `reloadTriggered` flag + `reloadForUpdate(reason)` helper in
+`pwa-updater.js`. Both the `controllerchange` listener and the two 3s fallback timeouts
+(in `registration.waiting` and `newWorker installed` branches of the update button) now
+call `reloadForUpdate()`, which only calls `window.location.reload()` the first time —
+later calls are no-ops. This makes the "belt-and-suspenders" fallback safe: it still
+covers the case where `controllerchange` never fires, but no longer double-fires when it
+does.
 
 ## Gotcha: alert()/confirm() are no-ops in iOS standalone PWAs
 

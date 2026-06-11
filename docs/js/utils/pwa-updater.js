@@ -14,6 +14,17 @@ import { APP_CONFIG } from '../config.js';
 
 let deferredPwaPrompt = null;
 
+// Guards against double-reload + blank flash: both the automatic `controllerchange`
+// listener and the manual "Check for Updates" button's fallback timeout can each call
+// reload() for the same activation. Only the first one should actually run.
+let reloadTriggered = false;
+function reloadForUpdate(reason) {
+  if (reloadTriggered) return;
+  reloadTriggered = true;
+  console.log(`[PWA] reloading for update (${reason})`);
+  window.location.reload();
+}
+
 function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
@@ -44,8 +55,7 @@ function initServiceWorker() {
 
         // Reload when the new SW takes control so the page runs fresh code.
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[PWA] controllerchange — reloading');
-          window.location.reload();
+          reloadForUpdate('controllerchange');
         });
       })
       .catch(error => {
@@ -106,7 +116,8 @@ function initUpdateButton() {
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
           // controllerchange listener will reload; fall back to a manual reload in
           // case controllerchange doesn't fire (seen on some iOS WebKit versions).
-          setTimeout(() => window.location.reload(), 3000);
+          // reloadForUpdate() guards against both firing and causing a double reload.
+          setTimeout(() => reloadForUpdate('fallback-waiting'), 3000);
           return;
         }
 
@@ -133,7 +144,8 @@ function initUpdateButton() {
           newWorker.postMessage({ type: 'SKIP_WAITING' });
           // controllerchange listener will reload; fall back to a manual reload in
           // case controllerchange doesn't fire (seen on some iOS WebKit versions).
-          setTimeout(() => window.location.reload(), 3000);
+          // reloadForUpdate() guards against both firing and causing a double reload.
+          setTimeout(() => reloadForUpdate('fallback-newWorker'), 3000);
         } else {
           console.log('[PWA] Check for updates: no update found');
           await notify(`No updates found.\n\nYou're already on the latest version (${APP_CONFIG.version}).`, 'Up to Date');
