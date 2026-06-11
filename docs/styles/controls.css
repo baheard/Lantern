@@ -6,7 +6,6 @@
   width: 100%;
   border-top: 1px solid var(--border-subtle);
   padding: 4px 8px;
-  padding-bottom: calc(4px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -550,7 +549,20 @@
   flex-shrink: 0;
 }
 
-/* Removed ::after pseudo-element to eliminate extra bottom spacing */
+/* Fill the home-indicator safe area below the status bar without making the
+   bar itself taller. Fixed (not part of flex layout) so it doesn't affect
+   .status's height/centering - just paints the strip below it with the same
+   background. */
+.status:not(.hidden)::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
+  background: var(--bg-surface);
+  pointer-events: none;
+}
 
 .status-text {
   flex: 1;
