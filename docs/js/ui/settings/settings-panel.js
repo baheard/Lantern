@@ -334,6 +334,18 @@ function initOpenAITTSSettings() {
     });
   }
 
+  // Clear cached TTS audio (Cache API has no expiry — this is the pressure valve)
+  const clearCacheBtn = document.getElementById('openaiClearCacheBtn');
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', async () => {
+      clearCacheBtn.disabled = true;
+      const { clearTTSCache } = await import('../../narration/openai-tts.js');
+      const count = await clearTTSCache();
+      clearCacheBtn.disabled = false;
+      updateStatus(count > 0 ? `✓ Cleared ${count} cached clip${count !== 1 ? 's' : ''}` : 'TTS cache already empty');
+    });
+  }
+
   // Test voice button
   if (testBtn) {
     testBtn.addEventListener('click', async () => {

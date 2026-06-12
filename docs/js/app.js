@@ -1024,7 +1024,9 @@ async function initApp() {
       }
       if (ui.micUnmuted) window._pendingRestoreMic = true;
       window._pendingRepeatAfterRestore = true;  // speak app message + read section after restore
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[App] Could not restore UI state after reload (mic/autoplay reset to defaults):', e);
+    }
   }
 
   initViewport();

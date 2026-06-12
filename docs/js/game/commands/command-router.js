@@ -145,10 +145,6 @@ These commands work whether typed or spoken:<br>
 • STATUS - Read current game status<br>
 • READ LAST COMMAND - Repeat last command output<br>
 <br>
-<b>AI Hints:</b><br>
-• GET HINT - ChatGPT assistance<br>
-• GET GEMINI HINT - UHS-style progressive hints<br>
-<br>
 <b>Game Management:</b><br>
 • QUIT - Auto-save and return to game selection<br>
 • REPAIR - Fix broken game state (if not responding)<br>
@@ -319,16 +315,6 @@ See Settings → Voice Commands for complete reference.
       playAppCommand();
       const h = voiceCommandHandlers;
       if (h.restoreLatest) h.restoreLatest();
-      return true;
-
-    case 'get hint':
-      playAppCommand();
-      voiceCommandHandlers.getHint();
-      return true;
-
-    case 'get gemini hint':
-      playAppCommand();
-      voiceCommandHandlers.getGeminiHint();
       return true;
 
     case 'quit':

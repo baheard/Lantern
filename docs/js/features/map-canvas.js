@@ -51,7 +51,15 @@ let _allMapsData = {};
 // Cleared when the hint is shown, the user adds a map, or the game resets.
 let _pendingNewAreaHint = false;
 
+let _initialized = false;
+
 export function initMapCanvas() {
+  // Idempotence guard: both the map button and Ctrl+M lazy-init this module,
+  // and their `if (!mapModule)` checks can interleave across awaits — a double
+  // init would duplicate the window event listeners below.
+  if (_initialized) return;
+  _initialized = true;
+
   createMapUI();
   setupEventListeners();
   setupCallbacks();
@@ -1185,6 +1193,20 @@ export function hideHint() {
   domRefs.hint?.classList.add('hidden');
 }
 
+// Dismiss handler for the new-area hint's close button. Tracked at module
+// level because showNewAreaHint() re-runs on every map open while the hint is
+// pending — without removing the previous listener first, dismiss handlers
+// accumulate on the persistent close button, and the "Add map" path would
+// leave a stale one armed to fire on a later unrelated hint close.
+let _newAreaDismissHandler = null;
+
+function _clearNewAreaDismissHandler(closeBtn) {
+  if (_newAreaDismissHandler && closeBtn) {
+    closeBtn.removeEventListener('click', _newAreaDismissHandler);
+  }
+  _newAreaDismissHandler = null;
+}
+
 function showNewAreaHint() {
   if (!domRefs.hint) return;
   clearTimeout(timers.hintTimeout);  // no auto-hide — user must decide
@@ -1192,27 +1214,30 @@ function showNewAreaHint() {
   const textEl = domRefs.hint.querySelector('.map-hint-text');
   if (textEl) textEl.textContent = 'Looks like a new area.';
 
+  const closeBtn = domRefs.hint.querySelector('.map-hint-close');
+  _clearNewAreaDismissHandler(closeBtn);
+
   domRefs.hint.querySelector('.map-hint-action')?.remove();
   const addBtn = document.createElement('button');
   addBtn.className = 'map-hint-action';
   addBtn.textContent = 'Add map';
   addBtn.addEventListener('click', () => {
+    _clearNewAreaDismissHandler(closeBtn);
     setSuppressJourneyClear(false);
     addMap();
     syncFromAutoMapper();  // replay buffered journey into the new map
     hideHint();
   });
-  domRefs.hint.querySelector('.map-hint-close').before(addBtn);
+  closeBtn.before(addBtn);
 
   // Dismissing (X) flushes the buffered journey into the current map
-  const closeBtn = domRefs.hint.querySelector('.map-hint-close');
-  function onDismiss() {
+  _newAreaDismissHandler = () => {
+    _newAreaDismissHandler = null;
     _pendingNewAreaHint = false;
     setSuppressJourneyClear(false);
     syncFromAutoMapper();
-    closeBtn.removeEventListener('click', onDismiss);
-  }
-  closeBtn.addEventListener('click', onDismiss, { once: true });
+  };
+  closeBtn.addEventListener('click', _newAreaDismissHandler, { once: true });
 
   domRefs.hint.classList.remove('hidden');
 }

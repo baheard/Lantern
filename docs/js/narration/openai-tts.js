@@ -94,6 +94,23 @@ async function storeInCache(cacheKey, blob) {
 }
 
 /**
+ * Delete all cached TTS audio. The cache has no expiry and grows unbounded,
+ * so this is the user's pressure valve when storage becomes a concern.
+ * @returns {Promise<number>} Number of cached clips deleted
+ */
+export async function clearTTSCache() {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const keys = await cache.keys();
+    await caches.delete(CACHE_NAME);
+    return keys.length;
+  } catch (err) {
+    console.warn('[TTS] Failed to clear cache:', err);
+    return 0;
+  }
+}
+
+/**
  * Play a blob as audio. Resolves when playback ends OR when stopped externally
  * (e.g. stopNarration() calls audio.pause()). Without the pause handler the
  * awaiting speakTextChunked loop hangs indefinitely after a stop.
@@ -352,7 +369,11 @@ export function prefetchOpenAIChunk(text, speedModifier = 0) {
           throw err;
         });
       pendingFetches.set(key, promise);
-    })().catch(() => {});
+    })().catch(err => {
+      // Prefetch is speculative — playback falls back to a direct fetch — but
+      // log it so silent degradation (bad key, 429s) is visible when debugging.
+      console.log(`[TTS:prefetch] failed for "${chunk.slice(0, 40)}…": ${err?.message || err}`);
+    });
   }
 }
 
