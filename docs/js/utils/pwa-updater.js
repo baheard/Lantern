@@ -25,6 +25,20 @@ function reloadForUpdate(reason) {
   window.location.reload();
 }
 
+// Ask the current controlling SW for its CACHE_VERSION over a MessageChannel.
+// Resolves null if there's no controller, the SW predates GET_VERSION support,
+// or it doesn't answer within timeoutMs (null → caller falls back to reloading).
+function getControllerVersion(timeoutMs) {
+  return new Promise((resolve) => {
+    const controller = navigator.serviceWorker.controller;
+    if (!controller) { resolve(null); return; }
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), timeoutMs);
+    channel.port1.onmessage = (e) => { clearTimeout(timer); resolve(e.data); };
+    controller.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+  });
+}
+
 function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
@@ -55,8 +69,17 @@ function initServiceWorker() {
         // Worker that finished installing while the page was loading.
         if (registration.waiting) activate(registration.waiting);
 
-        // Reload when the new SW takes control so the page runs fresh code.
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // Reload when the new SW takes control so the page runs fresh code — unless the
+        // new controller reports the same version this page is already running. That
+        // happens when the registration changes but the code didn't (e.g. migrating from
+        // the old ?v= SW URL to the stable one), where a reload would just flash the
+        // screen for nothing.
+        navigator.serviceWorker.addEventListener('controllerchange', async () => {
+          const swVersion = await getControllerVersion(1500);
+          if (swVersion === `v${APP_CONFIG.version}`) {
+            console.log('[PWA] new controller is same version, skipping reload');
+            return;
+          }
           reloadForUpdate('controllerchange');
         });
       })

@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.535';
+const CACHE_VERSION = 'v1.5.537';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -205,6 +205,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  // Lets the page compare the controlling SW's version against its own APP_CONFIG
+  // version, so controllerchange can skip the reload when the code is already current.
+  if (event.data && event.data.type === 'GET_VERSION' && event.ports[0]) {
+    event.ports[0].postMessage(CACHE_VERSION);
   }
 });
 
