@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.538';
+const CACHE_VERSION = 'v1.5.539';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -112,39 +112,6 @@ const CORE_ASSETS = [
   './lib/zvm.js'
 ];
 
-// Bundled game files (28 games)
-const BUNDLED_GAMES = [
-  './games/905.z5',
-  './games/aisle.z5',
-  './games/allroads.z5',
-  './games/amfv.z4',
-  './games/anchorhead.z8',
-  './games/bronze.zblorb',
-  './games/curses.z5',
-  './games/dreamhold.z8',
-  './games/edifice.z5',
-  './games/galatea.zblorb',
-  './games/hitchhik.z5',
-  './games/jigsaw.z8',
-  './games/lostpig.z8',
-  './games/metamorphoses.z5',
-  './games/photopia.z5',
-  './games/planetfall.z3',
-  './games/savoirfaire.zblorb',
-  './games/seastalker.z3',
-  './games/shade.z5',
-  './games/slouching.z5',
-  './games/spiderandweb.z5',
-  './games/theatre.z5',
-  './games/hints/theatre.json',
-  './games/trinity.z4',
-  './games/varicella.z8',
-  './games/violet.zblorb',
-  './games/wishbringer.z3',
-  './games/witness.z3',
-  './games/zork.z5'
-];
-
 // Font files
 const FONTS = [
   './fonts/MaterialIcons-Regular.woff2',
@@ -176,10 +143,8 @@ self.addEventListener('install', (event) => {
       }),
       caches.open(CACHE_NAMES.icons).then(cache => {
         return cache.addAll(ICONS);
-      }),
-      caches.open(CACHE_NAMES.games).then(cache => {
-        return cache.addAll(BUNDLED_GAMES);
       })
+      // Games and hints JSON are NOT pre-cached here — see /games/ fetch handler.
     ]).then(() => {
       // Don't auto-activate - wait for user approval via SKIP_WAITING message
     })
@@ -308,7 +273,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for everything else (images, fonts, games, etc.)
+  // Cache-on-demand for game files and hints JSON.
+  // Not pre-cached on install; downloaded and stored on first play/use.
+  if (url.pathname.startsWith('/games/')) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(response => {
+          if (!response || response.status !== 200 || response.type === 'error') {
+            return response;
+          }
+          const copy = response.clone();
+          caches.open(CACHE_NAMES.games).then(cache => cache.put(request, copy));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Cache-first for everything else (images, fonts, etc.)
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) {
