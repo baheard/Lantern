@@ -7,6 +7,7 @@
 import { state } from '../core/state.js';
 import { compareSaves, syncSaveFile } from '../utils/gdrive/gdrive-sync-preview.js';
 import { updateStatus } from '../utils/status.js';
+import { escapeHtml } from '../utils/text-processing.js';
 import { deleteFile } from '../utils/gdrive/gdrive-api.js';
 import { getGameDisplayName } from './settings/settings-panel.js';
 
@@ -81,7 +82,7 @@ function cellHtml(timestamp, name, side, localKey, driveMoves) {
   const moves = side === 'local' && localKey ? getMoveCount(localKey) : (side === 'drive' ? driveMoves : null);
   const movesHtml = moves !== null ? `<div class="sm-cell-moves">${moves === 0 ? 'zero' : moves} moves</div>` : '';
   return `<div class="sm-cell" data-side="${side}">
-    <div class="sm-cell-name">${name}</div>
+    <div class="sm-cell-name">${escapeHtml(name)}</div>
     <div class="sm-cell-time">${relTime(timestamp)}</div>
     ${movesHtml}
   </div>`;
@@ -376,7 +377,7 @@ async function executeSync() {
       const item = keyMap.get(key);
       const saveName = item?.name || key;
       const gameLabel = !currentGameName && gameName ? getGameLabel(gameName) : null;
-      const label = gameLabel ? `${gameLabel} — ${saveName}` : saveName;
+      const label = escapeHtml(gameLabel ? `${gameLabel} — ${saveName}` : saveName);
       const dirIcon = direction === 'export' ? 'cloud_upload' : 'cloud_download';
 
       const progressRow = document.createElement('div');
@@ -398,7 +399,7 @@ async function executeSync() {
         }
       } catch (err) {
         progressRow.className = 'sm-progress-item sm-progress-err';
-        progressRow.innerHTML = `<span class="material-icons">error</span><span class="sm-progress-label">${label}<br><small>${err.message}</small></span>`;
+        progressRow.innerHTML = `<span class="material-icons">error</span><span class="sm-progress-label">${label}<br><small>${escapeHtml(err.message)}</small></span>`;
         failed++;
       }
     }
@@ -419,7 +420,7 @@ async function executeSync() {
   } catch (err) {
     const errEl = document.createElement('div');
     errEl.className = 'sm-progress-summary sm-progress-err';
-    errEl.innerHTML = `<span class="material-icons">error</span><span>Sync failed: ${err.message}</span>`;
+    errEl.innerHTML = `<span class="material-icons">error</span><span>Sync failed: ${escapeHtml(err.message)}</span>`;
     body.insertBefore(errEl, progressList);
     updateStatus('Sync failed: ' + err.message, 'error');
   }
@@ -472,7 +473,7 @@ export async function showSyncModal(gameName, filterKey = null) {
     }
     updateSelectAllIcon();
   } catch (err) {
-    body.innerHTML = `<div class="sm-empty sm-error">Could not load Drive saves.<br><small>${err.message}</small></div>`;
+    body.innerHTML = `<div class="sm-empty sm-error">Could not load Drive saves.<br><small>${escapeHtml(err.message)}</small></div>`;
   }
 }
 

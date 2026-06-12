@@ -2,62 +2,45 @@
 
 Debug console logs from mobile devices where dev tools aren't available.
 
-## Setup
+## Local Server Logging
 
-Uses [BetterStack LogTail](https://betterstack.com/logtail) for remote log collection.
+Logs from a phone on the LAN are mirrored to the dev server's terminal.
+This is local-only by design — the BetterStack/LogTail integration was
+removed in v1.5.537 (it shipped console output to a third party and wasn't
+being used).
 
-### Configuration
+### Setup
 
 File: `docs/js/utils/remote-console.js`
 
-```javascript
-const LOGTAIL_TOKEN = 'your-source-token';
-const LOGTAIL_ENDPOINT = 'https://your-host.betterstackdata.com';
-const LOCAL_SERVER = false;
-```
+1. Set `LOCAL_SERVER = true` in `remote-console.js`
+2. Run `npm start` — logs appear in your terminal with colors
+3. Access from phone via local IP (e.g., `http://192.168.1.x:3002`)
 
-### Getting Your Credentials
+Server endpoint: `POST /api/log` (defined in `server/core/app.js`)
 
-1. Sign up at https://betterstack.com/logtail (free tier: 1GB/month)
-2. Click **"Connect source"** → **"JavaScript"**
-3. Copy the **Source token** and **Ingesting host** from your source settings
-4. Update `remote-console.js` with both values
-
-**Important:** New BetterStack sources (after Feb 2025) use custom endpoints like `s123.eu-nbg-2.betterstackdata.com`, not the legacy `in.logs.betterstack.com`.
-
-## Usage
-
-### Automatic Logging (when enabled)
-
-All `console.log`, `warn`, `error`, `info`, `debug` calls are sent to LogTail automatically when `LOGTAIL_TOKEN` is set.
+With `INTERCEPT_ALL = true` (default), all `console.log`, `warn`, `error`,
+`info`, `debug` calls from mobile devices are forwarded. Both flags must be
+on for anything to be sent; with `LOCAL_SERVER = false` (the committed
+default) the module is a no-op apart from defining `console.remote()`.
 
 ### Manual Remote Logging
 
-Use `console.remote()` to always send to LogTail, regardless of configuration:
+Use `console.remote()` for targeted debug output:
 
 ```javascript
 console.remote('Debug info', { state: someValue });
 console.remote('Error occurred', error);
 ```
 
-- Shows as `[REMOTE]` prefix in local console
-- Always sends to LogTail if token is configured
-- Useful for targeted debugging in local dev (accessing via phone on LAN)
+- Shows as `[REMOTE]` prefix in the device's local console always
+- Forwards to the server terminal when `LOCAL_SERVER = true` and the device is mobile
 
 ### Unhandled Errors
 
-Automatically captures:
+When `LOCAL_SERVER = true`, automatically captures from mobile devices:
 - Uncaught exceptions (`window.onerror`)
 - Unhandled promise rejections
-
-## Viewing Logs
-
-1. Go to LogTail dashboard
-2. Click **"Live tail"** for real-time logs
-3. Filter by:
-   - `level: error` - errors only
-   - `level: remote` - manual `console.remote()` calls
-   - `userAgent: iPhone` - iOS devices only
 
 ## Cross-Origin Storage Sync
 
@@ -89,13 +72,3 @@ If you change production environment, update these files:
 | `docs/js/utils/storage-sync.js` | `REMOTE_ORIGIN` | `https://baheard.github.io` |
 
 The sync button appears on any origin that is NOT the production origin.
-
-## Local Server Logging (Optional)
-
-For local development without LogTail:
-
-1. Set `LOCAL_SERVER = true` in `remote-console.js`
-2. Run `npm start` - logs appear in your terminal with colors
-3. Access from phone via local IP (e.g., `http://192.168.1.x:3000`)
-
-Server endpoint: `POST /api/log` (defined in `server/core/app.js`)
