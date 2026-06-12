@@ -2,6 +2,8 @@
 
 **Status:** Removed in v1.4.85 (January 2026)
 
+> **Superseded:** A static UHS-style hints system replaced this approach in v1.5.538. See `docs/js/features/hints/` and `docs/games/hints/theatre.json`.
+
 This document preserves learnings and design decisions from the AI hints feature that was built and then removed.
 
 ---

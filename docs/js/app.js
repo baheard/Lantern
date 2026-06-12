@@ -50,6 +50,8 @@ import { initGameSelection } from './game/game-loader.js';
 import './features/auto-mapper.js';  // Auto-mapping location tracker (lightweight, must run always)
 // Map canvas UI (~2500 lines) lazy loaded on demand
 let mapModule = null;
+// Hints panel UI lazy loaded on demand
+let hintsModule = null;
 
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
@@ -486,6 +488,18 @@ function initUIComponents() {
         mapModule.initMapCanvas();
       }
       mapModule.showMap();
+    });
+  }
+
+  // Initialize hints panel - lazy load on first use
+  const hintsBtn = document.getElementById('hintsBtn');
+  if (hintsBtn) {
+    hintsBtn.addEventListener('click', async () => {
+      if (!hintsModule) {
+        hintsModule = await import('./features/hints/hints-panel.js');
+        hintsModule.initHintsPanel();
+      }
+      hintsModule.toggleHints();
     });
   }
 

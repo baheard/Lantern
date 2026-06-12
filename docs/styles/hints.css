@@ -1,0 +1,425 @@
+/**
+ * Hints Panel Styles
+ * UHS-style progressive hint browser overlay
+ *
+ * Z-index: 950 (same layer as map canvas, below settings at 1000)
+ * Structure mirrors map-canvas.css overlay block.
+ */
+
+/* Z-index token (declared here; map-canvas.css already owns 950 for map) */
+:root {
+  --z-hints-overlay: 950;
+}
+
+/* ============================================================
+   OVERLAY — slide from right with backdrop (mirrors .map-canvas-overlay)
+   ============================================================ */
+
+.hints-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-hints-overlay);
+  visibility: hidden;
+}
+
+.hints-overlay.hidden {
+  display: none;
+}
+
+.hints-overlay.visible {
+  visibility: visible;
+}
+
+/* Backdrop */
+.hints-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 1;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.hints-overlay.visible::before {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   PANEL — slides in from right
+   ============================================================ */
+
+.hints-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 92vw);
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+}
+
+.hints-overlay.visible .hints-panel {
+  transform: translateX(0);
+}
+
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
+
+.hints-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  min-height: 52px;
+}
+
+.hints-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.hints-title-icon {
+  color: #fbbf24;
+  font-size: 1.25rem;
+}
+
+.hints-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hints-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+/* ============================================================
+   CONTENT SCROLL AREA
+   ============================================================ */
+
+.hints-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 0 16px;
+}
+
+/* ============================================================
+   EMPTY / LOADING STATES
+   ============================================================ */
+
+.hints-loading,
+.hints-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.hints-empty-icon {
+  display: block;
+  font-size: 2.5rem;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.hints-empty-sub {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.hints-empty code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.hints-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hints-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hints-section-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+}
+
+.hints-section-chevron {
+  font-size: 1.1rem;
+  color: #475569;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.hints-section.expanded .hints-section-chevron {
+  transform: rotate(90deg);
+}
+
+.hints-section-title {
+  flex: 1;
+}
+
+/* 📍 location badge */
+.hints-location-badge {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* unverified tag */
+.hints-unverified-tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+/* Section body — hidden by default, visible when expanded */
+.hints-section-body {
+  display: none;
+  padding: 0 16px 8px;
+}
+
+.hints-section.expanded .hints-section-body {
+  display: block;
+}
+
+.hints-no-questions {
+  padding: 8px 0;
+  color: #475569;
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   QUESTIONS
+   ============================================================ */
+
+.hints-question {
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hints-question-matched {
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.hints-question-text {
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   HINTS LIST
+   ============================================================ */
+
+.hints-hints-list {
+  padding: 0 12px;
+}
+
+.hints-hint-item {
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hints-hint-number {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin-bottom: 3px;
+}
+
+.hints-hint-answer .hints-hint-number {
+  color: #f59e0b;
+}
+
+.hints-hint-text {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   REVEAL BUTTON
+   ============================================================ */
+
+.hints-reveal-btn {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 8px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.hints-reveal-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.5);
+  color: #cbd5e1;
+}
+
+/* Answer (final hint) — amber warning colour */
+.hints-reveal-answer-btn {
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.hints-reveal-answer-btn:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+.hints-remaining {
+  padding: 0 12px 8px;
+  font-size: 0.72rem;
+  color: #475569;
+  text-align: center;
+}
+
+.hints-all-revealed {
+  padding: 6px 12px 10px;
+  font-size: 0.75rem;
+  color: #475569;
+  text-align: center;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.hints-footer {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #0f172a;
+}
+
+.hints-footer.hidden {
+  display: none;
+}
+
+.hints-spoiler-warning {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.hints-spoiler-warning .material-icons {
+  font-size: 0.9rem;
+  color: #f59e0b;
+}
+
+.hints-reset-btn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  min-height: 44px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  color: #ef4444;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.hints-reset-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+/* ============================================================
+   MOBILE ADJUSTMENTS
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .hints-panel {
+    width: 100vw;
+    left: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .hints-spoiler-warning span:last-of-type {
+    display: none; /* hide text label on very small screens, keep icon */
+  }
+}

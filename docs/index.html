@@ -222,6 +222,15 @@
                     <span class="material-icons">map</span> Game Map
                   </button>
                 </div>
+                <!-- Hints -->
+                <div class="quick-action-row">
+                  <label class="quick-action-checkbox">
+                    <input type="checkbox" id="qaHintsToggle" class="toggle-switch" checked>
+                  </label>
+                  <button id="hintsBtn" class="compact-btn quick-action-btn">
+                    <span class="material-icons">lightbulb</span> Hints
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -873,6 +882,11 @@
         <span class="material-icons">map</span>
         <span class="menu-item-text">Map</span>
         <span class="menu-item-shortcut">Ctrl+M</span>
+      </button>
+      <!-- Hints -->
+      <button class="mobile-menu-item" id="mobileHintsIcon" data-action="hints" role="menuitem" title="Hints">
+        <span class="material-icons">lightbulb</span>
+        <span class="menu-item-text">Hints</span>
       </button>
       <!-- Quick Save -->
       <button class="mobile-menu-item" id="mobileSaveIcon" data-action="quicksave" role="menuitem" title="Quick Save: Ctrl+S">

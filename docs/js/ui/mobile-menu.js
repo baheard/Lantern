@@ -19,6 +19,7 @@ let charMenuBtnEl = null;
 // Default preferences (all enabled except Settings and Feedback which are always shown)
 const DEFAULT_QA_PREFS = {
   map: true,
+  hints: true,
   save: true,
   load: true,
   managesaves: true,
@@ -178,6 +179,14 @@ async function handleMenuAction(action) {
       }
       break;
 
+    case 'hints':
+      // Open hints panel
+      const hintsBtn = document.getElementById('hintsBtn');
+      if (hintsBtn) {
+        hintsBtn.click();
+      }
+      break;
+
     case 'quicksave':
       // Trigger quick save
       const saveBtn = document.getElementById('quickSaveBtn');
@@ -234,6 +243,7 @@ export function updateMobileMenuForGameState(inGame) {
   // Toggle-controlled menu items
   const menuItems = [
     { id: 'quickMenuMapBtn', pref: 'map', gameOnly: true },
+    { id: 'mobileHintsIcon', pref: 'hints', gameOnly: true },
     { id: 'mobileSaveIcon', pref: 'save', gameOnly: true },
     { id: 'mobileLoadIcon', pref: 'load', gameOnly: true },
     { id: 'mobileManageSavesIcon', pref: 'managesaves', gameOnly: true },
@@ -260,6 +270,7 @@ function initQuickAccessToggles() {
   // Set initial toggle states (Settings and Feedback have no toggle - always shown)
   const toggles = {
     qaMapToggle: 'map',
+    qaHintsToggle: 'hints',
     qaSaveToggle: 'save',
     qaLoadToggle: 'load',
     qaManageSavesToggle: 'managesaves',
