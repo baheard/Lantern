@@ -41,8 +41,20 @@ export function hasValidToken() {
 /**
  * Try to get a new token silently (no UI). Returns true if successful.
  * Works as long as the user has an active Google session in the browser.
+ *
+ * Concurrent callers share one in-flight refresh: _doSilentRefresh swaps
+ * tokenClient.callback, so two overlapping calls would capture each other's
+ * override as the "original" and GIS would get two requestAccessToken calls.
  */
+let refreshInFlight = null;
+
 export function silentRefresh() {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = _doSilentRefresh().finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
+
+function _doSilentRefresh() {
   return new Promise((resolve) => {
     if (!tokenClient) { resolve(false); return; }
 
@@ -198,7 +210,11 @@ function _storeToken(response) {
     localStorage.setItem('gdrive_email', userInfo.email); // persists past token expiry
     state.gdriveEmail = userInfo.email;
     window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
-  }).catch(() => {});
+  }).catch(err => {
+    // Non-fatal, but a missing email makes the next sign-in look "first-ever"
+    // (shows the consent dialog again) — worth a trace when debugging auth.
+    console.warn('[GDrive] Could not fetch account email:', err?.message || err);
+  });
 }
 
 function handleAuthCallback(response) {

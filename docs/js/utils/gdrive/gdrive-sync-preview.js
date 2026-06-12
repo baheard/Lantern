@@ -255,9 +255,12 @@ function getSaveNameFromKey(key, gameName) {
 }
 
 /**
- * Create conflict backup when local save is about to be overwritten
+ * Create conflict backup when local save is about to be overwritten.
+ * Stores backup in localStorage with timestamped key.
+ * Backup limits: autosaves keep 5, other saves keep 2.
+ * Shared with gdrive-sync.js — keep the single copy here.
  */
-function createConflictBackup(localStorageKey, localData) {
+export function createConflictBackup(localStorageKey, localData) {
   const timestamp = Date.now();
   const backupKey = `${localStorageKey.replace('iftalk_', 'iftalk_backup_')}_${timestamp}`;
   localStorage.setItem(backupKey, JSON.stringify(localData));

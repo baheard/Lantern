@@ -84,7 +84,10 @@ function decodeQuetzalScreenWidth(bytes, origram) {
 /**
  * Compress a string using gzip (pako)
  * @param {string} str - String to compress
- * @returns {string} Base64-encoded compressed data
+ * @returns {string|null} Base64-encoded compressed data, or null on failure.
+ *   Callers must store the original uncompressed data with the *Compressed
+ *   flag false when this returns null — never store the fallback as compressed,
+ *   that writes a save that can't be decompressed later.
  */
 function compressString(str) {
     if (!str || str.length === 0) return '';
@@ -93,14 +96,17 @@ function compressString(str) {
         return btoa(String.fromCharCode(...uint8array));
     } catch (error) {
         console.error(`Compression failed (input length ${str.length}):`, error);
-        return str; // Return original on error
+        return null;
     }
 }
 
 /**
  * Decompress a gzip-compressed base64 string
  * @param {string} compressed - Base64-encoded compressed data
- * @returns {string} Decompressed string
+ * @returns {string|null} Decompressed string, or null on failure. Callers must
+ *   treat null as corruption and fail/skip explicitly — the old behavior of
+ *   returning the compressed input fed gzip bytes into atob()/JSON.parse()
+ *   downstream and produced garbage restores.
  */
 function decompressString(compressed) {
     if (!compressed || compressed.length === 0) return '';
@@ -114,7 +120,7 @@ function decompressString(compressed) {
         return decompressed;
     } catch (error) {
         console.error(`Decompression failed (input length ${compressed.length}):`, error);
-        return compressed; // Return original on error
+        return null;
     }
 }
 
@@ -351,7 +357,9 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         // Get current display state (status bar, upper window, lower window)
         const displayHTML = getCurrentDisplayState();
 
-        // Limit lowerWindow to 100 turns and compress
+        // Limit lowerWindow to 100 turns and compress.
+        // compressString returns null on failure — store uncompressed in that
+        // case, with the matching *Compressed flag false, so restore stays correct.
         const limitedLowerWindow = limitHTMLHistory(displayHTML.lowerWindowHTML, 100);
         const compressedLowerWindow = compressString(limitedLowerWindow);
 
@@ -378,16 +386,16 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             gameName: state.currentGameName,
             gameSignature: gameSignature,
             appMoveCount: state.appMoveCount,
-            quetzalData: compressedQuetzalData,
-            quetzalDataCompressed: true,
+            quetzalData: compressedQuetzalData !== null ? compressedQuetzalData : base64Data,
+            quetzalDataCompressed: compressedQuetzalData !== null,
             displayHTML: {
                 statusBar: displayHTML.statusBarHTML,
                 upperWindow: displayHTML.upperWindowHTML,
-                lowerWindow: compressedLowerWindow,
-                lowerWindowCompressed: true
+                lowerWindow: compressedLowerWindow !== null ? compressedLowerWindow : limitedLowerWindow,
+                lowerWindowCompressed: compressedLowerWindow !== null
             },
-            mapData: compressedMapData,
-            mapDataCompressed: compressedMapData ? true : false,
+            mapData: compressedMapData !== null ? compressedMapData : mapDataStr,
+            mapDataCompressed: !!compressedMapData,
             voxglkState: {
                 generation: savedGeneration,
                 inputWindowId: savedInputWindowId,
@@ -467,10 +475,15 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             return false;
         }
 
-        // Decompress quetzalData if compressed
+        // Decompress quetzalData if compressed — fail loudly on corruption
+        // rather than feeding garbage into atob()/restore_file()
         let quetzalDataBase64 = saveData.quetzalData;
         if (saveData.quetzalDataCompressed) {
             quetzalDataBase64 = decompressString(saveData.quetzalData);
+            if (quetzalDataBase64 === null) {
+                updateStatus('Restore failed: save data is corrupted', 'error');
+                return false;
+            }
         }
 
         // Decode base64 to binary
@@ -584,10 +597,16 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     }
                 }
                 if (lowerWindowEl && saveData.displayHTML.lowerWindow) {
-                    // Decompress lowerWindow if compressed
+                    // Decompress lowerWindow if compressed. On corruption, fall
+                    // back to an empty transcript — the game state itself is
+                    // intact and the game redraws on the next command.
                     let lowerWindowHTML = saveData.displayHTML.lowerWindow;
                     if (saveData.displayHTML.lowerWindowCompressed) {
                         lowerWindowHTML = decompressString(saveData.displayHTML.lowerWindow);
+                        if (lowerWindowHTML === null) {
+                            console.warn('[Restore] Saved transcript failed to decompress — restoring game state without transcript');
+                            lowerWindowHTML = '';
+                        }
                     }
 
                     const commandLine = document.getElementById('commandLine');
@@ -626,6 +645,12 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     let mapDataStr = saveData.mapData;
                     if (saveData.mapDataCompressed) {
                         mapDataStr = decompressString(saveData.mapData);
+                        if (mapDataStr === null) {
+                            // Corrupted map blob — keep the existing on-device map
+                            // rather than replacing it with garbage or clearing it.
+                            console.error('[Restore] Map data failed to decompress — keeping existing map');
+                            updateStatus('Warning: map could not be restored from save', 'error');
+                        }
                     }
                     if (mapDataStr) {
                         try {

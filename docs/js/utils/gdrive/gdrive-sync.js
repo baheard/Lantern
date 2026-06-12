@@ -16,6 +16,7 @@ import {
   filenameToLocalStorageKey
 } from './gdrive-api.js';
 import { getDeviceInfo } from './gdrive-device.js';
+import { createConflictBackup } from './gdrive-sync-preview.js';
 
 /**
  * Return a human-readable label for a save localStorage key.
@@ -552,48 +553,3 @@ export async function checkDriveForNewerAutosave(gameName) {
   }
 }
 
-/**
- * Create conflict backup when local save is about to be overwritten
- * Stores backup in localStorage with timestamped key
- * Backup limits: Autosaves (5 backups), Other saves (2 backups)
- * @param {string} localStorageKey - The localStorage key (e.g., "iftalk_autosave_lostpig")
- * @param {object} localData - The save data to backup
- */
-function createConflictBackup(localStorageKey, localData) {
-  // Create backup key with timestamp: iftalk_backup_autosave_lostpig_1703435022000
-  const timestamp = Date.now();
-  const backupKey = `${localStorageKey.replace('iftalk_', 'iftalk_backup_')}_${timestamp}`;
-
-  // Store backup
-  localStorage.setItem(backupKey, JSON.stringify(localData));
-
-  // Determine save type from key
-  const isAutosave = localStorageKey.includes('_autosave_');
-  const maxBackups = isAutosave ? 5 : 2;
-
-  // Find all backups for this save (same prefix without timestamp, exclude exempt)
-  const backupPrefix = backupKey.substring(0, backupKey.lastIndexOf('_'));
-  const allBackups = [];
-
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(backupPrefix + '_') && !key.endsWith('_exempt')) {
-      // Extract timestamp from key
-      const parts = key.split('_');
-      const ts = parseInt(parts[parts.length - 1]);
-      allBackups.push({ key: key, timestamp: ts });
-    }
-  }
-
-  // Sort by timestamp (newest first)
-  allBackups.sort((a, b) => b.timestamp - a.timestamp);
-
-  // Keep only the most recent backups based on save type
-  // Autosaves: 5 backups, Other types: 2 backups
-  if (allBackups.length > maxBackups) {
-    const toRemove = allBackups.slice(maxBackups);
-    toRemove.forEach(({ key }) => {
-      localStorage.removeItem(key);
-    });
-  }
-}
