@@ -7,7 +7,7 @@
 import { createApp, getLocalIP } from './core/app.js';
 import { config } from './core/config.js';
 
-const { app, httpServer, httpsServer, io } = createApp();
+const { app, httpServer, httpsServer } = createApp();
 
 // Start servers
 const HTTP_PORT = config.port || 3000;

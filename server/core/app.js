@@ -1,31 +1,27 @@
 /**
  * Server Application Core
  *
- * Express and Socket.IO server setup with event handlers.
+ * Static file server for the browser-based app, plus two small endpoints:
+ * /api/log (remote console for mobile debugging) and /api/fetch-game
+ * (CORS proxy for downloading games from the IF Archive).
+ *
+ * All game logic runs client-side (ifvms.js) — there is deliberately no
+ * server-side interpreter, no Socket.IO, no session state.
  */
 
 import express from 'express';
 import { createServer as createHttpsServer } from 'https';
 import { createServer as createHttpServer } from 'http';
-import { Server } from 'socket.io';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { config } from './config.js';
-import { startGame, sendCommand, getSession, killSession } from '../game/frotz-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure saves directory exists
-const savesDir = path.join(__dirname, '../../saves');
-if (!existsSync(savesDir)) {
-  mkdirSync(savesDir);
-}
-
 /**
  * Create and configure Express app
- * @returns {Object} {app, httpServer, httpsServer, io}
+ * @returns {Object} {app, httpServer, httpsServer}
  */
 export function createApp() {
   const app = express();
@@ -46,12 +42,6 @@ export function createApp() {
     httpsServer = createHttpsServer(httpsOptions, app);
   }
 
-  // Create Socket.IO server and attach to both HTTP and HTTPS
-  const io = new Server(httpServer);
-  if (httpsServer) {
-    io.attach(httpsServer);
-  }
-
   // Parse JSON bodies
   app.use(express.json());
 
@@ -66,7 +56,7 @@ export function createApp() {
 
   // Remote console logging endpoint (for iOS debugging)
   app.post('/api/log', (req, res) => {
-    const { level, args, url, userAgent } = req.body;
+    const { level, args } = req.body;
     const timestamp = new Date().toLocaleTimeString();
 
     // Color codes for terminal
@@ -81,20 +71,13 @@ export function createApp() {
     const color = colors[level] || colors.log;
 
     // Format args for display
-    const message = args.map(arg =>
+    const message = (args || []).map(arg =>
       typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
     ).join(' ');
 
     console.log(`${color}[${timestamp}] [client:${level}] ${message}${reset}`);
 
     res.sendStatus(200);
-  });
-
-  // API endpoint to get config
-  app.get('/api/config', (req, res) => {
-    res.json({
-      voice: config.voice
-    });
   });
 
   // Proxy endpoint for fetching remote game files (avoids CORS issues)
@@ -159,178 +142,7 @@ export function createApp() {
     }
   });
 
-  // Socket.IO connection handler
-  io.on('connection', (socket) => {
-
-    // Start game
-    socket.on('start-game', async (gamePath) => {
-      try {
-
-        startGame(
-          socket.id,
-          gamePath,
-          (htmlOutput, statusLine, hasClearScreen) => {
-            if (hasClearScreen) {
-              socket.emit('clear-screen');
-            }
-
-            // Check for scene change
-            const session = getSession(socket.id);
-            if (session && statusLine && session.lastStatusLine && session.lastStatusLine !== statusLine) {
-              socket.emit('clear-screen');
-            }
-            if (session && statusLine) {
-              session.lastStatusLine = statusLine;
-            }
-
-            socket.emit('game-output', htmlOutput);
-            if (statusLine) {
-              socket.emit('status-line', statusLine);
-            }
-          },
-          (error) => {
-            socket.emit('error', error);
-          }
-        );
-
-      } catch (error) {
-        socket.emit('error', error.message);
-      }
-    });
-
-    // Send command to game
-    socket.on('send-command', async (command) => {
-      const session = getSession(socket.id);
-
-      if (!session) {
-        socket.emit('error', 'No game running');
-        return;
-      }
-
-      try {
-        const lowerCmd = command.toLowerCase().trim();
-        const isSaveCommand = lowerCmd === 'save';
-
-        let saveFilename = null;
-        if (isSaveCommand) {
-          const gameBasename = path.basename(session.path, path.extname(session.path));
-          const timestamp = Date.now();
-          const sessionPrefix = socket.id.substring(0, 8);
-          saveFilename = path.join(savesDir, `${sessionPrefix}_${gameBasename}_${timestamp}.sav`);
-        }
-
-        sendCommand(
-          socket.id,
-          command,
-          (htmlOutput, statusLine, hasClearScreen, pendingSaveFile) => {
-            if (hasClearScreen) {
-              socket.emit('clear-screen');
-            }
-
-            // Check for scene change
-            if (statusLine && session.lastStatusLine && session.lastStatusLine !== statusLine) {
-              socket.emit('clear-screen');
-            }
-            if (statusLine) {
-              session.lastStatusLine = statusLine;
-            }
-
-            socket.emit('game-output', htmlOutput);
-            if (statusLine) {
-              socket.emit('status-line', statusLine);
-            }
-
-            // Handle save data
-            if (isSaveCommand && pendingSaveFile) {
-              setTimeout(() => {
-                if (existsSync(pendingSaveFile)) {
-                  const saveData = readFileSync(pendingSaveFile);
-                  const gameBasename = path.basename(session.path, path.extname(session.path));
-                  socket.emit('save-data', {
-                    game: gameBasename,
-                    data: saveData.toString('base64'),
-                    timestamp: Date.now()
-                  });
-                  try { unlinkSync(pendingSaveFile); } catch (e) {}
-                }
-              }, 300);
-            }
-          },
-          (error) => {
-            socket.emit('error', error);
-          },
-          { saveFilename }
-        );
-
-      } catch (error) {
-        socket.emit('error', error.message);
-      }
-    });
-
-    // Restore game from client save data
-    socket.on('restore-data', async ({ data }) => {
-      const session = getSession(socket.id);
-
-      if (!session) {
-        socket.emit('error', 'No game running');
-        return;
-      }
-
-      let tempFile = null;
-      try {
-        // Write save data to temp file
-        tempFile = path.join(savesDir, `restore_${socket.id}_${Date.now()}.sav`);
-        writeFileSync(tempFile, Buffer.from(data, 'base64'));
-
-        // Send RESTORE command with filename
-        sendCommand(
-          socket.id,
-          'restore',
-          (htmlOutput, statusLine) => {
-            // Clear screen on restore
-            socket.emit('clear-screen');
-
-            socket.emit('game-output', htmlOutput);
-            if (statusLine) {
-              socket.emit('status-line', statusLine);
-              session.lastStatusLine = statusLine;
-            }
-
-            // Clean up temp file
-            setTimeout(() => {
-              try { unlinkSync(tempFile); } catch (e) {}
-            }, 1000);
-          },
-          (error) => {
-            socket.emit('error', error);
-            if (tempFile && existsSync(tempFile)) {
-              try { unlinkSync(tempFile); } catch (e) {}
-            }
-          },
-          { saveFilename: tempFile }
-        );
-
-      } catch (error) {
-        socket.emit('error', error.message);
-        if (tempFile && existsSync(tempFile)) {
-          try { unlinkSync(tempFile); } catch (e) {}
-        }
-      }
-    });
-
-    // Generate TTS (browser only - just return processed text)
-    socket.on('speak-text', async (text) => {
-      // Browser TTS - return text for client-side speech synthesis
-      socket.emit('audio-ready', text);
-    });
-
-    // Disconnect handler
-    socket.on('disconnect', () => {
-      killSession(socket.id);
-    });
-  });
-
-  return { app, httpServer, httpsServer, io };
+  return { app, httpServer, httpsServer };
 }
 
 /**
