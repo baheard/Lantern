@@ -18,7 +18,7 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [save-restore-paradigm](save-restore-paradigm.md) — DESIGN NOTE: shared root of bootstrap bug class (two systems, one restore); 3 options — #1 full snapshot (deferred, version-fragile), #2 prompt-boundary restore (blocked on ifvms), #3 own input plumbing (small, consolidation not a guarantee); none scheduled (zvm, save-restore, design, architecture) — updated 2026-05-30
 - [text-decode-corruption](text-decode-corruption.md) — FIXED v1.5.409: "the"→"tv2" abbreviation corruption = first post-restore line command written to stale read_data.bufaddr (63), clobbering Theatre's abbrev strings at 0x40; fixed by setting read_data.bufaddr=seededAddr in sendInput() at submit time (NOT performRestore — resuming aread resets it) (zvm, save-restore, corruption, fixed) — updated 2026-05-30
 - [openai-tts-pipeline](openai-tts-pipeline.md) — Cache API persistence, prefetch pipeline gap at chunk 1, long-chunk latency, cost tracking (narration, tts, openai, cache, prefetch) — updated 2026-05-28
-- [xss-vectors](xss-vectors.md) — Known XSS vectors: all 4 now fixed (saves + map node names) (security, xss, map) — updated 2026-04-27
+- [xss-vectors](xss-vectors.md) — Known XSS vectors: all 5 fixed (saves, map node names, sync modals ×2) (security, xss, map) — updated 2026-06-12
 - [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26
 
 - [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26
@@ -27,7 +27,7 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [quetzal-restore-globals](quetzal-restore-globals.md) — restore_file fixes header but not game globals; perpetuation cycle; CMem decode; chunk-delimiter textContent gotcha (zvm, save-restore, quetzal, screen-width) — updated 2026-05-31
 - [watchdog-repair-flow](watchdog-repair-flow.md) — 5s VM-hang detection + manual REPAIR recovery flow (zvm, watchdog, recovery) — updated 2026-04-26
 - [mic-narration-coupling](mic-narration-coupling.md) — Mic state and narration state are independent; vestigial `if (false &&)` clusters (voice, narration, design) — updated 2026-04-26
-- [save-system](save-system.md) — Autosave vs quicksave semantics; storage layout; map restore clears localStorage; restore injects HTML so must invalidate narration chunks; restore-debug + SW-cache notes (save, restore, design) — updated 2026-05-31
+- [save-system](save-system.md) — Autosave vs quicksave semantics; storage layout; map restore clears localStorage; restore injects HTML so must invalidate narration chunks; MAX_SAVES regression resolved; restore-debug + SW-cache notes (save, restore, design) — updated 2026-06-12
 - [snapshot-pollution-pattern](snapshot-pollution-pattern.md) — `inert`+`aria-hidden` for hidden panels; why both are needed (accessibility, testing, ui-pattern) — updated 2026-04-26
 - [home-screen-and-quirks](home-screen-and-quirks.md) — Home-screen UI; F5/port/autosave-vs-quicksave gotchas (ui, gotchas) — updated 2026-04-26
 - [map-undo-snapshots](map-undo-snapshots.md) — Map undo/redo is full-state snapshots (not deltas); memory-only, never serialized; lazy-first-change capture to keep LIFO order; auto-mapper intentionally excluded (map-canvas, undo, redo, design) — updated 2026-05-31

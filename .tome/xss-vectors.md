@@ -2,13 +2,16 @@
 title: XSS Vectors
 tags: [security, xss, map]
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-06-12
 aliases: [xss, injection, escaping, sanitization]
 ---
 
 # XSS Vectors
 
 ## Known vectors (fixed or open)
+
+### Sync modal (two-column) — **Fixed v1.5.537**
+`sync-modal.js` (the newer two-column modal) built progress rows AND save-name cells via `innerHTML` with unescaped values: `cellHtml()`'s `${name}`, the progress rows' `${label}` (contains `item.name`, user-controlled), and raw `err.message` in two error paths. This was the **same pattern fixed twice before** in the older sync-preview modal (v1.5.222 preview list, v1.5.239 progress log) — the two-column modal was written later and reintroduced it. Fixed with `escapeHtml()` on all six sinks. Lesson: any new modal that renders save/file names must import `escapeHtml` from `utils/text-processing.js` from day one.
 
 ### Save HTML in `performRestore()` — **Fixed v1.5.222 (4b73a06)**
 `displayHTML.statusBar/upperWindow/lowerWindow` from an imported save file was written to `innerHTML` without sanitization. Fixed by wrapping with `sanitizeRestoredHTML()`.

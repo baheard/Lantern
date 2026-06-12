@@ -2,7 +2,7 @@
 title: Save System
 tags: [save, restore, design]
 created: 2026-04-26
-updated: 2026-06-02
+updated: 2026-06-12
 aliases: [autosave, quicksave, restore]
 ---
 
@@ -57,9 +57,9 @@ quicksave is a single manual slot); they keep using the capped `createBackup` ch
 - **Cleanup:** `deleteSave()` removes the fixed backup key too when a named save is
   deleted, so it doesn't linger orphaned.
 
-## Custom save limit (regression note)
+## Custom save limit (regression resolved)
 
-`MAX_SAVES = 5` was enforced in the original `commands.js` — both for user-typed `SAVE` and for in-game dialog saves. It was silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`). The current `handleSaveResponse` and `handleGameSaveResponse` in `meta-command-handlers.js` do not limit the number of custom saves. Restoring the limit requires adding `const MAX_SAVES = 5` and the `!existingSave && saves.length >= MAX_SAVES` guard in both handlers.
+`MAX_SAVES = 5` was enforced in the original `commands.js`, silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`), and later restored: `meta-command-handlers.js` now defines `MAX_SAVES = 5` and enforces it inside `validateSaveName()`, which BOTH `handleSaveResponse` (typed SAVE) and `handleGameSaveResponse` (in-game dialog) route through. Verified 2026-06-12. If save-name validation is ever refactored, keep both handlers on the shared `validateSaveName` path — that's what closed the regression.
 
 ## Bootstrap restore (see separate entry)
 

@@ -11,8 +11,9 @@
   - GlkOte handles display, windowing, and input
 - **Backend**: Node.js/Express - **static file server ONLY**
   - No game processing on server
-  - **No Socket.IO** - completely removed (was legacy from Frotz architecture)
-  - Just serves HTML, JS, CSS, and game files
+  - **No Socket.IO** - legacy Frotz/Socket.IO code fully deleted in v1.5.537
+  - Serves HTML, JS, CSS, and game files, plus two small endpoints:
+    `/api/log` (local dev logging, off by default) and `/api/fetch-game` (CORS proxy, domain-whitelisted)
 - **TTS**: Browser Web Speech API (client-side only)
   - Narration runs entirely in browser with `speechSynthesis`
   - No server round-trip for audio generation
@@ -29,7 +30,7 @@
   - `input/`: Keyboard input and tap-to-examine
   - `ui/`: UI components (settings, game output, etc.)
   - `utils/`: Storage, scrolling, wake lock, etc.
-  - `features/`: ChatGPT hints integration
+  - `features/`: Auto-mapper, map canvas, feedback
 - `docs/lib/`: Third-party libraries
   - `zvm.js`: ifvms Z-machine interpreter (v1.1.6)
   - `glkote.js`, `glkapi.js`: GlkOte display library (v2.2.5)
@@ -99,7 +100,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.535
+**Current Version:** v1.5.537
 
 ## Third-Party Libraries
 
@@ -141,7 +142,7 @@ For detailed technical information, see the `reference/` folder:
 - **[Bug Fixes History](reference/bug-fixes-history.md)** - Past bugs and solutions for context
 
 ### Development & Debugging
-- **[Remote Debugging](reference/remote-debugging.md)** - iOS/mobile debugging via LogTail
+- **[Remote Debugging](reference/remote-debugging.md)** - iOS/mobile debugging via local server logging
 - **[Reference Index](reference/README.md)** - Full table of contents for all reference docs
 
 ## Recent Changes
@@ -183,7 +184,6 @@ Fixed issues where scroll-down button and scrolling were off when mobile keyboar
 - ✅ Push-to-talk mode
 - ✅ Settings panel with per-game preferences
 - ✅ Google Drive sync
-- ✅ ChatGPT hints integration
 - ✅ Lock screen mode
 - ✅ Fully offline-capable
 - ✅ Auto-mapper with interactive map canvas
