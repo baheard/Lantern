@@ -29,8 +29,7 @@
 /* 9. Map Canvas (interactive game map) */
 @import url('map-canvas.css');
 
-/* 10. Hints Panel (UHS-style progressive hint browser) */
-@import url('hints.css');
+/* hints.css is injected lazily by hints-panel.js on first use */
 
-/* 11. Mobile Responsive Styles (must be last to override desktop styles) */
+/* 10. Mobile Responsive Styles (must be last to override desktop styles) */
 @import url('mobile.css');

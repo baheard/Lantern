@@ -42,6 +42,14 @@ export function initHintsPanel() {
     if (_initialized) return;
     _initialized = true;
 
+    if (!document.getElementById('hints-css')) {
+        const link = document.createElement('link');
+        link.id = 'hints-css';
+        link.rel = 'stylesheet';
+        link.href = '/styles/hints.css';
+        document.head.appendChild(link);
+    }
+
     createHintsUI();
 
     // Load hints data for the current game if one is loaded
