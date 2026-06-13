@@ -15,7 +15,7 @@
  */
 
 import { loadHints, findCurrentTopics } from './hints-data.js';
-import { getRevealedCount, revealNext, resetAll } from './hints-state.js';
+import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen } from './hints-state.js';
 import { confirmDialog } from '../../ui/confirm-dialog.js';
 
 // ============================================================================
@@ -28,6 +28,7 @@ let _isVisible = false;
 let _currentHintsData = null;
 let _lastFocusedBeforeOpen = null;
 let _currentGameName = null;
+let _openQuestionId = null; // only one question's hints shown at a time (accordion)
 
 // ============================================================================
 // INITIALIZATION
@@ -70,6 +71,11 @@ export function initHintsPanel() {
 
     // Re-load hints when a new game is loaded
     window.addEventListener('gameLoaded', handleGameLoaded);
+
+    // Live-update pin + unblur as the player moves between rooms
+    window.addEventListener('locationChanged', () => {
+        if (_isVisible) renderHintsContent();
+    });
 }
 
 /** @param {CustomEvent} e */
@@ -105,6 +111,7 @@ function createHintsUI() {
     cont.setAttribute('aria-label', 'Game Hints');
     cont.innerHTML = `
       <div class="hints-panel">
+        <div class="hints-resize-handle" id="hintsResizeHandle"></div>
         <div class="hints-toolbar">
           <div class="hints-title">
             <span class="material-icons hints-title-icon">lightbulb</span>
@@ -151,6 +158,80 @@ function createHintsUI() {
 
     // Event delegation for expand/reveal interactions inside hints-content
     document.getElementById('hintsContent').addEventListener('click', handleContentClick);
+
+    setupResizeHandle();
+}
+
+// ============================================================================
+// RESIZE HANDLE — drag left edge to adjust panel width
+// ============================================================================
+
+const HINTS_RESIZE = {
+    DEFAULT_WIDTH_VW: 75,
+    MIN_WIDTH_VW: 35,
+    MAX_WIDTH_VW: 92,
+    STORAGE_KEY: 'iftalk_hints_width_vw',
+};
+
+function setupResizeHandle() {
+    const handle = document.getElementById('hintsResizeHandle');
+    const panel = document.querySelector('.hints-panel');
+    if (!handle || !panel) return;
+
+    // Restore saved width
+    try {
+        const saved = parseFloat(localStorage.getItem(HINTS_RESIZE.STORAGE_KEY));
+        if (saved >= HINTS_RESIZE.MIN_WIDTH_VW && saved <= HINTS_RESIZE.MAX_WIDTH_VW) {
+            panel.style.width = `${saved}vw`;
+        }
+    } catch (_) {}
+
+    let isResizing = false;
+    let startX = 0;
+    let startWidthPx = 0;
+
+    function getClientX(e) { return e.clientX ?? e.touches?.[0]?.clientX; }
+
+    function startResize(e) {
+        isResizing = true;
+        startX = getClientX(e);
+        startWidthPx = panel.getBoundingClientRect().width;
+        handle.classList.add('dragging');
+        panel.classList.add('resizing');
+        document.body.classList.add('hints-resizing');
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function doResize(e) {
+        if (!isResizing) return;
+        const dx = startX - getClientX(e); // dragging left = wider
+        const newWidthVw = Math.min(
+            HINTS_RESIZE.MAX_WIDTH_VW,
+            Math.max(HINTS_RESIZE.MIN_WIDTH_VW, ((startWidthPx + dx) / window.innerWidth) * 100)
+        );
+        panel.style.width = `${newWidthVw}vw`;
+        e.preventDefault();
+    }
+
+    function stopResize() {
+        if (!isResizing) return;
+        isResizing = false;
+        handle.classList.remove('dragging');
+        panel.classList.remove('resizing');
+        document.body.classList.remove('hints-resizing');
+        try {
+            const widthVw = (panel.getBoundingClientRect().width / window.innerWidth) * 100;
+            localStorage.setItem(HINTS_RESIZE.STORAGE_KEY, widthVw.toString());
+        } catch (_) {}
+    }
+
+    handle.addEventListener('mousedown', startResize);
+    handle.addEventListener('touchstart', startResize, { passive: false });
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('touchmove', doResize, { passive: false });
+    document.addEventListener('mouseup', stopResize);
+    document.addEventListener('touchend', stopResize);
 }
 
 // ============================================================================
@@ -167,16 +248,18 @@ export function showHints() {
     _overlay.removeAttribute('inert');
     _overlay.removeAttribute('aria-hidden');
     _overlay.classList.remove('hidden');
-    // Trigger reflow so CSS transition fires
-    _overlay.offsetHeight; // eslint-disable-line no-unused-expressions
-    _overlay.classList.add('visible');
     _isVisible = true;
 
+    // Render content while the panel is still off-screen (transform: 100%),
+    // THEN force a reflow and slide in — avoids the content reflowing
+    // mid-transition (the "slides and slides back" glitch).
     renderHintsContent();
+    _overlay.offsetHeight; // eslint-disable-line no-unused-expressions
+    _overlay.classList.add('visible');
 
-    // Focus the close button after the panel slides in
+    // Focus the close button after the panel slides in (no scroll jump)
     setTimeout(() => {
-        document.getElementById('hintsCloseBtn')?.focus();
+        document.getElementById('hintsCloseBtn')?.focus({ preventScroll: true });
     }, 50);
 }
 
@@ -187,6 +270,7 @@ export function hideHints() {
     _overlay.setAttribute('inert', '');
     _overlay.setAttribute('aria-hidden', 'true');
     _isVisible = false;
+    _openQuestionId = null;
 
     // Restore focus to trigger element
     if (_lastFocusedBeforeOpen && document.contains(_lastFocusedBeforeOpen)) {
@@ -247,33 +331,18 @@ function renderHintsContent() {
         return;
     }
 
-    let html = '';
-    let firstMatchedSectionId = null;
+    // Mark matched sections as seen (persists across sessions)
+    if (sectionIds.size > 0) {
+        markSectionsSeen(sectionIds, _currentGameName);
+    }
+    const seenSections = getSeenSections(_currentGameName);
 
+    let html = '';
     for (const section of sections) {
-        const isMatched = sectionIds.has(section.id);
-        if (isMatched && !firstMatchedSectionId) {
-            firstMatchedSectionId = section.id;
-        }
-        html += renderSection(section, isMatched, questionIds);
+        html += renderSection(section, sectionIds.has(section.id), questionIds, seenSections);
     }
 
     contentEl.innerHTML = html;
-
-    // Auto-scroll the first matched section into view
-    if (firstMatchedSectionId) {
-        const sectionEl = contentEl.querySelector(`[data-section-id="${firstMatchedSectionId}"]`);
-        if (sectionEl) {
-            // Expand it
-            sectionEl.classList.add('expanded');
-            const header = sectionEl.querySelector('.hints-section-header');
-            if (header) header.setAttribute('aria-expanded', 'true');
-
-            setTimeout(() => {
-                sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 80);
-        }
-    }
 }
 
 /**
@@ -282,17 +351,16 @@ function renderHintsContent() {
  * @param {Object} section
  * @param {boolean} isMatched - Whether this section matches current location
  * @param {Set<string>} matchedQuestionIds
+ * @param {Set<string>} seenSections - Section IDs ever pinned for this game
  * @returns {string} HTML string
  */
-function renderSection(section, isMatched, matchedQuestionIds) {
+function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
+    const isSeen = isMatched || seenSections.has(section.id);
+    const lockedClass = isSeen ? '' : ' hints-section-locked';
+    const inertAttr = isSeen ? '' : ' inert';
     const badgeHtml = isMatched
-        ? '<span class="hints-location-badge" title="You may be here">📍</span>'
+        ? '<button class="material-icons hints-location-badge" data-action="open-map" title="Current location — open map">add_location</button>'
         : '';
-    const unverifiedHtml = !section.verified
-        ? '<span class="hints-unverified-tag" title="Room names in this section were not verified by live playthrough">unverified</span>'
-        : '';
-    const expandedClass = isMatched ? ' expanded' : '';
-    const ariaExpanded = isMatched ? 'true' : 'false';
 
     let questionsHtml = '';
     const questions = Array.isArray(section.questions) ? section.questions : [];
@@ -301,13 +369,14 @@ function renderSection(section, isMatched, matchedQuestionIds) {
     }
 
     return `
-      <div class="hints-section${expandedClass}" data-section-id="${escHtml(section.id)}">
-        <button class="hints-section-header" aria-expanded="${ariaExpanded}" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
-          <span class="material-icons hints-section-chevron">chevron_right</span>
-          <span class="hints-section-title">${escHtml(section.title)}</span>
+      <div class="hints-section${lockedClass}" data-section-id="${escHtml(section.id)}"${inertAttr}>
+        <div class="hints-section-row">
+          <button class="hints-section-header" aria-expanded="false" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
+            <span class="material-icons hints-section-chevron">chevron_right</span>
+            <span class="hints-section-title">${escHtml(section.title)}</span>
+          </button>
           ${badgeHtml}
-          ${unverifiedHtml}
-        </button>
+        </div>
         <div class="hints-section-body">
           ${questionsHtml || '<div class="hints-no-questions">No questions defined for this section.</div>'}
         </div>
@@ -325,43 +394,59 @@ function renderQuestion(question, isMatched) {
     const hints = Array.isArray(question.hints) ? question.hints : [];
     const total = hints.length;
     const revealed = getRevealedCount(question.id, _currentGameName);
+    const allRevealed = total > 0 && revealed >= total;
 
+    // Revealed hints — plain text; final hint (answer) tinted amber
     let hintsHtml = '';
     for (let i = 0; i < revealed; i++) {
         const isAnswer = i === total - 1;
         hintsHtml += `
           <div class="hints-hint-item ${isAnswer ? 'hints-hint-answer' : ''}">
-            <span class="hints-hint-number">${isAnswer ? 'Answer' : `Hint ${i + 1}`}</span>
             <span class="hints-hint-text">${escHtml(hints[i])}</span>
           </div>`;
     }
 
-    let revealButtonHtml = '';
-    if (revealed < total) {
-        const nextNum = revealed + 1;
-        const isNextAnswer = nextNum === total;
-        const btnClass = isNextAnswer ? 'hints-reveal-btn hints-reveal-answer-btn' : 'hints-reveal-btn';
-        const btnLabel = isNextAnswer
-            ? 'Tap to reveal the answer'
-            : `Tap to reveal hint ${nextNum} of ${total}`;
-        revealButtonHtml = `
-          <button class="${btnClass}" data-action="reveal-hint" data-question-id="${escHtml(question.id)}" data-total="${total}">
-            ${escHtml(btnLabel)}
-          </button>
-          <div class="hints-remaining">${total - revealed} hint${total - revealed !== 1 ? 's' : ''} remaining</div>`;
-    } else if (total > 0) {
-        revealButtonHtml = '<div class="hints-all-revealed">All hints revealed</div>';
+    // Slim reveal button below the revealed hints, until everything is shown.
+    // "Show answer" when the next reveal is the final hint, else "Show next hint".
+    let revealBtnHtml = '';
+    if (revealed > 0 && !allRevealed) {
+        const nextIsAnswer = revealed + 1 === total;
+        revealBtnHtml = `
+          <button class="hints-reveal-btn ${nextIsAnswer ? 'hints-reveal-answer' : ''}" data-action="reveal-hint" data-question-id="${escHtml(question.id)}" data-total="${total}">
+            ${nextIsAnswer ? 'Show answer' : 'Show next hint'}
+          </button>`;
     }
 
+    // Count badge: bare total before any reveal (e.g. "3"), else "revealed/total"
+    const countText = revealed === 0 ? `${total}` : `${revealed}/${total}`;
+    const countTitle = revealed === 0
+        ? `${total} hint${total !== 1 ? 's' : ''}`
+        : `${revealed} of ${total} hints shown`;
+    const countHtml = `<span class="hints-count" title="${countTitle}">${countText}</span>`;
+
+    // Question text: reveals hint 1 (if none revealed yet) or toggles expand/collapse
+    const triggerAction = revealed === 0 ? 'reveal-hint' : 'toggle-question';
+    const triggerDisabled = total === 0 ? ' disabled' : '';
+
     const matchedClass = isMatched ? ' hints-question-matched' : '';
+    // Accordion: only the single open question shows its hints
+    const expandedClass = question.id === _openQuestionId ? ' expanded' : '';
 
     return `
-      <div class="hints-question${matchedClass}" data-question-id="${escHtml(question.id)}">
-        <div class="hints-question-text">${escHtml(question.q)}</div>
-        <div class="hints-hints-list" id="hints-list-${escHtml(question.id)}">
-          ${hintsHtml}
+      <div class="hints-question${matchedClass}${expandedClass}" data-question-id="${escHtml(question.id)}">
+        <div class="hints-question-header">
+          <button class="hints-question-trigger" data-action="${triggerAction}" data-question-id="${escHtml(question.id)}" data-total="${total}"${triggerDisabled}>
+            ${escHtml(question.q)}
+          </button>
+          ${countHtml}
+          <button class="hints-question-close" data-action="close-question" data-question-id="${escHtml(question.id)}" aria-label="Collapse">
+            <span class="material-icons">expand_less</span>
+          </button>
         </div>
-        ${revealButtonHtml}
+        <div class="hints-hints-list">
+          ${hintsHtml}
+          ${revealBtnHtml}
+        </div>
       </div>`;
 }
 
@@ -375,33 +460,91 @@ function handleContentClick(e) {
 
     const action = target.dataset.action;
 
+    if (action === 'open-map') {
+        openMap();
+        return;
+    }
+
     if (action === 'toggle-section') {
         const sectionId = target.dataset.sectionId;
         const sectionEl = _overlay.querySelector(`.hints-section[data-section-id="${sectionId}"]`);
         if (!sectionEl) return;
-        const expanded = sectionEl.classList.toggle('expanded');
-        target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        const willExpand = !sectionEl.classList.contains('expanded');
+        // Accordion: close all other open sections
+        if (willExpand) {
+            _overlay.querySelectorAll('.hints-section.expanded').forEach(el => {
+                el.classList.remove('expanded');
+                const h = el.querySelector('.hints-section-header');
+                if (h) h.setAttribute('aria-expanded', 'false');
+            });
+        }
+        sectionEl.classList.toggle('expanded', willExpand);
+        target.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+        return;
     }
 
     if (action === 'reveal-hint') {
         const questionId = target.dataset.questionId;
         const total = parseInt(target.dataset.total, 10);
         if (!questionId || isNaN(total)) return;
-        const newCount = revealNext(questionId, total, _currentGameName);
+        revealNext(questionId, total, _currentGameName);
 
-        // Re-render just this question in place
-        const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
-        if (questionEl) {
-            const section = findQuestionSection(questionId);
-            if (section) {
-                const question = section.questions.find(q => q.id === questionId);
-                if (question) {
-                    const isMatched = questionEl.classList.contains('hints-question-matched');
-                    questionEl.outerHTML = renderQuestion(question, isMatched);
-                }
-            }
+        // Accordion: this question becomes the single open one
+        _openQuestionId = questionId;
+        collapseOtherQuestions(questionId);
+        rerenderQuestion(questionId);
+    }
+
+    if (action === 'toggle-question') {
+        const questionId = target.dataset.questionId;
+        if (_openQuestionId === questionId) {
+            _openQuestionId = null;
+            const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
+            if (questionEl) questionEl.classList.remove('expanded');
+        } else {
+            _openQuestionId = questionId;
+            collapseOtherQuestions(questionId);
+            const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
+            if (questionEl) questionEl.classList.add('expanded');
         }
     }
+
+    if (action === 'close-question') {
+        const questionId = target.dataset.questionId;
+        if (_openQuestionId === questionId) _openQuestionId = null;
+        const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
+        if (questionEl) questionEl.classList.remove('expanded');
+    }
+}
+
+/**
+ * Open the map canvas. Lazy-loads the module and inits it; initMapCanvas() is
+ * idempotent (module-level _initialized guard) and ES imports are cached, so
+ * this is safe alongside app.js's own map-button init path.
+ */
+async function openMap() {
+    const mapModule = await import('../map-canvas.js');
+    mapModule.initMapCanvas();
+    mapModule.showMap();
+}
+
+/** Collapse every open question except the given one (accordion behavior). */
+function collapseOtherQuestions(exceptId) {
+    _overlay.querySelectorAll('.hints-question.expanded').forEach(el => {
+        if (el.dataset.questionId !== exceptId) el.classList.remove('expanded');
+    });
+}
+
+/** Re-render a single question's DOM in place from current state. */
+function rerenderQuestion(questionId) {
+    const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
+    if (!questionEl) return;
+    const section = findQuestionSection(questionId);
+    if (!section) return;
+    const question = section.questions.find(q => q.id === questionId);
+    if (!question) return;
+    const isMatched = questionEl.classList.contains('hints-question-matched');
+    questionEl.outerHTML = renderQuestion(question, isMatched);
 }
 
 /** Find the section containing a given questionId */

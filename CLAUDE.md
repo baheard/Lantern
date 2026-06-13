@@ -1,8 +1,8 @@
-# IFTalk - Interactive Fiction with Voice Control
+﻿# IFTalk - Interactive Fiction with Voice Control
 
 ## Architecture Overview
 
-**🎮 Fully Browser-Based - No Server-Side Game Logic**
+**ðŸŽ® Fully Browser-Based - No Server-Side Game Logic**
 
 - **Frontend**: Vanilla JavaScript (ES6 modules)
 - **Game Engine**: ifvms.js (Z-machine interpreter) + GlkOte (display library)
@@ -52,13 +52,13 @@ cd /e/Project/IFTalk && npm start
 
 **Context Management:** Claude will warn when context usage reaches 85% (15% remaining). Use `/context` to check current usage.
 
-**Tome:** When implementing a feature, save non-obvious design decisions, gotchas, and architectural rationale to `.tome/` — not just on explicit request, but proactively whenever something worth remembering surfaces (e.g. a pipeline gap, a cache design, a module cycle workaround). The global instructions already say to do this; this is a project-level reminder to not skip it during feature work.
+**Tome:** When implementing a feature, save non-obvious design decisions, gotchas, and architectural rationale to `.tome/` â€” not just on explicit request, but proactively whenever something worth remembering surfaces (e.g. a pipeline gap, a cache design, a module cycle workaround). The global instructions already say to do this; this is a project-level reminder to not skip it during feature work.
 
 ## Version Management
 
 **IMPORTANT:** Every time a new feature is added or a significant change is made:
 
-**⚠️ Claude: ALWAYS increment the version number when making any code changes, bug fixes, or feature additions. No exceptions.**
+**âš ï¸ Claude: ALWAYS increment the version number when making any code changes, bug fixes, or feature additions. No exceptions.**
 
 1. **Increment the version number** in THREE places:
    - `docs/js/config.js` (line ~10) - **Single source of truth**:
@@ -100,7 +100,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.540
+**Current Version:** v1.5.550
 
 ## Third-Party Libraries
 
@@ -161,8 +161,8 @@ Fixed issues where scroll-down button and scrolling were off when mobile keyboar
    - Files: `docs/js/ui/scroll-down-button.js` (lines ~289-304)
 
 2. **Timing adjustments**: Increased delays for keyboard animations
-   - Keyboard close delay: 150ms → 300ms
-   - Scroll button refresh delay: 50ms → 150ms
+   - Keyboard close delay: 150ms â†’ 300ms
+   - Scroll button refresh delay: 50ms â†’ 150ms
    - Files: `docs/js/utils/scroll.js` (line ~87), `docs/js/ui/scroll-down-button.js` (line ~344)
 
 3. **Debounced updates**: Added debouncing to scroll button updates during viewport resizes
@@ -174,20 +174,20 @@ Fixed issues where scroll-down button and scrolling were off when mobile keyboar
 ## Current Status
 
 **Working Features:**
-- ✅ Game selection and loading
-- ✅ Browser-based ZVM game engine (Z-machine v3-8)
-- ✅ Inline keyboard input with mode detection
-- ✅ Autosave/restore system
-- ✅ Text-to-speech narration with speed control
-- ✅ Text highlighting with auto-scroll during narration
-- ✅ Voice recognition and voice commands
-- ✅ Push-to-talk mode
-- ✅ Settings panel with per-game preferences
-- ✅ Google Drive sync
-- ✅ Lock screen mode
-- ✅ Fully offline-capable
-- ✅ Auto-mapper with interactive map canvas
+- âœ… Game selection and loading
+- âœ… Browser-based ZVM game engine (Z-machine v3-8)
+- âœ… Inline keyboard input with mode detection
+- âœ… Autosave/restore system
+- âœ… Text-to-speech narration with speed control
+- âœ… Text highlighting with auto-scroll during narration
+- âœ… Voice recognition and voice commands
+- âœ… Push-to-talk mode
+- âœ… Settings panel with per-game preferences
+- âœ… Google Drive sync
+- âœ… Lock screen mode
+- âœ… Fully offline-capable
+- âœ… Auto-mapper with interactive map canvas
 
 **Active Development:**
-- 🔄 Code refactoring (Phase 3 of 7 - see [refactoring plan](reference/refactoring-plan.md))
+- ðŸ”„ Code refactoring (Phase 3 of 7 - see [refactoring plan](reference/refactoring-plan.md))
 - See [TODO.md](TODO.md) for other tasks and progress

@@ -1,0 +1,123 @@
+THEATRE
+      (An Interactive Night of Horror)
+Brendon Wyber (Cave Rock Software Ltd.)
+Walk Through by Dorothy Millard (PC & Amiga Versions)
+
+Source: https://www.solutionarchive.com/file/id%2C8345/
+Originally from Dorothy Irene's site: http://dorothyirene.fateback.com/
+
+Notes
+1. The pager goes off on move 250.  When it does just EXAMINE PAGER then drop it.
+2. You gain three points for reading all the pages.
+
+Walk Through
+(Start in the Theatre Lobby), EXAMINE POSTERS, EXAMINE STAIRCASE, LOOK UP (two stories high), NW
+(manager's office), D (basement), GET PAGER THEN EXAMINE IT, GET PAGE (loose), EXAMINE PANEL,
+TURN ON SWITCH, EXAMINE BARRELS, GET POPCORN, GET POPCORN, GET POPCORN, GET POPCORN (four lots), U,
+SE, S (outside theatre where you discover your car has been stolen), N (you start back into the
+theatre but are confronted by a thug carrying a knife), EXAMINE THUG, WAIT, WAIT, WAIT (the thug is
+driving you back into the theatre), N, NW (manager's office),  N (cramped hallway), GET PAGE
+(loose).
+
+W, W, S, W (music room), EXAMINE PIANO (note the wheels), GET MUSIC THEN EXAMINE IT, PUT MUSIC ON
+HOLDER, PLAY PIANO, PUSH PIANO EAST, PUSH PIANO SOUTH (prop room), STAND ON PIANO, OPEN TRAPDOOR, U
+(southern end of attic), GET PAGES (loose), N, TURN HANDLE (this lowers the chandelier to the
+auditorium floor), N (attic observatory), EXAMINE TELESCOPE, GET LENS (note the green gas which is
+escaping so don't hang around), S, S, D (prop room).
+
+N, N, D, D (cramped hallway), N (narrow hall), MOVE CARPET ROLLS (this frees the passage to the
+north and reveals a body), GET CORPSE, EXAMINE CORPSE (see an appointment book), READ APPOINTMENT
+BOOK (Reinhart left his cellular phone here - if you can find that you can call for help), DROP
+APPOINTMENT BOOK, N (end of hallway), GET PAGE (loose), N (alley courtyard), EXAMINE RUBBISH BIN
+(closed), OPEN RUBBISH BIN, GET PAGE FROM BIN, GET TICKET FROM BIN, EXAMINE TICKET, SW, S, S, S, SE
+(theatre lobby), DROP ALL EXCEPT LENS AND PAGER.
+
+U (staircase landing), EXAMINE PORTRAIT, FEEL PAINTING, OPEN DOOR, N (secret gallery), GET PAGE
+(loose), GET CAMERA THEN EXAMINE IT, S, D (lobby), DROP CAMERA AND PAGER, U, E, S (southern
+landing), OPEN CURTAINS (reveals a curiously patterned circular window), EXAMINE WINDOW, LOOK DOWN
+(the light shining through the window has made a spotlight on the lobby floor below), NE, W, D
+(lobby), PUT LENS IN SPOTLIGHT (the pattern is burned into the lens), GET LENS AND TICKET.
+
+U, E, N (eastern theatre aisle where you see the chandelier which has been lowered), PUSH
+CHANDELIER, DROP TICKET (a voice whispers that you are too early... there is a gust of air and you
+find yourself on the staircase landing), E, E, U (eastern balcony), SWING CHANDELIER (you swing
+across to the western balcony), NW (back wall), GET PAGE (loose), S, W (secret library), EXAMINE
+BOOKS, N (reading recess), GET PAGES (loose), S, S (southern end of library where you see a large
+nest containing a slug), EXAMINE SLUG, EXAMINE NEST (guarded by the slug), N, EXAMINE BOOKCASE (a
+long chain holds them in place), UNHOOK CHAIN, PUSH BOOKCASE, S (the bookcase fell on the slug), S,
+EXAMINE NEST (see a strange blue eye-like pearl), GET BLUE PEARL.
+
+W (through the window to street balcony), U (theatre roof), GET CROW (as you move towards it it
+flies down the chimney), D (guest star room), EXAMINE FIREPLACE (it continues up and down), CLIMB
+DOWN CHIMNEY (into a sealed office), OPEN COFFIN (see a key which the crow steals but drops down the
+chimney), EXAMINE FIREPLACE (goes up and down), D (boiler room), GET KEY, OPEN CHEST (reveals a
+bottle of glue), GET BOTTLE THEN EXAMINE IT, EXAMINE COAL BIN, GET LUMP THEN EXAMINE IT, CLEAN LUMP
+(reveals a violet eye-like pearl), U, U (the chimney to guest star room), E (north end of long
+corridor), S, W (costume room), GET MASK (as you reach for it the mannequins shuffle towards you),
+BREAK BOTTLE (the glue splashes stopping the mannequins), GET MASK (gas).
+
+E, S, S (prop room), CLIMB PIANO, U (attic), N, WEAR MASK, N (observatory where the gas mask
+protects from the green gas), PUT LENS IN TELESCOPE (this stops the flow of gas), DROP MASK, LOOK
+THROUGH TELESCOPE (through the patterned lens you see an alien presence... you collapse and awake
+with something new in your inventory), INVENTORY (it's a star crystal), EXAMINE STAR CRYSTAL,
+S, S, D, N, N, N.
+
+N (sick bay), OPEN CABINET, GET PAGE (loose), GET TABLETS AND STETHOSCOPE FROM CABINET, GET VIAL,
+EXAMINE VIAL (contains a blue liquid), READ LETTER, S, S, E, E, S (manager's office), EXAMINE
+SAFE (has a dial), WEAR STETHOSCOPE, LISTEN SAFE, TURN DIAL LEFT, TURN DIAL RIGHT, TURN DIAL LEFT,
+TURN DIAL RIGHT (the safe opens to reveal a red eye-like pearl which you take), DROP STETHOSCOPE,
+EXAMINE DESK (see drawer), OPEN DRAWER (reveals a loose page and architect's plans), GET PAGE
+(loose), GET PLANS THEN EXAMINE IT (note the ticket booth to the south of the office), EXAMINE SOUTH
+WALL, DROP PLANS, KICK SOUTH WALL (reveals an exit south), S (into sealed-up ticket booth), GET PAGE
+(loose), EXAMINE SKELETON (see rags and a pocket watch), EXAMINE RAGS, EXAMINE WATCH (has a dial),
+PULL DIAL, TURN DIAL, TURN DIAL, TURN DIAL, TURN DIAL (until it reads 7:40 - it will now be late
+enough to enter the theatre), N.
+
+SE (lobby), DROP ALL EXCEPT PAGER, GET CAMERA, U (landing), GET TICKET, E, N (eastern theatre isle
+where a voice whispers "tickets please"), DROP TICKET (the ghostly presents says to enjoy
+the show), N (stage), N (backstage), DROP TICKET, GET PAGE (loose), EXAMINE ROPE (see door above),
+CLIMB ROPE, W (dressing room), OPEN LOCKER (you discover an ancient amulet, an old newspaper
+clipping and a coiled serpent), PUSH LOCKER EAST (it falls to the stage below killing the snake), D,
+READ NEWSPAPER, GET AMULET THEN WEAR IT.
+
+S, S (orchestra pit), E (storage cupboards), E (a shadow forms from out of the gloom and drives you
+back), EXAMINE SHADOW, TAKE PHOTOGRAPH (seeing the flash the shadow creature vanishes), DROP CAMERA,
+E (dark place), NW (under stage), GET PAGE (loose), EXAMINE ITEMS (see coin, pencil, bits of paper
+and a green eye-like pearl), GET GREEN PEARL THEN EXAMINE IT (leave the rest), SE, W, W, N (stage),
+SE, S, W, D (lobby), GET ALL, NE (cloakroom), EXAMINE HOOKS (one is cleaner than the others), PULL
+CLEAN HOOK (a secret passage opens), D (secret stairway), GET PAGE (loose), D (underground passage),
+EXAMINE DOOR, UNLOCK DOOR WITH SHINY KEY, OPEN DOOR, DROP KEY, E (above pit where you hear a
+growling beast below), EXAMINE PIT, GET PAGE (loose), POUR LIQUID ON BODY (poison), DROP VIAL, THROW
+BODY IN PIT, D (inside pit), E (tunnel junction), GET PAGE (loose).
+
+SW (mine shaft), D (deep in mines where a large cage dominates the area containing a goblin-like
+creature), EXAMINE CREATURE (humanoid - note the following four moves give a random response so make
+a note of it), SHOW VIOLET PEARL TO GOBLIN, SHOW BLUE PEARL TO GOBLIN, SHOW RED PEARL TO GOBLIN,
+SHOW GREEN PEARL TO GOBLIN, U, NE, SE (western end of sewer), DROP POPCORN, E (center of sewer),
+DROP POPCORN, E (eastern end of sewer), DROP POPCORN, SE (rat nest), DROP POPCORN (the rats consume
+it), NW (rats follow), W, N (the rats scurry west following the popcorn trail), EXAMINE LEVER, WAIT
+(until the rats move away to the western end of the sewer), PULL LEVER (sluice gate opens and
+flushes the rats down the drain... the gate automatically closes again), S, E, SE (rat nest).
+
+WITCH'S LAIR - SE (witch's lair), GET PAGE (loose), EXAMINE STATUE (the forehead has four
+eye sockets forming a diamond), PUT BLUE PEARL IN ............ SOCKET, PUT RED PEARL IN ............
+SOCKET, PUT GREEN PEARL IN ............. SOCKET, PUT VIOLET PEARL IN ............ SOCKET, GET DAGGER
+THEN EXAMINE IT, NW, DROP AMULET.
+
+NW, W, W, NW (tunnel junction), SW, D (to where the goblin is), GET EARTH CRYSTAL (from dagger),
+SHOW EARTH CRYSTAL TO TRENT, SHOW STAR CRYSTAL TO TRENT, PUT STAR CRYSTAL IN DAGGER, READ PAGES
+(read all of them for 3 points), ASK TRENT ABOUT ELIZABETH (he says she might hear you), DROP ALL
+EXCEPT DAGGER AND TABLETS, U, NE, NE (old hallway where you hear chanting), NE (the chanting is
+sinister are you sure?), YES (you are in the ceremony room where you meet Elizabeth who takes the
+dagger, but it contains the wrong crystal... she vanishes releasing you... you awake outside the
+burning mansion).
+
+N (smoky hall), GIVE TABLETS TO MAN (they remove his pain and he tells you he is Trent... he says
+that you must destroy an evil in female form which is below), GET DAGGER, GET STAR, D (wine cellar),
+THROW STAR AT YOUNG WOMAN (the crystal shatters and all is consumed in an immense explosion... you
+find yourself back in the theatre lobby), NW, D, U (manager's office... Reinhart gets his phone
+and hands you your pager), SE (lobby), S (outside theatre where you see your car), ENTER CAR.
+
+*** You have won ***
+You have discovered the secret of the theatre and have completed the game
+with a score of 50 out of a possible 50.

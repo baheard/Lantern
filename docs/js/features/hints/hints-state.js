@@ -74,10 +74,37 @@ export function revealNext(questionId, totalHints, gameName) {
 
 /**
  * Reset all revealed hints for the current game.
+ * Does NOT reset seen-sections (those track visited rooms, not hint state).
  *
  * @param {string} [gameName]
  */
 export function resetAll(gameName) {
     const key = getGameKey('hints', gameName);
     setJSON(key, { revealed: {}, updatedAt: new Date().toISOString() });
+}
+
+/**
+ * Return the set of section IDs that have ever been pinned (location-matched)
+ * for this game. Used to decide which sections to blur.
+ *
+ * @param {string} [gameName]
+ * @returns {Set<string>}
+ */
+export function getSeenSections(gameName) {
+    const key = getGameKey('hints_seen', gameName);
+    const stored = getJSON(key, null);
+    return new Set(Array.isArray(stored) ? stored : []);
+}
+
+/**
+ * Persist one or more section IDs as "ever seen" (location matched at some point).
+ *
+ * @param {Iterable<string>} sectionIds
+ * @param {string} [gameName]
+ */
+export function markSectionsSeen(sectionIds, gameName) {
+    const key = getGameKey('hints_seen', gameName);
+    const existing = getSeenSections(gameName);
+    for (const id of sectionIds) existing.add(id);
+    setJSON(key, [...existing]);
 }

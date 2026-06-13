@@ -7,17 +7,18 @@
     "sources": [
       {
         "name": "Dorothy Millard walkthrough (CASA)",
-        "url": "https://solutionarchive.com/file/id%2C8345/"
+        "url": "https://solutionarchive.com/file/id%2C8345/",
+        "file": "docs/games/walkthroughs/theatre.txt"
       }
     ],
     "generatedBy": "generate-hints skill",
     "generatedAt": "2026-06-12",
-    "appVersion": "1.5.538"
+    "appVersion": "1.5.543"
   },
   "sections": [
     {
       "id": "act1-the-pager",
-      "title": "Act I — The Pager",
+      "title": "The Lobby & Basement",
       "verified": true,
       "locations": ["Theatre Lobby", "Cloakroom", "Manager's Office", "Basement", "Outside The Theatre"],
       "questions": [
@@ -37,7 +38,7 @@
           "locations": ["Basement"],
           "hints": [
             "Quite a lot, actually. Examine everything — the panel, the barrels, and keep an eye out for paper.",
-            "Turn on the switch on the electrical panel. You'll appreciate having the lights on later.",
+            "There's an electrical panel on the wall. A dark theatre is no friend of yours — TURN ON SWITCH.",
             "There's a loose page here. Pages are scattered all over the game — collecting and reading every one is worth bonus points.",
             "The barrels hold popcorn — and not just one handful. Keep taking it. Trust us, you will want all of it much later.",
             "Answer: TAKE PAGER, GET PAGE, EXAMINE PANEL, TURN ON SWITCH, EXAMINE BARRELS, then GET POPCORN four times (there are four lots)."
@@ -60,7 +61,7 @@
           "hints": [
             "Examine it — it has a combination dial. Nobody is going to tell you the combination.",
             "Old movies have the answer: safecrackers listen to the tumblers. You need the right instrument for that.",
-            "A stethoscope. There's one in a cabinet in the Sick Bay, which you'll find while exploring the upper hallways.",
+            "A stethoscope. Have you explored the upper hallways yet? There's a Sick Bay up there with a cabinet worth opening.",
             "Answer: WEAR STETHOSCOPE, LISTEN SAFE, then TURN DIAL LEFT, TURN DIAL RIGHT, TURN DIAL LEFT, TURN DIAL RIGHT. The safe opens — take what's inside, you'll need it."
           ]
         },
@@ -87,16 +88,17 @@
     },
     {
       "id": "westwing",
-      "title": "The Music Room, Attic & Chandelier",
+      "title": "The West Wing",
       "verified": false,
+      "locations": ["Music Room", "Prop Room", "Attic", "Attic Observatory"],
       "questions": [
         {
           "id": "westwing-piano",
           "q": "There's a piano in the Music Room. Can I do anything with it?",
+          "locations": ["Music Room"],
           "hints": [
             "Examine it closely — note what it's standing on.",
-            "It's on wheels. But it won't budge until it has served its musical purpose. Is there any music around?",
-            "GET MUSIC, PUT MUSIC ON HOLDER, PLAY PIANO. After that, it can be pushed.",
+            "It's on wheels, and it pushes easily. (Don't ignore the sheet of music in the room either: GET MUSIC, PUT MUSIC ON HOLDER, PLAY PIANO.)",
             "Where to push it? Think of the piano as furniture — something sturdy to stand on, positioned under something out of reach.",
             "Answer: PUSH PIANO EAST, then PUSH PIANO SOUTH into the Prop Room. STAND ON PIANO, OPEN TRAPDOOR, and go UP into the attic."
           ]
@@ -104,15 +106,17 @@
         {
           "id": "westwing-chandelier",
           "q": "The chandelier hangs high over the auditorium. How do I reach it?",
+          "locations": ["Attic"],
           "hints": [
             "You don't reach it — you bring it to you. Machinery for stage rigging is usually kept above.",
-            "In the southern end of the attic, head north and look for a mechanism.",
+            "The machinery is in the attic. (If you haven't found a way up there yet, see the piano question first.) From the attic's southern end, head north and look for a mechanism.",
             "Answer: In the attic, TURN HANDLE. The chandelier is lowered to the auditorium floor. What it's for comes later — see the balconies."
           ]
         },
         {
           "id": "westwing-gas",
           "q": "Green gas is leaking in the Attic Observatory and it's killing me!",
+          "locations": ["Attic Observatory"],
           "hints": [
             "The gas comes from the telescope area. On your first visit, you can dash in and out — don't linger.",
             "Grab the one thing worth taking (EXAMINE TELESCOPE, GET LENS) and get out fast.",
@@ -123,10 +127,11 @@
         {
           "id": "westwing-telescope",
           "q": "What is the telescope in the Observatory for?",
+          "locations": ["Attic Observatory"],
           "hints": [
-            "It's missing something. Examine it — and recall anything lens-shaped you've picked up.",
+            "It's missing something. Examine it. (If the gas drove you out before you could look around, see the gas question first.)",
             "An ordinary lens isn't enough. The lens needs to carry a particular pattern first. Have you seen a strange pattern anywhere — perhaps in a window?",
-            "Once you've burned the window's pattern into the lens (see 'The Landing & the Window'), bring it back here wearing the gas mask.",
+            "Once you've burned the window's pattern into the lens (see 'The Staircase Landing'), bring it back here wearing the gas mask.",
             "Answer: WEAR MASK, go to the Observatory, PUT LENS IN TELESCOPE (this also stops the gas), then LOOK THROUGH TELESCOPE. You collapse — and wake with a star crystal in your inventory. You will absolutely need it."
           ]
         }
@@ -134,12 +139,14 @@
     },
     {
       "id": "hallways",
-      "title": "Hallways, the Corpse & the Alley",
+      "title": "The Hallways & the Alley",
       "verified": false,
+      "locations": ["Cramped Hallway", "Narrow Hall", "End of Hallway", "Alley Courtyard"],
       "questions": [
         {
           "id": "hallways-carpet",
           "q": "Rolls of carpet block the passage in the Narrow Hall.",
+          "locations": ["Narrow Hall"],
           "hints": [
             "They're just heavy, not magical.",
             "Answer: MOVE CARPET ROLLS. The passage north is freed — and something unpleasant is revealed underneath."
@@ -148,15 +155,17 @@
         {
           "id": "hallways-corpse",
           "q": "I found a corpse under the carpet. Ew. Now what?",
+          "locations": ["Narrow Hall"],
           "hints": [
             "Steel yourself and search it. The dead man was here for a reason.",
             "GET CORPSE / EXAMINE CORPSE — he carries an appointment book.",
-            "Answer: READ APPOINTMENT BOOK. Reinhart left his cellular phone in the theatre — if you could find it, you could call for help. (Also: don't be squeamish about the corpse itself. It has one more grim use, much later, underground.)"
+            "Answer: READ APPOINTMENT BOOK. Reinhart left his cellular phone in the theatre — if you could find it, you could call for help. (And remember where you left the poor fellow.)"
           ]
         },
         {
           "id": "hallways-bin",
           "q": "Is there anything useful in the alley courtyard?",
+          "locations": ["Alley Courtyard"],
           "hints": [
             "The rubbish bin is closed. Open things.",
             "Answer: OPEN RUBBISH BIN, GET PAGE FROM BIN, GET TICKET FROM BIN. The ticket is your admission to the show — hold onto it."
@@ -166,12 +175,14 @@
     },
     {
       "id": "landing",
-      "title": "The Landing & the Window",
+      "title": "The Staircase Landing",
       "verified": false,
+      "locations": ["Staircase Landing", "Southern Landing", "Secret Gallery"],
       "questions": [
         {
           "id": "landing-portrait",
           "q": "There's a portrait on the staircase landing. It feels significant.",
+          "locations": ["Staircase Landing"],
           "hints": [
             "It is. Get your hands on it — literally.",
             "Answer: FEEL PAINTING, then OPEN DOOR and go N into the Secret Gallery. Take the camera you find there (GET CAMERA) — a flash camera has a very specific use later."
@@ -180,10 +191,11 @@
         {
           "id": "landing-window",
           "q": "What's the deal with the curiously patterned circular window?",
+          "locations": ["Southern Landing"],
           "hints": [
             "First make sure you can see it properly: OPEN CURTAINS on the southern landing.",
             "LOOK DOWN. The light through the window casts a patterned spotlight on the lobby floor below.",
-            "A pattern made of light... and you're carrying something made for catching light.",
+            "A pattern made of light... Have you found anything made for catching light? If not, don't go on — explore the attic first and come back.",
             "Answer: Go down to the lobby and PUT LENS IN SPOTLIGHT. The pattern is burned into the lens. Now the telescope in the Observatory has a purpose."
           ]
         }
@@ -191,24 +203,27 @@
     },
     {
       "id": "show",
-      "title": "Seeing the Show",
+      "title": "The Auditorium & Stage",
       "verified": false,
+      "locations": ["Eastern Theatre Aisle", "Stage", "Backstage", "Dressing Room", "Orchestra Pit", "Storage Cupboards"],
       "questions": [
         {
           "id": "show-too-early",
           "q": "A voice at the theatre aisle whispered that I'm \"too early\" and threw me out!",
+          "locations": ["Eastern Theatre Aisle"],
           "hints": [
             "The ghostly usher takes your ticket but the performance hasn't started. You can't wait it out — time in this place doesn't move on its own.",
             "If time won't pass by itself, you need to find a way to set the time. Has anything in the theatre got a dial or a face?",
-            "There's a pocket watch on a skeleton — inside the sealed-up ticket booth. Getting in there is its own puzzle (see the next question).",
+            "Something with a face is hidden very close to the lobby — behind a wall, in fact. Finding the way in is its own puzzle (see 'Is there anything else to find in the Manager's Office?').",
             "Answer: With the watch in the booth: PULL DIAL, then TURN DIAL four times until it reads 7:40. Now it's late enough. Return to the aisle with your ticket and DROP TICKET when the voice asks."
           ]
         },
         {
           "id": "show-ticket-booth",
-          "q": "How do I get into the sealed-up ticket booth?",
+          "q": "Is there anything else to find in the Manager's Office?",
+          "locations": ["Manager's Office"],
           "hints": [
-            "No door is visible — so check whether one ever existed. Old buildings have records.",
+            "Quite a bit. Old buildings keep records of their own construction — and offices keep records in furniture.",
             "The Manager's Office desk has a drawer. OPEN DRAWER — there are architect's plans inside.",
             "EXAMINE PLANS: the ticket booth lies directly south of the office. The wall between is just plaster and lath.",
             "Answer: EXAMINE SOUTH WALL, then KICK SOUTH WALL. It gives way, opening an exit south into the booth. Inside: a loose page, and a skeleton with rags and a pocket watch."
@@ -217,6 +232,7 @@
         {
           "id": "show-backstage",
           "q": "I'm on the stage/backstage. What should I be doing here?",
+          "locations": ["Stage", "Backstage"],
           "hints": [
             "Backstage, look up. EXAMINE ROPE — there's a door above.",
             "CLIMB ROPE and go W into the dressing room. The locker is worth opening — carefully.",
@@ -228,9 +244,10 @@
         {
           "id": "show-shadow",
           "q": "A shadow creature east of the orchestra pit keeps driving me back!",
+          "locations": ["Storage Cupboards"],
           "hints": [
             "You can't fight a shadow. But think about what shadows can't survive.",
-            "Light — sudden, bright light. Are you carrying anything that flashes?",
+            "Light — sudden, bright light. Have you found anything that flashes? If not, see 'There's a portrait on the staircase landing' first.",
             "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. You can drop the camera afterwards; continue east, then NW to get under the stage."
           ]
         }
@@ -238,54 +255,60 @@
     },
     {
       "id": "balconies",
-      "title": "The Balconies, Library & Roof",
+      "title": "The Balconies & the Roof",
       "verified": false,
+      "locations": ["Eastern Balcony", "Western Balcony", "Back Wall", "Secret Library", "Reading Recess", "Street Balcony", "Theatre Roof", "Guest Star Room", "Boiler Room", "North End of Long Corridor", "Costume Room"],
       "questions": [
         {
           "id": "balconies-western",
           "q": "I can see a western balcony but I can't find any way to walk to it.",
+          "locations": ["Eastern Balcony"],
           "hints": [
             "There is no walkway. Look at what's hanging in the middle of the auditorium — at its new height.",
-            "You lowered the chandelier with the attic handle, didn't you? A chandelier on a long chain is a pendulum.",
+            "If the chandelier is still hanging high, don't go on — see 'The chandelier hangs high over the auditorium' first. Once it's lowered: a chandelier on a long chain is a pendulum.",
             "Answer: From the Eastern Balcony, SWING CHANDELIER. You swing across to the Western Balcony — which leads to the back wall and the Secret Library."
           ]
         },
         {
           "id": "balconies-slug",
-          "q": "A huge slug guards a nest in the Secret Library.",
+          "q": "A huge slug is guarding a nest, and it won't let me near!",
+          "locations": ["Secret Library"],
           "hints": [
             "Whatever is glinting in that nest, the slug won't let you near it. You need to neutralize the slug without touching it.",
-            "Look around the library. What's tall, heavy, and standing right next to it?",
+            "Look around the room. What's tall, heavy, and standing right next to it?",
             "The bookcase — EXAMINE BOOKCASE. A long chain holds it in place.",
-            "Answer: UNHOOK CHAIN, PUSH BOOKCASE — it falls on the slug. Then EXAMINE NEST and GET BLUE PEARL. That's one of four strange eye-like pearls you'll be collecting."
+            "Answer: UNHOOK CHAIN, PUSH BOOKCASE — it falls on the slug. Then EXAMINE NEST and GET BLUE PEARL. That strange eye-like pearl will matter a great deal later — keep it safe."
           ]
         },
         {
           "id": "balconies-crow",
           "q": "A crow on the theatre roof keeps flying away from me — and now it's stolen a key!",
+          "locations": ["Theatre Roof", "Guest Star Room"],
           "hints": [
             "You can't catch it. Follow it instead. Where did it go? Down the chimney.",
             "Chimneys in this theatre connect rooms vertically — EXAMINE FIREPLACE in the guest star room, then CLIMB DOWN CHIMNEY.",
             "In the sealed office below: OPEN COFFIN. The crow steals the key — and drops it further down the chimney.",
-            "Answer: Climb down again to the Boiler Room and GET KEY there. That shiny key unlocks a door deep underground later. While you're in the Boiler Room, see the next questions — don't leave empty-handed."
+            "Answer: Climb down again to the Boiler Room and GET KEY there. That shiny key unlocks a door deep underground later. While you're in the Boiler Room, don't leave empty-handed — see 'What's worth taking in the Boiler Room?'"
           ]
         },
         {
           "id": "balconies-boiler",
           "q": "What's worth taking in the Boiler Room?",
+          "locations": ["Boiler Room"],
           "hints": [
             "Three things, plus the key the crow dropped. Open and examine everything.",
             "OPEN CHEST — there's a bottle of glue. Take it; it solves a problem in the Costume Room.",
             "EXAMINE COAL BIN and GET LUMP. One lump of coal is not like the others.",
-            "Answer: GET KEY, GET BOTTLE (glue, from the chest), GET LUMP, then CLEAN LUMP — it conceals the violet eye-like pearl, the second of four."
+            "Answer: GET KEY, GET BOTTLE (glue, from the chest), GET LUMP, then CLEAN LUMP — it conceals another strange eye-like pearl, violet this time."
           ]
         },
         {
           "id": "balconies-mannequins",
           "q": "The mannequins in the Costume Room come alive and shuffle toward me!",
+          "locations": ["Costume Room"],
           "hints": [
-            "They only move when you reach for the gas mask, and they're slow. Stop them in their tracks — literally.",
-            "Mannequins have feet. What do you have that could fix feet to a floor?",
+            "They're slow, at least. You don't need to fight them — stop them in their tracks. Literally.",
+            "Mannequins have feet. Is there anything in the theatre that could fix feet to a floor? If you haven't searched the Boiler Room, do that first (see 'What's worth taking in the Boiler Room?').",
             "Answer: BREAK BOTTLE (the glue bottle from the Boiler Room chest). The glue splashes across the floor and the mannequins stick fast. Now GET MASK — you'll need it for the gas in the Observatory."
           ]
         }
@@ -295,10 +318,12 @@
       "id": "underground",
       "title": "The Underground",
       "verified": false,
+      "locations": ["Secret Stairway", "Underground Passage", "Above Pit", "Inside Pit", "Tunnel Junction", "Mine Shaft", "Deep In Mines", "Western End of Sewer", "Center of Sewer", "Eastern End of Sewer", "Rat Nest", "Sick Bay"],
       "questions": [
         {
           "id": "underground-door",
           "q": "There's a locked door in the underground passage below the cloakroom.",
+          "locations": ["Underground Passage"],
           "hints": [
             "You found the way down by pulling the clean hook in the Cloakroom. The door needs a key you may already have.",
             "Remember the crow, the coffin, and the chimney?",
@@ -308,6 +333,7 @@
         {
           "id": "underground-pit",
           "q": "Something huge is growling in a pit and I can't get past it alive.",
+          "locations": ["Above Pit"],
           "hints": [
             "You cannot fight it and you cannot sneak by. The beast wants to eat — so feed it something.",
             "Feed it something... treated. Did you find a vial of blue liquid in the Sick Bay cabinet? Examine it — read the letter there too.",
@@ -318,8 +344,9 @@
         {
           "id": "underground-goblin",
           "q": "There's a goblin-like creature in a cage deep in the mines. Can it help me?",
+          "locations": ["Deep In Mines"],
           "hints": [
-            "He's more than he appears, and he knows things nobody else can tell you — specifically about the pearls you've been collecting.",
+            "He's more than he appears, and he knows things nobody else can tell you — particularly about certain strange objects you may have picked up along the way.",
             "Show him things. Note down what he says — his answers are different in every playthrough, and you will need them word for word later.",
             "Answer: SHOW VIOLET PEARL TO GOBLIN, SHOW BLUE PEARL TO GOBLIN, SHOW RED PEARL TO GOBLIN, SHOW GREEN PEARL TO GOBLIN — and WRITE DOWN which socket he names for each. The statue in the Witch's Lair has four sockets, and the correct placement is randomized per game."
           ]
@@ -327,6 +354,7 @@
         {
           "id": "underground-rats",
           "q": "Rats! The sewer is swarming with rats and I can't get through.",
+          "locations": ["Western End of Sewer", "Center of Sewer", "Eastern End of Sewer", "Rat Nest"],
           "hints": [
             "You can't kill that many rats. But rats follow food. Have you been carrying anything edible since the very first room of the game?",
             "The popcorn from the basement barrels — all four lots. Lay a trail.",
@@ -336,10 +364,11 @@
         },
         {
           "id": "underground-green-pearl",
-          "q": "I have three pearls — blue, red, violet. Where is the green one?",
+          "q": "The statue's forehead has four empty sockets, and I can't fill them all.",
           "hints": [
-            "Not underground, actually — it's been under your feet during the show.",
-            "Under the stage. Get past the shadow creature east of the orchestra pit first (camera flash).",
+            "If you haven't yet found a statue with empty sockets, set this question aside — you'll know when the time comes.",
+            "What fills them turns up all over the theatre: a guarded nest, a lump of coal... and one piece isn't underground at all. It's somewhere you passed during the show.",
+            "Under the stage. Something blocks the way east of the orchestra pit — see 'A shadow creature east of the orchestra pit keeps driving me back!'",
             "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
           ]
         }
@@ -349,10 +378,12 @@
       "id": "endgame",
       "title": "The Endgame",
       "verified": false,
+      "locations": ["Witch's Lair", "Old Hallway", "Ceremony Room", "Smoky Hall", "Wine Cellar"],
       "questions": [
         {
           "id": "endgame-statue",
-          "q": "I have all four pearls. What are they actually for?",
+          "q": "What are these strange eye-like pearls actually for?",
+          "locations": ["Witch's Lair"],
           "hints": [
             "They're described as eye-like. Something in the deepest part of the theatre is missing its eyes.",
             "The statue in the Witch's Lair — EXAMINE STATUE. Its forehead has four sockets in a diamond.",
@@ -362,17 +393,19 @@
         },
         {
           "id": "endgame-crystals",
-          "q": "I have the dagger. It has a crystal in it. Now what?",
+          "q": "What do I do with this strange dagger?",
+          "locations": ["Witch's Lair", "Deep In Mines"],
           "hints": [
-            "There are two crystals in this game: the earth crystal in the dagger, and the star crystal from the telescope. Only one of them can destroy the evil — and the ceremony must not get the right one.",
-            "Go back to the goblin. GET EARTH CRYSTAL (from the dagger), then SHOW EARTH CRYSTAL TO TRENT and SHOW STAR CRYSTAL TO TRENT. He explains what each really is.",
-            "Arm the dagger with the decoy: PUT STAR CRYSTAL IN DAGGER... no wait — that's exactly what you should do. The ceremony is a trap either way; the dagger Elizabeth takes must fail her.",
-            "Answer: PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger — wrong crystal — and vanishes, releasing you."
+            "EXAMINE DAGGER — the crystal set in it can be removed. And it isn't the only crystal in the game. (If you only have one, see 'What is the telescope in the Observatory for?')",
+            "Only one of the two crystals can destroy the evil, and you need to learn which. The caged goblin — Trent — can tell crystals apart. GET EARTH CRYSTAL from the dagger, then SHOW EARTH CRYSTAL TO TRENT and SHOW STAR CRYSTAL TO TRENT.",
+            "The coming ceremony is a trap: Elizabeth intends to use the dagger. Make sure the crystal it holds when she takes it is the wrong one for her purpose.",
+            "Answer: PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards — see the burning mansion question.)"
           ]
         },
         {
           "id": "endgame-mansion",
           "q": "I'm outside a burning mansion with a man in pain. How does this end?",
+          "locations": ["Smoky Hall", "Wine Cellar"],
           "hints": [
             "Help the man first. You've been carrying something medicinal since the Sick Bay.",
             "GIVE TABLETS TO MAN. He is Trent — and he tells you what must be destroyed, and that it is below, in female form.",

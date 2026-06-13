@@ -60,7 +60,8 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 92vw);
+  width: 75vw;
+  max-width: 92vw;
   background: #0f172a;
   display: flex;
   flex-direction: column;
@@ -74,6 +75,58 @@
 
 .hints-overlay.visible .hints-panel {
   transform: translateX(0);
+}
+
+/* Disable slide transition while dragging the resize handle */
+.hints-panel.resizing {
+  transition: none;
+  user-select: none;
+}
+
+/* ============================================================
+   RESIZE HANDLE — drag left edge to widen/narrow (mirrors map)
+   ============================================================ */
+
+.hints-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  cursor: ew-resize;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Simple vertical pill, flush near the edge (matches .sheet-handle) */
+.hints-resize-handle::before {
+  content: '';
+  width: 4px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.hints-resize-handle:hover::before {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.hints-resize-handle.dragging::before {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+body.hints-resizing {
+  user-select: none;
+}
+
+body.hints-resizing .hints-overlay,
+body.hints-resizing .hints-overlay * {
+  cursor: ew-resize;
 }
 
 /* ============================================================
@@ -173,30 +226,63 @@
    SECTIONS
    ============================================================ */
 
+/* Section = outlined container, accordion (one open at a time) */
 .hints-section {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hints-section.expanded {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.04);
+}
+
+/* Sections player has never visited — blurred, inert, non-interactive */
+.hints-section-locked {
+  pointer-events: none;
+  user-select: none;
+  filter: blur(3px);
+  opacity: 0.35;
+}
+
+/* Row holding the header button + location badge as siblings */
+.hints-section-row {
+  display: flex;
+  align-items: center;
+}
+
+.hints-section.expanded .hints-section-row {
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .hints-section-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
   min-height: 44px;
   border: none;
   background: transparent;
-  color: #cbd5e1;
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
+  border-radius: 8px;
   transition: background 0.15s, color 0.15s;
 }
 
 .hints-section-header:hover {
   background: rgba(255, 255, 255, 0.04);
-  color: #e2e8f0;
+}
+
+.hints-section.expanded .hints-section-header {
+  color: #93c5fd;
+  border-radius: 8px 8px 0 0;
 }
 
 .hints-section-chevron {
@@ -208,34 +294,41 @@
 
 .hints-section.expanded .hints-section-chevron {
   transform: rotate(90deg);
+  color: #93c5fd;
 }
 
 .hints-section-title {
   flex: 1;
 }
 
-/* 📍 location badge */
+/* location badge — clickable; opens the map. Matches map's "add location" icon */
 .hints-location-badge {
-  font-size: 0.95rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-right: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #3b82f6;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
 
-/* unverified tag */
-.hints-unverified-tag {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: #64748b;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
-  padding: 1px 5px;
-  flex-shrink: 0;
+.hints-location-badge:hover {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
 }
 
 /* Section body — hidden by default, visible when expanded */
 .hints-section-body {
   display: none;
-  padding: 0 16px 8px;
+  padding: 8px 14px 12px;
 }
 
 .hints-section.expanded .hints-section-body {
@@ -253,23 +346,79 @@
    ============================================================ */
 
 .hints-question {
-  margin: 6px 0;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  overflow: hidden;
+  margin: 4px 0;
 }
 
-.hints-question-matched {
-  border-color: rgba(251, 191, 36, 0.25);
+.hints-question-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
 }
 
-.hints-question-text {
-  padding: 10px 12px;
+/* Question text — the reveal trigger; distinctive parent styling
+   (blue left-border + indent) sets it apart from the hint lines below */
+.hints-question-trigger {
+  flex: 1;
+  background: none;
+  border: none;
+  border-left: 2px solid #3b82f6;
+  padding: 0 0 0 10px;
+  text-align: left;
   font-size: 0.875rem;
-  color: #94a3b8;
-  font-style: italic;
+  font-weight: 500;
+  color: #cbd5e1;
   line-height: 1.5;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hints-question-trigger:hover {
+  color: #93c5fd;
+}
+
+.hints-question-trigger:disabled {
+  cursor: default;
+}
+
+.hints-question-trigger:disabled:hover {
+  color: #cbd5e1;
+}
+
+/* Count badge — shows remaining unrevealed hints */
+.hints-count {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  line-height: 1.5;
+  cursor: default;
+}
+
+/* Collapse button — only visible when question is expanded */
+.hints-question-close {
+  display: none;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.hints-question-close .material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.hints-question-close:hover {
+  color: #94a3b8;
+}
+
+.hints-question.expanded .hints-question-close {
+  display: block;
 }
 
 /* ============================================================
@@ -277,84 +426,57 @@
    ============================================================ */
 
 .hints-hints-list {
-  padding: 0 12px;
+  display: none;
+  padding: 2px 0 6px;
 }
 
-.hints-hint-item {
-  padding: 8px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.hints-hint-number {
+.hints-question.expanded .hints-hints-list {
   display: block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #475569;
-  margin-bottom: 3px;
 }
 
-.hints-hint-answer .hints-hint-number {
-  color: #f59e0b;
+/* Indent hints clearly under their parent question (which sits at +10px) */
+.hints-hint-item {
+  padding: 3px 0 3px 24px;
 }
 
+/* Hint lines */
 .hints-hint-text {
-  font-size: 0.875rem;
-  color: #cbd5e1;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
-/* ============================================================
-   REVEAL BUTTON
-   ============================================================ */
-
+/* Slim reveal button below the revealed hints */
 .hints-reveal-btn {
-  display: block;
-  width: calc(100% - 24px);
-  margin: 8px 12px;
-  padding: 10px 14px;
-  min-height: 44px;
-  border: 1px solid rgba(100, 116, 139, 0.4);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  margin: 4px 0 2px 24px;
+  padding: 0;
+  background: none;
+  border: none;
   font-size: 0.8rem;
-  font-style: italic;
-  text-align: center;
+  font-weight: 500;
+  color: #60a5fa;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
 .hints-reveal-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(148, 163, 184, 0.5);
-  color: #cbd5e1;
+  color: #93c5fd;
 }
 
-/* Answer (final hint) — amber warning colour */
-.hints-reveal-answer-btn {
-  border-color: rgba(245, 158, 11, 0.35);
+/* Final reveal ("Show answer") — amber to signal it's the full solution */
+.hints-reveal-answer {
   color: #f59e0b;
 }
 
-.hints-reveal-answer-btn:hover {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.55);
+.hints-reveal-answer:hover {
+  color: #fbbf24;
 }
 
-.hints-remaining {
-  padding: 0 12px 8px;
-  font-size: 0.72rem;
-  color: #475569;
-  text-align: center;
-}
-
-.hints-all-revealed {
-  padding: 6px 12px 10px;
-  font-size: 0.75rem;
-  color: #475569;
-  text-align: center;
+/* Answer (final hint) — amber, never a link */
+.hints-hint-answer .hints-hint-text {
+  color: #f59e0b;
 }
 
 /* ============================================================

@@ -9,7 +9,7 @@
  * approach and why it was removed (v1.4.85).
  */
 
-import { getLastLocationName, getMapData } from '../auto-mapper.js';
+import { getLastLocationName } from '../auto-mapper.js';
 
 // Module-level cache: maps gameName → { data } or { error } (404s cached too)
 const _cache = new Map();
@@ -74,41 +74,14 @@ export function findCurrentTopics(hintsData) {
         return { sectionIds, questionIds };
     }
 
-    // Build candidate location name set from last-known location + recent journey
-    const candidates = new Set();
-
     const lastName = getLastLocationName();
-    if (lastName) {
-        candidates.add(lastName.trim().toLowerCase());
-    }
+    if (!lastName) return { sectionIds, questionIds };
 
-    try {
-        const mapData = getMapData();
-        if (mapData && Array.isArray(mapData.journey)) {
-            const recent = mapData.journey.slice(-10);
-            for (const entry of recent) {
-                if (entry && entry.locationName) {
-                    candidates.add(entry.locationName.trim().toLowerCase());
-                }
-            }
-        }
-    } catch (_) {
-        // getMapData may not be available before auto-mapper initialises
-    }
-
-    if (candidates.size === 0) {
-        return { sectionIds, questionIds };
-    }
+    const currentLoc = lastName.trim().toLowerCase();
 
     for (const section of hintsData.sections) {
-        if (!section.verified) continue;
-
         const sectionLocs = Array.isArray(section.locations) ? section.locations : [];
-        const sectionMatches = sectionLocs.some(
-            loc => candidates.has(loc.trim().toLowerCase())
-        );
-
-        if (sectionMatches) {
+        if (sectionLocs.some(loc => currentLoc === loc.trim().toLowerCase())) {
             sectionIds.add(section.id);
         }
 
@@ -116,10 +89,7 @@ export function findCurrentTopics(hintsData) {
 
         for (const question of section.questions) {
             const qLocs = Array.isArray(question.locations) ? question.locations : [];
-            const qMatches = qLocs.some(
-                loc => candidates.has(loc.trim().toLowerCase())
-            );
-            if (qMatches) {
+            if (qLocs.some(loc => currentLoc === loc.trim().toLowerCase())) {
                 sectionIds.add(section.id);
                 questionIds.add(question.id);
             }

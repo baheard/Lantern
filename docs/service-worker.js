@@ -1,9 +1,9 @@
-/**
+﻿/**
  * IFTalk PWA Service Worker
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.540';
+const CACHE_VERSION = 'v1.5.550';
 const CACHE_NAMES = {
   core: `iftalk-core-${CACHE_VERSION}`,
   games: `iftalk-games-${CACHE_VERSION}`,
@@ -25,7 +25,7 @@ const CORE_ASSETS = [
   './styles/fonts.css',
   './styles/game-output.css',
   './styles/lock-screen.css',
-  // hints.css is injected lazily by hints-panel.js — not pre-cached
+  // hints.css is injected lazily by hints-panel.js â€” not pre-cached
   './styles/map-canvas.css',
   './styles/main.css',
   './styles/mobile.css',
@@ -144,7 +144,7 @@ self.addEventListener('install', (event) => {
       caches.open(CACHE_NAMES.icons).then(cache => {
         return cache.addAll(ICONS);
       })
-      // Games and hints JSON are NOT pre-cached here — see /games/ fetch handler.
+      // Games and hints JSON are NOT pre-cached here â€” see /games/ fetch handler.
     ]).then(() => {
       // Don't auto-activate - wait for user approval via SKIP_WAITING message
     })
@@ -214,7 +214,7 @@ function networkFirstWithTimeout(request, timeoutMs) {
         settled = true; resolve(cached || networkResponse);
       }
     }).catch(() => {
-      // Offline / network error — fall back to cache (may be undefined → network-error to page).
+      // Offline / network error â€” fall back to cache (may be undefined â†’ network-error to page).
       clearTimeout(timer);
       if (settled) return;
       settled = true; resolve(cached);
