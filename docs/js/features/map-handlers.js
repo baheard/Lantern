@@ -291,6 +291,14 @@ export function handleTouchMove(e) {
       // Zoom around the pinch center
       const zoomFactor = distance / touchState.lastTouchDistance;
       zoom(zoomFactor, canvasX, canvasY);
+
+      // Two-finger pan: translate the viewport by how far the pinch center
+      // moved. This is the only way to pan in select mode (single-finger is
+      // consumed by rect-select / node selection there). See feedback #148.
+      if (touchState.lastTouchCenter) {
+        mapState.viewport.x += center.x - touchState.lastTouchCenter.x;
+        mapState.viewport.y += center.y - touchState.lastTouchCenter.y;
+      }
     }
 
     touchState.lastTouchDistance = distance;

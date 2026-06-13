@@ -34,3 +34,9 @@ Escape key (`handleKeyDown`) clears both `isSelectMode` and `selectedNodes.clear
 ## Rect-select cursor handling
 
 When `isSelectMode` is active, cursor is `'default'` (not `'grab'`). On pointer-up after rect-select, cursor restores to `'default'` if still in select mode, else `'grab'`.
+
+## Panning in select mode — two-finger drag (v1.5.557, feedback #148)
+
+In select mode on touch, **single-finger is fully consumed**: a tap on empty canvas starts a rect-select and a tap on a node selects/moves it — neither pans. So there was no way to pan the map on a phone while in select mode (you could only pinch-zoom).
+
+Fix: the two-finger `handleTouchMove` branch now pans the viewport by the pinch-center delta (`center − lastTouchCenter`) in addition to pinch-zoom. Two fingers are never used for selection, so this works in every mode (select, add-node, normal) without conflict and gives the standard mobile map gesture (simultaneous pinch+pan). Viewport x/y are screen-px, same units as the single-finger pan path, so the delta applies directly.
