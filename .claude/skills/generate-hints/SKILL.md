@@ -17,6 +17,27 @@ Hint files are static JSON, **not AI-generated at runtime**. This skill is run o
 
 Distilled from study of real Invisiclues booklets (Zork I, Trinity, Spellbreaker, The Witness, Stationfall), UHS files and authoring guidance, and IF hint-design literature (Emily Short, intfiction.org, The Digital Antiquarian). The core problem: **the question list is itself a spoiler surface.** A browsing player learns what puzzles exist, what objects matter, and how much game remains. Every rule below defends against that, or makes the hint ladder respect the player's actual knowledge state.
 
+### The stance (read this first — it generates every rule below)
+
+Writing hints fights a model's strongest instinct: **be clear, complete, and unambiguous.** That instinct is right almost everywhere else and wrong here, because being maximally clear *collapses the player's uncertainty straight onto the answer* — which is the one thing a hint must not do. If you write hints the way you'd explain anything else, you will produce walkthroughs. Every rule in this document is a consequence of resisting that pull; hold the stance and you rarely need to consult the rules.
+
+**The stance: a hint changes the player's *option space*, never their *answer*.** A good hint does one of exactly two things:
+- **Widens** — opens a space the player hadn't considered ("not every gap is crossed on foot" → now they think about *crossing*, not *walking*).
+- **Narrows** — rules out a wrong approach ("you can't fight a shadow") so the player stops wasting the space they're in.
+
+Neither names the move. After reading a non-final hint the player should have **more ideas worth trying, or fewer dead ends** — never *the action*. If they can act with no thought left, you answered instead of hinted.
+
+**Clarity is not the enemy — misaimed clarity is.** You do not communicate lightly by being vague; you do it by being *precise about the right layer*:
+
+| Be perfectly clear about… | Stay silent about… |
+|---|---|
+| the **category** of solution ("something sticky", "something that flashes") | the **instance** ("the glue bottle", "the camera") |
+| the **property** that matters ("it's on wheels", "shadows can't survive light") | the **command** (`PUSH PIANO`, `TAKE PHOTOGRAPH`) |
+| the **wrong theory to drop** ("you can't win this fight") | the **right one**, until the rung that earns it |
+| the **area** to attend to ("look up", "records live in furniture") | the **exact object/exit** |
+
+So: spend all your clarity on the *framing*, and reserve vagueness strictly for the *instance and the move*. "Something sticky underfoot would root them in place" is vivid, confident, and gives away nothing. That sentence is the whole craft.
+
 ### Tiers at a glance
 
 Each tier of a hint entry has a *different job* and answers to a different subset of the rules. A hint that's wrong is usually doing another tier's job. Read this as the map; the numbered rules are the detail.
@@ -47,7 +68,7 @@ The shape of a good ladder: **visible symptom → think → look → mechanism �
 
 5. **3–5 levels: confirm/redirect → point attention → mechanism → exact commands.** A good level-1 hint does one of: confirms the puzzle is real, names a relevant property ("It's a vampire bat"), rules out the likely wrong theory ("Fighting isn't always the answer"), asks a genuinely *opening* question, or quotes the game's own failure text.
    **The Socratic test.** Question-form hints preserve player agency and belong at early levels — but *only when the question opens up the player's thinking*: it reframes the problem or challenges an assumption ("Have you checked all sides?", "You're sure fighting is the only option?"). A question that *presupposes the answer's framing and points the player straight at it* is not Socratic — it's the next step softened into a question, i.e. leading. The test for any question hint: **does it widen the search space, or hand over the move dressed as inquiry?** "Where might you have seen a pattern worth capturing?" fails — it has already decided the answer involves a pattern-bearing place and is just nudging the player at it. Reframe to open thinking, or cut it (see rule 12a). Contrast a rung-1 hint that passes: "Not every gap is crossed on foot." — it confirms the puzzle, rules out the wrong approach (walking), and widens the search space, all without naming the solution.
-6. **The final hint is non-negotiable: complete, literal, exact commands.** A ladder that never fully resolves is the cardinal failure. The sum of all final hints should constitute a minimal walkthrough of every progress gate.
+6. **The final hint is non-negotiable: complete, literal, exact commands.** A ladder that never fully resolves is the cardinal failure. The sum of all final hints should constitute a minimal walkthrough of every progress gate. **Conversely, *only* the final hint uses literal parser commands.** Every rung above it directs the mind in prose — "open the chest", "look in the coal bin", "follow the crow" — never a capitalised command like `OPEN CHEST`. A parser command appearing above the answer rung is a solution that has leaked up the ladder: demote it to a nudge. Middle rungs name an action in plain language at most; they never spell the keystrokes.
 7. **Never assert game state the player may not have.** No "you're carrying something made for catching light" — the player may not have the lens. Use conditionals ("Have you found anything made for catching light? If not, explore the attic first") or gates (below).
 8. **Gate prerequisites inside the ladder, Invisiclues-style:** an explicit early hint reading "Don't go on unless you've explored the attic" or "You can't solve this yet — you'll know when the time comes." A player lacking the prerequisite stops there unspoiled.
 9. **Don't cross-reference other questions or sections.** Each ladder stands completely on its own and ends in its own full answer (rule 6); the panel is browsable by location, so a player finds related puzzles by exploring — exactly as they explore the game. Naming another entry ("see 'A shadow creature keeps driving me back'") treats the file as hypertext, goes stale the moment a title changes, and clutters the hint. When a puzzle depends on another being solved first, state that prerequisite *in-world* as a gate (rule 8) — "lower the chandelier first", "you'll need something that flashes" — never as a pointer to the entry that covers it. The gate both protects against spoilers and tells the player what to pursue. (And a hint must still never spoil a different puzzle's solution.)
