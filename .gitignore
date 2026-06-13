@@ -8,7 +8,9 @@ node_modules/
 config.json
 
 # Development
-.claude/
+.claude/*
+# ...but keep project skills under source control
+!.claude/skills/
 *.zip
 
 # OS Files
