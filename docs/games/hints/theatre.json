@@ -39,7 +39,7 @@
           "hints": [
             "Quite a lot, actually. Examine everything, and take what isn't nailed down.",
             "There's an electrical panel on the wall — and a dark theatre is no friend of yours.",
-            "There's a loose page here. Pages are scattered all over the theatre — collecting and reading every one is worth bonus points.",
+            "There's a loose page here — worth grabbing. Keep an eye out for others like it as you explore.",
             "The barrels hold popcorn — and not just one handful. Keep taking it. Trust us, you will want all of it much later.",
             "Answer: TAKE PAGER, GET PAGE, EXAMINE PANEL, TURN ON SWITCH, EXAMINE BARRELS, then GET POPCORN four times (there are four lots)."
           ]
@@ -248,7 +248,7 @@
           "locations": ["Under the Stage", "Dark Place"],
           "hints": [
             "Now that you've made it under the stage, take a careful look around — it's not as empty as it seems.",
-            "Among the odds and ends down here, one item is easy to overlook — and it's another of those eye-like pearls.",
+            "Among the odds and ends down here, one item is easy to overlook — a small, eye-like pearl.",
             "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
           ]
         }
@@ -326,9 +326,9 @@
           "q": "There's a locked door in the underground passage below the cloakroom.",
           "locations": ["Underground Passage"],
           "hints": [
-            "You found the way down by pulling the clean hook in the Cloakroom. The door needs a key you may already have.",
-            "Remember the crow, the coffin, and the chimney?",
-            "Answer: UNLOCK DOOR WITH SHINY KEY (from the Boiler Room), OPEN DOOR, and head E. You can drop the key afterwards."
+            "It's locked, and nothing down here will open it — you'll need a key, and you may already be carrying the right one.",
+            "Among the keys and oddments you've gathered, one is plainly a door key. Try it here.",
+            "Answer: UNLOCK DOOR WITH SHINY KEY, OPEN DOOR, and head E. You can drop the key afterwards."
           ]
         },
         {
@@ -337,8 +337,8 @@
           "locations": ["Above the Pit"],
           "hints": [
             "You cannot fight it and you cannot sneak by. The beast wants to eat — so feed it something.",
-            "Feed it something... treated. Did you find a vial of blue liquid in the Sick Bay cabinet? Examine it — read the letter there too.",
-            "The liquid is poison. Now, what do you have that a beast would eat? Think of the grimmest item you've encountered. The corpse from under the carpet rolls.",
+            "Feed it something... treated. Have you found a vial of blue liquid yet? If not, the medical cabinet upstairs is worth a search — examine the vial, and read the letter beside it.",
+            "The liquid is a poison — useless to drink, but useful to apply. So the question is what to bait it with: something a beast will devour that you've no further use for. What have you come across that's already dead, and grimly portable?",
             "Answer: Bring the corpse and the vial to the pit. POUR LIQUID ON BODY, DROP VIAL, THROW BODY IN PIT. The beast takes the bait, and you can go D and onward."
           ]
         },
