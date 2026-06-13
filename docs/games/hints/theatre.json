@@ -109,8 +109,8 @@
           "locations": ["Attic"],
           "hints": [
             "You don't reach it — you bring it to you. Machinery for stage rigging is usually kept above.",
-            "The machinery is in the attic. (If you haven't found a way up there yet, see the piano question first.) From the attic's southern end, head north and look for a mechanism.",
-            "Answer: In the attic, TURN HANDLE. The chandelier is lowered to the auditorium floor. What it's for comes later — see the balconies."
+            "The machinery is in the attic.",
+            "Answer: In the attic, TURN HANDLE. The chandelier is lowered to the auditorium floor. What it's for comes later."
           ]
         },
         {
@@ -121,7 +121,7 @@
             "The gas comes from the telescope area. On your first visit, you can dash in and out — don't linger.",
             "Grab the one thing worth taking (EXAMINE TELESCOPE, GET LENS) and get out fast.",
             "To stay longer you'll need breathing protection. Theatres keep all sorts of props and costumes...",
-            "Answer: There's a gas mask in the Costume Room (see that section). WEAR MASK before entering. Permanently stopping the gas comes later, via the telescope itself."
+            "Answer: There's a gas mask in the Costume Room. WEAR MASK before entering. Permanently stopping the gas comes later, via the telescope itself."
           ]
         },
         {
@@ -129,9 +129,9 @@
           "q": "What is the telescope in the Observatory for?",
           "locations": ["Attic Observatory"],
           "hints": [
-            "It's missing something. Examine it. (If the gas drove you out before you could look around, see the gas question first.)",
-            "An ordinary lens isn't enough. The lens needs to carry a particular pattern first. Have you seen a strange pattern anywhere — perhaps in a window?",
-            "Once you've burned the window's pattern into the lens (see 'The Staircase Landing'), bring it back here wearing the gas mask.",
+            "It's missing something. Examine it closely.",
+            "An ordinary lens isn't enough — it needs to carry a particular pattern before it'll show you anything.",
+            "The lens must already be carrying that pattern before it's any use here — getting it there is a separate puzzle. Once it does, wear the gas mask and bring the lens back.",
             "Answer: WEAR MASK, go to the Observatory, PUT LENS IN TELESCOPE (this also stops the gas), then LOOK THROUGH TELESCOPE. You collapse — and wake with a star crystal in your inventory. You will absolutely need it."
           ]
         }
@@ -213,8 +213,8 @@
           "locations": ["Eastern Theatre Aisle"],
           "hints": [
             "The ghostly usher takes your ticket but the performance hasn't started. You can't wait it out — time in this place doesn't move on its own.",
-            "If time won't pass by itself, you need to find a way to set the time. Has anything in the theatre got a dial or a face?",
-            "Something with a face is hidden very close to the lobby — behind a wall, in fact. Finding the way in is its own puzzle (see 'Is there anything else to find in the Manager's Office?').",
+            "If time won't pass on its own, you'll need to set it yourself — find something that keeps time.",
+            "What you need is hidden close to the lobby, and reaching it is a puzzle in itself.",
             "Answer: With the watch in the booth: PULL DIAL, then TURN DIAL four times until it reads 7:40. Now it's late enough. Return to the aisle with your ticket and DROP TICKET when the voice asks."
           ]
         },
@@ -247,7 +247,7 @@
           "locations": ["Storage Cupboards"],
           "hints": [
             "You can't fight a shadow. But think about what shadows can't survive.",
-            "Light — sudden, bright light. Have you found anything that flashes? If not, see 'There's a portrait on the staircase landing' first.",
+            "Light — sudden, bright light. Have you found anything that flashes? If not, you'll need it first.",
             "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. You can drop the camera afterwards; continue east, then NW to get under the stage."
           ]
         }
@@ -264,8 +264,8 @@
           "q": "I can see a western balcony but I can't find any way to walk to it.",
           "locations": ["Eastern Balcony"],
           "hints": [
-            "There is no walkway. Look at what's hanging in the middle of the auditorium — at its new height.",
-            "If the chandelier is still hanging high, don't go on — see 'The chandelier hangs high over the auditorium' first. Once it's lowered: a chandelier on a long chain is a pendulum.",
+            "Not every gap is crossed on foot.",
+            "If the chandelier is still hanging high, you can't cross yet — lower it first. Once it's down: a chandelier on a long chain is a pendulum.",
             "Answer: From the Eastern Balcony, SWING CHANDELIER. You swing across to the Western Balcony — which leads to the back wall and the Secret Library."
           ]
         },
@@ -288,7 +288,7 @@
             "You can't catch it. Follow it instead. Where did it go? Down the chimney.",
             "Chimneys in this theatre connect rooms vertically — EXAMINE FIREPLACE in the guest star room, then CLIMB DOWN CHIMNEY.",
             "In the sealed office below: OPEN COFFIN. The crow steals the key — and drops it further down the chimney.",
-            "Answer: Climb down again to the Boiler Room and GET KEY there. That shiny key unlocks a door deep underground later. While you're in the Boiler Room, don't leave empty-handed — see 'What's worth taking in the Boiler Room?'"
+            "Answer: Climb down again to the Boiler Room and GET KEY there. That shiny key unlocks a door deep underground later. While you're in the Boiler Room, don't leave empty-handed — there's more here worth taking."
           ]
         },
         {
@@ -308,7 +308,7 @@
           "locations": ["Costume Room"],
           "hints": [
             "They're slow, at least. You don't need to fight them — stop them in their tracks. Literally.",
-            "Mannequins have feet. Is there anything in the theatre that could fix feet to a floor? If you haven't searched the Boiler Room, do that first (see 'What's worth taking in the Boiler Room?').",
+            "Mannequins have feet — something sticky underfoot would root them in place.",
             "Answer: BREAK BOTTLE (the glue bottle from the Boiler Room chest). The glue splashes across the floor and the mannequins stick fast. Now GET MASK — you'll need it for the gas in the Observatory."
           ]
         }
@@ -368,7 +368,7 @@
           "hints": [
             "If you haven't yet found a statue with empty sockets, set this question aside — you'll know when the time comes.",
             "What fills them turns up all over the theatre: a guarded nest, a lump of coal... and one piece isn't underground at all. It's somewhere you passed during the show.",
-            "Under the stage. Something blocks the way east of the orchestra pit — see 'A shadow creature east of the orchestra pit keeps driving me back!'",
+            "Under the stage. Something blocks the way east of the orchestra pit — deal with that first.",
             "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
           ]
         }
@@ -396,10 +396,10 @@
           "q": "What do I do with this strange dagger?",
           "locations": ["Witch's Lair", "Deep In Mines"],
           "hints": [
-            "EXAMINE DAGGER — the crystal set in it can be removed. And it isn't the only crystal in the game. (If you only have one, see 'What is the telescope in the Observatory for?')",
+            "EXAMINE DAGGER — the crystal set in it can be removed. And it isn't the only crystal you've come across.",
             "Only one of the two crystals can destroy the evil, and you need to learn which. The caged goblin — Trent — can tell crystals apart. GET EARTH CRYSTAL from the dagger, then SHOW EARTH CRYSTAL TO TRENT and SHOW STAR CRYSTAL TO TRENT.",
             "The coming ceremony is a trap: Elizabeth intends to use the dagger. Make sure the crystal it holds when she takes it is the wrong one for her purpose.",
-            "Answer: PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards — see the burning mansion question.)"
+            "Answer: PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards.)"
           ]
         },
         {
