@@ -72,8 +72,15 @@ export function initHintsPanel() {
     // Re-load hints when a new game is loaded
     window.addEventListener('gameLoaded', handleGameLoaded);
 
-    // Live-update pin + unblur as the player moves between rooms
+    // Unblur areas as soon as the player enters them — even with the panel
+    // closed — so a section is "available" the moment you've stood there,
+    // not only if you happened to have Hints open at the time. Stays
+    // spoiler-safe: only sections matching the current room get marked seen.
     window.addEventListener('locationChanged', () => {
+        if (_currentHintsData && _currentGameName) {
+            const { sectionIds } = findCurrentTopics(_currentHintsData);
+            if (sectionIds.size > 0) markSectionsSeen(sectionIds, _currentGameName);
+        }
         if (_isVisible) renderHintsContent();
     });
 }
