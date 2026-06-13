@@ -223,6 +223,9 @@ export async function playBlockedCommand() {
  * Play tone for mute button (triple tap descending)
  */
 export async function playMuteTone() {
+  // Don't play audio feedback when sound effects are disabled
+  if (!areSoundEffectsEnabled()) return;
+
   try {
     const ctx = await getContext();
     const masterVol = getMasterVolume();
@@ -249,6 +252,9 @@ export async function playMuteTone() {
  * Play tone for unmute button (ascending chime)
  */
 export async function playUnmuteTone() {
+  // Don't play audio feedback when sound effects are disabled
+  if (!areSoundEffectsEnabled()) return;
+
   try {
     const ctx = await getContext();
     const masterVol = getMasterVolume();

@@ -56,7 +56,7 @@ let hintsModule = null;
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility, updateConvModeButton } from './utils/lock-screen.js';
-import { playMuteTone, playUnmuteTone } from './utils/audio-feedback.js';
+import { playUnmuteTone } from './utils/audio-feedback.js';
 import { initPWA } from './utils/pwa-updater.js';
 import { scrollToBottom } from './utils/scroll.js';
 
@@ -748,8 +748,9 @@ function wireEventListeners() {
       // The onend handler will set isMuted=true after processing results
       state.listeningEnabled = false;
 
-      // Play mute tone
-      playMuteTone();
+      // No release tone in push-to-talk: the press chime already confirmed the
+      // mic was live, and the command-sent/blocked tone confirms the result.
+      // Playing a mute tone on every release was excessive in PTT use (#138).
 
       // Update UI
       const icon = dom.muteBtn?.querySelector('.material-icons');
