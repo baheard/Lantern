@@ -31,12 +31,14 @@ Neither names the move. After reading a non-final hint the player should have **
 
 | Be perfectly clear about… | Stay silent about… |
 |---|---|
-| the **category** of solution ("something sticky", "something that flashes") | the **instance** ("the glue bottle", "the camera") |
-| the **property** that matters ("it's on wheels", "shadows can't survive light") | the **command** (`PUSH PIANO`, `TAKE PHOTOGRAPH`) |
 | the **wrong theory to drop** ("you can't win this fight") | the **right one**, until the rung that earns it |
-| the **area** to attend to ("look up", "records live in furniture") | the **exact object/exit** |
+| the **property** that matters ("it's on wheels", "shadows can't survive light") | the **command** (`PUSH PIANO`, `TAKE PHOTOGRAPH`) |
+| the **area** to attend to ("look up", "it's the floor, not the mannequins") | the **exact object/exit** |
+| the **category** of solution — *only when it's a real space, not a one-item synonym* | the **instance** ("the glue", "the camera") |
 
-So: spend all your clarity on the *framing*, and reserve vagueness strictly for the *instance and the move*. "Something sticky underfoot would root them in place" is vivid, confident, and gives away nothing. That sentence is the whole craft.
+**The category trap.** Naming a solution-category feels safe but usually isn't: "something sticky" has essentially one member — the glue — so it *is* the answer in disguise. It hands over both *what to do* (immobilize them) and *what with* (a sticky thing). When a category collapses to a single obvious item, drop down a layer and nudge at the **problem** rather than the **solution-shape**: not "something sticky underfoot would root them" but "it's the floor between you and them that you can change." Let the player re-derive that sticky is the way. The safe layers — wrong-theory, property, area — almost never collapse like this; reach for them first, and treat solution-category as a last resort.
+
+So: spend all your clarity on the *framing* and reserve vagueness strictly for the *instance and the move*. "Not every gap is crossed on foot." is vivid, confident, and gives away nothing — it widens the space without touching the answer. *That* is the whole craft.
 
 ### Tiers at a glance
 

@@ -204,7 +204,7 @@
       "id": "show",
       "title": "The Auditorium & Stage",
       "verified": false,
-      "locations": ["Eastern Theatre Aisle", "Stage", "Backstage", "Dressing Room", "Orchestra Pit", "Storage Cupboards"],
+      "locations": ["Eastern Theatre Aisle", "Stage", "Backstage", "Dressing Room", "Orchestra Pit", "Storage Cupboards", "Under The Stage"],
       "questions": [
         {
           "id": "show-too-early",
@@ -248,6 +248,16 @@
             "You can't fight a shadow. But think about what shadows can't survive.",
             "Light — sudden, bright light. Have you found anything that flashes? If not, you'll need it first.",
             "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. You can drop the camera afterwards; continue east, then NW to get under the stage."
+          ]
+        },
+        {
+          "id": "underground-green-pearl",
+          "q": "Is there anything worth finding under the stage?",
+          "locations": ["Under The Stage"],
+          "hints": [
+            "Now that you've made it under the stage, take a careful look around — it's not as empty as it seems.",
+            "Among the odds and ends down here, one item is easy to overlook — and it's another of those eye-like pearls.",
+            "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
           ]
         }
       ]
@@ -307,7 +317,7 @@
           "locations": ["Costume Room"],
           "hints": [
             "They're slow, at least. You don't need to fight them — stop them in their tracks. Literally.",
-            "Mannequins have feet — something sticky underfoot would root them in place.",
+            "They have to cross the floor to reach you — so it's the floor you can change, not the mannequins.",
             "Answer: BREAK BOTTLE (the glue bottle from the Boiler Room chest). The glue splashes across the floor and the mannequins stick fast. Now GET MASK — you'll need it for the gas in the Observatory."
           ]
         }
@@ -359,15 +369,6 @@
             "The popcorn from the basement barrels — all four lots. Lay a trail.",
             "Lay the popcorn trail — the western end of the sewer, the center, the eastern end, and the Rat Nest itself. The rats follow it away from where you need to be.",
             "Answer: After laying the trail (W end, center, E end, nest), go NW then W then N, EXAMINE LEVER, WAIT until the rats reach the western end, then PULL LEVER. The sluice gate opens and flushes the rats down the drain."
-          ]
-        },
-        {
-          "id": "underground-green-pearl",
-          "q": "Is there anything worth finding under the stage?",
-          "hints": [
-            "Now that you've made it under the stage, take a careful look around — it's not as empty as it seems.",
-            "Among the odds and ends down here, one item is easy to overlook — and it's another of those eye-like pearls.",
-            "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
           ]
         }
       ]
