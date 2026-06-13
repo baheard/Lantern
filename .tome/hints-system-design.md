@@ -2,8 +2,8 @@
 title: Hints System Design
 tags: hints, uhs, design, auto-mapper, location
 created: 2026-06-12
-updated: 2026-06-12
-aliases: hints, uhs-hints, hint-panel
+updated: 2026-06-13
+aliases: hints, uhs-hints, hint-panel, hint-philosophy, generate-hints
 ---
 
 # Hints System Design
@@ -37,3 +37,13 @@ Theatre's Act I is the only `verified: true` section — its room names were con
 The hints module (`hints-panel.js`) is lazily imported on first click of `#hintsBtn`. `initHintsPanel()` starts an async fetch for the hints JSON, then `showHints()` runs immediately — before the fetch resolves. Fix: the `loadHints` callback in `initHintsPanel` calls `renderHintsContent()` if `_isVisible` is true (same pattern as `handleGameLoaded`). Without this, the first open always shows "No hints available."
 
 Also: `app.js` must call `toggleHints()` (not `showHints()`) so the menu item acts as a toggle when the panel is already open.
+
+## Hint-authoring philosophy — lives in the versioned skill
+
+The *content* rules for writing hints (distinct from the runtime system above) live in `.claude/skills/generate-hints/SKILL.md`, which is **source-controlled** — `.gitignore` ignores `.claude/*` but has a `!.claude/skills/` exception. That file is the single source of truth; don't duplicate it here. Read it before authoring or editing any hint.
+
+The governing idea (v1.5.553, the "stance"): **a hint changes the player's *option space*, not their *answer*.** It widens (opens an approach they hadn't considered) or narrows (rules out a wrong one) — never names the move. Be perfectly clear about the *framing* (wrong-theory / property / area), silent about the *instance and the command*. Only the final "Answer:" rung uses literal parser commands; every rung above it is prose. **The category trap** (v1.5.554): naming a one-member solution-category ("something sticky" = the glue) is the answer in disguise — nudge at the *problem* (the floor) not the *solution-shape*. This philosophy is a deliberate corrective to a model's natural pull toward clear/complete explanation, which produces walkthroughs.
+
+## Question `id` stability (reveal state is keyed by it)
+
+Reveal state in `iftalk_hints_<game>` is keyed by question `id`. **Never change an `id` on regeneration** — it silently resets that question's reveals for every user. The `q` *text* can be reworded freely (and a section can be moved between sections) as long as the `id` is preserved. Section `id`s are likewise stable; only titles/wording are safe to change.

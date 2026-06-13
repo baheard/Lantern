@@ -19,7 +19,7 @@ Invoke: `/tome <topic>` to search · `/tome <statement>` to save.
 - [text-decode-corruption](text-decode-corruption.md) — FIXED v1.5.409: "the"→"tv2" abbreviation corruption = first post-restore line command written to stale read_data.bufaddr (63), clobbering Theatre's abbrev strings at 0x40; fixed by setting read_data.bufaddr=seededAddr in sendInput() at submit time (NOT performRestore — resuming aread resets it) (zvm, save-restore, corruption, fixed) — updated 2026-05-30
 - [openai-tts-pipeline](openai-tts-pipeline.md) — Cache API persistence, prefetch pipeline gap at chunk 1, long-chunk latency, cost tracking (narration, tts, openai, cache, prefetch) — updated 2026-05-28
 - [xss-vectors](xss-vectors.md) — Known XSS vectors: all 5 fixed (saves, map node names, sync modals ×2) (security, xss, map) — updated 2026-06-12
-- [hints-system-design](hints-system-design.md) — App-observed location vocab; getLastLocationName module-only; verified flag; local-only reveal state; lazy-load race condition fix (hints, uhs, design, auto-mapper) — updated 2026-06-12
+- [hints-system-design](hints-system-design.md) — App-observed location vocab; getLastLocationName module-only; verified flag; local-only reveal state; lazy-load fix; + authoring philosophy (versioned skill, option-space stance, category trap) & question-id stability (hints, uhs, design, auto-mapper, hint-philosophy) — updated 2026-06-13
 - [browser-testing-games](browser-testing-games.md) — Which games to use for browser testing (9:05 good, Lost Pig bad for movement) (testing, games, webagent) — updated 2026-04-26
 
 - [app-init-phases](app-init-phases.md) — initApp() 7-phase split; ordering deps; why phases stay in app.js (app, init, architecture) — updated 2026-04-26
