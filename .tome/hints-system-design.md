@@ -28,7 +28,9 @@ Practical consequence: when writing a hints JSON, populate `locations` by observ
 
 Only sections with `verified: true` are eligible for the 📍 badge and auto-expand. Unverified sections render with an "unverified" tag and are never auto-expanded. This prevents auto-expanding spoiler-heavy later-game sections based on location guesses from an AI that hasn't actually played through.
 
-As of 2026-06-13, Theatre has 7 of 8 sections `verified: true` (all but The Endgame). Only Witch's Lair in the Endgame is confirmed; the four rooms past the pearl-socket puzzle (Old Hallway, Ceremony Room, Smoky Hall, Wine Cellar) couldn't be reached because the walkthrough redacts the socket directions and placement is randomized per game.
+As of 2026-06-13, **all 8** of Theatre's sections are `verified: true` — confirmed by completing the game live.
+
+The pearl-socket puzzle (which blocks the endgame) is *not* unsolvable from the walkthrough — the walkthrough redacts the socket directions only because placement is keyed to riddle-clues the caged goblin (Trent) gives in-game, and the eye→socket mapping is consistent (not actually randomized, despite a hint that says so): show each pearl, and Trent names it Eye of Strength = "right hand" (right socket), Eye of Wisdom = "beside Strength to balance" (left), Eye of Mana = "foundation" (bottom), Eye of Control = "above" (top). To complete via replay you must *read his answers* and translate the riddle, not just `SHOW` the pearls. Two cutscene gotchas past that point: `READ PAGES` opens an interactive paginated journal reader (send `Q` to resume — any game commands sent meanwhile are eaten by the reader), and the ceremony triggers a `[Press any key to continue...]` prompt that consumes the next command. The ceremony itself is a cutscene with no navigable room name — the file's old "Ceremony Room" guess never existed; the real post-ceremony room is "Outside the Burning Mansion".
 
 ### Walkthrough names ≠ the game's `location.name` (verify, don't trust the walkthrough)
 

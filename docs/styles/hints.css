@@ -261,8 +261,8 @@ body.hints-resizing .hints-overlay * {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
   min-width: 0;
+  max-width: 100%;
   padding: 10px 14px;
   min-height: 44px;
   border: none;
@@ -298,7 +298,10 @@ body.hints-resizing .hints-overlay * {
 }
 
 .hints-section-title {
-  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* location badge — clickable; opens the map. Matches map's "add location" icon */
@@ -309,7 +312,7 @@ body.hints-resizing .hints-overlay * {
   justify-content: center;
   width: 36px;
   height: 36px;
-  margin-right: 6px;
+  margin-left: -6px;
   padding: 0;
   border: none;
   border-radius: 8px;

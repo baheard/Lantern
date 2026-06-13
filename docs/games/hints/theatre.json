@@ -368,8 +368,8 @@
     {
       "id": "endgame",
       "title": "The Endgame",
-      "verified": false,
-      "locations": ["Witch's Lair", "Old Hallway", "Ceremony Room", "Smoky Hall", "Wine Cellar"],
+      "verified": true,
+      "locations": ["Witch's Lair", "Old Hallway", "Outside the Burning Mansion", "Smoky Hall", "Wine Cellar"],
       "questions": [
         {
           "id": "endgame-statue",
@@ -396,7 +396,7 @@
         {
           "id": "endgame-mansion",
           "q": "I'm outside a burning mansion with a man in pain. How does this end?",
-          "locations": ["Smoky Hall", "Wine Cellar"],
+          "locations": ["Outside the Burning Mansion", "Smoky Hall", "Wine Cellar"],
           "hints": [
             "Help the man first. You've been carrying something medicinal since the Sick Bay.",
             "Give him the tablets. He is Trent — and he tells you what must be destroyed, and that it is below, in female form.",
