@@ -90,6 +90,29 @@ directions that **survives journey clears**:
 Net: after opening the map mid-exploration, a `enter gate` places the new room along the
 last cardinal you walked, not straight up.
 
+## Unconfirmed: "bad connections on map open" (feedback #149, open)
+
+Report (anchorhead, v1.5.535): spurious edges appear, "related to when the map opens —
+like the location where you were when you opened it last connecting to the location you
+are when you open it now." Not reproduced by reporter or in code review; this is the
+leading hypothesis, not a confirmed cause.
+
+Chain: a scene break into an **unmapped** area **while the map is hidden** sets
+`_pendingNewAreaHint = true` + `suppressJourneyClear = true` and then early-returns from
+`handleLocationChange` on *every* later move until the user opens the map and resolves the
+hint (`map-canvas.js` ~683). While suppressed, further scene breaks **don't clear the
+journey** (`auto-mapper.js` ~126), so multiple disconnected areas pile into one journey
+buffer. On the next open, dismissing the hint runs `syncFromAutoMapper()`, replaying the
+whole buffer into the **current** map. Replay skips null-command entries, so a *correctly*
+tagged scene break is safe — but any teleport/cutscene whose screen-clear was **missed**
+(so `setSceneBreak()` never fired) carries `lastCommand` as a real command and becomes a
+spurious cross-area edge. The replay-at-open timing is why it feels tied to opening the map.
+
+Deferred rather than blind-fixed: can't reproduce, and this machinery has a history of
+regressions (see the v1.5.471/472/473 notes above). Next step when it recurs: capture the
+offending `from→to` edge plus `suppressJourneyClear`/`_pendingNewAreaHint`/`pendingSceneBreak`
+state via debug logging at edge-creation time.
+
 ## Rule of thumb
 
 Any change to how nodes/edges are created, positioned, or upgraded must be applied to
