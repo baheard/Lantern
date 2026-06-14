@@ -1,0 +1,356 @@
+{
+  "schema": 1,
+  "game": "bronze",
+  "title": "Bronze",
+  "meta": {
+    "gameAuthor": "Emily Short (2006)",
+    "sources": [
+      {
+        "name": "Emily Short official walkthrough (Inform 7 Bronze example project)",
+        "url": "https://i7-examples.github.io/Bronze/Walkthrough.txt",
+        "file": "docs/games/walkthroughs/bronze.txt"
+      },
+      {
+        "name": "ClubFloyd transcript (2021-08-03)",
+        "url": "https://www.allthingsjacq.com/intfic_clubfloyd_20210803.html",
+        "file": "docs/games/walkthroughs/bronze.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-06-14",
+    "appVersion": "1.5.563"
+  },
+  "sections": [
+    {
+      "id": "getting-around",
+      "title": "Getting Around the Castle",
+      "verified": true,
+      "locations": ["Drawbridge", "Entrance Hall", "Central Courtyard"],
+      "questions": [
+        {
+          "id": "novice-prompt",
+          "q": "The game opens by asking whether I've played interactive fiction before. Does my answer change the game?",
+          "hints": [
+            "It's not a trick question — it only sets how much hand-holding you get.",
+            "Answer: Say YES for normal play, or NO to turn on novice mode, which adds extra inline guidance. Either way the story and puzzles are the same."
+          ]
+        },
+        {
+          "id": "navigation-tedious",
+          "q": "Trekking room by room across this castle is getting tedious. Is there a faster way?",
+          "hints": [
+            "Once you've stood somewhere, you needn't walk back to it step by step.",
+            "Answer: Type GO TO <place> — e.g. GO TO THE BELLROOM — to auto-walk to any room you've already visited. It prints the route as it takes you there. Use it freely after your first pass through the castle."
+          ]
+        },
+        {
+          "id": "reading-references",
+          "q": "There are books and records scattered around the castle. Are they worth reading?",
+          "hints": [
+            "They aren't just scenery — this castle will answer questions, if you know how to ask.",
+            "Different reference works cover different ground: the castle's history, the souls bound to it, and an enchantress's private notes.",
+            "Answer: Use LOOK UP <topic> IN <book> — e.g. LOOK UP LUCREZIA IN THE RECORDS. Most of the hard puzzles are clued by one of these lookups, so when you're stuck, ask the books about whatever's puzzling you."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "entrance-galleries",
+      "title": "The Entrance & Galleries",
+      "verified": true,
+      "locations": ["Drawbridge", "Entrance Hall", "Guard Tower", "Scarlet Gallery", "Scarlet Tower", "Gallery of Historical Paintings", "Room with the Labyrinth Floor", "Ground Floor Helical Staircase"],
+      "questions": [
+        {
+          "id": "helmet",
+          "q": "There's a helmet sitting on a windowsill. Is it any use?",
+          "locations": ["Scarlet Tower"],
+          "hints": [
+            "It's a sentry's helmet. A soldier on watch relies on more than sharp eyes.",
+            "Worn, it sharpens your hearing — and some things in this castle are easier to track down by ear than by sight.",
+            "Answer: WEAR HELMET. Now you can LISTEN to tell where a sound is really coming from. TAKE OFF HELMET when the amplified noise becomes a nuisance."
+          ]
+        },
+        {
+          "id": "forest-window",
+          "q": "I can see a forest through the tower window. Can I get out there?",
+          "locations": ["Scarlet Tower"],
+          "hints": [
+            "You came back to this castle on purpose. The world outside isn't where your story is.",
+            "Answer: No — the forest is scenery you can look at, nothing more. (And don't read too much into which questions exist here: a puzzle isn't important just because it has a hint, nor unimportant because it doesn't.)"
+          ]
+        },
+        {
+          "id": "gargoyle",
+          "q": "There's a gargoyle on the staircase. Can I move it or take it?",
+          "locations": ["Ground Floor Helical Staircase"],
+          "hints": [
+            "Some statues are just statues.",
+            "Answer: No. The gargoyle is harmless scenery — the game will cheerfully mock you for trying to take it. Leave it be."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "treasure-scrying",
+      "title": "The Treasure Room & Scrying Room",
+      "verified": true,
+      "locations": ["Treasure Room", "Scarlet Gallery", "Scrying Room", "Walk's End"],
+      "questions": [
+        {
+          "id": "iron-cage",
+          "q": "There's an iron cage with something locked inside. How do I get it open?",
+          "locations": ["Treasure Room"],
+          "hints": [
+            "It's locked, and force won't do it — \"You lack a key that fits the iron cage.\"",
+            "This isn't a key you'll find lying in a drawer. Someone in the castle will hand it to you, once you've done him a good turn — you can't open the cage before then.",
+            "Answer: The Beast gives you the iron key after you revive him. Then GO TO THE IRON CAGE, UNLOCK CAGE, OPEN CAGE, GET ALL FROM CAGE (the cloven shoes, a sceptre, and a puzzle piece)."
+          ]
+        },
+        {
+          "id": "sceptre",
+          "q": "What's the sceptre from the cage for?",
+          "locations": ["Treasure Room"],
+          "hints": [
+            "Not everything shiny is a tool.",
+            "Answer: Nothing, really — the sceptre is flavour. The puzzle piece beside it is the takeaway here; the sceptre you can ignore."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cloister-rose-garden",
+      "title": "The Cloister & Rose Garden",
+      "verified": true,
+      "locations": ["Central Courtyard", "Great Dining Hall", "Cloister Walk", "Rose Garden", "Walk's End", "Scrying Room", "Treasure Room"],
+      "questions": [
+        {
+          "id": "phantom-guard",
+          "q": "A phantom guard appears whenever I try to head north, and drives me back!",
+          "locations": ["Central Courtyard", "Great Dining Hall"],
+          "hints": [
+            "The guard isn't really the problem — he answers to something you keep hearing. What summons him?",
+            "With keen-enough hearing you can tell the chiming that calls him isn't coming from here at all. Track the sound down.",
+            "The chimes hang in the Rose Garden, below the Cloister Walk. Silence them and the guard has nothing to answer to.",
+            "They're up out of reach, and leaping for them gets you nowhere (\"you don't attain much height\"). You need something to stand on. They're also padlocked — a small key hangs in the Scrying Room.",
+            "Answer: Bring the stool from the Guest Bedroom to the Rose Garden. STAND ON STOOL, UNLOCK CHIMES (with the small key from the Scrying Room), GET CHIMES, GET DOWN. With the chimes gone the phantom guards vanish and the way north opens."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "state-rooms-bulbs",
+      "title": "The State Rooms & the Bulbs",
+      "verified": true,
+      "locations": ["State Rotunda", "Parliamentary Chambers", "Law Library", "Lower Bulb", "Upper Bulb", "Records Room"],
+      "questions": [
+        {
+          "id": "dying-beast",
+          "q": "I've found the Beast, collapsed and near death. Waking and kissing him do nothing. How do I help him?",
+          "locations": ["Upper Bulb"],
+          "hints": [
+            "He's past words and past waking. Look at him closely — what does he actually need before anything else?",
+            "He needs feeding. But there's no food simply lying around a castle this size — you'll have to call for it.",
+            "The castle's cooks still answer a summons, if you call them where they worked. Their meal then turns up where meals are served.",
+            "Answer: Take the gold dinner bell (from the Bellroom) to the Enormous Kitchen and RING GOLD BELL — it only works there. A feast appears in the Great Dining Hall; GET FEAST, GO TO THE BEAST, FEED BEAST. He revives, explains your task, and gives you the iron key."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bellroom",
+      "title": "The Bellroom",
+      "verified": true,
+      "locations": ["Bellroom", "White Gallery", "Apothecary"],
+      "questions": [
+        {
+          "id": "bell-system",
+          "q": "The Bellroom is full of bells and instruments. How am I meant to use them?",
+          "locations": ["Bellroom"],
+          "hints": [
+            "They aren't interchangeable noisemakers. Look closely at each one — every instrument is stamped with a mark.",
+            "Each mark is a servant's trade. An instrument calls on that servant's power — but usually only where that servant once worked.",
+            "So the loop is: figure out whose instrument this is (its stamp, plus a LOOK UP), then ring it in the room that matches that trade. The cook's bell feeds you in the kitchen; the lamplighter's bell brings light to a darkened room; and so on.",
+            "Answer: Don't ring a bell whose purpose you don't yet understand — ringing one blind just fails (the Beast warns you of this too). Identify the servant first, then carry the bell to the matching place and ring it there."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "translation-room",
+      "title": "The Translation Room",
+      "verified": true,
+      "locations": ["Translation Room", "Lower Bulb"],
+      "questions": [
+        {
+          "id": "need-light",
+          "q": "The passages underground are pitch dark. Where do I find a light?",
+          "locations": ["Translation Room", "Lower Bulb"],
+          "hints": [
+            "Don't go hunting for a torch or a lantern — think about why a room that should be lit has gone dark.",
+            "One room near the bulbs has lost its flame. Whoever once kept the castle's lamps lit could set it blazing again — and that's a job for the right bell.",
+            "Answer: Take the silver bell (the lamplighter's, from the Bellroom) to the dark Translation Room and RING SILVER BELL. The room blazes up and leaves a candle you can carry as your light. GET CANDLE."
+          ]
+        },
+        {
+          "id": "untranslatable-writing",
+          "q": "I keep finding writing I can't read — strange scripts on the helmet and elsewhere.",
+          "locations": ["Translation Room"],
+          "hints": [
+            "It isn't a code you crack yourself. The castle has a room built for exactly this — but it has to be working first.",
+            "Answer: Once the Translation Room is lit (ring the lamplighter's silver bell there), it translates otherwise-unreadable scripts. Bring the writing — or LOOK UP your topic — there."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bedrooms",
+      "title": "The Bedrooms",
+      "verified": true,
+      "locations": ["Private Parlor", "Green Bedroom", "Crystal Bedroom", "Gilded Balcony", "Empty Bedroom", "Guest Bedroom"],
+      "questions": [
+        {
+          "id": "shoes-too-big",
+          "q": "I have a pair of cloven shoes but they're far too big to wear. Can they be made to fit?",
+          "locations": ["Empty Bedroom", "Lucrezia's Study"],
+          "hints": [
+            "They were made for a foot that isn't yours. Someone in the castle's history did this kind of work — resizing footwear by magic.",
+            "There's an image of a gnome shoemaker resizing shoes, and beside it an instrument. As with every bell here, his tool only works where he once worked.",
+            "His old workroom is the Empty Bedroom (\"here your father stayed\"). LOOK UP SHOES IN THE NOTES if you want confirmation of what they do.",
+            "Answer: Bring the leather tambourine (the shoemaker's, from the Bellroom) to the Empty Bedroom and HIT TAMBOURINE. A wind resizes the shoes. Now WEAR SHOES — they link your mind to the Beast and let you walk the castle's dead-spaces."
+          ]
+        },
+        {
+          "id": "jigsaw",
+          "q": "There's a half-finished jigsaw on a table. Should I bother with it?",
+          "locations": ["Private Parlor"],
+          "hints": [
+            "It's not a gate to anything — but it does have something to say if you complete it.",
+            "Answer: Optional. With the puzzle piece from the iron cage in hand, GO TO THE PARLOR and SOLVE PUZZLE, then READ IT — it completes into a lore picture (a devil and a king, \"TIME IS ON MY SIDE / BUT NOT FOR LONG\"). Skippable if you don't care about the backstory."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "underground-sinister-door",
+      "title": "Underground & the Sinister Door",
+      "verified": true,
+      "locations": ["Rooted Room", "Bell Castings", "Wax Supply", "Zoo", "Bear Corridor", "Rocky Chamber", "Tight Passage"],
+      "questions": [
+        {
+          "id": "inscription-unreadable",
+          "q": "There's an inscription by the sinister door, but I can't make it out even with my candle.",
+          "locations": ["Tight Passage"],
+          "hints": [
+            "Holding the candle up the usual way isn't working. Notice where the lettering actually sits.",
+            "The writing is low on the wall, near knee height. Light striking it from the side — a raking angle — would throw the letters into relief. Your hand can't hold the candle low and steady enough.",
+            "You're carrying something you can set the candle down on, at just the right height.",
+            "Answer: DROP STOOL, then PUT CANDLE ON THE STOOL. The harsh raking light at knee height makes the inscription legible: pull the cord, then wait in the room directly above to speak with Lucrezia's steward — and do it within five minutes, or he leaves."
+          ]
+        },
+        {
+          "id": "sinister-door-locked",
+          "q": "The sinister door won't open. There's a pull cord beside it — what's it for?",
+          "locations": ["Tight Passage", "Parliamentary Chambers"],
+          "hints": [
+            "The door doesn't open from here at all. The cord summons someone — but only briefly, so timing matters.",
+            "Pull the cord (a deep bell tolls above), then get to the room directly overhead and wait for the summons to arrive. Dawdle and you'll have to pull it again.",
+            "Answer: PULL CORD, then go UP and around to the Parliamentary Chambers (the room above) and WAIT, within five minutes. Lucrezia's steward speaks, and her sealed study opens below. If you're too slow, return and PULL CORD again."
+          ]
+        },
+        {
+          "id": "miniature",
+          "q": "I found a small miniature painting down here. What's it for?",
+          "locations": ["Zoo"],
+          "hints": [
+            "It's a clue, not a tool — and it doesn't give itself up on first glance.",
+            "Answer: Take it and study it (THINK ABOUT MINIATURE), then LOOK UP MINIATURE IN THE CONTRACT BOOK once you can read such things. It's backstory that points you toward the endgame, not a puzzle item in its own right."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lucrezia-study-crypt",
+      "title": "Lucrezia's Study & the Crypt",
+      "verified": true,
+      "locations": ["Lucrezia's Study", "Father's Regret", "Central Crypt", "Debtor's Paradise", "Apprentice's Workshop", "Virgin's End"],
+      "questions": [
+        {
+          "id": "lucrezia-notes",
+          "q": "I've reached Lucrezia's sealed study. What should I be doing here?",
+          "locations": ["Lucrezia's Study"],
+          "hints": [
+            "This room is the deepest source of answers in the castle. Don't rush out of it.",
+            "There's an image showing how she had her own shoes resized, an instrument beside it, and her private notes.",
+            "Answer: Read her notes — LOOK UP SHOES IN THE NOTES, LOOK UP THE TAMBOURINE IN THE NOTES, LOOK UP ELEPHANT IN THE NOTES, and later LOOK UP SCRYING IN THE NOTES. These clue the shoes, the tambourine, the gong, and how to reach Yvette. Take the notes with you (GET NOTES) so you can consult them anywhere."
+          ]
+        },
+        {
+          "id": "ivory-key",
+          "q": "Is there a way deeper into the crypt? I seem to be missing a key.",
+          "locations": ["Father's Regret"],
+          "hints": [
+            "Crypts keep their keys close to their dead. Search the furniture, not just the floor.",
+            "Answer: In Father's Regret, OPEN DRAWERS and GET the ivory key inside. It opens the ivory door at the top of the hourglass into the rest of the crypt."
+          ]
+        },
+        {
+          "id": "harness",
+          "q": "There's a harness in the crypt. How do I take it?",
+          "locations": ["Central Crypt"],
+          "hints": [
+            "You've met something like this before — a fixture the castle simply won't let you carry off.",
+            "Answer: You can't. The harness is immovable, the same class of fixed scenery as the gargoyle. The bronze gong you're after is a separate object, kept in the Bellroom — not this."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "endings",
+      "title": "Reaching an Ending",
+      "verified": true,
+      "locations": ["Gallery of Historical Paintings", "Scrying Room", "Crystal Bedroom", "Bellroom"],
+      "questions": [
+        {
+          "id": "how-to-end",
+          "q": "I've done most of what the Beast asked. How do I actually bring the story to a close?",
+          "locations": ["Gallery of Historical Paintings"],
+          "hints": [
+            "You're approaching a fork, not a single solution. The castle offers you more than one way to end the Beast's story — and they are very different in spirit.",
+            "One instrument here is built for destruction; the same act, turned the other way, is built for love. The choice of which ending you want is yours to make.",
+            "Answer: Take the bronze gong from the Bellroom (LOOK UP HARNESS / ELEPHANT in the notes for its nature) and prime it: GO TO ELZIBAD, RING GONG. From here you choose — ring the gong at the Beast for vengeance (he is destroyed), or pursue the cure instead (contact Yvette and use her girdle). Neither is the \"correct\" answer; pick the ending you want."
+          ]
+        },
+        {
+          "id": "cure-beast",
+          "q": "I'd rather save the Beast than destroy him. A plain kiss does nothing — what am I missing?",
+          "locations": ["Scrying Room", "Crystal Bedroom"],
+          "hints": [
+            "The curse has terms. It lifts only for someone bound by no magical contract who loves him — and who wields a particular power. A kiss alone meets none of that.",
+            "The woman who laid the curse can be reached. Her instrument is the cow bell, and she answers where reflections gather. She'll point you to the thing you must wear.",
+            "What you need is a girdle, kept in the crypt — Yvette's, descended from Lucrezia.",
+            "Answer: RING THE COW BELL in the Scrying Room, then again at the Mirrors (Crystal Bedroom) to contact Yvette. Go to the crypt, GET THE GIRDLE, WEAR IT, then GO TO THE BEAST and KISS THE BEAST. Because you're under no contract and now wield the girdle's power, the curse breaks."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "freeing-servants",
+      "title": "Freeing the Servants (Optional)",
+      "verified": false,
+      "locations": ["Central Crypt", "Debtor's Paradise", "Virgin's End", "Bellroom", "Law Library"],
+      "questions": [
+        {
+          "id": "free-the-souls",
+          "q": "The Beast spoke of freeing the enslaved souls. Do I have to, and how?",
+          "locations": ["Central Crypt"],
+          "hints": [
+            "You don't have to — either ending stands on its own without this. But it's the Beast's own dream, and the thematic heart of the game, so it's there if you want it. It's a long detour.",
+            "Two threads come together: hear out the buried servants in the crypt (the helmet helps you LISTEN for them), and prepare the means to rewrite what binds them — the contract book, a stand built to hold it, and ink.",
+            "The librarian's instrument is the glass bell, and the lectern it wakes is the LIE library stand. The inkpot from the Black Gallery has to be filled at the Press Room before it's any use.",
+            "Answer: Gather the servants' tokens in the crypt (WEAR HELMET, LISTEN, JUMP, OPEN STONE). Fetch the inkpot from the Black Gallery and FILL INKPOT at the Press Room. PUT THE CONTRACT BOOK ON THE STAND in the LIE library, PUT INKPOT ON THE STAND, and RING THE GLASS BELL (the librarian's) to rewrite the contracts and free the souls. Then go finish your chosen ending."
+          ]
+        }
+      ]
+    }
+  ]
+}
