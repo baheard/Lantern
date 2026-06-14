@@ -1,0 +1,277 @@
+﻿# Theatre (Brendon Wyber) -- canonical command list for headless replay
+# Source: Dorothy Millard walkthrough (docs/games/walkthroughs/theatre.txt)
+#
+# DETERMINISM CUTOFF: This list stops at EXAMINE STATUE in the Witch's Lair,
+# just before the socket ceremony (PUT X PEARL IN ... SOCKET). The goblin's
+# four SHOW PEARL responses are assigned via @random each run -- those must be
+# noted per run and used to order the socket-placing commands. Everything above
+# this cutoff is fully deterministic and replays cleanly.
+#
+# Verify: node tools/play.cjs theatre --file docs/games/walkthroughs/theatre.cmds.txt --strict
+examine posters
+nw
+d
+get pager
+get page
+examine panel
+turn on switch
+get popcorn
+get popcorn
+get popcorn
+get popcorn
+u
+se
+s
+n
+examine thug
+wait
+wait
+wait
+n
+nw
+n
+get page
+w
+w
+s
+w
+get music
+put music on holder
+play piano
+push piano east
+push piano south
+stand on piano
+open trapdoor
+u
+get pages
+n
+turn handle
+n
+get lens
+s
+s
+d
+n
+n
+d
+d
+n
+move carpet rolls
+get corpse
+examine corpse
+read appointment book
+drop appointment book
+n
+get page
+n
+open rubbish bin
+get page from bin
+get ticket from bin
+sw
+s
+s
+s
+se
+drop all except lens and pager
+u
+feel painting
+open door
+n
+get page
+get camera
+s
+d
+drop camera and pager
+u
+e
+s
+open curtains
+look down
+ne
+w
+d
+put lens in spotlight
+get lens and ticket
+u
+e
+n
+push chandelier
+drop ticket
+e
+e
+u
+swing chandelier
+nw
+get page
+s
+w
+n
+get pages
+s
+s
+n
+unhook chain
+push bookcase
+s
+examine nest
+get blue pearl
+w
+u
+get crow
+d
+climb down chimney
+open coffin
+examine fireplace
+d
+get key
+open chest
+get bottle
+get lump
+clean lump
+u
+u
+e
+s
+w
+get mask
+break bottle
+get mask
+e
+s
+s
+climb piano
+u
+n
+wear mask
+n
+put lens in telescope
+drop mask
+look through telescope
+s
+s
+d
+n
+n
+n
+n
+open cabinet
+get page
+get tablets and stethoscope from cabinet
+get vial
+read letter
+s
+s
+e
+e
+s
+wear stethoscope
+listen safe
+turn dial left
+turn dial right
+turn dial left
+turn dial right
+get pearl
+drop stethoscope
+open drawer
+get page
+get plans
+examine plans
+examine south wall
+drop plans
+kick south wall
+s
+get page
+examine watch
+pull dial
+turn dial
+turn dial
+turn dial
+turn dial
+n
+se
+drop all except pager
+get camera
+u
+get ticket
+e
+n
+drop ticket
+n
+n
+drop ticket
+get page
+climb rope
+w
+open locker
+push locker east
+d
+read newspaper
+get amulet
+wear amulet
+s
+s
+e
+e
+examine shadow
+take photograph
+drop camera
+e
+nw
+get page
+examine items
+get green pearl
+se
+w
+w
+n
+se
+s
+w
+d
+get all
+ne
+examine hooks
+pull clean hook
+d
+get page
+d
+unlock door with shiny key
+open door
+drop key
+e
+examine pit
+get page
+pour liquid on body
+throw body in pit
+d
+e
+get page
+sw
+d
+examine creature
+show violet pearl to goblin
+show blue pearl to goblin
+show red pearl to goblin
+show green pearl to goblin
+u
+ne
+se
+drop popcorn
+e
+drop popcorn
+e
+drop popcorn
+se
+drop popcorn
+nw
+w
+n
+examine lever
+wait
+pull lever
+s
+e
+se
+se
+get page
+examine statue
