@@ -23,7 +23,7 @@
     ],
     "generatedBy": "generate-hints skill",
     "generatedAt": "2026-06-14",
-    "appVersion": "1.5.566"
+    "appVersion": "1.5.567"
   },
   "milestones": [
     { "id": "festeron",  "start": true, "enterLocations": ["Post Office"] },
@@ -55,7 +55,7 @@
           "q": "A tiny poodle outside the cottage keeps yapping and snapping at me. How do I get past it?",
           "locations": ["Outside Cottage"],
           "hints": [
-            "It's a hungry little thing, not a guard. You don't need to fight or flee it.",
+            "It's not a guard you have to beat — neither fighting it nor forcing your way past will get you anywhere.",
             "Have you found anything edible? A dog with something to chew on loses interest in you.",
             "There's a bone to be had down below the cemetery. Bring it here.",
             "Answer: GIVE BONE TO POODLE. (The bone is down in the open grave / underground area near the cemetery. With the poodle busy, you can grab the slip of paper it was guarding — GET NOTE.)"
