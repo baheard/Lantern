@@ -229,7 +229,7 @@
             "Climb the rope to the dressing room. The locker there is worth opening — carefully.",
             "Inside the locker: an ancient amulet, a newspaper clipping... and a coiled serpent guarding them.",
             "Don't reach in. The locker itself is your weapon — it's heavy and the stage is below.",
-            "Answer: PUSH LOCKER EAST — it falls to the stage and kills the snake. Go D, READ NEWSPAPER, GET AMULET, WEAR AMULET. The amulet matters: it protects you in the underground areas."
+            "Answer: PUSH LOCKER EAST — it falls to the stage and kills the snake. Go D, READ NEWSPAPER, GET AMULET, WEAR AMULET."
           ]
         },
         {
@@ -363,6 +363,16 @@
             "The popcorn from the basement barrels — all four lots. Lay a trail.",
             "Lay the popcorn trail — the western end of the sewer, the center, the eastern end, and the Rat Nest itself. The rats follow it away from where you need to be.",
             "Answer: After laying the trail (W end, center, E end, nest), go NW then W then N, EXAMINE LEVER, WAIT until the rats reach the western end, then PULL LEVER. The sluice gate opens and flushes the rats down the drain."
+          ]
+        },
+        {
+          "id": "underground-archway",
+          "q": "An archway keeps pushing me back — I can't get through to the room beyond it.",
+          "locations": ["Rat Nest"],
+          "hints": [
+            "You can't force it, and there's no key or switch — the archway reacts to you as you try to step through.",
+            "It responds to something protective, and only if you're wearing it — carrying it isn't enough. Have you found anything like that?",
+            "Answer: WEAR AMULET (the one from the dressing-room locker behind the stage), then go SE. Worn, it lets you pass the archway into the Witch's Lair."
           ]
         }
       ]
