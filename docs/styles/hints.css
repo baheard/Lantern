@@ -483,6 +483,129 @@ body.hints-resizing .hints-overlay * {
 }
 
 /* ============================================================
+   PER-HINT RATING (👍 / 👎)
+   ============================================================ */
+
+/* Thumb row under each revealed hint */
+.hints-rate {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.hints-rate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hints-rate-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #93c5fd;
+}
+
+.hints-rate-btn .material-icons {
+  font-size: 0.95rem;
+}
+
+/* Rated (static) state */
+.hints-rate-done {
+  gap: 6px;
+  color: #64748b;
+}
+
+.hints-rate-icon {
+  font-size: 0.95rem;
+}
+
+.hints-rate-up {
+  color: #34d399;
+}
+
+.hints-rate-down {
+  color: #f59e0b;
+}
+
+.hints-rate-thanks {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+/* 👎 optional-reason box */
+.hints-rate-reason {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hints-rate-reason-input {
+  width: 100%;
+  resize: vertical;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  line-height: 1.4;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+}
+
+.hints-rate-reason-input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.hints-rate-reason-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hints-rate-reason-cancel,
+.hints-rate-reason-send {
+  padding: 5px 12px;
+  min-height: 32px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.hints-rate-reason-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: #94a3b8;
+}
+
+.hints-rate-reason-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+.hints-rate-reason-send {
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.hints-rate-reason-send:hover {
+  background: rgba(59, 130, 246, 0.28);
+  color: #dbeafe;
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 
@@ -512,6 +635,24 @@ body.hints-resizing .hints-overlay * {
 .hints-spoiler-warning .material-icons {
   font-size: 0.9rem;
   color: #f59e0b;
+}
+
+.hints-reveal-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.hints-reveal-all input {
+  width: 16px;
+  height: 16px;
+  accent-color: #f59e0b;
+  cursor: pointer;
 }
 
 .hints-reset-btn {

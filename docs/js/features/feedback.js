@@ -99,3 +99,39 @@ export async function submitFeedback(feedbackText, gameName = 'None') {
     // no-cors fetch may throw in some browsers; the POST still lands
   }
 }
+
+/**
+ * Submit a 👍/👎 rating for a single hint. Rides the same Google Form as
+ * submitFeedback() — an external automation files these as `feedback`-labelled
+ * GitHub issues, which `/triage-feedback` folds into one per-game `hint-feedback`
+ * dashboard issue. The structured header line is the contract triage parses.
+ * See .tome/hints-feedback-system.md.
+ *
+ * @param {Object} p
+ * @param {string} p.gameName
+ * @param {string} p.sectionId
+ * @param {string} p.questionId
+ * @param {number} p.hintIndex     - 0-based index of the rated hint
+ * @param {number} p.total         - total hints in the question
+ * @param {string} p.hintText      - the exact hint text that was rated
+ * @param {string} [p.hintsVersion]- meta.appVersion (or generatedAt) of the hints file
+ * @param {'up'|'down'} p.rating
+ * @param {string} [p.reason]      - optional free-text, only meaningful for 👎
+ * @returns {Promise<void>}
+ */
+export async function submitHintRating({
+  gameName, sectionId, questionId, hintIndex, total,
+  hintText, hintsVersion, rating, reason,
+}) {
+  const thumb = rating === 'up' ? '\u{1F44D}' : '\u{1F44E}';
+  const lines = [
+    `[HINT ${thumb}] game=${gameName} · section=${sectionId} · q=${questionId} `
+      + `· hint=${hintIndex + 1}/${total} · hintsVersion=${hintsVersion || 'unknown'}`,
+    `"${hintText}"`,
+  ];
+  if (rating === 'down') {
+    const r = reason && reason.trim() ? reason.trim() : '(none)';
+    lines.push('', `Reason: ${r}`);
+  }
+  await submitFeedback(lines.join('\n'), gameName || 'None');
+}

@@ -1,0 +1,430 @@
+{
+  "schema": 1,
+  "game": "dreamhold",
+  "title": "The Dreamhold",
+  "meta": {
+    "gameAuthor": "Andrew Plotkin (2004)",
+    "sources": [
+      {
+        "name": "IF Archive standard-mode walkthrough (Dreamhold-WalkthroughStandard.log)",
+        "url": "https://ifarchive.org/if-archive/games/zcode/Dreamhold-WalkthroughStandard.log",
+        "file": "docs/games/walkthroughs/dreamhold.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-06-14",
+    "appVersion": "1.5.565"
+  },
+  "sections": [
+    {
+      "id": "cell-study",
+      "title": "The Cell & the Study",
+      "verified": true,
+      "locations": ["Cell", "Narrow Hallway", "Crowded Study", "Sitting Room"],
+      "questions": [
+        {
+          "id": "cell-orientation",
+          "q": "I've woken up with amnesia in a strange house and I don't know what I'm supposed to be doing.",
+          "hints": [
+            "Relax — you're not stuck on a puzzle. Nothing is blocking you and there's no item you're missing yet. This is a wizard's house and you've lost your memory; for now, wandering it and examining things is the whole point.",
+            "Keep an eye on the score in the top corner. The moment you pick up your first real find it reads \"1 of 7\" — your quiet signal that there are seven things to gather.",
+            "The seven are paper masks, scattered all through the house, up the mountain and down in the caverns. Raised to your face, each gives back a piece of who you were.",
+            "Answer: Explore every part of the house and collect all seven masks, examining everything and taking what you find. There's no fixed order — just be thorough."
+          ]
+        },
+        {
+          "id": "study-clutter",
+          "q": "The study is crammed with clutter. Is any of it actually worth taking?",
+          "locations": ["Crowded Study"],
+          "hints": [
+            "Most of it is scenery, but a couple of things matter. Look closely around the desk, and don't overlook the furniture that opens.",
+            "Examining the desk turns up a mask half-buried in the mess; the small brass trunk nearby is closed.",
+            "Answer: EXAMINE DESK to spot the white mask, then TAKE WHITE MASK. OPEN TRUNK and TAKE COPPER KEY."
+          ]
+        },
+        {
+          "id": "copper-key",
+          "q": "I have a small copper key — what does it open?",
+          "locations": ["Crowded Study", "Sitting Room"],
+          "hints": [
+            "It's far too small for the heavy iron-locked door in the study. But the house has daintier locks than that one.",
+            "Answer: It fits the white-painted door in the Sitting Room (north of the study). UNLOCK DOOR WITH COPPER KEY there, opening the way east into the curving halls."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mountain-garden",
+      "title": "The Mountain Garden",
+      "verified": true,
+      "locations": ["Dim Shed", "Mountain Path", "Mountain Garden", "Cool Bower", "Warm Bower", "Marble Balcony"],
+      "questions": [
+        {
+          "id": "garden-berries",
+          "q": "The berries on the mountain bushes are too cold (or too hot) to pick — I keep snatching my hand back.",
+          "locations": ["Cool Bower", "Warm Bower"],
+          "hints": [
+            "Bare hands are no match for that cold and heat. You need something to shield your hand.",
+            "A gardener's glove would do. Have you searched the shed at the foot of the mountain stairs?",
+            "Answer: WEAR GLOVE (it's in the Dim Shed), then TAKE BERRIES. The Cool Bower's bush gives frost-cold white berries; the Warm Bower's gives fire-hot orange berries. Gather a handful of each."
+          ]
+        },
+        {
+          "id": "garden-statue",
+          "q": "There's a gold mask balanced on a statue's face out on the balcony, and I can't reach it.",
+          "locations": ["Marble Balcony"],
+          "hints": [
+            "Don't try to climb up to it — the statue won't bear your weight, and that isn't the way anyhow.",
+            "Look at how the statue stands: heavy, leaning forward, its weight already tipped.",
+            "Answer: PUSH STATUE. It topples over, and the gold mask flutters down beside it. TAKE GOLD MASK."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "atelier",
+      "title": "The Mosaic Room & the Studio",
+      "verified": true,
+      "locations": ["Mosaic Room", "Atelier", "Metal Culvert", "Mountain Pool", "Red Desert", "Sea of White", "Platform in the Void"],
+      "questions": [
+        {
+          "id": "atelier-telescope",
+          "q": "What is the telescope in the artist's studio for?",
+          "locations": ["Atelier"],
+          "hints": [
+            "It isn't for admiring the view. Peer into it and the world turns — it takes you somewhere.",
+            "Where it sends you isn't fixed. Notice what's on display on the easel beside it.",
+            "The telescope carries you into the world of whatever painting stands on the easel. Change what's displayed to change where you go; to come back, simply head south.",
+            "Answer: LOOK IN TELESCOPE. With the mountain painting on the easel (where it starts), you arrive at a Mountain Pool holding the brown mask — TAKE BROWN MASK, then S to return. Put other things on the easel for other destinations."
+          ]
+        },
+        {
+          "id": "atelier-other-worlds",
+          "q": "Is there anything to find in the telescope's other worlds?",
+          "locations": ["Atelier", "Red Desert", "Sea of White"],
+          "hints": [
+            "The desert world holds only an old letter — atmosphere, nothing you need. The trick is to display something other than a painting.",
+            "Answer: Put the PALETTE on the easel and LOOK IN TELESCOPE to reach a white sea, where a knotted string floats. TAKE STRING — an optional discovery; its knots spell PORTRAIT, and it's one of several oddments worth keeping."
+          ]
+        },
+        {
+          "id": "atelier-apple",
+          "q": "There's a ripe apple locked in a brass birdcage in the Mosaic Room. How do I get it out?",
+          "locations": ["Mosaic Room"],
+          "hints": [
+            "Are you sure you want it? Cages in a wizard's house aren't always kind to what they hold.",
+            "Opening the cage is a classic blunder — the instant air reaches it, the apple withers to a husk. (If you just did that, UNDO.)",
+            "Answer: The apple is a red herring — there's nothing here you need, and no use for the fruit fresh or rotten. Leave the cage shut and move on. The whole episode is really the game teaching you the UNDO command."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domes",
+      "title": "The Domes",
+      "verified": true,
+      "locations": ["Dark Dome, East", "Dark Dome, North", "Dark Dome, West", "Dark Dome, South", "Dark Dome, Center", "Lit Dome, Center", "Starry Dome, East", "Starry Dome, North", "Starry Dome, West", "Starry Dome, South", "Starry Dome, Center"],
+      "questions": [
+        {
+          "id": "domes-dark",
+          "q": "The huge domed room is too dark to make anything out.",
+          "locations": ["Dark Dome, East", "Dark Dome, North", "Dark Dome, West", "Dark Dome, South", "Dark Dome, Center"],
+          "hints": [
+            "You need to bring light up here. Have you seen a source of cool, carry-able light anywhere in the house?",
+            "The Sitting Room fire is no ordinary fire — its glowing spheres can be lifted (with your gloved hand). Bring one up.",
+            "In the centre of the dome stands a metal pyramid that opens. There's a wire basket inside, plainly meant to hold something.",
+            "Answer: TAKE SPHERE from the Sitting Room fireplace, carry it to the Dark Dome centre, OPEN PYRAMID, PUT SPHERE IN WIRE, then CLOSE PYRAMID. The dome floods with light and cycles through images — WAIT through them until it fills with stars."
+          ]
+        },
+        {
+          "id": "domes-cloak",
+          "q": "Can I reach any of the constellations in the star dome?",
+          "locations": ["Starry Dome, South"],
+          "hints": [
+            "Most hang far overhead. But one sits unusually low, just above the horizon.",
+            "Answer: The Cloak of Night, low in the south, is close enough to touch — TAKE CLOAK (an optional discovery, and a warm one to wear). Reading the other constellations is just lore, but pleasant."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "translucent-dome",
+      "title": "The Bonfire Dome & Catwalk",
+      "verified": true,
+      "locations": ["Translucent Dome", "Catwalk, South", "Catwalk, West", "Catwalk, North", "Catwalk, East", "Catwalk, South; Night", "Catwalk, West; Night", "Catwalk, North; Night", "Catwalk, East; Night", "Ledge; Night"],
+      "questions": [
+        {
+          "id": "dome-black-mask",
+          "q": "There's a black mask on a ledge across a deep ravine, and I can't jump across.",
+          "locations": ["Catwalk, North", "Catwalk, North; Night", "Ledge; Night"],
+          "hints": [
+            "You won't leap it, and climbing is no better. But a bridge of some kind might be possible — just not a conventional one.",
+            "A shadow, with a strong enough light behind it, can be solid as a plank in this house. And there's a dome at the top of the stairs with a pile of wood and a tall copper \"sail\".",
+            "Once the fire is roaring, climb to the catwalk outside (it's night up there) and find where the sail's shadow stretches out across the ravine.",
+            "Answer: PUT ORANGE BERRY IN WOOD to light the bonfire, go UP to the catwalk, walk round to Catwalk North, and go N out onto the band of shadow. It bears your weight across to the ledge — TAKE BLACK MASK."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orrery",
+      "title": "The Orrery",
+      "verified": true,
+      "locations": ["South Alcove", "Orrery", "North Alcove"],
+      "questions": [
+        {
+          "id": "orrery-blue-mask",
+          "q": "A blue mask is caught on the great spinning orrery, always whirling out of reach.",
+          "locations": ["Orrery"],
+          "hints": [
+            "You can't snatch it as it flies past. If you want it, you'll have to ride the machine.",
+            "Watch the globe the mask hangs from, and wait for it to swing down low enough to grab.",
+            "When you grab on, you're carried up — and the grab knocks the mask loose to the floor. So take the ride, then get yourself back down to where the mask landed.",
+            "Answer: Wait until the tan globe sweeps to the floor, then TAKE TAN GLOBE (you're carried up and the mask drops). Ride round, go D onto the inner globes and D again to step off, and back on the floor TAKE BLUE MASK."
+          ]
+        },
+        {
+          "id": "orrery-belt",
+          "q": "Is there anything else on the orrery worth reaching?",
+          "locations": ["Orrery"],
+          "hints": [
+            "Higher up, something dangles above the very top of the great tilted disk.",
+            "Answer: Ride the wheels upward (grab a globe and wait as it climbs); near the ceiling a grey leather strip hangs in reach — TAKE STRIP. It's a belt, an optional discovery and one of the oddments worth keeping. DON BELT."
+          ]
+        },
+        {
+          "id": "orrery-gauze",
+          "q": "There's a holed gauzy rag in the alcove by the orrery. Is it any use?",
+          "locations": ["North Alcove"],
+          "hints": [
+            "It looks like rubbish, but keep it — its holes are oddly regular, as if meant to line up with something.",
+            "Answer: TAKE RAG. Its use is far below, at a brass grate that needs sealing — hold onto it until then."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "west-arboretum",
+      "title": "The West End & Arboretum",
+      "verified": true,
+      "locations": ["Curving Hall, West End", "Arboretum", "Dank Jungle (in the earthenware tub)"],
+      "questions": [
+        {
+          "id": "arboretum-iron-key",
+          "q": "The far western room has a flowering tub in it. Is there anything here?",
+          "locations": ["Arboretum"],
+          "hints": [
+            "Yes — and an iron key is the prize, resting on the tub's rim.",
+            "Answer: TAKE IRON KEY; it fits the heavy iron-bound door in the study. Smelling the golden flower also triggers a brief memory-vision — harmless and worth seeing, but it changes nothing."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "caverns",
+      "title": "The Deep Caverns",
+      "verified": true,
+      "locations": ["Harp Chamber", "Natural Passage", "Darkness", "Subterrane World", "Vaulting Cavern", "Shore of River", "Far Shore of River", "River Crawl", "Ledge in Pit", "Deep in Pit", "Depths of Pit"],
+      "questions": [
+        {
+          "id": "caverns-torch",
+          "q": "It's pitch dark in the caves past the natural passage — I can't see to explore.",
+          "locations": ["Natural Passage", "Vaulting Cavern"],
+          "hints": [
+            "The candlelit halls don't reach down here. You'll need to carry fire of your own.",
+            "There's a bundle of straw in the Harp Chamber that's really a torch. And you already know how to make fire.",
+            "Answer: TAKE TORCH (Harp Chamber), PUT ORANGE BERRY IN TORCH to light it, then carry it north — now you can see the Vaulting Cavern and beyond."
+          ]
+        },
+        {
+          "id": "caverns-dagger",
+          "q": "If I go into the dark caverns without a light, I just get lost in the blackness.",
+          "locations": ["Darkness", "Subterrane World", "Natural Passage"],
+          "hints": [
+            "Without the torch, the north passage is true darkness — but that darkness hides something, if you'll press deeper instead of fleeing.",
+            "You can't steer by sight. Steer by the faint glimmer of light instead — and go the opposite way from it.",
+            "Answer: From the Natural Passage go N into the dark, then repeatedly GO AWAY FROM LIGHT. You reach the Subterrane World and a dagger balanced on its point — TAKE DAGGER (an optional discovery). ENTER RENT to slip back to the Sitting Room."
+          ]
+        },
+        {
+          "id": "caverns-river",
+          "q": "A black underground river blocks the way, with a green mask on the far shore.",
+          "locations": ["Shore of River", "Far Shore of River"],
+          "hints": [
+            "You won't wade or swim that. But think what one of your berries could do to a sheet of water.",
+            "Cold. The frost berry.",
+            "Answer: PUT WHITE BERRY IN RIVER — it freezes into an ice bridge. Cross W quickly, before the ice wears away in the current, and TAKE GREEN MASK."
+          ]
+        },
+        {
+          "id": "caverns-pit-bracelet",
+          "q": "A steaming pit drops away in the cavern. Is there anything down it?",
+          "locations": ["River Crawl", "Ledge in Pit", "Deep in Pit", "Depths of Pit"],
+          "hints": [
+            "A hot updraft rises from it, and the heat and steam make the descent treacherous. Calm it first — the same way you calmed the river.",
+            "From the crawl beyond the river you'll slip down onto a ledge in the pit. From there, send the cold down ahead of you.",
+            "Answer: Reach the Ledge in Pit (SW from the Far Shore into the River Crawl, then D — you slip in). PUT WHITE BERRY IN PIT to quell the heat, take your torch, and climb D, waiting for the frost to clear, down to the bracelet — TAKE BRACELET (an optional discovery). Then climb back U."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cistern",
+      "title": "The Cistern",
+      "verified": true,
+      "locations": ["Confusing Passage", "Dead End", "Cistern, West", "Cistern, East", "Cistern, East (on the glass platform)", "Cistern, Bottom", "Cistern, Rising", "Cistern Catwalk, East", "Cistern Catwalk, North", "Cistern Catwalk, Northeast", "Cistern Catwalk, Northwest", "Cistern Catwalk, South", "Cistern Catwalk, Southeast", "Cistern Catwalk, Southwest", "Cistern Catwalk, West", "Grey Chamber"],
+      "questions": [
+        {
+          "id": "cistern-main",
+          "q": "I'm in a vast sealed cistern with a featureless black floor and no obvious way on.",
+          "locations": ["Cistern, West", "Cistern, East", "Cistern, Bottom", "Dead End", "Cistern, East (on the glass platform)"],
+          "hints": [
+            "That black \"floor\" isn't solid — it's a liquid you can lower and raise. Look for the controls: a lever, and a wheel.",
+            "Pull the lever and step down; wait, and the black tide drains away, carrying you to the bottom and uncovering a catwalk that rings the room above.",
+            "Your real goal is the opposite — to flood the room and ride the rising black tide up to the ceiling, where it meets the roof and lets you through. But first you must stop the liquid escaping.",
+            "It leaks two ways: through cracked holes in the glass catwalk-trough, and through a grate in the floor. Seal them all, redirect the flow into the trough, then refill.",
+            "Answer: Plug the three catwalk holes by size — the small and big gum blobs and the curved glass slab each fit one hole — and TURN SPOUT so the black liquid pours into the trough. PUT GAUZE ON GRATE to seal the floor grate (the holed rag from the orrery alcove). Then PUSH LEVER and WAIT — the tide rises and lifts you up through the roof into the Grey Chamber."
+          ]
+        },
+        {
+          "id": "cistern-red-mask",
+          "q": "Where is the seventh — the red — mask?",
+          "locations": ["Cistern Catwalk, East"],
+          "hints": [
+            "It's here in the cistern, lying in the glass trough of the catwalk that rings the room. You'll pass it while solving the place.",
+            "Answer: On the catwalk's east side, the red mask lies in the trough — TAKE RED MASK."
+          ]
+        },
+        {
+          "id": "cistern-buckler",
+          "q": "Is there a discovery to be found at the very top of the cistern?",
+          "locations": ["Grey Chamber"],
+          "hints": [
+            "When the rising tide carries you up through the roof, you arrive somewhere strange and grey — look around before you leave.",
+            "Answer: A gleaming triangular buckler hangs in the Grey Chamber — TAKE BUCKLER (an optional discovery). Go W to climb back out into the caverns."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mirror",
+      "title": "The Mirror",
+      "verified": true,
+      "locations": ["Curtained Room", "Curtained Room (on the chair)"],
+      "questions": [
+        {
+          "id": "mirror-faceless",
+          "q": "I sit before the mirror but my reflection has no face — just a blur.",
+          "locations": ["Curtained Room", "Curtained Room (on the chair)"],
+          "hints": [
+            "The blur is the point. The masks you've gathered are pieces of yourself, and this mirror is where they go back together.",
+            "Sit down, then give the mirror each mask in turn.",
+            "Answer: SIT ON CHAIR, then PUT each mask ON MIRROR — white, gold, red, brown, green, blue, and black. Each restores a fragment, and after the last your memory begins knitting itself back together."
+          ]
+        },
+        {
+          "id": "mirror-missing-fragment",
+          "q": "After placing all the masks, the mirror says one fragment is still missing.",
+          "locations": ["Curtained Room", "Curtained Room (on the chair)"],
+          "hints": [
+            "Think back — was every mask whole? One of the seven came to you damaged.",
+            "The black mask was torn; its missing piece has to turn up somewhere things tend to surface in this house.",
+            "Answer: A torn black shred now lies on the study desk — TAKE SHRED, return to the chair, SIT, and PUT SHRED ON MIRROR. Your reflection completes, and the last, darkest memory falls into place."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "laboratory",
+      "title": "The Laboratory & the Portal",
+      "verified": true,
+      "locations": ["Iron Corridor", "Iron Passage", "Laboratory", "Crowded Study", "Cell"],
+      "questions": [
+        {
+          "id": "lab-spell-door",
+          "q": "There's a heavy iron-bound door in the study, and a strange mirrored barrier in the hall beyond it.",
+          "locations": ["Crowded Study", "Iron Corridor"],
+          "hints": [
+            "You couldn't deal with either until you'd remembered who you are. Once the mirror is complete, both give way.",
+            "The iron key opens the door; the barrier just past it is an old guard-spell of your own making.",
+            "Answer: UNLOCK DOOR WITH IRON KEY and go S; in the Iron Corridor, BREAK SPELL, then continue S to reach your Laboratory."
+          ]
+        },
+        {
+          "id": "lab-ink",
+          "q": "I'm in the laboratory. What am I meant to make here?",
+          "locations": ["Laboratory"],
+          "hints": [
+            "You need a special ink — the one for redrawing the portal diagram. The recipe is on the scrap of paper on the table.",
+            "It calls for resin and the blue dust, fused together by the optical apparatus.",
+            "Answer: PUT RESIN IN FLASK (from the basket), POUR DUST IN FLASK (from the leaden jar), PUT FLASK IN LOOP of the apparatus, then PULL CHAIN twice (resin to gel to ink). TAKE FLASK."
+          ]
+        },
+        {
+          "id": "lab-mural",
+          "q": "The mural shows a robed figure carrying all sorts of gear. Does it mean anything?",
+          "locations": ["Laboratory"],
+          "hints": [
+            "It's you, shown properly equipped for what's coming — the game even tells you you're \"not properly arrayed\" yet.",
+            "Look at what the figure wears and holds: a cloak, a snakeskin belt, a heavy gauntlet, a small shield, a wristlet, a black dagger, and a knotted thread — the very oddments you've been turning up.",
+            "Answer: Equip yourself as the figure is shown — wear the cloak, belt, glove, and bracelet, and carry the dagger, buckler, and string. Gathering these extra discoveries isn't required merely to reach the portal, but the mural shows the regalia that shapes how your story ends."
+          ]
+        },
+        {
+          "id": "lab-draw-diagram",
+          "q": "I've made the ink and I'm equipped. How do I actually finish?",
+          "locations": ["Crowded Study", "Cell"],
+          "hints": [
+            "The book names the diagram as the final step. The wizard's own margin note insisted it be drawn somewhere smooth and well-insulated — bare, uncut stone.",
+            "Where in the whole house is the floor smooth, unbroken white stone? The very room you woke in.",
+            "Answer: Go down to the Cell, DIP PEN IN INK, DRAW DIAGRAM on the floor, then ENTER DIAGRAM to step through the portal and end the game."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "title": "Odds, Ends & Discoveries",
+      "verified": true,
+      "locations": ["Harp Chamber", "Curving Hall at Pedestal"],
+      "questions": [
+        {
+          "id": "general-harp",
+          "q": "The harp in the Harp Chamber is a burned ruin. Can I repair it or play it?",
+          "locations": ["Harp Chamber"],
+          "hints": [
+            "It's a sad, scorched wreck — the game itself wonders aloud what destroyed it.",
+            "Answer: Nothing to be done. The harp is pure atmosphere — a mystery with no solution and no use. (The bundle of straw on the floor, on the other hand, is worth taking.)"
+          ]
+        },
+        {
+          "id": "general-pedestal",
+          "q": "There's a black marble pedestal in the curving hall. What am I supposed to put on it?",
+          "locations": ["Curving Hall at Pedestal"],
+          "hints": [
+            "Nothing. It simply stands there.",
+            "Answer: The pedestal is bare decoration — there's no puzzle here at all. Don't read importance into it just because it's described; in this house, the presence of an oddity is no promise that it matters."
+          ]
+        },
+        {
+          "id": "general-discoveries",
+          "q": "My score has a \"+\" that keeps going up. What are these extra discoveries?",
+          "hints": [
+            "They're optional side-finds — texture, not requirements. You can win without a single one.",
+            "There are seven, scattered like the masks.",
+            "Answer: The knotted string (the telescope's white sea), the dagger (deep in the unlit caverns), the Cloak of Night (low in the star dome), the leather belt (high on the orrery), the bracelet (deep in the steaming pit), the buckler (the grey chamber atop the cistern), and a seventh earned by an unusual fire up at the bonfire dome. The wearable ones together are the regalia the laboratory mural depicts."
+          ]
+        },
+        {
+          "id": "general-alternate-ending",
+          "q": "Is there more than one way the game can end?",
+          "hints": [
+            "Yes. Quite apart from the portal in the Cell, there's a very different ending hidden up at the bonfire dome.",
+            "It turns on doing something contrary with the bonfire, and on the copper sail's shadow — pointing it a new way.",
+            "Answer (this spoils an alternate ending): Push the copper sail round its track until its shadow falls WEST, then PUT WHITE BERRY IN FIRE to turn the bonfire to cold blue flame (an extra discovery). Walk the west shadow-path to its end at night — the ringed moon opens a gentler portal, and the stars welcome you home."
+          ]
+        }
+      ]
+    }
+  ]
+}

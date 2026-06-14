@@ -9,7 +9,8 @@
  * approach and why it was removed (v1.4.85).
  */
 
-import { getLastLocationName } from '../auto-mapper.js';
+import { getLastLocationName, getLastStatusContext } from '../auto-mapper.js';
+import { getReachedMilestone, setReachedMilestone } from './hints-state.js';
 
 // Module-level cache: maps gameName → { data } or { error } (404s cached too)
 const _cache = new Map();
@@ -64,9 +65,10 @@ export async function loadHints(gameName) {
  * Matching is case-insensitive / whitespace-trimmed.
  *
  * @param {Object} hintsData - Loaded hints data object
+ * @param {string} [gameName] - Current game (needed for milestone scoping)
  * @returns {{ sectionIds: Set<string>, questionIds: Set<string> }}
  */
-export function findCurrentTopics(hintsData) {
+export function findCurrentTopics(hintsData, gameName) {
     const sectionIds = new Set();
     const questionIds = new Set();
 
@@ -78,10 +80,39 @@ export function findCurrentTopics(hintsData) {
     if (!lastName) return { sectionIds, questionIds };
 
     const currentLoc = lastName.trim().toLowerCase();
+    const currentPhase = (getLastStatusContext() || '').toLowerCase();
+
+    // Optional `phase` scoping: when a section/question declares a `phase` string, it
+    // only matches if the game's current status-bar context contains it (e.g. "day two").
+    // No `phase` → location-only behaviour, exactly as before. This lets games that reuse
+    // the same geography across acts/days (Anchorhead) avoid badging the wrong act.
+    const phaseMatches = (obj, inheritedPhase) => {
+        const phase = (obj.phase || inheritedPhase || '').trim().toLowerCase();
+        return !phase || currentPhase.includes(phase);
+    };
+
+    // Optional `milestone` scoping: for games whose status bar can't name the act (e.g. a
+    // clock), a section/question can declare an `afterMilestone`/`untilMilestone` window.
+    // Milestones latch one-way as the player crosses act boundaries (see updateMilestone),
+    // so a room that recurs across acts (Wishbringer's Festeron→Witchville) badges the
+    // section whose act the player is actually in. No milestone fields → always-active.
+    const milestones = Array.isArray(hintsData.milestones) ? hintsData.milestones : [];
+    // Reached-index space is 0-based: index 0 is the first/start act (milestones[0]),
+    // index N is milestones[N]. Default reached = 0 = start act.
+    const indexById = new Map(milestones.map((m, i) => [m.id, i]));
+    const reached = getReachedMilestone(gameName);
+    const milestoneMatches = (obj, inheritedAfter, inheritedUntil) => {
+        const after = obj.afterMilestone || inheritedAfter;
+        const until = obj.untilMilestone || inheritedUntil;
+        if (after && reached < (indexById.get(after) ?? 0)) return false;
+        if (until && reached >= (indexById.get(until) ?? Infinity)) return false;
+        return true;
+    };
 
     for (const section of hintsData.sections) {
         const sectionLocs = Array.isArray(section.locations) ? section.locations : [];
-        if (sectionLocs.some(loc => currentLoc === loc.trim().toLowerCase())) {
+        const locMatch = sectionLocs.some(loc => currentLoc === loc.trim().toLowerCase());
+        if (locMatch && phaseMatches(section) && milestoneMatches(section)) {
             sectionIds.add(section.id);
         }
 
@@ -89,7 +120,10 @@ export function findCurrentTopics(hintsData) {
 
         for (const question of section.questions) {
             const qLocs = Array.isArray(question.locations) ? question.locations : [];
-            if (qLocs.some(loc => currentLoc === loc.trim().toLowerCase())) {
+            // A question inherits its section's phase/milestone window unless it overrides.
+            if (qLocs.some(loc => currentLoc === loc.trim().toLowerCase())
+                && phaseMatches(question, section.phase)
+                && milestoneMatches(question, section.afterMilestone, section.untilMilestone)) {
                 sectionIds.add(section.id);
                 questionIds.add(question.id);
             }
@@ -97,4 +131,58 @@ export function findCurrentTopics(hintsData) {
     }
 
     return { sectionIds, questionIds };
+}
+
+/**
+ * Latch the player's milestone (act) progress. Called on every location change with the
+ * current turn's output text. A milestone *fires* when the current room is one of its
+ * `enterLocations` OR the output text contains its `textMatch` signature (any-of).
+ *
+ * Two latch behaviours:
+ *  - A `start: true` milestone (the first/reset act) fires → milestone is FORCED to its
+ *    index (a down-move). This is how an in-game RESTART self-heals: returning to the start
+ *    act's room / seeing its prose ("Festeron") resets to act 0 with no VM-event hook.
+ *  - Any other milestone fires → milestone advances to the highest such index (forward only,
+ *    never regresses). Non-start signatures need NOT be act-exclusive — a recurring prose
+ *    word like "Witchville" only ever raises the floor, so a later act mentioning it can't
+ *    pull the player back.
+ *
+ * `textMatch` recovers the discriminator the status-bar location parser discards (room prose
+ * says "the Witchville Cemetery"; the status bar says only "Outside Cemetery"). Pass the
+ * latest game output (current turn's text), not the whole scrollback, so a stale signature
+ * from many turns ago can't force a spurious reset.
+ *
+ * See the generate-hints skill ("Milestone scoping") for how to choose triggers.
+ *
+ * @param {Object} hintsData - Loaded hints data object
+ * @param {string} [gameName]
+ * @param {string} [outputText] - The current turn's game output text (for `textMatch`)
+ */
+export function updateMilestone(hintsData, gameName, outputText = '') {
+    const milestones = Array.isArray(hintsData?.milestones) ? hintsData.milestones : [];
+    if (milestones.length === 0) return;
+
+    const currentLoc = (getLastLocationName() || '').trim().toLowerCase();
+    const text = (outputText || '').toLowerCase();
+
+    const fires = (m) => {
+        const locHit = Array.isArray(m.enterLocations)
+            && m.enterLocations.some(loc => currentLoc === loc.trim().toLowerCase());
+        const textHit = m.textMatch && text.includes(String(m.textMatch).toLowerCase());
+        return locHit || textHit;
+    };
+
+    // Start/reset milestone wins: its trigger forces an exact reset (down-move allowed).
+    for (let i = 0; i < milestones.length; i++) {
+        if (milestones[i].start && fires(milestones[i])) {
+            setReachedMilestone(i, gameName);
+            return;
+        }
+    }
+
+    // Forward latch: advance to the highest non-start milestone whose trigger fired.
+    const reached = getReachedMilestone(gameName);
+    let best = reached;
+    milestones.forEach((m, i) => { if (!m.start && fires(m) && i > best) best = i; });
+    if (best > reached) setReachedMilestone(best, gameName);
 }

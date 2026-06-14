@@ -8,7 +8,10 @@
 # player in the app gets a different word — HINTS MUST TEACH "say the word the lighthouse
 # showed you", never the literal value. (See wishbringer.notes.md "power word".)
 #
-# Section markers (## NN) map to wishbringer.notes.md puzzle sections for fast cross-ref.
+# Section markers `## [slug] label` map to the same-[slug] headings in wishbringer.notes.md
+# (validate: node tools/_check_walkthrough_map.cjs wishbringer). Probe a puzzle with
+# --snapshot-at "## [slug]". NOTE: the pre-pelican front half is not yet slug-marked (the lint
+# warns on the unmarked span) — only the post-pelican endgame carries anchors so far.
 # Verify (full, from scratch): node tools/play.cjs wishbringer --strict --seed 1 --file docs/games/walkthroughs/wishbringer.cmds.txt
 s
 wait
@@ -118,7 +121,7 @@ e
 e
 give the hat to the bird
 # --- post-pelican endgame (verified end-to-end, --seed 1) ---
-## fountain-token + boot timing  (notes: "Token comes from the fountain", "Boot Patrol timing")
+## [fountain-token] fountain-token + boot timing
 w
 w
 s
@@ -130,13 +133,13 @@ buy ticket
 in
 show ticket to gravedigger
 n
-## 3D glasses under the seat  (notes: "3D glasses double-life")
+## [glasses] 3D glasses under the seat
 examine floor
 get glasses
 out
 out
 yes
-## video arcade joystick  (notes: "Arcade joystick - z3 parser note")
+## [arcade] video arcade joystick
 e
 wait
 s
@@ -148,11 +151,11 @@ push joystick south
 press button
 yes
 yes
-## enter Tower with the power word  (notes: "power word", "Tower entry")
+## [enter-tower] enter Tower with the power word
 say fratto
 s
 s
-## Mr. Crisp + the violet note  (notes: "violet note drives Mr. Crisp off", "Corky/Alexis trap")
+## [crisp] Mr. Crisp + the violet note
 give violet note to mr crisp
 get lab coat
 look in pocket
@@ -161,27 +164,28 @@ unlock chain with rusty key
 get violet note
 read violet note
 pull down lever
-## climb out, lab, switches  (notes: "Free the Princess", "Laboratory/Fuzziness", "control panel")
+## [lab] climb out, the Laboratory behind "Fuzziness"
 open hatch
 u
 u
 wear glasses
+## [control-panel] the second switch (cuts power to the library case)
 push second switch
 d
 drop glasses
-## hidden drawbridge crank  (notes: "Exit the tower - the drawbridge crank")
+## [crank] hidden drawbridge crank
 look behind paintings
 turn crank
 n
 n
-## cottage hellhound -- name from the OPENED note  (notes: "Corky/Alexis trap")
+## [hellhound] cottage hellhound -- name from the OPENED note
 e
 alexis, heel
 open cottage door
 enter cottage
 get steel key
 exit cottage
-## library: break case, recreate Chaos  (notes: "Endgame (village)")
+## [endgame] library: break case, recreate Chaos
 n
 unlock library door with steel key
 enter library

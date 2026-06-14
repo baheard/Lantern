@@ -1,0 +1,415 @@
+{
+  "schema": 1,
+  "game": "wishbringer",
+  "title": "Wishbringer",
+  "meta": {
+    "gameAuthor": "Brian Moriarty (Infocom, 1985)",
+    "sources": [
+      {
+        "name": "\"Mr. X\" walkthrough (Color Computer Archive, 95/100 no-wish path)",
+        "url": "https://colorcomputerarchive.com/repo/Documents/Walkthroughs/Infocom%20Adventures/Wishbringer%20Walkthrough%20(Infocom).TXT",
+        "file": "docs/games/walkthroughs/wishbringer.txt"
+      },
+      {
+        "name": "The Spoiler",
+        "url": "https://the-spoiler.com/ADVENTURE/Infocom/wishbringer.1.html",
+        "file": "docs/games/walkthroughs/wishbringer.txt"
+      },
+      {
+        "name": "Official Infocom InvisiClues",
+        "url": "https://dfabulich.github.io/infocom-hints-html/wishbringer.html",
+        "file": "docs/games/walkthroughs/wishbringer.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-06-14",
+    "appVersion": "1.5.566"
+  },
+  "milestones": [
+    { "id": "festeron",  "start": true, "enterLocations": ["Post Office"] },
+    { "id": "witchville", "textMatch": "Witchville", "enterLocations": ["Fog", "Underground", "Grue's Nest", "Misty Island", "Throne Room", "Jail Cell"] },
+    { "id": "tower",  "enterLocations": ["Vestibule", "Torture Chamber", "Round Chamber", "Laboratory", "Fuzziness"] },
+    { "id": "endgame", "textMatch": "hellhound", "enterLocations": ["Circulation Desk", "Museum", "Cottage"] }
+  ],
+  "sections": [
+    {
+      "id": "festeron",
+      "title": "Festeron — the Delivery",
+      "verified": true,
+      "untilMilestone": "witchville",
+      "locations": ["Post Office", "Hilltop", "Outside Cottage", "Magick Shoppe", "Cliff Edge"],
+      "questions": [
+        {
+          "id": "fest-errand",
+          "q": "My boss handed me a package to deliver. Where does it go, and is there a rush?",
+          "locations": ["Post Office", "Hilltop"],
+          "hints": [
+            "There is a rush. No puzzle is blocking you yet — you're a clerk and this is simply a delivery — but the place you're delivering to closes at nightfall, and you do not want to be out on the streets after dark.",
+            "It isn't anywhere in the village itself. Leave town heading west, toward the sea — the address is up on the cliffs, not down among the houses.",
+            "From the western edge of the village, follow the winding cliffside path and keep heading up; the little fairy-tale shop sits near the top. Pick up any loose objects you pass on the way.",
+            "Answer: The sealed envelope goes to Ye Olde Magick Shoppe — west out of the village and up the winding cliff path to the top. OPEN THE MAGICK SHOPPE DOOR, go in, and GIVE ENVELOPE TO WOMAN (she'll ask you to read it to her). Everything else in the game flows from making this delivery."
+          ]
+        },
+        {
+          "id": "fest-poodle",
+          "q": "A tiny poodle outside the cottage keeps yapping and snapping at me. How do I get past it?",
+          "locations": ["Outside Cottage"],
+          "hints": [
+            "It's a hungry little thing, not a guard. You don't need to fight or flee it.",
+            "Have you found anything edible? A dog with something to chew on loses interest in you.",
+            "There's a bone to be had down below the cemetery. Bring it here.",
+            "Answer: GIVE BONE TO POODLE. (The bone is down in the open grave / underground area near the cemetery. With the poodle busy, you can grab the slip of paper it was guarding — GET NOTE.)"
+          ]
+        },
+        {
+          "id": "fest-gather",
+          "q": "There's a lot of stuff lying around Festeron. What's actually worth carrying off?",
+          "hints": [
+            "More than you'd think. This town is about to change, and several ordinary objects become the only tools you'll have. Take what isn't nailed down.",
+            "An umbrella left against a tombstone, a horseshoe, a coin, a bone — each earns its keep later. Grab them while the village is still friendly.",
+            "Answer: Collect the UMBRELLA (cemetery), the HORSESHOE, the GOLD COIN, and the BONE before you finish your errand."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "witchville-stone",
+      "title": "Witchville — the Stone of Dreams",
+      "verified": true,
+      "afterMilestone": "witchville",
+      "untilMilestone": "tower",
+      "locations": ["Fog", "North of Bridge", "Bridge", "South of Bridge", "Lake Edge", "River Outlet", "Cliff Bottom"],
+      "questions": [
+        {
+          "id": "wv-transformed",
+          "q": "The whole town has turned dark and sinister and I don't recognize anything. What now?",
+          "locations": ["Fog", "North of Bridge"],
+          "hints": [
+            "This is the real game beginning. The shopkeeper gave you a task before night fell — that's your thread to follow.",
+            "You were promised the Stone of Dreams in exchange for something that was stolen. First you have to find the Stone, then use it to recover what was taken.",
+            "Answer: Press on toward recovering the Stone (the Wishbringer) — it's hidden across the river, past a toll gate. The rest of the game flows from getting it."
+          ]
+        },
+        {
+          "id": "wv-troll",
+          "q": "An ugly little creature is guarding a toll gate and won't let me through. How do I deal with him?",
+          "locations": ["North of Bridge", "Bridge"],
+          "hints": [
+            "He's greedy, not tough. Look at what he wants rather than trying to force past.",
+            "He's eyeing something you picked up earlier — a sealed metal can with a tempting label. Let him have it.",
+            "He won't survive his own greed once he opens it. Hand it over and stand back.",
+            "Answer: GIVE CAN TO TROLL. He opens it, a rattlesnake leaps out, and he flees across the bridge — leaving the gate clear."
+          ]
+        },
+        {
+          "id": "wv-squeeze-can",
+          "q": "I've got the metal can back but it seems empty. Is it useful?",
+          "locations": ["North of Bridge"],
+          "hints": [
+            "Not empty — the legends say the Stone of Dreams was hidden somewhere humble and overlooked.",
+            "The can is dented and battered. A small thing could be wedged inside it.",
+            "Answer: GET CAN, then SQUEEZE CAN — a small stone pops out. GET WISHBRINGER (it begins to glow). That stone is the Stone of Dreams."
+          ]
+        },
+        {
+          "id": "wv-platypus",
+          "q": "There's a creature trapped in a pit at the lake's edge and I can't reach it. How do I free it?",
+          "locations": ["Lake Edge"],
+          "hints": [
+            "It's stuck five feet down in dry sand. What would let a trapped swimmer simply float up to you?",
+            "You're holding a Stone that grants wishes, and you brought something that keeps the rain off. Put them together — raise the umbrella before you wish, so you stay dry when the sky opens.",
+            "Once it's free it marks a spot in the sand before vanishing. Whatever it leaves there is worth digging up.",
+            "Answer: OPEN UMBRELLA, WISH FOR RAIN (the downpour floods the pit and the platypus floats free, drawing an X), DIG X WITH HANDS to uncover a silver whistle, GET WHISTLE, then BLOW WHISTLE to be carried to Misty Island."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "misty-island",
+      "title": "Misty Island",
+      "verified": true,
+      "afterMilestone": "witchville",
+      "untilMilestone": "tower",
+      "locations": ["Misty Island", "Throne Room", "Lake Edge"],
+      "questions": [
+        {
+          "id": "mi-hat",
+          "q": "I'm in the platypus court. Is there anything to gain here?",
+          "locations": ["Throne Room"],
+          "hints": [
+            "You did the King a great favour, and royalty repays its debts. Accept what's offered.",
+            "Answer: The King rewards you with a wizard's hat — GET HAT."
+          ]
+        },
+        {
+          "id": "mi-stuck",
+          "q": "I'm stranded on Misty Island — every exit is a cliff, the lake, or back to the King. How do I get off?",
+          "locations": ["Misty Island", "Throne Room"],
+          "hints": [
+            "Don't try to walk or swim off — those ways are all dead ends (one of them is a nasty death). You arrived by other means; you'll leave the same way.",
+            "The whistle brought you here. But it only has power over the water at one particular spot — and that isn't the open beach.",
+            "Stay exactly where the King holds court. Don't step outside first; the moment you wander onto the beach the magic goes quiet.",
+            "Answer: From the Throne Room (not the beach), WAIT once, then BLOW WHISTLE. The King's fanfare carries you back to the mainland. (If you stepped east onto the beach, go back in to the Throne Room first — the whistle does nothing out there.)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "underground",
+      "title": "The Cemetery Underground",
+      "verified": true,
+      "afterMilestone": "witchville",
+      "untilMilestone": "tower",
+      "locations": ["Open Grave", "Underground", "Jail Cell", "Grue's Nest"],
+      "questions": [
+        {
+          "id": "ug-grue",
+          "q": "There's a small, dangerous beast curled up in a dark nest and I daren't get near it. How do I get past?",
+          "locations": ["Grue's Nest"],
+          "hints": [
+            "You can't fight it and you can't outrun it. The trick is to take away what it relies on — but gently, not with light.",
+            "A grue hates the light but is at home in the dark. Smother the nest in darkness rather than trying to brighten it.",
+            "Something soft and heavy enough to throw over it would do. There's a thick blanket on the bunk in the cell back up the passage.",
+            "Answer: Fetch the blanket from the bunk (it has to be dropped down the hole to reach the lower level — GET BLANKET, DROP BLANKET DOWN HOLE, go DOWN, GET BLANKET), carry it to the nest, then COVER GRUE WITH BLANKET."
+          ]
+        },
+        {
+          "id": "ug-fridge",
+          "q": "There's a refrigerator in the grue's nest. Anything in it worth taking?",
+          "locations": ["Grue's Nest"],
+          "hints": [
+            "Odd place for an appliance — which is exactly why it's worth a look. There's live bait inside.",
+            "Answer: OPEN REFRIGERATOR, GET WORM. Keep it — a hungry creature in the village will go for it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lighthouse",
+      "title": "The Lighthouse & the Pelican",
+      "verified": true,
+      "afterMilestone": "witchville",
+      "untilMilestone": "tower",
+      "locations": ["Lighthouse", "Rocky Path", "Lookout Hill", "South of Bridge"],
+      "questions": [
+        {
+          "id": "lh-stump",
+          "q": "The old oak stump on the hilltop seems out of place. Is it?",
+          "locations": ["Lookout Hill"],
+          "hints": [
+            "Stumps that big don't usually invite a second look — but try.",
+            "Answer: OPEN STUMP, then UP — it's a shortcut/passage. (Use it to reach the lighthouse area to the north-east.)"
+          ]
+        },
+        {
+          "id": "lh-pelican",
+          "q": "There's a big seabird at the lighthouse. Does it want something?",
+          "locations": ["Lighthouse"],
+          "hints": [
+            "It does — and so do you. You're carrying something a bird that size might fancy wearing or hoarding.",
+            "Give it the hat you earned from the King. Then watch the sky above the lighthouse very carefully.",
+            "Answer: GIVE HAT TO BIRD. The lighthouse beam traces a magic word across the cloud. READ it and remember it exactly — you will need to SAY that word later at the Tower. (It is different in every game, so commit yours to memory; no walkthrough can tell you what it will be.)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "village-errands",
+      "title": "Witchville Village — Errands",
+      "verified": true,
+      "afterMilestone": "witchville",
+      "untilMilestone": "tower",
+      "locations": ["Park", "Rotary East", "Theater Lobby", "Inside Theater", "Pleasure Wharf", "Video Arcade"],
+      "questions": [
+        {
+          "id": "ve-token",
+          "q": "I need a token for something, and the arcade just eats them. Where does one come from?",
+          "locations": ["Park", "Video Arcade"],
+          "hints": [
+            "The arcade only spends tokens, never gives them. Look somewhere wetter.",
+            "The fountain in the park holds one — but something with teeth is in there guarding it.",
+            "You're carrying live bait that a hungry fish can't resist. Use it as a distraction.",
+            "Answer: PUT WORM IN FOUNTAIN — the piranha lunges for it — then GET TOKEN."
+          ]
+        },
+        {
+          "id": "ve-boots",
+          "q": "Marching boots keep catching me on the streets after dark and throwing me in a cell. How do I avoid them?",
+          "locations": ["Rotary East", "Park"],
+          "hints": [
+            "The patrol runs on a schedule. Standing still for a beat at the right moment lets it pass.",
+            "Do your night errands early, and when you mean to enter a building, be ready to step inside the same turn — don't loiter on the corner.",
+            "Settle your business outside before you go in, so you're not caught fumbling. Pausing once in the park shifts the patrol just enough to slip east into the theater.",
+            "Answer: WAIT once in the Park, then go EAST and BUY TICKET at the corner (it uses your gold coin), then IN immediately — the ticket-seller alerts the patrol the moment she sees the coin, so don't dawdle."
+          ]
+        },
+        {
+          "id": "ve-glasses",
+          "q": "The movie is too blurry to make out. Is there a way to watch it properly?",
+          "locations": ["Inside Theater", "Theater Lobby"],
+          "hints": [
+            "It's a 3-D picture — you need the right eyewear. The freebies aren't where you'd hope.",
+            "The carton of glasses in the lobby is a dead end. The pair you can actually use was left behind inside the auditorium.",
+            "Look down, not around — a previous patron dropped theirs under a seat.",
+            "Answer: Inside the theater, EXAMINE FLOOR to spot a used pair under a seat, then GET GLASSES. Wear them to resolve the movie — but never walk while wearing them (every direction reads as 'too blurry')."
+          ]
+        },
+        {
+          "id": "ve-arcade",
+          "q": "There's an arcade game here. Is it just for fun, or does it matter?",
+          "locations": ["Video Arcade"],
+          "hints": [
+            "It matters — winning it is your way up to the Tower. It costs the token you fished out of the fountain.",
+            "It's a simple star-moving game: nudge the marker to its goal, then commit, even though the machine warns you off.",
+            "Answer: PUT TOKEN IN SLOT, then PUSH JOYSTICK WEST, PUSH JOYSTICK WEST, PUSH JOYSTICK SOUTH, PUSH JOYSTICK SOUTH, PRESS BUTTON, and answer YES to the prompts. Winning teleports you to the hilltop at the Tower."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tower",
+      "title": "The Tower",
+      "verified": true,
+      "afterMilestone": "tower",
+      "untilMilestone": "endgame",
+      "locations": ["Hilltop", "Vestibule", "Torture Chamber", "Round Chamber", "Fuzziness", "Laboratory"],
+      "questions": [
+        {
+          "id": "tw-drawbridge",
+          "q": "The Tower's drawbridge is up and the moat is deep. How do I get across?",
+          "locations": ["Hilltop"],
+          "afterMilestone": "witchville",
+          "hints": [
+            "Force and climbing won't do it. The way in is spoken, not walked.",
+            "Remember the word the lighthouse traced on the cloud when you gave away the hat? This is where it earns its keep.",
+            "Answer: SAY <the word the lighthouse showed you> at the hilltop and the drawbridge lowers. (Your word is unique to your game — it is not a value any hint can give you. If you never saw it, go back to the lighthouse and give the bird the hat.)"
+          ]
+        },
+        {
+          "id": "tw-crisp",
+          "q": "I'm chained up and a man is calmly stealing my belongings one at a time! How do I stop him before he takes everything?",
+          "locations": ["Torture Chamber"],
+          "hints": [
+            "You can't wrestle him while chained — but you're carrying something that will rattle him far more than a struggle would. It's personal.",
+            "Long ago the librarian asked you to pass a little violet note to your boss. The man robbing you is that boss, and the note is a love letter.",
+            "Don't wait for him to find it himself — that risks him pocketing the glowing stone first. Hand it over at once.",
+            "Answer: GIVE VIOLET NOTE TO MR CRISP. He reads it, melts, drops his lab coat, and scampers off — before he can take the Stone."
+          ]
+        },
+        {
+          "id": "tw-free",
+          "q": "I'm still chained to the wall after my captor left. How do I get loose and free the prisoner in the machine?",
+          "locations": ["Torture Chamber"],
+          "hints": [
+            "He left something behind when he fled. Search it before anything else.",
+            "His discarded lab coat has a pocket. Strain for the coat first, even chained.",
+            "Answer: GET LAB COAT, LOOK IN POCKET (a rusty key), GET RUSTY KEY, UNLOCK CHAIN WITH RUSTY KEY. Pick the note back up and read it — GET VIOLET NOTE, READ VIOLET NOTE — then PULL DOWN LEVER to free Princess Tasmania from the torture machine."
+          ]
+        },
+        {
+          "id": "tw-fuzzy",
+          "q": "I climbed to the top room but everything is an unwatchable blur and I can't move. What's wrong?",
+          "locations": ["Fuzziness", "Round Chamber"],
+          "hints": [
+            "This is the same kind of blur you fixed once before, at the movies.",
+            "Answer: WEAR GLASSES — the room snaps into focus as the Laboratory. Keep them ON to move around up here; take them off only once you're back down in the (clear) Round Chamber."
+          ]
+        },
+        {
+          "id": "tw-switch",
+          "q": "There's a control panel up in the Laboratory with labelled switches. Do they do anything useful?",
+          "locations": ["Laboratory"],
+          "hints": [
+            "One of them quietly removes an obstacle waiting for you at the very end of the game. The other is a distraction.",
+            "Think about what's keeping you from a certain locked-away exhibit later — something needs its power cut.",
+            "Answer: PUSH SECOND SWITCH — it cuts power to the library's glass display case so you can break into it later. (The first switch only controls the cinema; ignore it.)"
+          ]
+        },
+        {
+          "id": "tw-crank",
+          "q": "I want to leave the Tower but the drawbridge is shut and the game says its mechanism is hidden. Where is it?",
+          "locations": ["Round Chamber", "Vestibule"],
+          "hints": [
+            "'Hidden' is literal — the controls are concealed in plain sight in the round room at the tower's heart.",
+            "Those blackened old paintings on the wall aren't just decoration. See what they're covering.",
+            "Answer: In the Round Chamber, LOOK BEHIND PAINTINGS to reveal a metal crank, then TURN CRANK to open the drawbridge. Now go N to the Vestibule and N again across the bridge to the hilltop."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "endgame",
+      "title": "The Cottage, the Library & Chaos",
+      "verified": true,
+      "afterMilestone": "endgame",
+      "locations": ["Outside Cottage", "Cottage", "Circulation Desk", "Museum", "Rotary South"],
+      "questions": [
+        {
+          "id": "eg-hellhound",
+          "q": "A huge slavering hellhound is blocking the cottage and roaring at me. How do I get past it?",
+          "locations": ["Outside Cottage"],
+          "hints": [
+            "Brute force is suicide. This beast was once a harmless pet — it will answer to its old name, if you know it.",
+            "The name isn't 'Corky' (that's just an embarrassing pet-name for someone else). The dog's real name was written down somewhere you've been carrying.",
+            "Read the violet note again — once your boss had opened it, it shows the name he uses to call the dog to heel.",
+            "Answer: ALEXIS, HEEL — the hellhound sits and wags its tail. (The name comes from re-reading the opened violet note back in the Tower.) Then OPEN COTTAGE DOOR, ENTER COTTAGE, GET STEEL KEY."
+          ]
+        },
+        {
+          "id": "eg-case",
+          "q": "There's a sculpture locked in a glass display case in the museum. How do I get it out?",
+          "locations": ["Museum", "Circulation Desk"],
+          "hints": [
+            "First you have to get into the library at all — the door is locked.",
+            "Once inside, the case looks like ordinary glass, but smashing it blindly won't work until its power has been cut. (You had a chance to do that up in the Tower.)",
+            "A heavy iron object you've carried since Festeron makes a fine hammer.",
+            "Answer: UNLOCK LIBRARY DOOR WITH STEEL KEY, ENTER, go to the case, and BREAK CASE WITH HORSESHOE (it only shatters because you switched off its power in the Tower lab). GET SCULPTURE."
+          ]
+        },
+        {
+          "id": "eg-chaos",
+          "q": "I'm holding the sculpture and the Wishbringer. How do I actually finish the quest?",
+          "locations": ["Museum"],
+          "hints": [
+            "The sculpture is the very thing that was stolen — the shopkeeper's lost companion, frozen in stone. The Stone of Dreams can wake it.",
+            "An old woman will appear and beg you to hand her the Stone instead. Don't — she is not who she pretends to be. Trust the Stone, not her.",
+            "Answer: PUT WISHBRINGER IN SCULPTURE and answer YES (twice) when warned off — the Stone restores Chaos the cat to life. GET CAT, then return to town and KNOCK ON MAGICK SHOPPE DOOR to give the shopkeeper back her companion. That's the ending."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "title": "General Questions",
+      "verified": true,
+      "locations": [],
+      "questions": [
+        {
+          "id": "gen-wishes",
+          "q": "The Stone grants seven Wishes. Should I be using them to solve puzzles?",
+          "hints": [
+            "You can — but think twice. Wishing is the lazy way, and the game quietly rewards restraint.",
+            "Every puzzle here has an ordinary, wish-free solution. Leaning on Wishes costs you points, and finishing with Wishes to spare is the real mark of an Adventurer.",
+            "Answer: Treat the Wishes as a safety net, not a toolbox. The documented best line uses just a single Wish (to make it rain at the lake) and scores 95/100; spending more only lowers your score. Solve with your wits and your inventory wherever you can."
+          ]
+        },
+        {
+          "id": "gen-broom",
+          "q": "What's the broom in the Laboratory for?",
+          "hints": [
+            "It looks like it ought to matter, doesn't it?",
+            "Answer: Nothing you need. It only ties into an optional, score-lowering Flight wish. Leave it; it's a red herring."
+          ]
+        },
+        {
+          "id": "gen-labcat",
+          "q": "There's a black cat asleep in the Laboratory. Is that the cat I'm looking for?",
+          "hints": [
+            "It's tempting to assume so — a black cat, right where the villain works.",
+            "Answer: No. It isn't Chaos and can't be carried out; the cat you're after is restored much later, elsewhere. This one is a decoy — leave it sleeping."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -73,7 +73,11 @@ Write `docs/games/walkthroughs/<game>.cmds.txt`: one parser command per line.
 - **Include forced opening answers**: games that open with a prompt need it as the first command — e.g. Bronze's "Have you played interactive fiction before?" → first line `yes`. (Char-mode "press any key" intros are auto-dismissed by the harness; don't add keys for those.)
 - **Meta-commands are fine**: many games support `GO TO <place>` navigation (Bronze) — keep them.
 - **Branching endgames**: pick one **linear trunk** (usually the shortest completion), stop the cmds at or just past the final progress gate, and note the branches in the report. Don't try to encode every branch.
-- **Map sections to the notes file — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## <label>"` from a probe point)*: group the list into acts/puzzles with `## <short label>  (notes: "<notes.md section>")` comment lines, **front to back**. Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. The label points at the matching `##` section in `<game>.notes.md`, so the command list and the analysis are bi-directionally navigable **and** the marker doubles as a snapshot anchor (Step 4.5). See `wishbringer.cmds.txt` for the pattern.
+- **Map sections to the notes file with SLUG ANCHORS — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## [slug]"` from a probe point)*: group the list into acts/puzzles with marker lines of the exact form `## [slug] Human label`, **front to back**. The `slug` is lowercase-kebab (`[a-z0-9-]+`), unique in the file, and is placed **immediately after the `##`** in square brackets — it is the **canonical, drift-proof link** to the matching `## [slug]` (or `### [slug]`) heading in `<game>.notes.md`. Because the slug is bracketed, `--snapshot-at "## [slug]"` resolves unambiguously (the closing `]` means one slug is never a prefix of another). Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. Day/act banner comments (`# ==== DAY 2 ====`) are fine for orientation but are **not** anchors — only `## [slug]` lines are. See `anchorhead.cmds.txt` for the canonical pattern. **Validate the mapping after writing both files** (Step 5):
+  ```bash
+  node tools/_check_walkthrough_map.cjs <game>      # errors → exit 1; add --strict to fail on warnings too
+  ```
+  It asserts every cmds `## [slug]` has a matching notes `[slug]` heading and vice-versa (so no probe path dead-ends), flags duplicate slugs, and warns on long unmarked command spans (the "back-half-only" failure). Errors must be fixed; the unmarked-span warnings are a judgment call (a single coherent long puzzle is fine — a buried sub-puzzle that you'd want to probe is not).
 - **Seeded randomized values are allowed in the trunk, but flag them in the header**: if a step needs an `@random` value (a power word, safe combo), the harness seeds RNG (`--seed 1`) so the fixed value replays clean — hard-code it, but add a header note that it's a *test-determinism artifact, not a player value*, and point to the notes.md randomization section. Verify the whole list with `--strict --seed 1`.
 
 ---
@@ -108,7 +112,7 @@ Iterate until `exit=0` (or only documented char-input residual gates remain).
   ```bash
   # 1. Snapshot a verified point in ONE pass (no hand-built prefix file) — by section marker,
   #    command substring, or 1-based count:
-  node tools/play.cjs <game> --seed 1 --file <game>.cmds.txt --snapshot-at "## enter Tower" --snapshot-out snap.json --quiet
+  node tools/play.cjs <game> --seed 1 --file <game>.cmds.txt --snapshot-at "## [enter-tower]" --snapshot-out snap.json --quiet
   # 2. Probe a new tail cheaply (--cmds avoids PowerShell array/quoting pain):
   node tools/play.cjs <game> --seed 1 --snapshot-in snap.json --status --strict --cmds "new ; tail ; cmds"
   ```
@@ -139,13 +143,17 @@ section.
 Skip notes **only** for genuinely trivial games (a handful of obvious actions, no real puzzles)
 — and even then, still state randomization status (below).
 
-Write it as puzzle-keyed notes, not a transcript. Use `##` section headings whose labels match
-the `## … (notes: "…")` markers in `<game>.cmds.txt` **for every puzzle**, so the two files
-cross-reference end-to-end. This keying is what makes probing during hint generation cheap: from
-a note section the hint author greps the cmds file for the same label, then `--snapshot-at
-"## <label>"` jumps the VM to exactly that puzzle to branch-probe a mechanic — no hand-built
-prefix. A note with no matching cmds marker (or a cmds span with no note) breaks that path, so
-keep them paired across the whole solution. For the
+Write it as puzzle-keyed notes, not a transcript. Give each puzzle a heading carrying the **same
+`[slug]`** as its `## [slug]` marker in `<game>.cmds.txt` — `## [slug] Label` or `### [slug] Label`
+(the slug must be the **first token** after the `#`s; a slug merely *mentioned* in prose inside
+another heading is correctly ignored). Cross-cutting sections that don't map to one command span —
+the required **⚠ RANDOMIZED BETWEEN PLAYS** section, reader-gate overviews, lantern-style
+crosscutting gotchas, score-ceiling notes — carry **no `[slug]`** and are skipped by the validator;
+reference the relevant puzzle slugs inline (`see [d3-mirror]`) instead. This keying is what makes
+probing during hint generation cheap: from a note section the hint author has the slug, so
+`--snapshot-at "## [slug]"` jumps the VM to exactly that puzzle to branch-probe a mechanic — no
+grep, no hand-built prefix. **Run `node tools/_check_walkthrough_map.cjs <game>` and fix every
+error** — a cmds slug with no note (or a note slug with no commands) breaks that probe path. For the
 hint author, bold the *insight* (the hintable nugget) in each section and tag build divergences
 (✗ published / ✓ our build). Good entries:
 - **"Why this ordering / why not the published one"** — e.g. *Misty Island exit: the King
@@ -170,8 +178,9 @@ full notes). But still state randomization status.
 
 These three files together are the `generate-hints` feedstock: the **sourced walkthrough**
 (`.txt`, with retrieval URLs + build + corrections), the **verified command list** (`.cmds.txt`,
-section-marked), and the **mapped analysis** (`.notes.md`). The mapping (shared `##` labels) lets
-a hint author jump from any command to the reasoning behind it and back.
+slug-anchored), and the **mapped analysis** (`.notes.md`). The mapping (shared `[slug]` anchors,
+enforced by `tools/_check_walkthrough_map.cjs`) lets a hint author jump from any command to the
+reasoning behind it and back, and `--snapshot-at "## [slug]"` straight to the VM state for probing.
 
 ## Step 6 — Report
 
@@ -179,6 +188,7 @@ Output to the caller / user:
 - Build match: our release/serial vs the walkthrough's targeted version (confident / risk noted).
 - `<game>.cmds.txt`: command count, and whether it passes `--strict` clean (or where it stops + why).
 - `<game>.notes.md`: written (and what it covers) or skipped-as-trivial.
+- Anchor-map lint: `node tools/_check_walkthrough_map.cjs <game>` result (paired count; any warnings).
 - Residual unverified gates (randomized puzzles, branch points) the caller must handle.
 - All source URLs used (for the caller's `meta.sources`), each with the local `"file"` path.
 

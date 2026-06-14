@@ -108,3 +108,73 @@ export function markSectionsSeen(sectionIds, gameName) {
     for (const id of sectionIds) existing.add(id);
     setJSON(key, [...existing]);
 }
+
+/**
+ * Get the user's own rating for a specific revealed hint, if any.
+ * Keyed by "<questionId>:<hintIndex>" within the per-game `hints_ratings` store.
+ * Local-only (like reveal state) — never Drive-synced. See [[hints-feedback-system]].
+ *
+ * @param {string} questionId
+ * @param {number} hintIndex - 0-based index of the hint within the question
+ * @param {string} [gameName]
+ * @returns {'up'|'down'|null}
+ */
+export function getHintRating(questionId, hintIndex, gameName) {
+    const key = getGameKey('hints_ratings', gameName);
+    const stored = getJSON(key, null);
+    if (!stored || typeof stored !== 'object') return null;
+    const r = stored[`${questionId}:${hintIndex}`];
+    return r === 'up' || r === 'down' ? r : null;
+}
+
+/**
+ * Persist the user's rating for a specific hint (prevents re-voting / duplicate sends).
+ *
+ * @param {string} questionId
+ * @param {number} hintIndex
+ * @param {'up'|'down'} rating
+ * @param {string} [gameName]
+ */
+export function setHintRating(questionId, hintIndex, rating, gameName) {
+    if (rating !== 'up' && rating !== 'down') return;
+    const key = getGameKey('hints_ratings', gameName);
+    const stored = getJSON(key, null);
+    const map = stored && typeof stored === 'object' ? stored : {};
+    map[`${questionId}:${hintIndex}`] = rating;
+    setJSON(key, map);
+}
+
+/**
+ * Return the milestone (act) index the player is currently in for this game.
+ *
+ * Milestones model act boundaries (e.g. Festeron → Witchville) for games whose
+ * status bar can't name the act (the `phase` mechanism's blind spot — e.g. a
+ * clock-only status bar). Index 0 is the first/start act in the file's ordered
+ * `milestones` array; index N is `milestones[N]`. The value is set EXACT by the
+ * most-recently-entered act-exclusive marker room (see updateMilestone in
+ * hints-data.js) — not monotonic — so re-entering the start act's marker after an
+ * in-game RESTART correctly drops the player back to act 0.
+ *
+ * @param {string} [gameName]
+ * @returns {number}
+ */
+export function getReachedMilestone(gameName) {
+    const key = getGameKey('hints_milestone', gameName);
+    const stored = getJSON(key, 0);
+    return typeof stored === 'number' && stored >= 0 ? stored : 0;
+}
+
+/**
+ * Set the current milestone (act) index EXACTLY — may move up OR down. Down-moves
+ * are intentional: entering the start act's marker room (e.g. after RESTART) resets
+ * to act 0, and restoring an earlier save (save-coupling, save-manager.js) restores
+ * that save's act. Marker rooms must be act-exclusive and not revisited later (the
+ * start room on RESTART being the deliberate exception) — see the generate-hints skill.
+ *
+ * @param {number} index
+ * @param {string} [gameName]
+ */
+export function setReachedMilestone(index, gameName) {
+    const key = getGameKey('hints_milestone', gameName);
+    if (typeof index === 'number' && index >= 0) setJSON(key, index);
+}

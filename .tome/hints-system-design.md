@@ -1,14 +1,52 @@
 ---
 title: Hints System Design
-tags: hints, uhs, design, auto-mapper, location
+tags: hints, uhs, design, auto-mapper, location, phase
 created: 2026-06-12
 updated: 2026-06-13
-aliases: hints, uhs-hints, hint-panel, hint-philosophy, generate-hints, invisiclues
+aliases: hints, uhs-hints, hint-panel, hint-philosophy, generate-hints, invisiclues, phase-scoping, status-context
 ---
 
 # Hints System Design
 
 UHS-style progressive hint panel added in v1.5.538. Key non-obvious decisions below.
+
+## Phase-scoped matching (optional second dimension; added 2026-06-13)
+
+Location-only badging breaks for games that **reuse the same geography across acts/days**:
+the same room name lives in multiple day-sections, so several sections badge at once and a
+later act's section lights up while you're still in an earlier one (forward spoiler). The
+canonical case is **Anchorhead** — one town map traversed across 5 days.
+
+The fix is a generic, opt-in second scoping dimension. The **code stays game-agnostic**; the
+per-game vocabulary lives in the authored JSON:
+
+- `auto-mapper.js` exposes `getStatusContext(statusBarText)` + cached `getLastStatusContext()` —
+  the **right-aligned status-bar region the location parser discards** (Anchorhead prints
+  `Foyer        day one, evening` there). Extraction: `line.match(/\S\s{3,}(\S.*)$/)` — the text
+  after the first run of 3+ spaces. Updated **every** non-char turn (phase can change while the
+  room name is static, e.g. Master Bedroom: `day one, evening` → `day two`), and reset in
+  `resetAutoMapper()`.
+- `hints-data.js` `findCurrentTopics`: a section/question with an optional `phase` matches only
+  if `getLastStatusContext().includes(phase)` (case-insensitive) **and** location matches. No
+  `phase` → location-only, exactly as before (100% backward-compatible). Questions inherit the
+  section's `phase` unless they set their own.
+- Substring (not equals) on purpose: `phase: "day one"` matches both `day one` and
+  `day one, evening`; `day two` won't match `day one`. Authoring rule: use the *discriminating*
+  prefix (`day two`), not the full sub-phase.
+
+**Caveat — the right region isn't always a "phase":** `getStatusContext` just returns whatever
+the game right-aligns there, which is often a clock or score, not an act marker. Smoke-tested
+2026-06-13: Wishbringer yields `Time: 3:01 PM` (a clock), Bronze yields `N` (compass-rose north
+from its multi-line upper window). Harmless because `phase` is opt-in — those games declare no
+`phase`, so the spurious value is never consulted — but the author must eyeball the harvested
+string and only use it when it genuinely discriminates acts/days (Anchorhead's `day two`).
+
+**When to use it:** almost never. Linear games and unique-geography-per-act games (Theatre)
+stay phase-less. Reach for `phase` only when the same rooms recur across acts. If a game prints
+nothing in the right-aligned region (`getStatusContext` returns `''`), the dimension isn't
+available — fall back to location-only. Harvest the exact string from the harness:
+`node tools/play.cjs <game> --status` prints `[@ Room  |  phase: <context>]` per turn
+(see [[headless-replay-harness]]).
 
 ## App-observed location vocabulary (the core insight)
 
@@ -60,6 +98,8 @@ Also: `app.js` must call `toggleHints()` (not `showHints()`) so the menu item ac
 ## Hint-authoring philosophy — lives in the versioned skill
 
 The *content* rules for writing hints (distinct from the runtime system above) live in `.claude/skills/generate-hints/SKILL.md`, which is **source-controlled** — `.gitignore` ignores `.claude/*` but has a `!.claude/skills/` exception. That file is the single source of truth; don't duplicate it here. Read it before authoring or editing any hint.
+
+**Skill decomposition (2026-06-14):** walkthrough *acquisition + verification* was split out into its own skill, `trace-walkthrough` — it finds an authoritative walkthrough, matches our release/serial, and produces a `--strict`-clean `docs/games/walkthroughs/<game>.cmds.txt` verified against our exact build (artifacts reusable beyond hints: regression, behavior checks). `generate-hints` Step 1 delegates to it (invokes it only if the cmds file is missing) and Step 3 just *consumes* the verified cmds for location/phase harvesting. `trace-walkthrough` confirms with the user before testing/regenerating an existing cmds file. Both skills lean on the harness ([[headless-replay-harness]]).
 
 The governing idea (v1.5.553, the "stance"): **a hint changes the player's *option space*, not their *answer*.** It widens (opens an approach they hadn't considered) or narrows (rules out a wrong one) — never names the move. Be perfectly clear about the *framing* (wrong-theory / property / area), silent about the *instance and the command*. Only the final "Answer:" rung uses literal parser commands; every rung above it is prose. **The category trap** (v1.5.554): naming a one-member solution-category ("something sticky" = the glue) is the answer in disguise — nudge at the *problem* (the floor) not the *solution-shape*. This philosophy is a deliberate corrective to a model's natural pull toward clear/complete explanation, which produces walkthroughs.
 

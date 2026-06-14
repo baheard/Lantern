@@ -14,9 +14,10 @@
  * TTS: panel DOM lives outside #gameport so it never enters the narration buffer.
  */
 
-import { loadHints, findCurrentTopics } from './hints-data.js';
-import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen } from './hints-state.js';
+import { loadHints, findCurrentTopics, updateMilestone } from './hints-data.js';
+import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getHintRating, setHintRating } from './hints-state.js';
 import { confirmDialog } from '../../ui/confirm-dialog.js';
+import { submitHintRating } from '../feedback.js';
 
 // ============================================================================
 // MODULE STATE
@@ -29,6 +30,34 @@ let _currentHintsData = null;
 let _lastFocusedBeforeOpen = null;
 let _currentGameName = null;
 let _openQuestionId = null; // only one question's hints shown at a time (accordion)
+let _openReasonKey = null;  // "<questionId>:<hintIndex>" whose 👎 reason box is open (transient)
+
+/**
+ * Read the current turn's game output text from the DOM, for milestone `textMatch`
+ * triggers. Returns the last game-text block (the freshest room description / event
+ * prose) — NOT the whole scrollback, so a stale signature from earlier turns can't
+ * force a spurious milestone reset. Empty string if nothing is rendered yet.
+ *
+ * @returns {string}
+ */
+function getLatestGameText() {
+    try {
+        const blocks = document.querySelectorAll('#lowerWindow .game-text');
+        return blocks.length ? (blocks[blocks.length - 1].textContent || '') : '';
+    } catch (_) {
+        return '';
+    }
+}
+
+// "Reveal all" overrides the location-gating that blurs unvisited sections.
+// Global preference (not per-game): persists across games and sessions.
+const REVEAL_ALL_KEY = 'lantern_hints_reveal_all';
+function getRevealAll() {
+    try { return localStorage.getItem(REVEAL_ALL_KEY) === '1'; } catch (_) { return false; }
+}
+function setRevealAll(on) {
+    try { localStorage.setItem(REVEAL_ALL_KEY, on ? '1' : '0'); } catch (_) {}
+}
 
 // ============================================================================
 // INITIALIZATION
@@ -78,7 +107,12 @@ export function initHintsPanel() {
     // spoiler-safe: only sections matching the current room get marked seen.
     window.addEventListener('locationChanged', () => {
         if (_currentHintsData && _currentGameName) {
-            const { sectionIds } = findCurrentTopics(_currentHintsData);
+            // Latch act-boundary milestones first so the topic match below is scoped
+            // to the act the player is actually in (recurring-room disambiguation).
+            // Pass the current turn's output text so `textMatch` triggers can fire on
+            // prose the status-bar location parser discards (e.g. "Witchville").
+            updateMilestone(_currentHintsData, _currentGameName, getLatestGameText());
+            const { sectionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
             if (sectionIds.size > 0) markSectionsSeen(sectionIds, _currentGameName);
         }
         if (_isVisible) renderHintsContent();
@@ -136,6 +170,10 @@ function createHintsUI() {
             <span class="material-icons">warning</span>
             Hints may contain spoilers
           </span>
+          <label class="hints-reveal-all" title="Show every section, including places you haven't visited yet">
+            <input type="checkbox" id="hintsRevealAll">
+            <span>Reveal all sections</span>
+          </label>
           <button class="hints-reset-btn" id="hintsResetBtn">Reset revealed hints</button>
         </div>
       </div>
@@ -149,6 +187,13 @@ function createHintsUI() {
     // Wire static controls
     document.getElementById('hintsCloseBtn').addEventListener('click', hideHints);
     document.getElementById('hintsResetBtn').addEventListener('click', handleReset);
+
+    const revealAllCb = document.getElementById('hintsRevealAll');
+    revealAllCb.checked = getRevealAll();
+    revealAllCb.addEventListener('change', () => {
+        setRevealAll(revealAllCb.checked);
+        renderHintsContent();
+    });
 
     // Close on backdrop click (clicking outside the panel)
     cont.addEventListener('click', e => {
@@ -330,7 +375,7 @@ function renderHintsContent() {
     document.getElementById('hintsFooter')?.classList.remove('hidden');
 
     // Determine matched sections/questions for the 📍 badge
-    const { sectionIds, questionIds } = findCurrentTopics(_currentHintsData);
+    const { sectionIds, questionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
 
     const sections = _currentHintsData.sections || [];
     if (sections.length === 0) {
@@ -362,7 +407,7 @@ function renderHintsContent() {
  * @returns {string} HTML string
  */
 function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
-    const isSeen = isMatched || seenSections.has(section.id);
+    const isSeen = isMatched || seenSections.has(section.id) || getRevealAll();
     const lockedClass = isSeen ? '' : ' hints-section-locked';
     const inertAttr = isSeen ? '' : ' inert';
     const badgeHtml = isMatched
@@ -372,7 +417,7 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
     let questionsHtml = '';
     const questions = Array.isArray(section.questions) ? section.questions : [];
     for (const question of questions) {
-        questionsHtml += renderQuestion(question, matchedQuestionIds.has(question.id));
+        questionsHtml += renderQuestion(question, matchedQuestionIds.has(question.id), section.id);
     }
 
     return `
@@ -395,21 +440,24 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
  *
  * @param {Object} question
  * @param {boolean} isMatched - Whether this question matches current location
+ * @param {string} sectionId - Parent section id (for rating payloads)
  * @returns {string} HTML string
  */
-function renderQuestion(question, isMatched) {
+function renderQuestion(question, isMatched, sectionId) {
     const hints = Array.isArray(question.hints) ? question.hints : [];
     const total = hints.length;
     const revealed = getRevealedCount(question.id, _currentGameName);
     const allRevealed = total > 0 && revealed >= total;
 
-    // Revealed hints — plain text; final hint (answer) tinted amber
+    // Revealed hints — plain text; final hint (answer) tinted amber. Each revealed
+    // hint grows a 👍/👎 rating row (see renderRatingBar).
     let hintsHtml = '';
     for (let i = 0; i < revealed; i++) {
         const isAnswer = i === total - 1;
         hintsHtml += `
           <div class="hints-hint-item ${isAnswer ? 'hints-hint-answer' : ''}">
             <span class="hints-hint-text">${escHtml(hints[i])}</span>
+            ${renderRatingBar(question.id, sectionId, i, total)}
           </div>`;
     }
 
@@ -457,6 +505,54 @@ function renderQuestion(question, isMatched) {
       </div>`;
 }
 
+/**
+ * Render the 👍/👎 rating row for a single revealed hint.
+ * - Already rated → static "rated" state (chosen thumb highlighted, no re-vote).
+ * - 👎 reason box open for this hint → render the optional-reason form instead.
+ * - Otherwise → the two thumb buttons.
+ *
+ * @param {string} questionId
+ * @param {string} sectionId
+ * @param {number} hintIndex - 0-based
+ * @param {number} total
+ * @returns {string}
+ */
+function renderRatingBar(questionId, sectionId, hintIndex, total) {
+    const rating = getHintRating(questionId, hintIndex, _currentGameName);
+    const key = `${questionId}:${hintIndex}`;
+
+    if (rating) {
+        const icon = rating === 'up' ? 'thumb_up' : 'thumb_down';
+        return `
+          <div class="hints-rate hints-rate-done">
+            <span class="material-icons hints-rate-icon hints-rate-${rating}">${icon}</span>
+            <span class="hints-rate-thanks">Thanks for the feedback</span>
+          </div>`;
+    }
+
+    if (_openReasonKey === key) {
+        return `
+          <div class="hints-rate-reason" data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}">
+            <textarea class="hints-rate-reason-input" id="hintsReason-${escHtml(key)}" rows="2" placeholder="What's wrong with this hint? (optional)"></textarea>
+            <div class="hints-rate-reason-actions">
+              <button class="hints-rate-reason-cancel" data-action="cancel-reason">Cancel</button>
+              <button class="hints-rate-reason-send" data-action="send-reason" data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}">Send feedback</button>
+            </div>
+          </div>`;
+    }
+
+    const dataAttrs = `data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}"`;
+    return `
+      <div class="hints-rate">
+        <button class="hints-rate-btn" data-action="rate-up" ${dataAttrs} aria-label="This hint helped" title="This hint helped">
+          <span class="material-icons">thumb_up</span>
+        </button>
+        <button class="hints-rate-btn" data-action="rate-down" ${dataAttrs} aria-label="This hint wasn't helpful" title="This hint wasn't helpful">
+          <span class="material-icons">thumb_down</span>
+        </button>
+      </div>`;
+}
+
 // ============================================================================
 // EVENT DELEGATION
 // ============================================================================
@@ -469,6 +565,48 @@ function handleContentClick(e) {
 
     if (action === 'open-map') {
         openMap();
+        return;
+    }
+
+    if (action === 'rate-up') {
+        const { questionId, sectionId, hintIndex, total } = readRatingDataset(target);
+        if (!questionId) return;
+        sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'up' });
+        setHintRating(questionId, hintIndex, 'up', _currentGameName);
+        if (_openReasonKey === `${questionId}:${hintIndex}`) _openReasonKey = null;
+        rerenderQuestion(questionId);
+        return;
+    }
+
+    if (action === 'rate-down') {
+        const { questionId, hintIndex } = readRatingDataset(target);
+        if (!questionId) return;
+        // Open the optional-reason box; nothing is submitted until "Send feedback".
+        _openReasonKey = `${questionId}:${hintIndex}`;
+        rerenderQuestion(questionId);
+        // Focus the textarea after re-render
+        const ta = _overlay.querySelector(`#hintsReason-${cssEscape(`${questionId}:${hintIndex}`)}`);
+        ta?.focus();
+        return;
+    }
+
+    if (action === 'send-reason') {
+        const { questionId, sectionId, hintIndex, total } = readRatingDataset(target);
+        if (!questionId) return;
+        const ta = _overlay.querySelector(`#hintsReason-${cssEscape(`${questionId}:${hintIndex}`)}`);
+        const reason = ta ? ta.value : '';
+        sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'down', reason });
+        setHintRating(questionId, hintIndex, 'down', _currentGameName);
+        _openReasonKey = null;
+        rerenderQuestion(questionId);
+        return;
+    }
+
+    if (action === 'cancel-reason') {
+        const box = target.closest('.hints-rate-reason');
+        const questionId = box?.dataset.questionId;
+        _openReasonKey = null;
+        if (questionId) rerenderQuestion(questionId);
         return;
     }
 
@@ -551,7 +689,59 @@ function rerenderQuestion(questionId) {
     const question = section.questions.find(q => q.id === questionId);
     if (!question) return;
     const isMatched = questionEl.classList.contains('hints-question-matched');
-    questionEl.outerHTML = renderQuestion(question, isMatched);
+    questionEl.outerHTML = renderQuestion(question, isMatched, section.id);
+}
+
+/**
+ * Read the rating data attributes off a clicked element (set on both the thumb
+ * buttons and the reason-box Send button).
+ * @param {HTMLElement} el
+ * @returns {{questionId: string, sectionId: string, hintIndex: number, total: number}}
+ */
+function readRatingDataset(el) {
+    return {
+        questionId: el.dataset.questionId,
+        sectionId: el.dataset.sectionId || '',
+        hintIndex: parseInt(el.dataset.hintIndex, 10) || 0,
+        total: parseInt(el.dataset.total, 10) || 0,
+    };
+}
+
+/**
+ * Look up a hint's text and submit a rating to the feedback pipeline.
+ * Fire-and-forget: the no-cors POST is opaque, so we don't await UI on it.
+ * @param {{questionId: string, sectionId: string, hintIndex: number, total: number, rating: 'up'|'down', reason?: string}} p
+ */
+function sendHintRating({ questionId, sectionId, hintIndex, total, rating, reason }) {
+    const section = findQuestionSection(questionId);
+    const question = section?.questions.find(q => q.id === questionId);
+    const hintText = Array.isArray(question?.hints) ? (question.hints[hintIndex] || '') : '';
+    const hintsVersion = _currentHintsData?.meta?.appVersion
+        || _currentHintsData?.meta?.generatedAt
+        || '';
+
+    submitHintRating({
+        gameName: _currentGameName,
+        sectionId,
+        questionId,
+        hintIndex,
+        total,
+        hintText,
+        hintsVersion,
+        rating,
+        reason,
+    });
+}
+
+/**
+ * Escape a string for use inside a CSS id selector (the "questionId:index" keys
+ * contain a colon, which is a CSS combinator). Prefer CSS.escape when available.
+ * @param {string} s
+ * @returns {string}
+ */
+function cssEscape(s) {
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(s);
+    return s.replace(/([^\w-])/g, '\\$1');
 }
 
 /** Find the section containing a given questionId */

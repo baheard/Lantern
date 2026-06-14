@@ -11,6 +11,7 @@ import { showMessageInput } from '../input/keyboard/index.js';
 import { scrollToBottom } from '../utils/scroll.js';
 import { addGameText } from '../ui/game-output.js';
 import { setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
+import { getReachedMilestone, setReachedMilestone } from '../features/hints/hints-state.js';
 import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
 
 // ============================================================================
@@ -403,6 +404,9 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
                 bufaddr: readData?.bufaddr,
                 parseaddr: readData?.parseaddr
             },
+            // Hints milestone (act index) travels with the save so restoring any slot
+            // restores the correct act — see hints-data.js updateMilestone / hints scoping.
+            hintsMilestone: getReachedMilestone(state.currentGameName),
             // Note: narrationState removed - start fresh on each load
             ...additionalData // Merge any additional data (saveName, verification, etc.)
         };
@@ -665,6 +669,13 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     localStorage.removeItem(`lantern_map_${saveData.gameName}`);
                     localStorage.removeItem(`lantern_automapper_restore_${saveData.gameName}`);
                 }
+            }
+
+            // Restore the hints milestone (act index) EXACTLY — allows a down-move when
+            // loading an earlier save. Absent on pre-feature saves: leave the current
+            // latch untouched (it self-corrects on the next marker room / prose match).
+            if (typeof saveData.hintsMilestone === 'number') {
+                setReachedMilestone(saveData.hintsMilestone, saveData.gameName);
             }
 
             // Restore narration position from old saves (backwards compatibility)

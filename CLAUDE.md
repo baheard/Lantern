@@ -139,7 +139,7 @@ final-state line: turns/location/status/score), and the snapshot pair:
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.562
+**Current Version:** v1.5.566
 
 ## Third-Party Libraries
 
