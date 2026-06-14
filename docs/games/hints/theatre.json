@@ -46,12 +46,12 @@
         },
         {
           "id": "act1-clean-hook",
-          "q": "One hook in the Cloakroom is cleaner than the others. What's that about?",
+          "q": "The Cloakroom looks like a dead end. Is there anything to it?",
           "locations": ["Cloakroom"],
           "hints": [
-            "A clean hook among cobwebbed ones means it's been used recently. But who has been here?",
-            "It isn't for hanging things. Try manipulating it.",
-            "Answer: PULL CLEAN HOOK — a secret passage opens, leading down below the theatre. (You won't need to go down there until late in the game, but remember it.)"
+            "Take a closer look at the hooks.",
+            "One of them is clean. Has it been used recently?",
+            "Answer: EXAMINE HOOKS (one is cleaner than the rest), then PULL CLEAN HOOK — a secret passage opens, leading down below the theatre. (You won't need to go down there until late in the game, but remember it.)"
           ]
         },
         {
