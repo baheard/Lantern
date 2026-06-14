@@ -9,7 +9,7 @@ Turns "I want to drive `<game>` reliably" into up to three repo-persistent artif
 
 - `docs/games/walkthroughs/<game>.txt` — the raw authoritative walkthrough(s), with a header block (source URLs, author, the build it targets, retrieval date). Never served to the browser. **Keep more than one source if they disagree** — cross-referencing them is how you catch a bad command (e.g. Wishbringer's Misty Island exit: one source's `e, blow whistle` strands you; another's `wait, blow whistle` works).
 - `docs/games/walkthroughs/<game>.cmds.txt` — a **verified** command list (one command per line; `#` comments allowed) that replays cleanly against our exact interpreter via `tools/play.cjs --strict`.
-- `docs/games/walkthroughs/<game>.notes.md` *(optional but recommended for non-trivial games)* — **your** puzzle-logic analysis: the *why* behind non-obvious command orderings, timing/patrol mechanics, build-specific divergences from the published walkthrough, and per-run-random gates. This is what survives when the raw walkthrough is wrong or terse, and it's the natural feedstock for `generate-hints` (which teaches method, not commands). Write it when you had to *figure something out* that the sources didn't state plainly.
+- `docs/games/walkthroughs/<game>.notes.md` *(required for any non-trivial game — see Step 5)* — **your** puzzle-logic analysis: the *why* behind non-obvious command orderings, timing/patrol mechanics, build-specific divergences from the published walkthrough, per-run-random gates, and the game's core mechanics. This is what survives when the raw walkthrough is wrong or terse, and it's the **primary feedstock** for `generate-hints` (which teaches method, not commands). **Write it whenever the *game* is non-obvious — not only when *deriving the commands* was hard.** A clean first-try `--strict` replay says the command list is right; it says nothing about whether the puzzles are simple. (Bronze replayed clean yet needed full notes.)
 
 `<game>` is the game filename minus extension, lowercased (matches `game-loader.js` normalisation).
 
@@ -73,7 +73,7 @@ Write `docs/games/walkthroughs/<game>.cmds.txt`: one parser command per line.
 - **Include forced opening answers**: games that open with a prompt need it as the first command — e.g. Bronze's "Have you played interactive fiction before?" → first line `yes`. (Char-mode "press any key" intros are auto-dismissed by the harness; don't add keys for those.)
 - **Meta-commands are fine**: many games support `GO TO <place>` navigation (Bronze) — keep them.
 - **Branching endgames**: pick one **linear trunk** (usually the shortest completion), stop the cmds at or just past the final progress gate, and note the branches in the report. Don't try to encode every branch.
-- **Map sections to the notes file** *(do this so a "why does this command do X?" question is one grep away)*: group the list into acts/puzzles with `## <short label>  (notes: "<notes.md section>")` comment lines. The label points at the matching `##` section in `<game>.notes.md`, so the command list and the analysis are bi-directionally navigable. See `wishbringer.cmds.txt` for the pattern.
+- **Map sections to the notes file — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## <label>"` from a probe point)*: group the list into acts/puzzles with `## <short label>  (notes: "<notes.md section>")` comment lines, **front to back**. Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. The label points at the matching `##` section in `<game>.notes.md`, so the command list and the analysis are bi-directionally navigable **and** the marker doubles as a snapshot anchor (Step 4.5). See `wishbringer.cmds.txt` for the pattern.
 - **Seeded randomized values are allowed in the trunk, but flag them in the header**: if a step needs an `@random` value (a power word, safe combo), the harness seeds RNG (`--seed 1`) so the fixed value replays clean — hard-code it, but add a header note that it's a *test-determinism artifact, not a player value*, and point to the notes.md randomization section. Verify the whole list with `--strict --seed 1`.
 
 ---
@@ -117,17 +117,35 @@ Iterate until `exit=0` (or only documented char-input residual gates remain).
 
 ---
 
-## Step 5 — Write the analysis notes (when you had to figure something out)
+## Step 5 — Write the analysis notes (required for any non-trivial game)
 
-If verifying the command list required **non-obvious reasoning** — a command the sources got
-wrong on our build, a timing/patrol mechanic, a prerequisite the walkthrough omitted, a
-per-run-random gate — capture it in `docs/games/walkthroughs/<game>.notes.md`. This is the
-third artifact, and it's the one that pays off later: `generate-hints` teaches *method* (it
-must never leak commands or random values), and a future trace session re-verifying the file
-shouldn't have to re-derive what you already learned.
+**Trigger on the *game's* complexity, not on how hard the commands were to derive.** Write
+`docs/games/walkthroughs/<game>.notes.md` for any game with more than a couple of real puzzles
+— *even if the published commands replayed `--strict`-clean on the first try*. A clean replay
+proves the command list is correct; it tells you nothing about whether the puzzles are obvious.
+The deliverable is a puzzle-logic analysis: the game's **core mechanic(s)**, the *why* behind
+non-obvious orderings, timing/patrol mechanics, prerequisites the walkthrough omitted,
+build-specific divergences, per-run-random gates, and red herrings. This is the one artifact
+that pays off later: it's the **primary feedstock** for `generate-hints` (which teaches *method*
+and must never leak commands or random values), and a future trace session shouldn't have to
+re-derive what you already learned.
+
+Capturing it cheaply: one `--status` replay pass simultaneously (a) re-verifies `--strict`,
+(b) emits the per-turn locations the hint author harvests, and (c) gives you the full transcript
+to mine for mechanics. Dump it once (`node tools/play.cjs <game> --status --seed 1 --file
+<game>.cmds.txt > /tmp-path`) and read the puzzle beats out of it rather than replaying per
+section.
+
+Skip notes **only** for genuinely trivial games (a handful of obvious actions, no real puzzles)
+— and even then, still state randomization status (below).
 
 Write it as puzzle-keyed notes, not a transcript. Use `##` section headings whose labels match
-the `## … (notes: "…")` markers in `<game>.cmds.txt`, so the two files cross-reference. For the
+the `## … (notes: "…")` markers in `<game>.cmds.txt` **for every puzzle**, so the two files
+cross-reference end-to-end. This keying is what makes probing during hint generation cheap: from
+a note section the hint author greps the cmds file for the same label, then `--snapshot-at
+"## <label>"` jumps the VM to exactly that puzzle to branch-probe a mechanic — no hand-built
+prefix. A note with no matching cmds marker (or a cmds span with no note) breaks that path, so
+keep them paired across the whole solution. For the
 hint author, bold the *insight* (the hintable nugget) in each section and tag build divergences
 (✗ published / ✓ our build). Good entries:
 - **"Why this ordering / why not the published one"** — e.g. *Misty Island exit: the King
@@ -146,8 +164,9 @@ the real value, and an explicit reminder that hints teach the method and never t
 so explicitly — the hint author shouldn't have to infer it from absence. This is the single most
 important section for hint safety.
 
-Skip the rest only for trivial games where the published commands replayed clean with no
-judgement calls — but still state randomization status.
+Skip the rest only for genuinely trivial games (no real puzzles) — *not* merely because the
+commands replayed clean with no judgement calls (a complex game can replay clean and still need
+full notes). But still state randomization status.
 
 These three files together are the `generate-hints` feedstock: the **sourced walkthrough**
 (`.txt`, with retrieval URLs + build + corrections), the **verified command list** (`.cmds.txt`,
