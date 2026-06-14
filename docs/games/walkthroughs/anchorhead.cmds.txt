@@ -1,0 +1,594 @@
+# Anchorhead — verified FULL command list (Aeron Pax walkthrough, R5/990206)
+# VERIFY WITH: node tools/play.cjs anchorhead --strict --seed 1   → exit 0, 532 turns, wins 99/100
+# Covers Day 1 → Day 2 → Day 3 → The Last Night → Epilogue. Strict-clean end to end.
+#
+# Seed-1 fixes all per-run randoms (a REAL player gets different values — hints teach METHOD, never these):
+#   safe combo 1-32-59 (torn journal) · flute holes 2 & 7 (Burial Mound) · blueprint var 0.0197 → mirror 2.
+# Wine-rack letters C,W,H,E,M are FIXED (the puzzle), not seed-dependent.
+# Score ceiling is 99/100 — the walkthrough's own point tags also sum to 99; the 100th point is undocumented.
+# Build divergences vs the raw walkthrough are commented inline below (lantern-in-pocket, cell key, mirror swap).
+#
+# ANCHOR MAP: each `## [slug] label` marker maps to the matching `## [slug]` section in
+# anchorhead.notes.md (validate: node tools/_check_walkthrough_map.cjs anchorhead). Jump the VM to
+# any puzzle to probe it: node tools/play.cjs anchorhead --seed 1 --file <this> \
+#   --snapshot-at "## [d3-mirror]" --snapshot-out /tmp/s.json --quiet   (then --snapshot-in /tmp/s.json).
+
+# ============ DAY 1 ============
+## [d1-office] Break into the abandoned real-estate office (+ answering machine)
+se
+push can against wall
+climb can
+up
+west
+push play
+east
+look up verlac
+## [d1-michael] Get into the house, meet Michael at the University, walk home
+west
+unlock door
+west
+west
+west
+nw
+west
+read book
+show keys to michael
+east
+se
+east
+south
+south
+east
+south
+sw
+nw
+unlock door
+north
+
+# ============ DAY 1, EVENING ============
+## [d1-bath] Lock up for the night, take a bath, sleep (the +1 bath point)
+close door
+lock door
+up
+north
+undress
+drop all
+west
+bathe
+east
+lie in bed
+sleep
+
+# ============ DAY 2 ============
+## [d2-journal] The torn journal behind the cupboard lining (safe-combo source — RANDOM)
+look
+get wallet
+open it
+get card
+leave bed
+dress
+get all
+wear coat
+south
+down
+west
+open cupboard
+pull lining
+read journal
+## [d2-supplies] Flashlight/matches/broom + the clippings reader (Verlac names) + cellar key
+north
+get flashlight
+open cabinet
+get matches
+turn on flashlight
+nw
+get broom
+unlock door
+down
+south
+search crates
+get box
+read clippings
+@char return 40
+@char q
+drop cardboard box
+wipe web
+drop broom
+get key
+put key on keyring
+## [d2-album] Family portraits + album name lookups
+north
+up
+se
+east
+east
+look at paintings
+look at scene
+south
+get album
+look up wilhelm in album
+look up eustacia in album
+look up croseus in album
+## [d2-safe] The hidden safe behind the bookshelf → puzzle box & flute
+west
+up
+east
+north
+get volume
+read it
+look at bookshelf
+get poe
+examine safe
+turn the dial to 1
+turn the dial to 32
+turn the dial to 59
+look in safe
+get puzzle box and flute
+## [d2-pages] Silver locket + the torn pages under the bed (teaches the name "William")
+south
+south
+open jewelry box
+get silver locket
+push bed
+look in hole
+get pages
+read pages
+leave bed
+## [d2-skull] The crypt — William Verlac's coffin → skull
+north
+west
+down
+north
+west
+unlock door
+north
+nw
+unlock crypt
+down
+examine coffin
+look up william on nameplate
+open william's coffin
+get skull
+up
+se
+south
+close door
+lock door
+east
+south
+unlock door
+## [d2-records] Courthouse records — look up the Verlac names (Death Records exit is NE in our build)
+south
+se
+ne
+north
+west
+get newspaper
+read it
+south
+south
+se
+look up edward in record
+look up mordecai in record
+look up elijah in record
+look up heinrich in record
+look up wilhelm in record
+nw
+sw
+look up edward in record
+look up mordecai in record
+look up elijah in record
+look up heinrich in record
+look up wilhelm in record
+ne
+## [d2-librarian] The library — card → historical-society book (another reader gate)
+north
+north
+north
+north
+west
+nw
+west
+north
+ring bell
+show card to librarian
+ask librarian for book
+open historical
+get slip of paper
+read it
+read historical
+@char return 20
+@char q
+drop it
+## [d2-amulet] Curio shop (puzzle box → amulet) and the bum on the wharf
+south
+east
+se
+east
+north
+get lantern
+south
+look under table
+get flask
+south
+nw
+read wall
+west
+south
+look in display case
+ask proprietor about amulet
+give puzzle box to him
+get puzzle box
+north
+east
+sw
+south
+south
+east
+east
+give flask to bum
+ask bum about himself
+ask bum about brother
+ask bum about anna
+ask bum about crypt
+tell bum about skull
+show skull to bum
+give amulet to bum
+
+# ============ DAY 2, EVENING ============
+## [d2-laptop] Michael's laptop passcode 0628 + the locked-room (letter-opener) escape
+put copper key on keyring
+se
+get tin
+nw
+west
+south
+sw
+nw
+north
+close door
+up
+east
+north
+east
+get letter opener
+look at screen
+remove ring
+look at it
+wear it
+type 0628 on laptop
+look at screen
+west
+south
+pull cord
+up
+push newspaper under door
+put letter opener in keyhole
+get newspaper
+get brass key
+put brass key on keyring
+unlock door
+## [d2-goldlocket] The gold locket in the attic straw, towel, sleep
+north
+search straw
+get gold locket
+south
+down
+west
+north
+west
+get towel
+east
+undress
+drop all
+lie in bed
+sleep
+
+# ============ DAY 3 ============
+## [d3-name] Telescope + puzzle-box lens → learn the Name IALDABAOLOTH
+leave bed
+dress
+wear coat
+get all
+south
+east
+north
+east
+look at fireplace
+turn sphere
+sw
+west
+look in hole
+east
+look in hole
+nw
+look in hole
+sw
+se
+put lens in telescope
+look in telescope
+## [d3-winerack] Wine-rack letter passage (C,W,H,E,M) → Great Stairs → Burial Mound
+se
+east
+down
+west
+down
+north
+west
+nw
+down
+east
+search wine rack
+turn c
+turn w
+turn h
+turn e
+turn m
+north
+north
+north
+ne
+down
+say ialdabaoloth
+north
+## [d3-flute] Flute attunement — find the 2 resonant holes (RANDOM; seed 1 = holes 2 & 7), remembered for the finale
+# Flute attunement (seed 1): holes 2 & 7 resonate — remembered for the finale, not played yet.
+south
+up
+sw
+nw
+east
+down
+west
+down
+south
+se
+ne
+south
+south
+## [d3-slaughter] Slaughterhouse — get the teddy, hide under bones to survive the monster
+look at woods
+west
+sw
+west
+get drawing paper
+get hook
+south
+lift plywood cover
+down
+search bones
+get teddy
+up
+north
+east
+south
+down
+hide under bones
+wait
+up
+up
+## [d3-church] Break into the church, the huge tome (answer NO), descend the rope shaft
+north
+east
+ne
+east
+north
+east
+se
+break padlock with hook
+down
+look at shape
+search shape
+put steel key on keyring
+look at furnace
+open hatch
+west
+put all in pocket
+jump onto riser
+north
+get cloth
+east
+read huge tome
+no
+east
+up
+up
+get rope
+down
+west
+west
+south
+drop robe in shaft
+tie rope to railing
+down
+drop rope
+light flashlight
+get robe
+get lantern
+## [d3-drawer] Oil the hatch, Claudia Benson's desk drawer → letter & bronze key
+nw
+north
+north
+open tin
+put oil on hatch
+open hatch
+up
+east
+west
+nw
+east
+unlock drawer
+open drawer
+get all from drawer
+read letter
+put bronze key on keyring
+## [d3-door11] #11 Mill Town Road — give the teddy to Jeffrey's mother → long steel key
+west
+west
+west
+north
+west
+north
+knock on door 11
+give teddy to woman
+look in overalls
+get long steel key
+put it on keyring
+west
+south
+south
+search thicket
+unlock hatch
+north
+## [d3-valve] Mill maintenance — shut the steam valve, the chain/lever riser
+# Build divergence: lantern is in the coat pocket here (not in hand) — take it out before lighting.
+light match
+take lantern from pocket
+light lantern
+put towel on valve
+turn wheel
+north
+north
+open hatch
+wait
+wait
+north
+tie chain to me
+look at controls
+pull lever
+untie chain
+north
+## [d3-mirror] Blueprint variable → match the mirror (RANDOM; seed 1 = 0.0197 → mirror 2), oil it
+read notes
+get caliper
+get memo
+get blueprint
+read it
+# Mirror puzzle (seed 1): blueprint variable 0.0197 → mirror 2 matches. Real players: measure each, match the blueprint.
+get mirror 2
+put mirror 2 in caliper
+open tin
+rub oil on mirror 2
+south
+down
+jump off equipment
+south
+south
+south
+south
+ne
+east
+east
+ne
+east
+up
+down
+
+# ============ THE LAST NIGHT ============
+## [ln-cell] Escape the padded cell — glass shard, cut the strait-jacket, torn square + needle
+break door
+break door
+get glass
+look at window pane
+put glass in crack
+cut jacket with glass
+open closet
+wear coat
+get all from closet
+south
+south
+unlock west door
+open it
+west
+look in tear
+get torn square
+read it
+get needle
+east
+south
+south
+down
+## [ln-gate] The madman — magazine for the cell key; unlock the gate with the key directly
+light match
+take lantern from pocket
+light lantern
+north
+north
+get magazine
+give magazine to madman
+get large key
+# Build divergence: the cell key won't go on the keyring — unlock the gate with it directly.
+unlock gate with cell key
+north
+north
+north
+## [ln-amulet] Cultist robe disguise → recover the amulet from the bum; the creature (gold locket + hook)
+remove coat
+wear robe
+east
+wait
+wait
+wait
+wait
+wait
+look
+put all in pocket
+get amulet
+north
+give gold locket to creature
+hit creature with hook
+north
+west
+north
+east
+ne
+## [ln-mirror-swap] The lighthouse device — take the real mirror, hand Michael the doctored one
+drop robe
+wear coat
+unlock door
+open it
+east
+up
+look at device
+get real mirror
+wait
+wait
+give mirror 2 to michael
+## [ln-finale] Free Jeffrey, the obelisk ritual (ring, amulet) and the flute finale (holes 2 & 7)
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+pick cuffs with needle
+free boy
+west
+sw
+sw
+west
+west
+north
+wait
+south
+east
+south
+east
+south
+south
+touch obelisk
+show ring to michael
+show amulet to michael
+# Flute finale (seed 1): the two holes that resonated in the Burial Mound were 2 & 7.
+cover hole 2
+cover hole 7
+play flute
+
+# ============ EPILOGUE ============
+## [epilogue] One year later — the pregnancy test
+north
+get test
+look at little window

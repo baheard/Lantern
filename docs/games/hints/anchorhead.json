@@ -1,0 +1,431 @@
+{
+  "schema": 1,
+  "game": "anchorhead",
+  "meta": {
+    "title": "Anchorhead",
+    "generatedAt": "2026-06-14",
+    "appVersion": "1.5.565",
+    "scoreNote": "Normal play caps at 99/100; the final point is undocumented and appears unobtainable.",
+    "sources": [
+      {
+        "name": "Aeron Pax walkthrough (CASA, file 20039)",
+        "url": "https://solutionarchive.com/file/id,20039/",
+        "file": "docs/games/walkthroughs/anchorhead.txt"
+      },
+      {
+        "name": "IFDB game page (R5/990206 confirmation)",
+        "url": "https://ifdb.org/viewgame?id=op0uw1gn1tjqmjt7",
+        "file": "docs/games/walkthroughs/anchorhead.txt"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "day-one",
+      "title": "Day One",
+      "phase": "day one",
+      "verified": true,
+      "locations": ["Alley", "File Room", "Office", "Outside the Real Estate Office", "Library", "University Court", "Foyer", "Upstairs Landing", "Master Bedroom", "Bathroom"],
+      "questions": [
+        {
+          "id": "d1-office",
+          "q": "The real estate office is locked up tight. How do I get in?",
+          "locations": ["Outside the Real Estate Office", "Alley", "Office"],
+          "hints": [
+            "There's no key to the front door and it won't budge. Stop trying the front.",
+            "Try the alley around the side of the building — and look up, not just around.",
+            "There's a high transom window you could reach if you had something to stand on. Something's lying in the alley to climb.",
+            "Answer: From Outside the Real Estate Office, go SE into the alley. PUSH CAN AGAINST WALL, CLIMB CAN, UP through the transom, then WEST into the office."
+          ]
+        },
+        {
+          "id": "d1-keys",
+          "q": "The Verlac file in the office has been emptied out. Is there anything left to find?",
+          "locations": ["File Room", "Office"],
+          "hints": [
+            "The papers are gone, but a file folder is more than the papers it holds.",
+            "Search the empty folder itself, not just the cabinet around it.",
+            "Answer: In the File Room, LOOK UP VERLAC — the house keys are tucked inside the empty hanging folder."
+          ]
+        },
+        {
+          "id": "d1-michael",
+          "q": "Michael is at the university library but won't respond to me. How do I get his attention?",
+          "locations": ["Library", "University Court"],
+          "hints": [
+            "He's lost in what he's reading. Maybe see for yourself what's so absorbing.",
+            "Answer: In the Library, READ BOOK to break his concentration, then SHOW KEYS TO MICHAEL."
+          ]
+        },
+        {
+          "id": "d1-bath",
+          "q": "Settling in for the night — is there a point to be had before I sleep?",
+          "locations": ["Master Bedroom", "Bathroom"],
+          "hints": [
+            "After a long, dusty walk to the house, you might want to freshen up before bed.",
+            "Answer: Upstairs in the Master Bedroom, UNDRESS, then go WEST to the bathroom and BATHE — worth a point, but only the first time. Return, LIE IN BED, SLEEP to begin the next day."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "day-two",
+      "title": "Day Two",
+      "phase": "day two",
+      "verified": true,
+      "locations": ["Dining Room", "Kitchen", "Pantry", "Cellar", "Storage", "Library", "Children's Bedroom", "Family Plot", "In the Crypt", "Path Behind the House", "Courthouse", "Courthouse Basement", "Birth Records", "Death Records", "Circulation Desk", "The Cauldron", "Hidden Court", "Twisting Lane", "Local Pub", "Wharf", "Study", "Attic", "Gallery", "Sitting Room"],
+      "questions": [
+        {
+          "id": "d2-journal",
+          "q": "The dining room cupboard seems to have something behind it. What's there?",
+          "locations": ["Dining Room"],
+          "hints": [
+            "The back of the cupboard isn't as solid as it looks.",
+            "Pull at the lining to get behind it.",
+            "Answer: OPEN CUPBOARD, PULL LINING, then READ JOURNAL. It records the combination to a safe — your three numbers will be different from anyone else's, so note them down."
+          ]
+        },
+        {
+          "id": "d2-safe",
+          "q": "There's something odd about the bookshelf in the library. What is it?",
+          "locations": ["Library"],
+          "hints": [
+            "Bookshelves in old houses don't always hold only books.",
+            "Examining the shelf closely reveals a safe set into the wall behind it.",
+            "You can't open it by guessing. The combination is written down elsewhere in the house — a journal hidden behind the dining room cupboard records it.",
+            "Answer: LOOK AT BOOKSHELF to reveal the safe. TURN THE DIAL TO each of the journal's three numbers in turn, LOOK IN SAFE, then GET PUZZLE BOX AND FLUTE."
+          ]
+        },
+        {
+          "id": "d2-cellarkey",
+          "q": "There's a key in the cellar, but a cobweb is in the way.",
+          "locations": ["Cellar", "Storage"],
+          "hints": [
+            "You can't get a clean grip through the web. Clear it out of the way first.",
+            "Something with a long handle from the kitchen would sweep it aside.",
+            "Answer: WIPE WEB with the broom, then GET KEY and PUT KEY ON KEYRING."
+          ]
+        },
+        {
+          "id": "d2-pages",
+          "q": "I feel like I'm missing something in the children's bedroom. Am I?",
+          "locations": ["Children's Bedroom"],
+          "hints": [
+            "Heavy furniture can be moved. What might be hidden under or behind the bed?",
+            "Push the bed aside — there's a hole in the floor beneath it.",
+            "Answer: PUSH BED, LOOK IN HOLE, GET PAGES, READ PAGES — they name an ancestor, William, you'll want at the family crypt. Also OPEN JEWELRY BOX and GET SILVER LOCKET."
+          ]
+        },
+        {
+          "id": "d2-skull",
+          "q": "The family crypt is locked, and inside are many coffins. How do I proceed?",
+          "locations": ["Family Plot", "In the Crypt"],
+          "hints": [
+            "One of your keys fits the crypt. Inside, you only want one particular Verlac.",
+            "You need to know whose coffin to open — a name you can learn from pages hidden under a bed in the house.",
+            "Answer: UNLOCK CRYPT, DOWN, LOOK UP WILLIAM ON NAMEPLATE, OPEN WILLIAM'S COFFIN, GET SKULL."
+          ]
+        },
+        {
+          "id": "d2-records",
+          "q": "How do I get anything useful out of the records at the courthouse?",
+          "locations": ["Courthouse Basement", "Birth Records", "Death Records"],
+          "hints": [
+            "The records are searchable by name — but only by names you actually know.",
+            "If the clerk doesn't recognize a name, you haven't learned it yet. Old newspaper clippings in the house cellar name the Verlac ancestors.",
+            "Answer: First read the clippings in the cellar (SEARCH CRATES, GET BOX, READ CLIPPINGS — page through to the very end) to learn the ancestors' names. In the courthouse basement, LOOK UP each name IN RECORD in both Birth Records and Death Records. The exit from Death Records is NORTHEAST."
+          ]
+        },
+        {
+          "id": "d2-records-names",
+          "q": "The clerk says some of the names I look up aren't familiar. Am I doing something wrong?",
+          "locations": ["Birth Records", "Death Records"],
+          "hints": [
+            "Trying names and watching which ones turn up is the puzzle, not a fault.",
+            "Answer: Nothing's wrong. Some Verlac names simply aren't on file, and the pattern of which are and which aren't is exactly what you're meant to notice. Keep looking them up."
+          ]
+        },
+        {
+          "id": "d2-librarian",
+          "q": "The librarian won't help me. What do I need?",
+          "locations": ["Circulation Desk", "Library"],
+          "hints": [
+            "You need to prove you're entitled to borrow — some identification.",
+            "There's a library card to be found early on; check your wallet. Ring for service first.",
+            "Answer: RING BELL, SHOW CARD TO LIBRARIAN, ASK LIBRARIAN FOR BOOK. Then OPEN HISTORICAL, GET SLIP OF PAPER, READ IT, and READ HISTORICAL — page through to the end."
+          ]
+        },
+        {
+          "id": "d2-amulet",
+          "q": "What is the puzzle box for?",
+          "locations": ["The Cauldron", "Hidden Court"],
+          "hints": [
+            "Someone in town has been hunting for exactly this kind of curio.",
+            "The proprietor of the curio shop is very interested. He'll deal for it.",
+            "Answer: In the shop, ASK PROPRIETOR ABOUT AMULET, GIVE PUZZLE BOX TO HIM — he hands over an amulet. Then GET PUZZLE BOX back; you still need what's inside it."
+          ]
+        },
+        {
+          "id": "d2-bum",
+          "q": "There's a bum down on the wharf. Can he actually help me?",
+          "locations": ["Wharf"],
+          "hints": [
+            "He knows far more about the Verlac family than he first lets on. You'll have to earn his trust.",
+            "He's thirsty, and he responds to proof you've been down to the crypt. There's a flask under a table nearby.",
+            "Answer: GIVE FLASK TO BUM, then ASK BUM ABOUT brother / anna / crypt and SHOW SKULL TO BUM. Once he's talking, GIVE AMULET TO BUM."
+          ]
+        },
+        {
+          "id": "d2-laptop",
+          "q": "Michael's laptop is password-protected. What's the code?",
+          "locations": ["Study"],
+          "hints": [
+            "The code is a date that means something to Michael — look for it on something he wears.",
+            "His wedding ring is engraved. Take it off and read the inscription.",
+            "Answer: REMOVE RING, LOOK AT IT for the date, WEAR IT again, then TYPE 0628 ON LAPTOP."
+          ]
+        },
+        {
+          "id": "d2-lockedroom",
+          "q": "I'm locked in the study and Michael has vanished!",
+          "locations": ["Study"],
+          "hints": [
+            "The key is still in the lock — just on the other side of the door. You can get it without opening up.",
+            "Slide something flat under the door to catch what falls, then poke the key out of the keyhole.",
+            "Answer: PUSH NEWSPAPER UNDER DOOR, PUT LETTER OPENER IN KEYHOLE (the key drops onto the paper), GET NEWSPAPER, GET BRASS KEY."
+          ]
+        },
+        {
+          "id": "d2-paintings",
+          "q": "The family portraits seem to watch me as I move. Is that important?",
+          "locations": ["Gallery", "Sitting Room"],
+          "hints": [
+            "The house is built to unsettle you. Not every chill hides a mechanism.",
+            "Answer: Pure atmosphere — the paintings do nothing you can act on. Look them over for the family's faces and names if you like, but there's no puzzle here. The presence or absence of a question is no guide to what matters."
+          ]
+        },
+        {
+          "id": "d2-goldlocket",
+          "q": "Is there anything in the attic worth searching for?",
+          "locations": ["Attic"],
+          "hints": [
+            "The loose straw up there isn't only for atmosphere.",
+            "Answer: SEARCH STRAW and GET GOLD LOCKET. Take the TOWEL while you're up there too."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "day-three",
+      "title": "Day Three",
+      "phase": "day three",
+      "verified": true,
+      "locations": ["Observatory", "Narrow Corridor", "Wine Cellar", "Windy Passage", "Edge of the Pit", "Other Side", "Great Stairs", "Bottom of Stairs", "Burial Mound", "Abandoned Slaughterhouse", "Old Stone Well", "In the Well", "Crumbled Ruin", "Churchyard", "Chapel", "Vestibule", "Steeple", "Vaulted Tunnel", "Behind the Church", "Church Cellar", "Sewer Tunnel", "Outflow Tunnel", "Narrow Beach", "#11 Mill Town Road", "Shanty Town", "Bare Foundations", "Mill Floor", "Catwalk", "Workshop", "Maintenance Access Tunnel", "Top of the Lighthouse", "Bottom of the Lighthouse"],
+      "questions": [
+        {
+          "id": "d3-name",
+          "q": "What do I do with the telescope in the observatory?",
+          "locations": ["Observatory"],
+          "hints": [
+            "The telescope won't show you anything until it has a lens.",
+            "The lens you need is the disk from the puzzle box. (Reaching the observatory means turning the sphere in the fireplace first.)",
+            "Answer: PUT LENS IN TELESCOPE, then LOOK IN TELESCOPE — you learn a Name, Ialdabaoloth, that opens a sealed door deep below the house."
+          ]
+        },
+        {
+          "id": "d3-winerack",
+          "q": "There's a wine rack down in the cellar with lettered bottles. What do they do?",
+          "locations": ["Wine Cellar"],
+          "hints": [
+            "The bottles aren't for drinking. The letters spell something, and you turn each bottle in that order.",
+            "Look the rack over first, then work the letters in the order C, W, H, E, M.",
+            "Answer: SEARCH WINE RACK, then TURN C, TURN W, TURN H, TURN E, TURN M — a passage opens north. Follow it down the Great Stairs and across the bridge; at the door at the bottom, SAY IALDABAOLOTH, then go NORTH into the Burial Mound."
+          ]
+        },
+        {
+          "id": "d3-flute",
+          "q": "The flute sounds different depending on which hole I cover. What am I listening for?",
+          "locations": ["Burial Mound"],
+          "hints": [
+            "Two of the seven holes make the right-hand column resonate 'in harmony'; the rest only make it 'grow momentarily stronger.' Your job is to find those two.",
+            "Test the holes one at a time: cover one, play, watch the column's reaction, then uncover and try the next.",
+            "Answer: For each hole 1 through 7 — COVER HOLE N, PLAY FLUTE, watch for 'resonating in harmony,' then REMOVE FINGER FROM FLUTE. Exactly two holes harmonize; remember which two — you'll need precisely those at the very end. Don't try to summon anything here yet."
+          ]
+        },
+        {
+          "id": "d3-slaughter",
+          "q": "Something is hunting me in the slaughterhouse! How do I survive it?",
+          "locations": ["Abandoned Slaughterhouse", "Old Stone Well", "In the Well"],
+          "hints": [
+            "You can't outrun it and you can't fight it. You need to be somewhere it won't think to look.",
+            "The pile of bones in the pit below is cover.",
+            "Answer: Before it arrives, GET HOOK and the drawing paper, LIFT PLYWOOD COVER, DOWN, SEARCH BONES, GET TEDDY. When the monster comes, HIDE UNDER BONES and WAIT until it leaves."
+          ]
+        },
+        {
+          "id": "d3-church",
+          "q": "How do I get into the boarded-up church?",
+          "locations": ["Churchyard", "Chapel", "Steeple", "Vaulted Tunnel"],
+          "hints": [
+            "The padlock won't pick, but it will break with the right heavy tool.",
+            "The hook from the slaughterhouse is heavy enough to break it.",
+            "Inside, a huge tome asks 'Will you read on?' — answer no. And to descend the rope shaft safely, tie off before you climb down.",
+            "Answer: BREAK PADLOCK WITH HOOK. At the tome, answer NO. At the shaft: TIE ROPE TO RAILING, DOWN, DROP ROPE — you plunge into water below. LIGHT FLASHLIGHT to see, and GET LANTERN from the floor here; you'll carry it from now on."
+          ]
+        },
+        {
+          "id": "d3-drawer",
+          "q": "A hatch in the tunnels is stuck fast and won't open. How do I get through?",
+          "locations": ["Sewer Tunnel", "Outflow Tunnel", "Office"],
+          "hints": [
+            "Forcing it won't help — it's seized, not locked. It needs lubricating.",
+            "There's a tin of oil to be found down here.",
+            "Answer: OPEN TIN, PUT OIL ON HATCH, OPEN HATCH. Beyond it, UNLOCK DRAWER, OPEN DRAWER, GET ALL FROM DRAWER and READ LETTER — the bronze key is inside."
+          ]
+        },
+        {
+          "id": "d3-door11",
+          "q": "I'm carrying a child's teddy bear. Who does it belong to?",
+          "locations": ["#11 Mill Town Road", "Shanty Town"],
+          "hints": [
+            "A newspaper article tied a missing child to a specific address.",
+            "The records named #11 Mill Town Road as Jeffrey Greer's home. Take the teddy there.",
+            "Answer: KNOCK ON DOOR 11, GIVE TEDDY TO WOMAN. She'll let you LOOK IN OVERALLS — GET LONG STEEL KEY (it opens the thicket hatch into the mill)."
+          ]
+        },
+        {
+          "id": "d3-valve",
+          "q": "Scalding steam blocks the way through the mill tunnels. How do I get past?",
+          "locations": ["Mill Floor", "Catwalk", "Maintenance Access Tunnel"],
+          "hints": [
+            "You have to shut the steam off at its source — and protect your hand on the hot valve wheel.",
+            "Something to wrap the wheel with would do it; there's a towel you found in the attic.",
+            "Answer: Light up first (LIGHT MATCH, TAKE LANTERN FROM POCKET, LIGHT LANTERN). PUT TOWEL ON VALVE, TURN WHEEL to stop the steam. To ride up to the lab, TIE CHAIN TO ME, then PULL LEVER."
+          ]
+        },
+        {
+          "id": "d3-mirror",
+          "q": "There are several mirrors and a blueprint in the workshop. Which mirror matters?",
+          "locations": ["Workshop"],
+          "hints": [
+            "The blueprint specifies one exact measurement, and only one mirror matches it.",
+            "A figure on the blueprint has been scratched out and a new value written in. Read that value, then measure each mirror with the caliper until one matches.",
+            "Answer: READ BLUEPRINT for the written-in value. PUT each MIRROR IN CALIPER until the readout matches it. Then RUB OIL ON that mirror — a memo demands the mirrors be clean. Keep that mirror; it's the one you'll quietly hand over later."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-last-night",
+      "title": "The Last Night",
+      "phase": "the last night",
+      "verified": true,
+      "locations": ["Padded Cell", "Hallway", "Top of Stairs", "Bottom of Stairs", "Waiting Room", "Asylum Courtyard", "Dark Corner", "Breakwater", "At the Foot of the Lighthouse", "Mill Road", "Top of the Lighthouse", "Bottom of the Lighthouse", "Island of Flesh", "Rocky Spur", "Burial Mound"],
+      "questions": [
+        {
+          "id": "ln-cell",
+          "q": "I'm locked in a padded cell, wrapped in a strait-jacket. How do I escape?",
+          "locations": ["Padded Cell"],
+          "hints": [
+            "The door will give if you throw yourself at it hard enough. Then you'll need an edge to cut yourself loose.",
+            "There's glass in the window you can break out and use as a blade.",
+            "Answer: BREAK DOOR twice, GET GLASS, PUT GLASS IN CRACK, CUT JACKET WITH GLASS. Before you leave, LOOK IN TEAR, GET TORN SQUARE, and GET NEEDLE."
+          ]
+        },
+        {
+          "id": "ln-gate",
+          "q": "A madman in the sewer has a key I need. How do I get it from him?",
+          "locations": ["Waiting Room", "Asylum Courtyard", "Dark Corner"],
+          "hints": [
+            "He wants something to read. Give him a distraction.",
+            "There's a magazine nearby to hand him.",
+            "Answer: In the dark, light the lantern first. GET MAGAZINE, GIVE MAGAZINE TO MADMAN — he drops the cell key. GET LARGE KEY, then UNLOCK GATE WITH CELL KEY directly; it won't go on your keyring."
+          ]
+        },
+        {
+          "id": "ln-amulet",
+          "q": "I gave the amulet away to the bum. How do I get it back now?",
+          "locations": ["Breakwater", "At the Foot of the Lighthouse"],
+          "hints": [
+            "Among the robed cultists, the thing to do is blend in and wait for the right moment.",
+            "Wear the robe to pass unnoticed; the amulet will come back to you on its own.",
+            "Answer: WEAR ROBE, head east, and WAIT (about five turns) until the amulet falls from the bum. Then PUT ALL IN POCKET and GET AMULET."
+          ]
+        },
+        {
+          "id": "ln-creature",
+          "q": "A monstrous creature is blocking my path. How do I get past it?",
+          "locations": ["At the Foot of the Lighthouse", "Breakwater"],
+          "hints": [
+            "Force alone won't do it — the thing is drawn to something you're carrying.",
+            "Offer it the gold locket from the attic, then strike.",
+            "Answer: GIVE GOLD LOCKET TO CREATURE, then HIT CREATURE WITH HOOK."
+          ]
+        },
+        {
+          "id": "ln-mirror-swap",
+          "q": "What am I supposed to do at the lighthouse device with Michael?",
+          "locations": ["Top of the Lighthouse", "Bottom of the Lighthouse"],
+          "hints": [
+            "The ritual turns on a mirror Michael trusts — but the one you prepared has been tampered with.",
+            "Take the genuine mirror out of the device and put your doctored one into Michael's hands instead.",
+            "Answer: GET REAL MIRROR from the device, then give Michael the oiled mirror you doctored at the mill. He re-checks it, is satisfied, and the swap becomes the sabotage."
+          ]
+        },
+        {
+          "id": "ln-finale",
+          "q": "Everything is coming to a head — how do I stop the ritual and save everyone?",
+          "locations": ["Island of Flesh", "Rocky Spur", "Burial Mound"],
+          "hints": [
+            "First free the boy, then confront the ritual at the obelisk with the proofs you've gathered.",
+            "You'll present the ring and the amulet to Michael, then play the flute — attuned to the two holes that harmonized back in the Burial Mound.",
+            "Answer: WAIT until the cultists flee, PICK CUFFS WITH NEEDLE, FREE BOY. At the obelisk: TOUCH OBELISK, SHOW RING TO MICHAEL, SHOW AMULET TO MICHAEL. Then COVER the two flute holes that resonated earlier and PLAY FLUTE to banish the god in time to save Michael."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "one-year-later",
+      "title": "One Year Later",
+      "phase": "one year later",
+      "verified": true,
+      "locations": ["Home", "Your Bathroom"],
+      "questions": [
+        {
+          "id": "epilogue",
+          "q": "It's one year later and I'm home. What now?",
+          "locations": ["Home", "Your Bathroom"],
+          "hints": [
+            "There's only one small thing left to look at.",
+            "Answer: Go NORTH, GET TEST, and LOOK AT LITTLE WINDOW. That look is the end of the story."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "title": "General Questions",
+      "verified": true,
+      "locations": ["Vaulted Tunnel", "Maintenance Access Tunnel", "Sewer Tunnel", "Crawlspace", "Broken Tunnel", "Dark Corner"],
+      "questions": [
+        {
+          "id": "gen-lantern",
+          "q": "My light keeps going out in the dark passages. What do I do?",
+          "hints": [
+            "In the worst dark a match buys you only seconds — but that's long enough to get a steadier light going.",
+            "Your lantern rides in your coat pocket; you have to take it out before you can light it.",
+            "Answer: In the dark, LIGHT MATCH, then TAKE LANTERN FROM POCKET and LIGHT LANTERN — the lantern catches before the match burns out. Keep the flashlight too; it works in places the lantern won't."
+          ]
+        },
+        {
+          "id": "gen-score",
+          "q": "Can I get a perfect score?",
+          "hints": [
+            "You can solve essentially the entire mystery — but expect to finish one point shy of a hundred.",
+            "Answer: In normal play the game caps at 99 of 100. The final point is undocumented and appears unobtainable — opening both lockets gives nothing, and a second bath nets nothing. Don't chase it; 99/100 with the mystery solved is the real ending."
+          ]
+        }
+      ]
+    }
+  ]
+}
