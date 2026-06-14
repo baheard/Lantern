@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   // App identity
   name: 'IFTalk',
   displayName: 'IFTalk',
-  version: '1.5.559',
+  version: '1.5.560',
 
   // Storage prefixes (used in localStorage keys)
   storagePrefix: 'iftalk',

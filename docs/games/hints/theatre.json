@@ -239,7 +239,7 @@
           "hints": [
             "You can't fight a shadow. But think about what shadows can't survive.",
             "Light — sudden, bright light. Have you found anything that flashes? If not, you'll need it first.",
-            "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. You can drop the camera afterwards; continue east, then NW to get under the stage."
+            "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. Continue east, then NW to get under the stage."
           ]
         },
         {
@@ -326,9 +326,9 @@
           "q": "There's a locked door in the underground passage below the cloakroom.",
           "locations": ["Underground Passage"],
           "hints": [
-            "It's locked, and nothing down here will open it — you'll need a key, and you may already be carrying the right one.",
-            "Among the keys and oddments you've gathered, one is plainly a door key. Try it here.",
-            "Answer: UNLOCK DOOR WITH SHINY KEY, OPEN DOOR, and head E. You can drop the key afterwards."
+            "It's a locked door. You'll need a key.",
+            "If you haven't come across the right key yet, keep an eye out for it.",
+            "Answer: UNLOCK DOOR WITH SHINY KEY (from the Boiler Room), OPEN DOOR, and head E."
           ]
         },
         {
