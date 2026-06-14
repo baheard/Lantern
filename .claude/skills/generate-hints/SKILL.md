@@ -81,10 +81,11 @@ The shape of a good ladder: **visible symptom → think → look → mechanism �
 11. **Don't invent failure behavior.** Walkthrough steps are usually requirements — treat them as needed and present them confidently. But a walkthrough records the successful sequence, not what happens when you skip a step. So never *describe the game's refusal* ("it won't budge until...", "the door stays locked unless...") unless the walkthrough states it or you observed it in-game — that's where fabrication creeps in (verified example: Theatre's piano pushes fine without ever being played, though the walkthrough plays it first). Safe phrasings that don't depend on unverified mechanics: "You'll need to...", "Do X first", "Don't leave without doing X." If a hint's pedagogy *hinges* on the refusal behavior, verify it live or rewrite the hint.
 12. **Order-independence (official UHS principle):** every ladder must make sense no matter what the reader has or hasn't read. Never assume they saw an earlier section.
 13. **Tone discipline:** jokes live at level 1 and at the end of fake/red-herring ladders; the middle of a real ladder is always played straight.
-14. **One increment per rung, then stop — say less.** Each rung delivers exactly one new thing and ends. Three ways writers over-deliver, all to be cut:
+14. **One increment per rung, then stop — say less.** Each rung delivers exactly one new thing and ends. Four ways writers over-deliver, all to be cut:
    - **Trailing leading question.** "…it must carry a pattern first. Where might you have seen a pattern worth capturing?" The concept statement *is* the hint; the tacked-on question just spoon-feeds the next move. Drop it. (This is narrower than rule 5's Socratic hints: a genuinely *opening* question is fine — "Have you checked all sides?" — but a question that presupposes the answer's framing and points at it is just leading dressed as inquiry.)
    - **The "— perhaps in X?" aside.** Bolting the next rung's reveal onto an early hint as a casual aside hands it over for free. If hint 2's job is "the lens must carry a pattern," it ends there; *where* the pattern lives is hint 3's job.
    - **Piled-on cross-refs and directions.** "The machinery is in the attic — you'll need a way up there first (see the piano question). From the attic's southern end, head north and look for a mechanism." Three rungs' worth in one. The hint is "The machinery is in the attic." — full stop. Exact directions belong in the answer; the prerequisite belongs in its own gate if it needs one at all.
+   - **The "you'll need it later" reassurance tail.** "GET PEARL — keep it, it matters much later." / "…and wake with a star crystal. You will absolutely need it." / "What it's for comes later." Telling the player to take or do something *already implies it matters* — the reassurance carries nothing they can act on, and a string of "…later" tails quietly leaks how much game remains. This is the most common padding on the answer rung specifically (the place that's supposed to be tightest — just the commands). Cut it. **Distinguish from naming an object's purpose** — "the ticket is your admission to the show", "that shiny key unlocks a door deep underground" — which is orientation the player can act on, not padding; keep (or lightly trim) those.
    Point early hints at the concept or category, never the specific object/room. When a hint feels complete, look for the clause after the em-dash or the trailing sentence — that's usually the over-delivery; cut it.
 15. **Hints speak to the player in-world, not about the hint file.** No meta-navigation ("see the gas question"), and no fail-state-presuming parentheticals ("(If the gas drove you out before you could look around, see the gas question first.)") — both break frame and treat the file as hypertext. A prerequisite is stated in the world as a gate (rules 9–10), not as a reference to another entry.
 
@@ -97,7 +98,7 @@ The shape of a good ladder: **visible symptom → think → look → mechanism �
 
 ### Structure
 
-20. **Sections by location/act in play order** — geography does most of the state-scoping for free. A player only browses sections for places they've reached. **Section titles name visible regions, never discoveries or contents**: "The West Wing", not "The Attic & Chandelier"; a title is a place the player has stood, not a thing they'll find. An object-centric catch-all section ("Stuff and Things"-style, holding "What good is X?" questions) and a "General Questions" section are permitted exceptions. If the game is navigated by something other than place (e.g. a mystery driven by characters and times), section by that dimension instead.
+20. **Sections by location/act in play order** — geography does most of the state-scoping for free. A player only browses sections for places they've reached. **Section titles name visible regions, never discoveries or contents**: "The West Wing", not "The Attic & Chandelier"; a title is a place the player has stood, not a thing they'll find. An object-centric catch-all section ("Stuff and Things"-style, holding "What good is X?" questions) and a "General Questions" section are permitted exceptions. If the game is navigated by something other than place (e.g. a mystery driven by characters and times), section by that dimension instead — and if the same *rooms* recur across those acts/days (so location alone can't tell the panel which act you're in), add a section-level `phase` (see Step 2 Section rules) so only the current act's section badges.
 21. **Hints should exist from the moment a puzzle is first encounterable** — err on the side of too early rather than too late.
 22. **Optional content (bonus points, easter eggs) is segregated and labeled** so completionists can find it and others aren't spoiled. A post-completion "For Your Amusement" section ("expose only after finishing") is the classic home for fun experiments and dev trivia. Scoring/perfect-score questions are "last resort" content by convention: their deep hints may name hidden places freely — a completionist asking that question wants the full list — but the early levels should still escalate normally.
 23. **Writing hints is a design audit:** if a puzzle can't be hinted gently, note it — that's information about the game, and the hint file may be the only fair warning a player gets.
@@ -150,6 +151,7 @@ Structure the JSON as one section per act or area of the game, in progression or
 - `title`: human-readable act/area name (e.g. `"Act I — The Pager"`).
 - `verified`: `true` only if every `locations` name was confirmed from the app's own journey log during a live playthrough (Step 3). All other sections: `verified: false`.
 - `locations` (section-level): **always populate this**, even for `verified: false` sections. Read through the walkthrough and extract every room name the player visits while working on puzzles in this section. Title-case the walkthrough's parenthetical room descriptions (e.g. `"(music room)"` → `"Music Room"`). A wrong name simply won't match and shows no pin — that is no worse than omitting it. An absent array guarantees the pin never works for that section.
+- `phase` (section-level, **optional**): a scoping string matched (case-insensitive substring) against the game's current **status-bar context** — the right-aligned region the location parser discards (e.g. `"day two"`, `"Chapter 3"`). A section badges only if its location matches **and** the current phase contains this string. **Omit it for almost every game** — location-only is the default and is correct for linear games and any game with unique geography per act (e.g. Theatre shipped entirely phase-less). Add `phase` *only* when a game **reuses the same rooms across acts/days** and would otherwise badge the wrong act (the canonical case: Anchorhead's 5 days over one town map). Harvest the exact string from a harness replay: `node tools/play.cjs <game> --status` prints `[@ Room  |  phase: <context>]` per turn — copy the discriminating part (`day two`, not `day two, evening`, so it also matches the evening sub-phase). If the game prints nothing in the right-aligned region (`phase:` is blank), this dimension isn't available — fall back to location-only. Questions inherit their section's `phase`; a question may set its own to override.
 
 **Question rules:**
 - `id`: stable slug. Preserve existing IDs on regeneration.
@@ -167,35 +169,58 @@ Structure the JSON as one section per act or area of the game, in progression or
 
 This step is what distinguishes `verified: true` from `verified: false` sections. Do not skip it for the opening section.
 
-1. Start the dev server: `npm start` (from `E:\Project\IFTalk`), app at `http://localhost:3002`.
-2. Use the web-agent skill to load the game in-browser and play through the opening.
-3. After each room change, capture observed room names:
-   ```js
-   // Run in browser console or via web-agent execute_console:
-   window.getMapData().journey.map(j => j.locationName)
+### Primary method — the headless replay harness (`tools/play.cjs`)
+
+Use the harness for location harvesting and walkthrough verification. It drives our **exact** ZVM stack headlessly and derives location names with the app's own `getCurrentLocation()`, so the names it prints are byte-identical to what the auto-mapper records — no browser, no web-agent cost. (Design + gotchas: `.tome/headless-replay-harness.md`.)
+
+1. Put the walkthrough's command sequence (one command per line) in a temp file, e.g. `docs/games/walkthroughs/anchorhead.cmds.txt`. Translate the walkthrough's compressed notation into real parser commands ("Se." → `se`, "Push can against wall." → `push can against wall`).
+2. Replay it and read the per-turn locations the app would record:
+   ```bash
+   node tools/play.cjs <gameName> --status --file <cmds>.txt
    ```
-   **Important**: capture this **before** opening the in-app map. Opening the map calls `clearJourney()` (auto-mapper.js ~line 312) and wipes the journey buffer.
-4. The primary location source (survives journey clears) is:
-   ```js
-   window.getLastLocationName()
-   ```
-5. Only names actually observed go into `locations` arrays for `verified: true` sections. Copy them byte-for-byte; replace the walkthrough-derived guesses with the confirmed names.
-6. Mark confirmed sections `verified: true`. Sections not yet played through keep `verified: false` and their walkthrough-derived locations.
+   Each turn prints a `[@ <location>]` line — that string is exactly what the auto-mapper's journey would contain. `--quiet` shows only the final turn; `--raw` keeps blank lines.
+3. The authoritative room list for a section is the set of distinct `[@ …]` names observed while replaying that section's commands. Copy them **byte-for-byte** into `locations` (mind British spellings, "the"/lowercase, two-word forms — walkthrough labels routinely drift from the game's actual `location.name`).
+4. **The harness is also your walkthrough-verification pass**: if a step produces an error, an unexpected room, or "[no line-input prompt]", the walkthrough is wrong/incomplete for our build — fix the command and re-run before trusting it. (This is how the Anchorhead `e`-vs-`Se` opening confusion was settled.)
+5. Mark sections you replayed end-to-end `verified: true`. Sections not yet replayed keep `verified: false` and their walkthrough-derived guesses.
+
+**Harness caveats (don't be surprised):**
+- **Randomized puzzles differ every run** (`@random` is clock-seeded): Anchorhead's safe combo, flute attunement, mirror measurement. Read the in-run clue; never hardcode. Puzzles whose solution depends on a per-run value can't be fully replayed past the gate — those sections stay `verified: false`.
+- Each typed command appears twice in output (Glk line-echo + the CLI's `> cmd` header). Harmless.
+- In-game `SAVE`/`RESTORE` are stubbed off — use replay-with-a-different-tail (Step 3.5) instead.
+
+### Fallback method — live browser (web-agent)
+
+Use the real app only for things the harness can't observe: actual in-app **save-slot** behavior, UI/narration/highlighting, map rendering, or a game whose intro the harness can't get past. Then:
+1. `npm start` (from `E:\Project\IFTalk`), app at `http://localhost:3002`; load the game via the web-agent skill.
+2. Location source that survives journey clears: `import('/js/features/auto-mapper.js').then(m => m.getLastLocationName())` (note: `window.getLastLocationName` does **not** exist — it's module-scoped). Capture **before** opening the in-app map, which calls `clearJourney()`.
 
 ---
 
 ## Step 3.5 — Probe questionable mechanics (the "hint-runner" method)
 
-Rule 11 forbids inventing refusal behavior; rule 7 forbids implying an unverified requirement (e.g. a `DROP`). When a draft hint *wants* to claim a requirement or refusal ("you can't push it until...", "the usher won't let you in without...", "drop everything first"), and the walkthrough doesn't state the requirement itself, test it live rather than guessing:
+Rule 11 forbids inventing refusal behavior; rule 7 forbids implying an unverified requirement (e.g. a `DROP`). When a draft hint *wants* to claim a requirement or refusal ("you can't push it until...", "the usher won't let you in without...", "drop everything first"), and the walkthrough doesn't state the requirement itself, test it live rather than guessing.
 
-1. Play (or continue the Step 3 session) to the moment just **before** the questionable step.
-2. Save to the dedicated probe slot using the app's named-save meta-command: type `SAVE` and name the slot **`hint-runner`** (stored as `iftalk_customsave_<game>_hint-runner`). **Never use the quicksave slot** — it belongs to the user.
-3. Try the skip-path: attempt the later action *without* the walkthrough's intermediate step. Record exactly what the game says.
-4. Type `RESTORE` and reload `hint-runner`, then try the next variant. Repeat as needed.
-5. Update the hint with what you observed: a real refusal (quote or paraphrase the game's actual response — now it's verified and quotable per rule 5), or no refusal (drop the false requirement, per the piano example).
-6. When done probing, delete the `hint-runner` slot (Manage Saves modal, or remove the localStorage key) so it doesn't linger in the user's save list.
+### Primary method — branch the replay tail (`tools/play.cjs`)
 
-Interpretation guide: a probe **disproves** a requirement cleanly (action succeeded without the step). A refusal only proves *something* is missing — not necessarily the step you skipped — so phrase verified refusals by what the game said, not by your inferred cause.
+Because replay starts from a fresh VM every time, probing a requirement is just running two command lists that share a prefix and differ in the tail — no save/restore needed (which also sidesteps the bootstrap-restore bug class entirely):
+
+1. Take the verified prefix that reaches the moment just **before** the questionable step.
+2. **With-skip run:** append the later action *without* the walkthrough's intermediate step:
+   ```bash
+   node tools/play.cjs <gameName> --quiet -- <prefix...> "<later action>"
+   ```
+3. **Control run:** append the intermediate step then the later action. Compare the two final turns.
+4. Update the hint with what you observed: if the with-skip run succeeded, the requirement is false — drop it (per the piano example). If it was refused, quote/paraphrase the game's actual response (now verified and quotable per rule 5).
+
+A probe **disproves** a requirement cleanly (the action succeeded without the step). A refusal only proves *something* is missing — not necessarily the step you skipped — so phrase verified refusals by what the game *said*, not by your inferred cause. Only probe claims that are load-bearing for a hint's pedagogy.
+
+### Fallback method — live save-slot probe (web-agent)
+
+Use this only when the harness can't reach the state (e.g. a randomized-puzzle gate that needs an in-run value, or genuinely save-dependent behavior):
+1. Play to just before the questionable step.
+2. Save to the dedicated probe slot via the app's named-save meta-command: type `SAVE`, name the slot **`hint-runner`** (`iftalk_customsave_<game>_hint-runner`). **Never use the quicksave slot** — it's the user's.
+3. Try the skip-path; record what the game says. `RESTORE` `hint-runner`, try the next variant.
+4. When done, delete the `hint-runner` slot (Manage Saves modal, or remove the localStorage key) so it doesn't linger in the user's save list.
 
 Only probe claims that are load-bearing for a hint's pedagogy. Don't exhaustively test every walkthrough step — most are requirements and the safe phrasings from rule 11 cover them.
 
@@ -217,6 +242,7 @@ Write the file to `docs/games/hints/<gameName>.json` where `<gameName>` is the g
 - [ ] **No cross-references** to other hint entries — prerequisites are stated in-world as gates, not pointers (rules 9–10). Search the file for "see '" / "see the" / "see that" and remove any that name another entry. (Naming in-world places/provenance in answers is fine — rule 6.)
 - [ ] Every section has a `locations` array (even `verified: false` — extracted from walkthrough)
 - [ ] Question-level `locations` added wherever the question is room-specific
+- [ ] `phase` set **only** for games that reuse geography across acts/days, and harvested from a `--status` replay (most games omit it entirely)
 - [ ] `meta.sources` lists all URLs used, each with a `"file"` key pointing to the local walkthrough copy
 - [ ] `meta.generatedAt` is today's date (YYYY-MM-DD)
 - [ ] `meta.appVersion` matches the version being bumped to

@@ -40,7 +40,7 @@
             "Quite a lot, actually. Examine everything, and take what isn't nailed down.",
             "There's an electrical panel on the wall — and a dark theatre is no friend of yours.",
             "There's a loose page here — worth grabbing. Keep an eye out for others like it as you explore.",
-            "The barrels hold popcorn — and not just one handful. Keep taking it. Trust us, you will want all of it much later.",
+            "The barrels hold popcorn — and not just one handful. Take all of it.",
             "Answer: TAKE PAGER, GET PAGE, EXAMINE PANEL, TURN ON SWITCH, EXAMINE BARRELS, then GET POPCORN four times (there are four lots)."
           ]
         },
@@ -62,7 +62,7 @@
             "Examine it — it has a combination dial. Nobody is going to tell you the combination.",
             "Old movies have the answer: safecrackers listen to the tumblers. You need the right instrument for that.",
             "A stethoscope. Have you explored the upper hallways yet? There's a Sick Bay up there with a cabinet worth opening.",
-            "Answer: WEAR STETHOSCOPE, LISTEN SAFE, then TURN DIAL LEFT, TURN DIAL RIGHT, TURN DIAL LEFT, TURN DIAL RIGHT. The safe opens — take what's inside, you'll need it."
+            "Answer: WEAR STETHOSCOPE, LISTEN SAFE, then TURN DIAL LEFT, TURN DIAL RIGHT, TURN DIAL LEFT, TURN DIAL RIGHT. The safe opens to reveal a red eye-like pearl. GET PEARL."
           ]
         },
         {
@@ -109,7 +109,7 @@
           "hints": [
             "You don't reach it — you bring it to you. Machinery for stage rigging is usually kept above.",
             "The machinery is in the attic.",
-            "Answer: In the attic, TURN HANDLE. The chandelier is lowered to the auditorium floor. What it's for comes later."
+            "Answer: In the attic, TURN HANDLE. The chandelier is lowered to the auditorium floor."
           ]
         },
         {
@@ -131,7 +131,7 @@
             "It's missing something. Examine it closely.",
             "An ordinary lens isn't enough — it needs to carry a particular pattern before it'll show you anything.",
             "The lens must already be carrying that pattern before it's any use here — getting it there is a separate puzzle. Once it does, wear the gas mask and bring the lens back.",
-            "Answer: WEAR MASK, go to the Observatory, PUT LENS IN TELESCOPE (this also stops the gas), then LOOK THROUGH TELESCOPE. You collapse — and wake with a star crystal in your inventory. You will absolutely need it."
+            "Answer: WEAR MASK, go to the Observatory, PUT LENS IN TELESCOPE (this also stops the gas), then LOOK THROUGH TELESCOPE. You collapse — and wake with a star crystal in your inventory."
           ]
         }
       ]
@@ -176,7 +176,7 @@
           "locations": ["Staircase Landing"],
           "hints": [
             "It is. Get your hands on it — literally.",
-            "Answer: FEEL PAINTING, then OPEN DOOR and go N into the Secret Gallery. Take the camera you find there (GET CAMERA) — a flash camera has a very specific use later."
+            "Answer: FEEL PAINTING, then OPEN DOOR and go N into the Secret Gallery. Take the camera you find there (GET CAMERA)."
           ]
         },
         {
@@ -278,7 +278,7 @@
             "Whatever is glinting in that nest, the slug won't let you near it. You need to neutralize the slug without touching it.",
             "Look around the room. What's tall, heavy, and standing right next to it?",
             "The bookcase — look closely. A long chain holds it in place.",
-            "Answer: UNHOOK CHAIN, PUSH BOOKCASE — it falls on the slug. Then EXAMINE NEST and GET BLUE PEARL. That strange eye-like pearl will matter a great deal later — keep it safe."
+            "Answer: UNHOOK CHAIN, PUSH BOOKCASE — it falls on the slug. Then EXAMINE NEST and GET BLUE PEARL."
           ]
         },
         {
@@ -298,7 +298,7 @@
           "locations": ["Boiler Room"],
           "hints": [
             "Three things, plus the key the crow dropped. Open and examine everything.",
-            "There's a chest worth opening — a bottle of glue inside. Keep it; it solves a problem later.",
+            "There's a chest worth opening — a bottle of glue inside.",
             "Look in the coal bin — one lump is not like the others.",
             "Answer: GET KEY, GET BOTTLE (glue, from the chest), GET LUMP, then CLEAN LUMP — it conceals another strange eye-like pearl, violet this time."
           ]
@@ -339,7 +339,7 @@
             "You cannot fight it and you cannot sneak by. The beast wants to eat — so feed it something.",
             "Feed it something... treated. Have you found a vial of blue liquid yet? If not, the medical cabinet upstairs is worth a search — examine the vial, and read the letter beside it.",
             "The liquid is a poison — useless to drink, but useful to apply. So the question is what to bait it with: something a beast will devour that you've no further use for. What have you come across that's already dead, and grimly portable?",
-            "Answer: Bring the corpse and the vial to the pit. POUR LIQUID ON BODY, DROP VIAL, THROW BODY IN PIT. The beast takes the bait, and you can go D and onward."
+            "Answer: Bring the corpse and the vial to the pit. POUR LIQUID ON BODY, THROW BODY IN PIT. The beast takes the bait, and you can go D and onward."
           ]
         },
         {
@@ -348,6 +348,8 @@
           "locations": ["Deep in the Mines"],
           "hints": [
             "He's more than he appears, and he knows things nobody else can tell you — particularly about certain strange objects you may have picked up along the way.",
+            "It's the eye-like pearls he cares about, and he'll want all four — one of each colour.",
+            "If you're missing any: the red is locked in the Manager's Office safe; the green is among the odds and ends under the stage; the blue is in the slug's nest in the library; the violet is hidden inside a lump of coal in the Boiler Room.",
             "Show him things. Note down what he says — his answers are different in every playthrough, and you will need them word for word later.",
             "Answer: SHOW VIOLET PEARL TO GOBLIN, SHOW BLUE PEARL TO GOBLIN, SHOW RED PEARL TO GOBLIN, SHOW GREEN PEARL TO GOBLIN — and WRITE DOWN which socket he names for each. The statue in the Witch's Lair has four sockets, and the correct placement is randomized per game."
           ]
@@ -390,7 +392,7 @@
             "Look closely at the dagger — the crystal set in it can be removed. And it isn't the only crystal you've come across.",
             "Only one of the two crystals can destroy the evil, and you need to learn which. Remove the dagger's crystal and show both it and the star crystal to the caged goblin, Trent — he can tell them apart.",
             "The coming ceremony is a trap: Elizabeth intends to use the dagger. Make sure the crystal it holds when she takes it is the wrong one for her purpose.",
-            "Answer: PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards.)"
+            "Answer: GET CRYSTAL FROM DAGGER, then PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards.)"
           ]
         },
         {
