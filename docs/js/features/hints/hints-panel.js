@@ -457,7 +457,7 @@ function renderQuestion(question, isMatched, sectionId) {
         hintsHtml += `
           <div class="hints-hint-item ${isAnswer ? 'hints-hint-answer' : ''}">
             <span class="hints-hint-text">${escHtml(hints[i])}</span>
-            ${renderRatingBar(question.id, sectionId, i, total)}
+            ${renderRatingBar(question.id, sectionId, i, total, hints[i])}
           </div>`;
     }
 
@@ -515,10 +515,11 @@ function renderQuestion(question, isMatched, sectionId) {
  * @param {string} sectionId
  * @param {number} hintIndex - 0-based
  * @param {number} total
+ * @param {string} hintText - current text of this hint (for rewrite-aware lock)
  * @returns {string}
  */
-function renderRatingBar(questionId, sectionId, hintIndex, total) {
-    const rating = getHintRating(questionId, hintIndex, _currentGameName);
+function renderRatingBar(questionId, sectionId, hintIndex, total, hintText) {
+    const rating = getHintRating(questionId, hintIndex, _currentGameName, hintText);
     const key = `${questionId}:${hintIndex}`;
 
     if (rating) {
@@ -572,7 +573,7 @@ function handleContentClick(e) {
         const { questionId, sectionId, hintIndex, total } = readRatingDataset(target);
         if (!questionId) return;
         sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'up' });
-        setHintRating(questionId, hintIndex, 'up', _currentGameName);
+        setHintRating(questionId, hintIndex, 'up', _currentGameName, getHintText(questionId, hintIndex));
         if (_openReasonKey === `${questionId}:${hintIndex}`) _openReasonKey = null;
         rerenderQuestion(questionId);
         return;
@@ -596,7 +597,7 @@ function handleContentClick(e) {
         const ta = _overlay.querySelector(`#hintsReason-${cssEscape(`${questionId}:${hintIndex}`)}`);
         const reason = ta ? ta.value : '';
         sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'down', reason });
-        setHintRating(questionId, hintIndex, 'down', _currentGameName);
+        setHintRating(questionId, hintIndex, 'down', _currentGameName, getHintText(questionId, hintIndex));
         _openReasonKey = null;
         rerenderQuestion(questionId);
         return;
@@ -713,9 +714,7 @@ function readRatingDataset(el) {
  * @param {{questionId: string, sectionId: string, hintIndex: number, total: number, rating: 'up'|'down', reason?: string}} p
  */
 function sendHintRating({ questionId, sectionId, hintIndex, total, rating, reason }) {
-    const section = findQuestionSection(questionId);
-    const question = section?.questions.find(q => q.id === questionId);
-    const hintText = Array.isArray(question?.hints) ? (question.hints[hintIndex] || '') : '';
+    const hintText = getHintText(questionId, hintIndex);
     const hintsVersion = _currentHintsData?.meta?.appVersion
         || _currentHintsData?.meta?.generatedAt
         || '';
@@ -731,6 +730,13 @@ function sendHintRating({ questionId, sectionId, hintIndex, total, rating, reaso
         rating,
         reason,
     });
+}
+
+/** Look up the current text of a hint by question id + 0-based index ('' if absent). */
+function getHintText(questionId, hintIndex) {
+    const section = findQuestionSection(questionId);
+    const question = section?.questions.find(q => q.id === questionId);
+    return Array.isArray(question?.hints) ? (question.hints[hintIndex] || '') : '';
 }
 
 /**
