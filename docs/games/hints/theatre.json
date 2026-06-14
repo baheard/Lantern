@@ -367,7 +367,7 @@
         },
         {
           "id": "underground-archway",
-          "q": "An archway keeps pushing me back — I can't get through to the room beyond it.",
+          "q": "An archway keeps pushing me back — I can't get through.",
           "locations": ["Rat Nest"],
           "hints": [
             "You can't force it, and there's no key or switch — the archway reacts to you as you try to step through.",

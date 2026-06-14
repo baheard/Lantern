@@ -214,6 +214,17 @@ Because replay starts from a fresh VM every time, probing a requirement is just 
 
 A probe **disproves** a requirement cleanly (the action succeeded without the step). A refusal only proves *something* is missing — not necessarily the step you skipped — so phrase verified refusals by what the game *said*, not by your inferred cause. Only probe claims that are load-bearing for a hint's pedagogy.
 
+### When the mechanic is an item's effect — probe every possession state, then audit for a missing entry
+
+If the claim is about what an *item* does (not a skipped step), branch the tail across **all** the states a player could actually be in — **worn / carried-but-unworn / never-acquired** — not just have-it vs skip-it. Games respond differently to each, and the differences decide both the hint's wording and whether a hint is even *missing*. Worked example (Theatre's amulet, verified via three replays):
+- **worn** → you pass the archway into the Witch's Lair;
+- **carried, unworn** → "pushed gently backwards… the amulet gently glows" — the game points at the item;
+- **never acquired** → "thrown roughly backwards, as if by magic" — *no pointer at all*.
+
+Three lessons fell out: (1) the real mechanic was far narrower than the draft claimed — one specific gate, not "protection in the underground areas" (rule 11 — the invented reason was wrong on the specifics, not just unverified); (2) it must be *worn*, not merely carried; (3) the never-acquired player gets **no in-game clue**, so they're silently stranded.
+
+That third case is a **design audit (rule 23)**: when a probe reveals a hard block, ask whether a *stuck* player has any entry to find. If the symptom has no question — especially when the game gives no pointer — add a first-person distress question for it (rule 3), and make its **answer supply the location the game withholds**. (Theatre gained an "An archway keeps pushing me back" question whose answer names the amulet's dressing-room locker.) The lesson generalizes: **the missing-item state is both the most likely to strand a player and the most likely to lack a hint — always probe it.**
+
 ### Fallback method — live save-slot probe (web-agent)
 
 Use this only when the harness can't reach the state (e.g. a randomized-puzzle gate that needs an in-run value, or genuinely save-dependent behavior):
