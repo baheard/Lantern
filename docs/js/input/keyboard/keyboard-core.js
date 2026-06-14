@@ -83,7 +83,7 @@ const COMMON_VERBS = [
   'eat', 'drink',
   'wear', 'remove',
   'throw', 'fill',
-  'give',
+  'give', 'show',
   'talk', 'ask', 'tell', 'say',
   'wait', 'z',
   'search',
