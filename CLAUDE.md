@@ -62,10 +62,24 @@ node tools/play.cjs anchorhead --file cmds.txt --quiet   # one cmd/line; show la
 ```
 
 Flags: `--status` (print `[@ location]` per turn), `--quiet`, `--raw`, `--file <path>`,
-`--stdin`, `--key <c>` (key to dismiss char-mode prompts, default space).
+`--stdin`, `--key <c>` (key to dismiss char-mode prompts, default space), `--strict` (halt on
+parser desync), `--stop-on-death` (halt on death/win screen), `--summary` (one machine-readable
+final-state line: turns/location/status/score), and the snapshot pair:
+- `--snapshot-out <file>` — after replaying all commands, serialize full VM state to JSON.
+- `--snapshot-in <file>` — restore from that snapshot instead of a fresh boot, then replay the
+  (short) command tail. Skips O(n²) prefix re-replay when extending a long walkthrough. Snapshots
+  are seed-/build-specific (restore with the same `--seed` + game file). Bit-exact validated by
+  `tools/_snapshot_validate.cjs`.
+- `--snapshot-at <N|substr|"## marker">` — with `--snapshot-out`, snapshot MID-replay (after the
+  Nth command / first command containing `substr` / at a `## marker` line in `--file`) in a single
+  pass, instead of hand-building a prefix file. Bit-exact with the prefix-file path.
+- `--cmds "a ; b ; c"` — one quoted arg split on `;` into commands; avoids PowerShell array/quoting
+  pain for ad-hoc tails (esp. with `--snapshot-in`). Appended after `--file`/`--stdin`.
 
-- **Replay-from-start, by design** — it never calls `restore_file()`, so it sidesteps the
+- **Default is replay-from-start** — it never calls `restore_file()`, so it sidesteps the
   whole bootstrap-restore bug class. Branch-probe a mechanic by changing the command tail.
+  (`--snapshot-in` uses zvm's `do_autorestore` full-state path, which also avoids the
+  char-bootstrap bug class — see `.tome/headless-replay-harness.md`.)
 - **Caveats:** `@random` is clock-seeded so randomized puzzles differ each run; the typed
   command echoes twice (Glk echo + CLI header); in-game `SAVE`/`RESTORE` are stubbed off.
 - Full design + gotchas: `.tome/headless-replay-harness.md`. Primary consumer: the

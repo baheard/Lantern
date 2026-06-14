@@ -1,0 +1,88 @@
+================================================================================
+WISHBRINGER (Infocom, 1985, Brian Moriarty) — walkthrough reference
+================================================================================
+Targets OUR build: release 69 / serial 850920 (docs/games/wishbringer.z3).
+Retrieved / assembled: 2026-06-14.
+
+Companion artifacts:
+  - wishbringer.cmds.txt  — verified replayable command list (--strict --seed 1 clean, 95/100)
+  - wishbringer.notes.md  — our puzzle-logic analysis (the WHY; build divergences; randomness)
+
+SOURCES (consult these for the full prose walkthroughs — reproduced here as command
+sequences + our corrections rather than verbatim copyrighted text):
+  - "Mr. X" walkthrough, Color Computer Archive (95/100, no-wish path):
+    https://colorcomputerarchive.com/repo/Documents/Walkthroughs/Infocom%20Adventures/Wishbringer%20Walkthrough%20(Infocom).TXT
+  - The Spoiler:        https://the-spoiler.com/ADVENTURE/Infocom/wishbringer.1.html
+  - Walkthrough King:   https://www.walkthroughking.com/text/wishbringer.aspx
+  - Official Infocom InvisiClues (hint ladder):
+    https://dfabulich.github.io/infocom-hints-html/wishbringer.html
+
+BUILD-SPECIFIC CORRECTIONS we had to make (published sources are WRONG for release 69 —
+details + reasoning in wishbringer.notes.md):
+  1. Misty Island: after getting the hat, `wait` then `blow whistle` FROM the Throne Room.
+     Published `e, blow whistle` strands you on the beach (the King's fanfare transports you).
+  2. Cottage hellhound: the dog's name "Alexis" is only revealed by RE-READING the violet note
+     AFTER Mr. Crisp opens it and flees (the note's outside only shows "Corky" = Crisp's
+     nickname). You must unchain, pick the dropped note back up, and read it to learn the
+     `alexis, heel` command. Some sources imply the name is known earlier — it isn't.
+  3. Tower exit: the drawbridge mechanism is hidden — `look behind paintings` (Round Chamber)
+     reveals a crank; `turn crank` opens it. Published `n,n,e` assumes it's already open.
+
+RANDOMIZED PER PLAY (never put in a hint as a literal value — see notes.md):
+  - The pelican's power word (lighthouse cloud word, used as `say <word>` at the Tower) is
+    @random each real playthrough. The command list hard-codes `say fratto` only because the
+    harness seeds RNG with --seed 1.
+
+================================================================================
+WALKTHROUGH (command form — the verified trunk; see wishbringer.cmds.txt for the
+exact replayable file with section markers mapped to notes.md)
+================================================================================
+
+ACT 1 — Festeron, deliver the envelope, gather items
+  s / wait / get envelope / n / w / w / yes / n / w / get umbrella / e / d / get bone / u
+  s / e / e / e / give bone to poodle / n / wait / get the note / n / get the gold coin
+  w / w / n / u / get horseshoe / d / e / n / n / e / u / w / n / u / e / s / u
+  open the magick shoppe door / enter the magick shoppe / wait / wait
+  give the envelope to the woman / open the envelope / read the letter / wait / get the can
+  wait / wait / d
+
+ACT 2 — Witchville, get the Wishbringer, summon the platypus
+  n / w / d / s / e / d / w / give the can to the troll / get the can / squeeze the can
+  drop the can / get the wishbringer / open the gate / s / s / w / s
+  open umbrella / wish for rain / drop the umbrella / dig the x with hands / get the whistle
+  blow the whistle   (-> Misty Island)
+
+ACT 3 — Misty Island (the hat) — CORRECTION #1
+  w / wait / get the hat / wait / blow the whistle   (stay in Throne Room; King transports you)
+  s / yes / e / d / n / e / move the bed / u / get the blanket / drop the blanket down the hole
+  d / get the blanket / n / e / cover the grue with the blanket / open refrigerator / get worm
+  w / w / open the stump / u / n / e / e / e / give the hat to the bird   (lighthouse word!)
+
+ACT 4 — Witchville errands (token + glasses), arcade -> Tower
+  w / w / s / s / put worm in fountain / get token / e / buy ticket / in
+  show ticket to gravedigger / n / examine floor / get glasses / out / out / yes
+  e / wait / s / put token in slot
+  push joystick west / push joystick west / push joystick south / push joystick south
+  press button / yes / yes   (-> Hilltop, at the Tower)
+
+ACT 5 — The Tower
+  say <power word>   (randomized; --seed 1 -> "fratto")
+  s / s   (Torture Chamber)
+  give violet note to mr crisp   (he reads it, flees, drops it)
+  get lab coat / look in pocket / get rusty key / unlock chain with rusty key
+  get violet note / read violet note   (CORRECTION #2: now reveals "alexis, heel")
+  pull down lever   (frees Princess Tasmania)
+  open hatch / u / u / wear glasses   (top = Laboratory; glasses gate movement)
+  push second switch   (cuts power to the library glass case)
+  d / drop glasses
+  look behind paintings / turn crank   (CORRECTION #3: opens the hidden drawbridge)
+  n / n   (-> Hilltop, out of the tower)
+
+ACT 6 — Endgame: cottage, library, recreate Chaos
+  e / alexis, heel / open cottage door / enter cottage / get steel key / exit cottage
+  n / unlock library door with steel key / enter library / wait / s
+  break case with horseshoe / get sculpture / put wishbringer in sculpture / yes / yes
+  get cat / knock on magick shoppe door   (WIN — 95/100, 0 wishes)
+
+THINGS DELIBERATELY OMITTED (per sources): the 7 Wishes (only "wish for rain" is needed; the
+broom and the Flight wish are red herrings). 95/100 is the documented max for the no-wish path.

@@ -1,0 +1,196 @@
+﻿# Wishbringer (Infocom, 1985, Brian Moriarty) -- canonical command list for headless replay
+# Build: release 69 / serial 850920 (docs/games/wishbringer.z3). Sources: see wishbringer.txt.
+# Completes the no-wish path: 95/100 points, 0 of 7 Wishes used (the documented maximum).
+#
+# RANDOM POWER WORD: the pelican's lighthouse word (used at the Tower as `say <word>`) is
+# @random per real run. Under the harness's seeded RNG (--seed 1, the default) it is
+# deterministically "fratto", so this list hard-codes `say fratto` and verifies clean. A real
+# player in the app gets a different word — HINTS MUST TEACH "say the word the lighthouse
+# showed you", never the literal value. (See wishbringer.notes.md "power word".)
+#
+# Section markers (## NN) map to wishbringer.notes.md puzzle sections for fast cross-ref.
+# Verify (full, from scratch): node tools/play.cjs wishbringer --strict --seed 1 --file docs/games/walkthroughs/wishbringer.cmds.txt
+s
+wait
+get envelope
+n
+w
+w
+yes
+n
+w
+get umbrella
+e
+d
+get bone
+u
+s
+e
+e
+e
+give bone to poodle
+n
+wait
+get the note
+n
+get the gold coin
+w
+w
+n
+u
+get horseshoe
+d
+e
+n
+n
+e
+u
+w
+n
+u
+e
+s
+u
+open the magick shoppe door
+enter the magick shoppe
+wait
+wait
+give the envelope to the woman
+open the envelope
+read the letter
+wait
+get the can
+wait
+wait
+d
+n
+w
+d
+s
+e
+d
+w
+give the can to the troll
+get the can
+squeeze the can
+drop the can
+get the wishbringer
+open the gate
+s
+s
+w
+s
+open umbrella
+wish for rain
+drop the umbrella
+dig the x with hands
+get the whistle
+blow the whistle
+w
+wait
+get the hat
+wait
+blow the whistle
+s
+yes
+e
+d
+n
+e
+move the bed
+u
+get the blanket
+drop the blanket down the hole
+d
+get the blanket
+n
+e
+cover the grue with the blanket
+open refrigerator
+get worm
+w
+w
+open the stump
+u
+n
+e
+e
+e
+give the hat to the bird
+# --- post-pelican endgame (verified end-to-end, --seed 1) ---
+## fountain-token + boot timing  (notes: "Token comes from the fountain", "Boot Patrol timing")
+w
+w
+s
+s
+put worm in fountain
+get token
+e
+buy ticket
+in
+show ticket to gravedigger
+n
+## 3D glasses under the seat  (notes: "3D glasses double-life")
+examine floor
+get glasses
+out
+out
+yes
+## video arcade joystick  (notes: "Arcade joystick - z3 parser note")
+e
+wait
+s
+put token in slot
+push joystick west
+push joystick west
+push joystick south
+push joystick south
+press button
+yes
+yes
+## enter Tower with the power word  (notes: "power word", "Tower entry")
+say fratto
+s
+s
+## Mr. Crisp + the violet note  (notes: "violet note drives Mr. Crisp off", "Corky/Alexis trap")
+give violet note to mr crisp
+get lab coat
+look in pocket
+get rusty key
+unlock chain with rusty key
+get violet note
+read violet note
+pull down lever
+## climb out, lab, switches  (notes: "Free the Princess", "Laboratory/Fuzziness", "control panel")
+open hatch
+u
+u
+wear glasses
+push second switch
+d
+drop glasses
+## hidden drawbridge crank  (notes: "Exit the tower - the drawbridge crank")
+look behind paintings
+turn crank
+n
+n
+## cottage hellhound -- name from the OPENED note  (notes: "Corky/Alexis trap")
+e
+alexis, heel
+open cottage door
+enter cottage
+get steel key
+exit cottage
+## library: break case, recreate Chaos  (notes: "Endgame (village)")
+n
+unlock library door with steel key
+enter library
+wait
+s
+break case with horseshoe
+get sculpture
+put wishbringer in sculpture
+yes
+yes
+get cat
+knock on magick shoppe door
