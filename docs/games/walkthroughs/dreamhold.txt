@@ -1,0 +1,3977 @@
+﻿The following is a transcript of a walk through the interactive fiction
+title "The Dreamhold" in standard mode.  As far as practical, it relies on
+logical actions as determined from information already revealed in the
+current session and the reasonable expectations of a player familiar with
+interactive fiction in general, but not this title in particular.  The
+final score is 7 + 7 points out of a possible 7, in 438 turns.
+
+
+ * * *
+
+
+Time shifts and flattens, days and decades folding aside like pages in a
+book. You can see--
+
+
+THE DREAMHOLD
+A tutorial adventure by Andrew Plotkin. Copyright 2003-4.
+First-time players should type "about".
+Release 5 / Serial number 041231 / Inform v6.21 Library 6/10 
+
+
+You wrench your eyes open. Rough grey stone. Grey stone ceiling. Your head
+hurts, and -- You're lying on the floor. You're staring at the ceiling, and
+it's rough and grey, and you don't recognize it.
+
+You roll slowly (smooth cold floor?) and try to sit up. It hurts. You crawl
+upright. The walls, rough stone also, scrape your aching fingers. You can't
+-- there was white agony, felt like raw light tearing you apart. You can't
+remember anything after that.
+
+You can't remember anything before that. Gone. You clutch at memory, and
+there's nothing but empty air.
+
+Cell
+This space, barely wider than outstretched arms, seems to have been chopped
+raw and square from unfinished stone. Only the floor is smooth -- a fine
+white surface beneath your feet. There is a narrow gap in the east wall.
+
+[Don't know how to get started? Type "help" and then hit enter.]
+
+>inventory
+You are carrying a quill pen.
+
+[You're carrying something unusual -- well, it's hard to say if it's
+unusual or not, just yet. Type "examine the pen" to take a close look at
+it.
+
+Or just "x pen" will work. "Examine" can be abbreviated to one letter, and
+you can always leave out nonessential words like "a", "an", and "the".]
+
+>examine pen
+You are holding a quill pen -- a sturdy black feather, its tip carefully
+cut to a nib. You have no memory of where you got it, or when, or why.
+
+>e
+You duck your head and push through the gap.
+
+Narrow Hallway
+You are standing in a short windowless hallway. To the east is the foot of
+a flight of stairs, which rises out of sight. To the west, the hallway
+narrows, ending in a small gap of a doorway.
+
+[Looks like you've taken the first step. Well done.
+
+Let me introduce myself. I am the Voice of this tutorial. Most games don't
+have me; but in this game, I will watch over your shoulder and give you
+some help. With a little practice, you'll soon be moving around the text
+adventure world in style.
+
+Back to the story. Remember what's going on? Actually, you don't. As the
+introduction said, you can't remember who you are or what you're doing
+here!
+
+Amnesia. Yes, it's a cliché, but it'll do for a tutorial.
+
+I'll let you go on exploring. The west corridor leads back to the cell
+where you started, so you'll want to try up the stairs instead. Type "up"
+or "climb stairs".]
+
+>e
+You begin climbing the stairs. They seem to go on for a long while...
+pressing between dim stone walls (where is the light coming from? You
+haven't seen a window yet)... climbing... (how far?)...
+
+Until you pass through a doorway into warm candlelight.
+
+Crowded Study
+You stand amid clutter, oddments, shelves and stacks. The chamber is
+comfortably broad, centered around a massive and well-worn wooden desk. But
+so much is jammed in, around the desk and up the panelled walls, that you
+barely find room to stand. Books; papers; dried plants; animals stuffed and
+preserved, antique instruments, candles of any hue. You don't recognize
+half of it, and you can't name half the rest.
+
+There are wide doorways on the north and east sides of the room. A door of
+heavy wood stands closed to the south, and stairs descend into dimness to
+the west.
+
+You see an immense book on the desk. Behind the desk is a tall glass-
+fronted cabinet. Beside that is a small brass trunk, which is closed.
+
+If there were a quarter as much here, and a tenth as many books, you might
+be in any scholar's study. But this knowledge must represent lifetimes of
+work -- lifetimes under a single hand. You do not know where you are, but
+you know what this place is: a dreamhold. A wizard's high house.
+
+You do not find yourself afraid. A dreamhold is more than merely dangerous.
+
+>examine desk
+The desk is heavy and plain, a massive wooden construction. Surprisingly,
+the surface is bare, except for an immense book.
+
+Something in the chaos catches your eye. It looks like a white papier-mache
+mask, lying beside the desk.
+
+>read book
+The book lies open. You frown at the fine, angular hand but discover that
+you can read it:
+
+    The Theory & UNDERSTANDING of Portalls;
+The lesser, which make a single place of many, and the Greater, which open
+from NOW into Time in Memory, or Prophecy Foretold, or even a Moment's
+Fancy;
+
+All portals are perilous. Perilous thresholds to cross, and more perilous
+to create; For there is no plying of the World, or of Time, that does not
+happen in the Mind of the learned one who conceives of the journey. Of your
+Thought is the portal built, arch and capstone. Slip but a moment of your
+attention, and the Portal will fall into ruin; All its might, and yours,
+crumbled into eggshell fragments that stray upon the Wind; ...
+
+The facing page shows an elaborate circular diagram, annotated here and
+there with tiny mathematical notes. The only comment you understand, tucked
+in a margin, says "Best to draw in a well-insulated space -- 35 Ll. of
+uncut stone? -- move house to Emmen Valley, work into mountain?"
+
+>turn page
+You turn a page of the immense book, and then another, and another. The
+handwriting is unchanged, but the languages are varied and unfamiliar. You
+find no more text that you can read; so you turn back to the diagram.
+
+>take white mask
+Taken.
+
+[Your score has gone up.
+
+Your score is displayed in the top right corner of the window. "1 of 7"
+means you've achieved one out of seven main goals. The score increased when
+you picked up the white mask; so presumably there are seven masks to find
+in the game.
+
+You can get a full account of your score by typing "score".]
+
+>examine white mask
+It looks like a paper mask, half life-size... but its curves are a
+delicately-shaded illusion. The mask is flat -- an inexplicable cutout of a
+human face.
+
+You can tell little about the person depicted. You have only an impression
+of unformed childhood.
+
+>don white mask
+The mask has no ribbons to tie -- it is not even curved to fit a human
+face. In any case, it's half life-size. It cannot be worn.
+
+Nonetheless, you try raising the mask before your eyes....
+
+...Memory stirs...
+
+A child runs through the forest. A robe, richly bright-embroidered, has
+slipped off one skinny shoulder -- a child old enough to be put in clothes,
+too young to know what it means to wear them. A silver-haired child whose
+glance darts from tree to bird, caught everywhere.
+
+A mother's voice shouting. Not patient, not yet urgent. The child attends
+this, with the same interest as bush, flower, fascinating new rustle
+underfoot...
+
+The name, again.
+
+A moist leaf, torn from a tree, clutched in a small fist. Tossed in the
+air. Blown about, blown upwards again and again, as the child dances back
+and forth, face raised, flushed, puffing madly...
+
+Mother's voice interrupting the game. The child spins once more, dashes
+back towards dinner.
+
+The leaf flutters about in the air. It circles a tree; then rises to a high
+branch, clings there. It seems to bend this way and that; then it casts
+loose, and flutters determinedly after its thoughtless maker.
+
+You yank the mask away with a shudder. What are these memories? Do they
+belong to the wizard whose house you are disturbing?
+
+>open trunk
+You hesitate a moment. Prying into a wizard's possessions? But you're
+already standing in his home; and you could as easily be damned for making
+free with his candlelight as with his trunk.
+
+You reach out, flip up the brass lid, and step back in one movement... A
+copper key glints at the very bottom of the trunk.
+
+>take copper key
+Taken.
+
+>examine books
+Books are lined up on shelves, stacked on the floor, scattered in hazard
+across everything else in the room. You glance at a few titles, gingerly
+lift a cover -- but you recognize none of the many scripts and languages
+you find.
+
+>examine door
+The door is of heavy wooden planks strapped with iron; the knob is secured
+with a thick iron lock. The door is closed.
+
+>unlock door with copper key
+The copper key is too small to fit the door's heavy lock.
+
+[The key doesn't match this door. But have you explored everywhere yet?
+There may be another door elsewhere which this key unlocks.]
+
+>n
+
+Sitting Room
+This room seems more inviting. The walls are painted with delicate patterns
+of flowers, which merge into a soft-hued carpet beneath your feet. Two
+chairs and a cushioned settee face a bright-flickering fireplace on the far
+wall.
+
+A desert landscape painting hangs above the fireplace.
+
+You see doorways to the south and in the southeast corner of the room. A
+white-painted door to the east is closed.
+
+>examine painting
+The painting shows a stark, rocky desert at dawn. The sunlight stains the
+dusty stones to harsh scarlets and rust; but the land seems serene for all
+that, unthreatened.
+
+>take painting
+You lift the desert landscape painting down from its hook.
+
+>examine door
+The door is neatly carpentered in panels, and painted white. It has an
+ornate copper doorknob and a tiny keyhole. The door is closed.
+
+>unlock door with copper key
+The copper key unlocks the door. You turn the knob and swing it open.
+
+>e
+
+Curving Hall
+You are in a high, dim corridor, walled in cracked and moldering plaster.
+The only light comes from tiny flickering candles above. The hall curves
+gently around from the south to the northwest. You see an open door to the
+west; archways open to the northeast and east.
+
+>s
+
+Curving Hall, South End
+The curving corridor ends here. The blank plaster wall to the south
+features a large window; sunlight pours in, brightening this end of the
+hall. You can go through the archway to the east, take the closed door to
+the west, or return north along the corridor.
+
+>examine window
+A broad glass pane -- inhumanly smooth and flawless -- looks out over a
+sunlit, mountainous world.
+
+You must be looking out of a sheer cliff, for you can see no ground below
+the windowsill. Far below, stone slopes break and crumble into a verdant
+valley. Sunlight glints off water -- threads of stream amid the greenery.
+Beyond the valley, the mountains rise again, and mountains beyond that.
+
+You stand for a moment, wondering at the view. "If I were a wizard," you
+think, "I would build a house overlooking..." But the thought frays,
+wanders, and is lost.
+
+>e
+
+Dim Shed
+This room looks like nothing so much as a small, windowless garden shed.
+The floor is bare dirt; the walls are unfinished planks. The only light
+falls in through the archway to the west. A narrow opening to the north
+leads to a steep stairway, which climbs away into darkness.
+
+A single glove is lying in the corner, lost and alone.
+
+>take glove
+Taken.
+
+[To wear an item of clothing, such as this glove, use the "wear thing" or
+"put on thing" command. To take it off again, try "remove thing" or "take
+off thing".]
+
+>examine glove
+It's a single glove -- the right. From the heavy palm padding and the
+ground-in dirt, you guess it's a gardening glove.
+
+>u
+You set foot on the narrow stairway.
+
+Landing
+The cramped stair reaches a landing here; it reverses and continues upward
+to the south. The walls are close and dark.
+
+>u
+You continue climbing.
+
+Landing
+The cramped stair reaches a landing here; it reverses and continues upward
+to the north. The walls are close and dark.
+
+>u
+You continue climbing.
+
+Landing
+The cramped stair reaches a landing here; it reverses and continues upward
+to the south. The walls are close and dark.
+
+>u
+You emerge into open air -- chill and fair-scented.
+
+Mountain Path
+You stand at the foot of a low rocky cliff. It squats above you, but it
+obscures little of the vast blue sky that stretches all around. Mossy
+boulders hem you in on either side; a tidy path winds to the south between
+them. To the north the path enters a crack in the cliff, meeting stairs
+which vanish down into enclosed darkness.
+
+>s
+The boulders open out as you follow the path.
+
+Mountain Garden
+A tiny pleasance-garden is nestled here, high on a mountainside. Odd bits
+of statuary stand among the sculpted slopes and hillocks; small marble
+pillars mark the borders of the knotted paths. The lawn is perfectly
+trimmed. The mountain towers above you to the north; high on its face you
+see a featureless white dome. Above that, the sun shines in a wide blue
+mountain's sky.
+
+A tidy path runs north between mossy boulders. A wider path curves west,
+down a grassy slope, and up to the east. To the south, a few marble steps
+lead to a balcony, which looks out over a verdant valley. You can see a
+particularly tall statue on the balcony.
+
+>e
+You climb the path, fog trailing around your feet.
+
+Cool Bower
+You stand on a small promontory which juts out of the face of the mountain.
+Shrubs and raised flowerbeds lie around you, except for the path which
+slopes down to the west. To the south and east, a sharp dropoff looks out
+over a lush green valley.
+
+In the center of the bower, a single dense bush squats, sullen and dark.
+Its branches knot heavily around each other, then spread into sprays of
+delicate, blue-green needles. Strangely, a chill fog seems to spread out
+from under the bush; it rolls across the ground and spills from the edges
+of the promontory.
+
+>examine bush
+The bush is broad and squat. Its blue-tinged needle-like leaves grow
+profusely, hiding heavy branches and small clusters of translucent white
+berries.
+
+>take white berries
+You reach for a berry... ow!
+
+You snatch back your hand, rubbing frost from your finger. The cold was
+intense enough to blanch your skin.
+
+The fog ripples gently on the ground, caught by a breath of breeze.
+
+>don glove
+You put on the glove.
+
+>take white berries
+You reach into the bush, and -- with your gloved hand -- carefully strip a
+handful of berries from a branch.
+
+After a few moments, their translucency dulls to a cloudy white, and the
+chill you feel through the glove diminishes. Gingerly you prod a berry with
+your bare finger. It's cool, but no longer burning-cold.
+
+>w
+
+Mountain Garden
+
+>w
+As you descend the path, you see a thread of smoke rising ahead.
+
+Warm Bower
+This corner of the garden is cozily tucked into a natural alcove,
+surrounded by stone bluffs on three sides. The sun is hot on your face. To
+the south, the ground drops away, revealing a lush valley far below. The
+path back to the garden curves up around an outcropping to the east.
+
+Small shrubs dot this garden bower, but a single tall and wild bush
+dominates the space. Its branches twist in intricate profusion, then leap
+chaotically upward, spraying gold-veined leaves through the air.
+
+>examine bush
+The wild bush is not broad, but it is taller than you. Its leaves are
+narrow, glossy, many-pointed, and veined with gold amid a yellow blush.
+Clusters of brilliant orange berries hang half-concealed amid the tangled
+black branches.
+
+You catch a whiff of woodsmoke -- the same smoke you saw while descending
+the path. You glance around for the fire...
+
+...And realize that the smoke is drifting from the bush. You see no flames,
+nor even ember-glow; but grey wisps curl from the coal-black stems and
+branches. The smoke trails up from the bush, buoyed on its own heat, and
+vanishes upward in a wind-tossed ribbon.
+
+>take orange berries
+You reach into the bush, and -- with your gloved hand -- carefully strip a
+handful of berries from a branch.
+
+After a few moments, their orange color dulls slightly, and the heat you
+feel through the glove diminishes. Gingerly you prod a berry with your bare
+finger. It's warm, but no longer scalding.
+
+>e
+
+Mountain Garden
+
+>s
+You step up to the balustrade and look out, to the south...
+
+Marble Balcony
+Below this gently curved balcony, the world drops away into a green vista.
+The stony slopes of the mountainside beneath you crumble, invaded by
+bracken and tree, until the mountain pines merge into verdant forest and a
+lush valley floor. A bright thread marks a stream; a distant valley lake is
+a silver arc. Beyond the valley, and around it, taller mountains stand like
+patient shadows in the blue air.
+
+In the center of the balcony, looking out -- as you are -- over the valley,
+a white marble statue towers over you. Incongruously, you can see a small
+gold mask balanced on the statue's face.
+
+>examine statue
+The statue is twice life size; it dwarfs you. Its form is curiously
+abstract. You can make out no gender, no personality in the marble curves.
+But... the statue gazes out from the balcony. Its weight is forward, its
+head turned, as if something in the distant valley had just caught its
+attention. Or... something rising from the valley, perhaps. For the chin is
+raised; the eyes, if you could see them, would be level.
+
+Those eyes are hidden by an absurdly small gold mask. The mask would not
+fit a child, and is unusually flat besides. It's not so much worn as
+balanced on the statue's brow.
+
+>climb statue
+You try to swing yourself up on the marble knee, but the statue shifts
+unsteadily beneath your weight. You'd best not.
+
+>push statue
+You brace yourself against the statue and heave. It's heavy... but it tips,
+slowly... and then bang it smacks down on the tiles. The gold mask flutters
+gently down beside it.
+
+>take gold mask
+Taken.
+
+[Your score has gone up.]
+
+>examine gold mask
+It looks like a gold paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a gold cutout of a face.
+
+The face depicted is young, with an impression of strength overlaid by
+exhaustion.
+
+>don gold mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+A man and a woman; they lean on each other, a dim and distant exhaustion.
+Between them, they cradle a dark-haired infant. It is the only thing in the
+world, as they always are.
+
+A silver head shakes; a hand draws back the blanket. The infant has a
+clubbed foot -- twisted and drawn in.
+
+The couple put out their hands, once again. Light curls out of the air.
+Blue and green, violet and no color at all, luminous currents slide down
+the infant's limbs. It twists and whines, fretting, but the child is
+exhausted as well.
+
+Then the light splinters and is gone. The foot is unchanged. The infant
+gathers itself for another howl. Its parents rock it absently, but they are
+looking at each other. The silver-haired one snaps a word -- both know the
+anger is self-directed, and is despair.
+
+>n
+
+Mountain Garden
+
+"Nothing delights a wizard's mind so much as a formal garden."
+
+"As a focus of power?" --Eagerly.
+
+The reply is a laugh. "Why spoil it?" And then soberly. "But as you carry
+yourself through years and ages, do not hold such a garden -- even a living
+one -- unchanged. Such an artful place is smaller than your mind; you
+cannot inhabit it without growing small and comfortable within it. Build it
+-- destroy it -- rewrite it from lifetime to lifetime. Some masters of
+magic," the voice adds in afterthought, "come to prefer the gardening."
+
+>n
+
+Mountain Path
+
+>n
+You enter the narrow stairway and begin to descend. After only a few steps,
+you find yourself at the bottom. Odd....
+
+Dim Shed
+
+"To stand in a dreamhold is to be no more than a thought in a wizard's
+dream." Or so it is said... somewhere. Certainly this stairway is
+changeable as a dream.
+
+[The first time you enter a room, you'll see a detailed description. But if
+you return to a room, you see just the room name, followed by a list of the
+more portable objects lying around.
+
+You can type "look" or "l" at any time to see the full description. But if
+you get tired of that, try the "verbose" command. In "verbose" mode, the
+game will give a detailed description of each room as you enter it -- every
+time you move.]
+
+>w
+
+Curving Hall, South End
+
+>n
+
+Curving Hall
+
+>e
+
+Mosaic Room
+The walls and ceiling of this room are entirely covered with tiny blue
+tiles. On the east wall, a few black and grey tiles seem to depict birds on
+the horizon of a mosaic sky. The only exit is an archway to the west.
+
+A delicate cage of brass wire hangs from a curved stand in the center of
+the room. Within the cage is a single ripe apple.
+
+>examine cage
+You've seen -- you might have seen -- such cages in the market, holding
+songbirds in their shining wire embrace. This one, however, contains a ripe
+and perfect apple. You cannot imagine why. The cage door is closed.
+
+>examine apple
+The apple looks ripe and fresh; it might have been plucked moments before
+you entered the room.
+
+>open cage
+You pull open the wire door. Then you jerk back; something invisible seems
+to burst from the cage. It rolls across the room like lightning or
+dessicated time. It echoes.
+
+The apple spots, rots, and sinks into itself in a single instant. Within a
+heartbeat, the fruit is a withered husk -- as if it had sat in that cage
+for decades.
+
+[You may have made a mistake. You're not likely to get that apple back.
+(One never knows, of course, but that decay looked very final.) What can
+you do about it?
+
+One option is to type "undo". This will let you "back up" one move -- back
+to just before you opened the cage. Everything will be the same, except
+that the cage will still be closed and the apple will still be fresh.
+
+In this game, you can only "undo" one move in a row. So if you do something
+else now (even "look" or "examine apple"), you won't be able to jump back
+to before the cage opened. The "undo" command is intended only to fix
+immediate mistakes.
+
+If you want to go back more than one turn, you'll have to use the "restart"
+or "restore" commands. Type "help saving" for more information.
+
+(Actually, many games protect you from severe mistakes. Since this is an
+introductory game, you don't really have to worry about accidentally
+running into a dead end. If you truly need a fresh apple, you'll probably
+find another way to get one.)]
+
+>w
+
+Curving Hall
+
+>ne
+
+Atelier
+This cramped, boxy room appears to have been an artist's studio. The walls
+and floor are splattered with paints of many colors. Strangely, the room is
+nearly empty; you see no stacks of canvas or bottles of pigment. The exit
+is southwest.
+
+A rough wooden easel is set up at one end of the room. Displayed upon it is
+a painting -- a bright mountain landscape.
+
+At the other end of the room, a tripod props up what looks like a small
+telescope.
+
+A pigment-daubed board, no doubt the artist's palette, is sitting in a
+corner.
+
+>look in telescope
+You bend and peer into the telescope's lens. You see a tiny dot of light in
+the distance... and then the... world turns... sideways....
+
+
+
+
+Metal Culvert
+You find yourself standing in a dark culvert of some kind. The curving
+walls are polished metal, antique with tarnish. To the south, the channel
+ends in a circular glass barrier; to the north, it opens out into light.
+
+>n
+The light grows brighter as you walk up the culvert....
+
+Mountain Pool
+Jagged mountains tear the skies in every direction. They are unreal,
+impossible peaks -- knife-like spires of rock. But in this sheltered nook,
+life flourishes. A small mossy pool, cool and shadowed with tiny fish, has
+gathered below a rock-spring.
+
+On the shore of the pool is a brown paper mask.
+
+>take brown mask
+Taken.
+
+[Your score has gone up.]
+
+>examine brown mask
+It looks like a brown paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a brown cutout of a face.
+
+The face shows steely regret.
+
+>don brown mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+In a darkened library, someone works alone. The tall shelves are crowded,
+but the rows of titles fade into shadows; only the desk is illuminated. A
+map is spread upon it. The pen, moving across its face, annotates and
+speculates.
+
+Nearly half the map is tinted red. Along the border, marks and notations
+cluster like wasps.
+
+The silver head snaps up, as an officer enters. He holds a pale cylinder,
+the length of a tall man's finger. He places it on the desk; he bows; he
+turns and leaves. At no point do his eyes rise from the floor.
+
+The cylinder, unrolled, proves to be a length of parchment: filthy, closely
+lettered. The tall figure reads it, once. Then the pen, taken up once
+again.
+
+In the blank heart of the red-tinted region, quick strokes now emblazon the
+shape of a crutch.
+
+>s
+The world seems to smear out of shape as you move. After a few steps, you
+see nothing but running colors....
+
+
+
+
+Atelier
+This cramped, boxy room appears to have been an artist's studio. The walls
+and floor are splattered with paints of many colors. Strangely, the room is
+nearly empty; you see no stacks of canvas or bottles of pigment. The exit
+is southwest.
+
+A rough wooden easel is set up at one end of the room. Displayed upon it is
+a painting -- a bright mountain landscape.
+
+At the other end of the room, a tripod props up what looks like a small
+telescope.
+
+A pigment-daubed board, no doubt the artist's palette, is sitting in a
+corner.
+
+>take mountain painting
+Taken.
+
+>look in telescope
+You bend and peer into the telescope's lens. You see a tiny dot of light in
+the distance... and then the... world turns... sideways....
+
+
+
+
+Metal Culvert
+You find yourself standing in a dark culvert of some kind. The curving
+walls are polished metal, antique with tarnish. To the south, the channel
+ends in a circular glass barrier; to the north, it opens out into light.
+
+>n
+The light grows brighter as you walk up the culvert....
+
+Platform in the Void
+You stand on a narrow wooden platform, which is suspended somehow in a
+vast, incomprehensible space. The platform stretches to the east and west.
+The space beyond is not dark, nor is it light... you are unable to focus
+upon it.
+
+>s
+The world seems to smear out of shape as you move. After a few steps, you
+see nothing but running colors....
+
+
+
+
+Atelier
+This cramped, boxy room appears to have been an artist's studio. The walls
+and floor are splattered with paints of many colors. Strangely, the room is
+nearly empty; you see no stacks of canvas or bottles of pigment. The exit
+is southwest.
+
+A rough wooden easel is set up at one end of the room.
+
+At the other end of the room, a tripod props up what looks like a small
+telescope.
+
+A pigment-daubed board, no doubt the artist's palette, is sitting in a
+corner.
+
+>put desert painting on easel
+You put the desert landscape painting on the easel.
+
+>look in telescope
+You bend and peer into the telescope's lens. You see a tiny dot of light in
+the distance... and then the... world turns... sideways....
+
+
+
+
+Metal Culvert
+You find yourself standing in a dark culvert of some kind. The curving
+walls are polished metal, antique with tarnish. To the south, the channel
+ends in a circular glass barrier; to the north, it opens out into light.
+
+>n
+The light grows brighter as you walk up the culvert....
+
+Red Desert
+A stark desert is spread in every direction. The harsh grit beneath your
+feet is littered with dusty stones, small and large. The sun is a red glare
+on the horizon, turning the world to strokes of scarlet, rust, and shadow.
+
+A crumpled white wad is lying here, half-buried in the sand.
+
+>take wad
+You scoop up the crumpled wad, and try to smooth it out. It proves to be a
+letter of credit, or something similar.
+
+>examine letter
+"Letter in hand... sum of 5000... in reparation, military action of the
+month of... fields, property, six barrels of wine, one cow..."
+
+>s
+The world seems to smear out of shape as you move. After a few steps, you
+see nothing but running colors....
+
+
+
+
+Atelier
+This cramped, boxy room appears to have been an artist's studio. The walls
+and floor are splattered with paints of many colors. Strangely, the room is
+nearly empty; you see no stacks of canvas or bottles of pigment. The exit
+is southwest.
+
+A rough wooden easel is set up at one end of the room. Displayed upon it is
+a painting -- a stark desert landscape.
+
+At the other end of the room, a tripod props up what looks like a small
+telescope.
+
+A pigment-daubed board, no doubt the artist's palette, is sitting in a
+corner.
+
+>take desert painting
+Taken.
+
+>take palette
+Taken.
+
+>put palette on easel
+You put the palette on the easel.
+
+>look in telescope
+You bend and peer into the telescope's lens. You see a tiny dot of light in
+the distance... and then the... world turns... sideways....
+
+
+
+
+Metal Culvert
+You find yourself standing in a dark culvert of some kind. The curving
+walls are polished metal, antique with tarnish. To the south, the channel
+ends in a circular glass barrier; to the north, it opens out into light.
+
+>n
+The light grows brighter as you walk up the culvert....
+
+Sea of White
+You are in the midst of a choppy, heaving sea. Impossibly, you stand
+balanced upon the milk-white waves. You can see no land in any direction.
+
+A small tangle of string floats on the surface nearby.
+
+>take string
+Taken.
+
+[Your score has gone up.
+
+Note that your score (in the top right corner) is now "3 of 7, +1". The
+"+1" indicates one optional goal achieved. THE DREAMHOLD has various "side
+quests" -- extra discoveries you can make. You don't need to find these to
+win the game. They're there for extra fun, and to add to the texture of the
+game world. (How many optional discoveries are there? Explore and find
+out!)
+
+You can get a full account of your score by typing "score".]
+
+>examine string
+You draw the string out in your hands. It's less than a foot of crude,
+hairy twine, and it's wracked with knots.
+
+But strange -- each knot seems to have a different shape. If they are
+letters, as they might be... you laboriously spell out the word PORTRAIT,
+knotted over and over down the string.
+
+>s
+The world seems to smear out of shape as you move. After a few steps, you
+see nothing but running colors....
+
+
+
+
+Atelier
+This cramped, boxy room appears to have been an artist's studio. The walls
+and floor are splattered with paints of many colors. Strangely, the room is
+nearly empty; you see no stacks of canvas or bottles of pigment. The exit
+is southwest.
+
+A rough wooden easel is set up at one end of the room. Lying on the easel
+is a palette.
+
+At the other end of the room, a tripod props up what looks like a small
+telescope.
+
+>sw
+
+Curving Hall
+
+>nw
+
+Curving Hall at Pedestal
+The dingy plaster walls of this corridor curve out of sight to the west and
+southeast. Tiny candles provide the only illumination. Archways lead north
+and northeast.
+
+A short pedestal of black marble stands by the inner wall.
+
+>n
+You blink into the dimming light as you step through the arch.
+
+Natural Passage
+This is a narrow passageway, which winds between irregular stone walls into
+the world's underdarkness. The passage was clearly not carved by human
+hands. Creamy limestone laps and drips in ancient, water-worn folds. For
+the first time, you have the sense of being far, far underground. The
+archway to the south is the only source of light; the passage vanishes into
+cave-blackness, somewhere to the north.
+
+>n
+You venture into the lightless passage...
+
+Darkness
+You are somewhere within utter darkness, somewhere within the earth.
+
+[Oh, dear. You've walked into a very dark place.
+
+Going "south" probably won't get you back; you can't tell directions in the
+dark. So what now? One option is to type "undo". This will let you "back
+up" one move -- back to just before you walked in here. Everything will be
+the same, except that you'll be in the Natural Passage, and you'll be able
+to see.
+
+In this game, you can only "undo" one move in a row. So if you do something
+else now (even "look" or "south"), you won't be able to jump back to the
+lit Passage. The "undo" command is intended only to fix immediate mistakes.
+
+If you want to go back more than one turn, you'll have to use the "restart"
+or "restore" commands. Type "help saving" for more information.
+
+Or you could stumble around in the dark, and try to find your way out.
+Since this is an introductory game, there is a way out. And maybe more to
+discover, as well.]
+
+>s
+You have no sense of direction in the dark.
+
+You strain, hopelessly, to see anything. But perhaps your eyes are
+adjusting somewhat... there is a dim glimmer of light in the distance.
+
+>go toward light
+You stumble slowly ahead, feeling blindly for a wall... and then you can
+see the outline of your hand against the light.
+
+Natural Passage
+This is a narrow passageway, which winds between irregular stone walls into
+the world's underdarkness. The passage was clearly not carved by human
+hands. Creamy limestone laps and drips in ancient, water-worn folds. The
+archway to the south is the only source of light; the passage vanishes into
+cave-blackness, somewhere to the north.
+
+>n
+You venture into the lightless passage...
+
+Darkness
+Darkness is all around you... infinitely far away, and an inch from your
+groping hands.
+
+>go away from light
+You set your back to the light, as best you can. And you move, slowly --
+reaching ahead with every step -- into the empty and utter dark.
+
+The trace of light dims behind you.
+
+Darkness
+Darkness is all around you... infinitely far away, and an inch from your
+groping hands.
+
+But you can make out the faintest glimmer of light, somewhere.
+
+>go away from light
+A faint drip of water echoes in the black. Perhaps you move along the verge
+of a river.
+
+The trace of light dims behind you.
+
+Darkness
+You are somewhere within utter darkness, somewhere within the earth.
+
+But you can make out the faintest glimmer of light, somewhere.
+
+>go away from light
+Every step you take is invisibly, indistinguishably identical to the last.
+
+The trace of light dims behind you.
+
+Darkness
+You are in the unchanging, unleavened darkness of the world below ground.
+
+But you can make out the faintest glimmer of light, somewhere.
+
+>go away from light
+The black world moves invisibly past, as you advance into nowhere.
+
+The trace of light dims behind you.
+
+Darkness
+You are in the unchanging, unleavened darkness of the world below ground.
+
+But you can make out the faintest glimmer of light, somewhere.
+
+>go away from light
+Something moves against the face of the darkness.
+
+But it is not light.
+
+
+
+
+Subterrane World
+The world is picked out, not in shades or tints or degrees of black; but in
+qualities of darkness. Each has a name; each whispers to you. 
+
+In utter night, you sense the cavernous space around you -- vaulted roof as
+clear in the darkness as the rough-hewn floor. Without sight, you perceive
+behemoth columns of stone, shaped to perfect smoothness and standing in
+perfect circular array. Eyeless, you are aware of the vast carved form high
+above.
+
+In the center of the stone circle is an acute angle of darkness: a dagger,
+balanced on its point.
+
+>take dagger
+You reach out (your hand, you suddenly notice, is the only indistinct form
+in this sightlessness) and seize the dagger's hilt.
+
+It is surprisingly heavy; and the hilt is obsidian, glassy-smooth against
+your fingers. But your attention is gripped by the rent which the blade
+leaves behind -- a narrow crack of emptiness against darkness.
+
+[An extra discovery has been added to your score.]
+
+>examine dagger
+The dagger is of simple, unbeautiful angles -- broad triangular blade,
+squared hilt, no guard or pommel. Its surface is an aching reflection of
+the blackness around you. But the edge is oblique, the point blunt. This
+blade could never have been used for mundane cleaving.
+
+>enter rent
+You move towards the rent.
+
+The darkness parts around you. What remains is not light; but a flickering
+motion, and a sound as of the voice of fluting wind...
+
+
+
+...and then the flickering is light; ordinary, flickering flames, which
+illuminate a comfortably familiar room.
+
+Sitting Room (on the settee)
+This room seems more inviting. The walls are painted with delicate patterns
+of flowers, which merge into a soft-hued carpet beneath your feet. Two
+chairs and a cushioned settee face a bright-flickering fireplace on the far
+wall.
+
+You see an empty hook above the fireplace.
+
+You see doorways to the south and in the southeast corner of the room. A
+white-painted door to the east is open.
+
+>stand
+You stand up.
+
+>examine fire
+If you doubted this was a dreamhold, you're certain now... the fireplace
+holds no wood, no ash. An odd basket of coiled silver wire holds a heap of
+glassy, glowing, cherry-red spheres. Insubstantial flames flicker above the
+spheres, and a mild warmth touches your face and body. But the spheres do
+not truly burn; they are not consumed.
+
+>take sphere
+With your gloved hand, you pluck one sphere from the glowing heap. Almost
+immediately, its red light fades, leaving a dim grey glassiness.
+
+Hmm. You cautiously hold your other hand above the grey sphere, then touch
+it. You feel only cool glass.
+
+>e
+
+Curving Hall
+
+>s
+
+Curving Hall, South End
+
+>w
+You pull the door open, revealing a narrow flight of stairs ascending out
+of sight. You follow them up.
+
+Dark Dome, East
+You stand at the east edge of a vast round space. It stretches out to the
+west, arching into an immense dome. A diffuse illumination spreads across
+the lower reaches, barely bright enough to see by.
+
+There is an open archway to the east; beyond it, stairs descend. You can
+also see a ladder in the distance, at the north edge of the dome.
+
+>n
+
+Dark Dome, North
+You stand at the north edge of a vast round space. It stretches out to the
+south, arching into an immense dome. A diffuse illumination spreads across
+the lower reaches, barely bright enough to see by.
+
+A ladder reaches both upwards and downwards from here, passing through
+openings in the floor and in the dome's skirt. You can also see a doorway
+off in the distance, at the far east edge of the dome.
+
+>w
+
+Dark Dome, West
+You stand at the west edge of a vast round space. It stretches out to the
+east, arching into an immense dome. A diffuse illumination spreads across
+the lower reaches, barely bright enough to see by.
+
+At the north edge of the dome, off in the distance, you can see a ladder.
+All the way across the dome to the east, a doorway is barely visible.
+
+>s
+
+Dark Dome, South
+You stand at the south edge of a vast round space. It stretches out to the
+north, arching into an immense dome. A diffuse illumination spreads across
+the lower reaches, barely bright enough to see by.
+
+At the east edge of the dome, off in the distance, you can see a doorway.
+All the way across the dome to the north, a ladder is barely visible.
+
+>n
+
+Dark Dome, Center
+You stand at the center of a vast round space. An immense dome arches above
+you. A diffuse illumination spreads across the lower reaches, barely bright
+enough to see by.
+
+In the distance to the east, you can see a doorway; a ladder is visible far
+to the north.
+
+A low metal pyramid stands in the center of the floor. Its surface shines
+with a dim, oddly shifting gleam. Its base has hinges along one edge, and a
+handle opposite.
+
+>examine pyramid
+It's a six-sided pyramid, perhaps a yard across and standing higher than
+your knee. It seems to be made of metal, but it has a strange sheen -- as
+if the surface were engraved with countless parallel lines. Hinges at the
+base of one edge, and a handle, imply that the pyramid could be pulled
+open.
+
+>open pyramid
+You crouch, seize the handle, and pull. The pyramid swings smoothly to the
+side, and falls open. It seems to be hollow... strange, then, how heavy it
+felt.
+
+Revealed within is a conical basket of coiled wire.
+
+>examine wire
+It's a small construction of silver wire -- a spiralled cone, mouth-up. The
+basket is empty.
+
+>put sphere in wire
+As you drop the grey sphere into the basket, its glassy surface flares with
+a brilliant white light.
+
+You shield your eyes as the dome is flooded with light.
+
+>close pyramid
+You heave the pyramid back upright, covering the basket. The white light
+from the sphere is cut off; but gradually you see patterns in the darkness
+above you. The dome is filled with flickering, jittering sparks of
+patternless white light.
+
+The images above you slowly change. The dome now contains tumbling bubbles,
+each surrounded by a whirling cloud of gold light.
+
+>wait
+Time passes.
+
+The images above you slowly change. The dome now contains shapeless blobs
+of red light -- each filled with smaller speckles and spots. The blobs flow
+slowly across the dome, like droplets of red wax in a hot sea.
+
+>wait
+Time passes.
+
+The images above you slowly change. The dome now contains spiralled nets of
+light, hung with beads in every shade of brown, ochre, and tan. The beads
+spark and flash, flinging light at each other. The flashing patterns form
+slow waves that surge and crest across the dome.
+
+>wait
+Time passes.
+
+The images above you slowly change. The dome now contains overlapping disks
+and lines of green light. They are in constant motion, growing, shrinking,
+moving apart, collapsing together. Sometimes several link rigidly together,
+move as one; and then drift apart. Occasionally a disk flares up, or
+vanishes entirely.
+
+>wait
+Time passes.
+
+The images above you slowly change. The dome now contains blue spheres of
+light, whirling in the darkness. Each sphere is marked with brown and grey
+patterns, like maps of an island archipelago.
+
+>wait
+Time passes.
+
+The images above you slowly change. The dome now contains familiar stars.
+Among the constellations, you can see the Iron Moth to the north; Parhu's
+Galley and Juinua's Wall to the east; the Cloak of Night and the Southern
+Axe to the south; the Doorstep of Heaven to the west; and the Crutch and
+the Bull-and-Cow directly above you.
+
+>examine bull
+The Bull and Cow are small star-groups near the zenith. Jernos desired
+Seroa, the wife of the Southern king. She turned herself into a sparrow and
+fled; he turned himself into a horhawk and followed her. Seroa hid herself
+in many other shapes, but each time Jernos changed into something that
+could find her. Finally she turned herself into a bull. Jernos turned into
+a cow, but a cow was too stupid to chase Seroa further. Seroa-the-bull
+mounted the Jernos-the-cow and sired eight brass calves.
+
+You've never been quite sure what the moral of that story was supposed to
+be.
+
+>examine crutch
+The Crutch is a bright zig-zag of stars high overhead. King Maijnir the
+Farsighted quarrelled with his son Walking Boy. He wounded Walking Boy's
+foot, and then exiled him to walk the boundaries of his kingdom, bearing
+only rags, tatters, and a crutch of gold.
+
+>e
+
+Starry Dome, East
+
+>examine galley
+Parhu's Galley is visible to the east. A row of dim stars mark the oars of
+the galley slaves. Parhu flung himself into the sea and drowned, but he did
+not rescind his oath, and so his slaves are bound to row forever after
+Parhu's Ruby, the red star beyond the Galley's prow.
+
+>examine wall
+The stars of Juinua's Wall run high above the eastern horizon. Juinua of
+Junorr was given a prophecy, that her blood would stain the walls of Junorr
+before her thirtieth year. Instead of tearing down the city wall, she
+ordered it built higher -- a new course of great stones every year. In her
+twenty-ninth year, she was crushed by a stone as she supervised the work on
+the wall. Or, depending who tells the tale, she died giving birth to a
+stone; or she was murdered by the master builder; or she died of the flux
+in an overcrowded city street.
+
+>s
+
+Starry Dome, South
+
+>examine cloak
+The Cloak of Night is a ragged patch of starless dark, low in the south,
+just above the horizon. The Lady of Summer leaves it lying there half the
+year, while she dances. In winter she takes up her cloak to wrap herself,
+as she sits by the fire to tell stories.
+
+The Cloak is low on the dome, just above your head. It seems low enough to
+touch.
+
+>take cloak
+You reach up and pull. Heavy, black cloth flows silently down into your
+arms.
+
+[An extra discovery has been added to your score.]
+
+>examine cloak
+It's a heavy armful of black cloth. Black, blacker -- blacker than that.
+But light, like twinkling dust, drifts in the deepest folds.
+
+>don cloak
+You swing the cloak around yourself. It is not so heavy on your shoulders;
+but warm, very warm.
+
+>examine axe
+An irregular double-curve of stars, high in the south, the Axe takes the
+form of the traditional southern weapon. The Hero of Torcova lived so close
+to his axe that the storymongers called it his wife. (Fortunately for them,
+he was a hero.) When he was mortally wounded at Deven, the axe agreed to
+die in his place. The Hero remained nameless in Torcova, awaiting the
+greatest battle to come, and the axe moved towards Heaven.
+
+>w
+
+Starry Dome, West
+
+>examine doorstep
+The Doorstep of Heaven is a near-perfect circle of stars in the western
+sky. It marks the gate, or guards the gate, through which the dead travel
+to the All-Place. Funereal ceremonies always begin when the Doorstep rises,
+day or night.
+
+>n
+
+Starry Dome, North
+
+>examine moth
+The stars of the Iron Moth hang high in the northern sky. The Moth never
+sets; it flutters constantly around and around the Utter North, which is
+always near its bright left antenna. Lodestones are dust from the Moth's
+wing.
+
+>u
+You climb up, through the dome, and a long way farther...
+
+Translucent Dome
+You are in a small round dome, much smaller than the vast dark space below.
+The curving surface is translucent, bright with the daylight filtering in
+from outside. The floor beneath your feet is a harsh metal grating. The
+ladder runs from a hole in the grating, near the south side, up to a
+matching opening in the dome above.
+
+A low platform fills the center of the floor. The platform is piled high
+with split lengths of wood.
+
+A tall triangle of beaten copper rises along the north side of the dome.
+
+>u
+You climb up and out.
+
+Catwalk, South
+This railless catwalk circles the outer edge of a pale dome. You stand at
+the southern edge of the circle; the catwalk disappears around the dome to
+the east and west. A few iron steps lead up to an opening in the dome, from
+which a ladder descends inside.
+
+The dome is nestled high on the shoulder of a sunlit mountain peak. Below
+you, a small terrace is filled with knotted and spiralled garden paths. And
+far below that, green and bright, a lush valley spreads out into the
+distance.
+
+>w
+You edge along the precarious catwalk, moving west around the dome.
+
+Catwalk, West
+You are at the western edge of a catwalk which circles a pale dome. The
+dome rises from the face of a sunlit mountain peak, which towers to the
+north. To the south, the stone slopes descend to a wide valley, shining
+green in the afternoon light.
+
+>n
+You edge along the precarious catwalk, moving north around the dome.
+
+Catwalk, North
+You stand on a narrow, railless catwalk, which girdles the translucent dome
+to the south. To the north, the mountain rises massively above you. But the
+dome stands on its own promontory; the mountain face is several yards away.
+The ravine between dome and mountain is deep and jagged.
+
+There is a tiny ledge on the face of the mountain. You can just make out a
+black mask balanced on the ledge.
+
+>e
+You edge along the precarious catwalk, moving east around the dome.
+
+Catwalk, East
+You are at the eastern edge of a catwalk which circles a pale dome. The
+dome rises from the face of a sunlit mountain peak, which towers to the
+north. To the south, the stone slopes fall to a verdant valley.
+
+>s
+You edge along the precarious catwalk, moving south around the dome.
+
+Catwalk, South
+
+>d
+You step up to the opening and climb down into the dome.
+
+Translucent Dome
+
+A low platform fills the center of the floor. The platform is piled high
+with split lengths of wood.
+
+A tall triangle of beaten copper rises along the north side of the dome.
+
+>examine copper triangle
+It is a thin sheet of hammered copper, as wide at the base as your
+outstretched arms. The sheet tapers as it rises, curving inward as it hugs
+the dome's inner surface. Its peak is halfway up the dome. The shape
+reminds you of a billowing sail.
+
+The copper triangle stands to the north, but its base rests in a narrow
+track that runs all the way around the dome.
+
+>examine track
+A narrow circular track runs around the room, a bare finger's width from
+the dome's lower edge. The copper sail rests in this track on the north
+side of the dome.
+
+>examine wood
+The wood is laid out in an immense, semicircular heap. It looks like
+nothing so much as a bonfire, ready for the spark.
+
+>put orange berry in wood
+You toss the orange berry into the heaped wood. It bursts and flares,
+spattering sparks of fiery juice. The wood crackles, slow to catch... but,
+after a few moments, a tongue of flame is licking up through the pile.
+
+A few moments more, and the heap is a roaring bonfire. You blink, turning
+from the intense heat.
+
+>u
+The sky fades to night as you climb.
+
+Catwalk, South; Night
+
+>w
+You edge along the precarious catwalk, moving west around the dome.
+
+Catwalk, West; Night
+
+>n
+You edge along the precarious catwalk, moving north around the dome.
+
+Catwalk, North; Night
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls north across the catwalk
+and out into the empty air.
+
+>examine shadow
+The shadow of the sail is an immensely elongated triangle, stretching out
+to the north, across the catwalk and out into space. It's odd, in fact, how
+it seems to hang in the air. A strip of utter black beyond the catwalk,
+reaching as far as the mountain face...
+
+>n
+You edge one foot forward onto the path of black shadow. It feels... not
+substantial, but somehow resistant to your probing. You gingerly press
+down. The shadow bears your weight.
+
+Clenching your fists -- wishing for a handrail -- you take a step forward.
+
+And another. In a few strides, you have crossed the ravine.
+
+Ledge; Night
+You are standing at the end of a long, black tongue of shadow which hangs
+incomprehensibly in empty air. The strip of darkness bridges a deep ravine
+between a fire-lit dome to the south, and the cliff-face of a towering
+mountain, to the north.
+
+A narrow ledge angles across the mountain face, directly in front of you.
+Balanced on the ledge is a torn black mask.
+
+>take black mask
+Taken.
+
+[Your score has gone up.]
+
+>examine black mask
+It looks like a black paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a black cutout of a face.
+
+This mask is torn. The left part of the black face, through the eye, has
+been ripped away. What remains has a worn expression of irritation -- and
+perhaps, far below, doubt.
+
+>don black mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+The one who stands in the field has silver hair, but it is cropped, and
+faded with streaks of white. The field has no corn, only muddy ruts.
+
+Behind the tall figure is a city; a bright city, with white spires, but
+perhaps a cold one. There are lights within it, but they do not move.
+
+Before the tall figure is an army. Its soldiers are arrayed in mail and
+gilt tabards. The sign on their tabards is unrecognizably changed. There
+are very many of them, and they have come a very long way, but now they too
+are still.
+
+The front rank shifts, and three figures come forward. Each carries a tall
+spear, held upright; brilliant blue luminosity whirls and knots on each
+spearpoint. The light falls on the silver-haired figure, and casts a long
+red shadow behind him, pointing back at the city.
+
+The three soldiers begin to bring their spears down. The blue radiance
+flares hungrily.
+
+Then it goes out. The tall figure has raised one hand. No more than that;
+the spears are clattering atop each other in the mud, and the three
+soldiers are on their knees, huddled over their empty hands.
+
+The gilt ranks shift again, and now it is no ordered movement. Mail-bound
+faces look up, at the aching black opacity which has begun to open above
+the silver one's raised hand. The hurting blackness is the sky now, and the
+army begins to run--
+
+...your memory ends abruptly.
+
+>s
+You move gingerly back to the safety of the catwalk.
+
+Catwalk, North; Night
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls north across the catwalk
+and out into the empty air.
+
+>e
+You edge along the precarious catwalk, moving east around the dome.
+
+Catwalk, East; Night
+
+>s
+You edge along the precarious catwalk, moving south around the dome.
+
+Catwalk, South; Night
+
+>d
+You step up to the opening and climb down into the smoky heat of the dome.
+
+Translucent Dome
+
+A low platform fills the center of the floor. Upon it is a blazing bonfire.
+Its heat fills the dome, hot enough to sting on the skin.
+
+A tall triangle of beaten copper rises along the north side of the dome.
+
+>d
+You descend.
+
+Starry Dome, North
+
+>d
+You climb down through a narrow shaft...
+
+South Alcove
+This is a small, curved alcove, off a large chamber to the north. A plain
+iron ladder leads up through a shaft.
+
+A vast machine spins endlessly in the chamber to the north.
+
+>n
+
+Orrery
+You stand in a wide, tall, and dimly lit chamber. It has six sides; smaller
+alcoves open to the north and south.
+
+The chamber is dominated by a vast machine: an engine of gears, shafts, and
+clattering motion. It is primarily a great stately disk of brass which
+turns on a tilted axis. Smaller wheels pirouette on the disk's face,
+bearing globes of delicate glass in their complicated courses.
+
+The great brass disk continues its revolution. The silver wheel is borne
+out of reach.
+
+You notice a blue mask fluttering from one of the glass globes on the
+machine's wheels.
+
+>examine brass disk
+The brass disk nearly fills the room. It rises at a sharp angle; its lower
+edge is a few inches above the floor, but the opposite edge approaches the
+high roof. Intricate arcs and lines are engraved across its surface,
+measuring you know not what. The disk turns with a slow, steady rotation.
+
+A large globe of blue glass is embedded at the disk's center. The globe
+bears a delicate pattern of brown and white, like a map of islands in an
+impossible curved sea. The globe is fixed; the disk rotates around it.
+
+A silver wheel makes its own revolutions on the lower left side of the
+disk. Opposite it, on the upper right side, a copper wheel turns. The
+wheels are also carried slowly around with the great disk's motion. Each
+wheel bears its own colored globes.
+
+The great brass disk continues its revolution.
+
+>examine blue globe
+The blue globe rests, unmoving, at the center of the great brass machine.
+It is mottled with delicate brown and white patterns -- as if the map of an
+island archipelago had been painted on a sphere.
+
+The silver wheel whirls past the top of its orbit. The copper wheel,
+opposite it, is at its lowest.
+
+>examine copper wheel
+The copper wheel is incised with precise radial lines. At its center is a
+banded globe of red glass. There is a small green globe at the wheel's rim,
+circling slowly as the wheel turns.
+
+The copper wheel now occupies the lower side of the great brass disk, as
+the engine continues its stately revolution. The green globe has passed the
+outermost edge of the brass disk.
+
+The great brass disk continues its revolution. The copper wheel is borne
+out of reach.
+
+>examine red globe
+At the center of the copper wheel is a large globe of red glass. It is
+banded in every shade and tint -- crimson, rust, scarlet, magenta, rose.
+
+The great brass disk continues its revolution.
+
+>examine green globe
+A globe of green glass revolves around the edge of the copper wheel. The
+green surface is irregularly pocked and cratered. The globe is currently
+passing the center of the brass disk.
+
+The copper wheel spins past the highest point of the great disk. The silver
+wheel is at the lowest.
+
+>examine silver wheel
+The silver wheel is engraved with spiralling moiré metrics. At its center,
+a globe of violet glass rotates slowly. A smaller globe of tan is carried
+around the silver wheel's rim with its motion. The tan globe is itself
+circled with heavy rings of frosted glass.
+
+The silver wheel now occupies the lower side of the great brass disk, as
+the engine continues its stately revolution. The ringed tan globe is
+swinging past the center of the brass disk, and the blue globe which rests
+there.
+
+The great brass disk continues its revolution. The silver wheel is borne
+out of reach.
+
+>examine violet globe
+At the center of the silver wheel is a swollen globe of glittering violet
+glass, streaked with silver and black.
+
+The great brass disk continues its revolution.
+
+>examine tan globe
+A globe of tan glass revolves around the edge of the silver wheel. It is
+currently passing the outer edge of the brass disk. The tan globe is
+circled by heavy rings of frosty white; you can see a blue mask caught in
+the rings.
+
+The silver wheel whirls past the top of its orbit. The copper wheel,
+opposite it, is at its lowest.
+
+>wait
+Time passes.
+
+The great brass disk continues its revolution. The copper wheel is borne
+out of reach.
+
+>wait
+Time passes.
+
+The great brass disk continues its revolution.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the great disk. The silver
+wheel is at the lowest. The tan globe, at the nadir of its own revolution
+around that wheel, is sweeping just inches above the floor. The mask,
+fluttering from the tan globe, is now within reach.
+
+>take tan globe
+You grab hold of one of the globe's rings. Your hand knocks the blue mask
+loose, and it falls to the floor.
+
+But the silver wheel continues merrily on its way... and in seconds your
+feet leave the floor. You are swinging higher into the air, sprawled across
+the wheel.
+
+The silver wheel swings away from the floor.
+
+[Great... the mask is lying on the floor now, but you're up in the air and
+rising higher every second. You might want to release the ring, slide down
+to the floor, and take the mask. Or maybe you want to continue your ride.
+Up to you.]
+
+>wait
+Time passes.
+
+The silver wheel bears you higher.
+
+You catch sight of something hanging in the gloom above the machine. It
+looks like a grey cord, or strip, of some soft material. It dangles
+directly over the topmost edge of the great, inclined brass disk.
+
+>wait
+Time passes.
+
+The silver wheel swings past the highest point of the great disk. You are
+not quite at the upper edge, however; the tan globe is still rotating away
+from the center.
+
+>d
+You release your grip, and slide helplessly down the face of the machine,
+towards the blue globe. You twist desperately... and manage to land,
+crouching, on the globe's upper surface.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the brass disk, directly
+above you. The silver wheel, opposite it, is directly below. The tan globe,
+carried on the silver wheel's rotation, is swinging past you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The green globe, carried on the copper wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The silver wheel spins past the highest point of the brass disk, directly
+above you. The copper wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The tan globe, carried on the silver wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the brass disk, directly
+above you. The silver wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The green globe, carried on the copper wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The tan globe, carried on the silver wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The silver wheel spins past the highest point of the brass disk, directly
+above you. The copper wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the brass disk, directly
+above you. The silver wheel, opposite it, is directly below. The tan globe
+and the green globe are both swinging past the heart of the machine.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The silver wheel spins past the highest point of the brass disk, directly
+above you. The copper wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The tan globe, carried on the silver wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The green globe, carried on the copper wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the brass disk, directly
+above you. The silver wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The tan globe, carried on the silver wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The silver wheel spins past the highest point of the brass disk, directly
+above you. The copper wheel, opposite it, is directly below.
+
+>wait
+Time passes.
+
+The green globe, carried on the copper wheel's rotation, is swinging past
+you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The copper wheel spins past the highest point of the brass disk, directly
+above you. The silver wheel, opposite it, is directly below. The tan globe,
+carried on the silver wheel's rotation, is swinging past you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The brass machine revolves remorselessly around you.
+
+>wait
+Time passes.
+
+The silver wheel spins past the highest point of the brass disk, directly
+above you. The copper wheel, opposite it, is directly below. The green
+globe, carried on the copper wheel's rotation, is swinging past you.
+
+>d
+You slip from the sphere and slide down. The green sphere is just below,
+and you manage to roll onto it -- although you are now spread-eagled across
+its rough surface. And rotating gently. How uncomfortable.
+
+The copper wheel swings away from the floor.
+
+>wait
+Time passes.
+
+The copper wheel bears you higher.
+
+>wait
+Time passes.
+
+The copper wheel swings past the highest point of the great disk. The green
+globe is at its outer edge -- nearly at the chamber's roof. The grey strip
+may be within reach....
+
+>take strip
+From your unstable perch, you reach up... and touch soft, heavy leather. It
+comes free with no effort at all. You snatch wildly, and manage to keep the
+grey strip from slithering away from you.
+
+The copper wheel swings away from the ceiling.
+
+[An extra discovery has been added to your score.]
+
+>examine strip
+It's a belt of soft, heavy, worn grey leather. Tiny dark stitches trace a
+pattern of curved feathers, or perhaps scales, across the leather -- frayed
+in places, but still visible.
+
+The copper wheel continues its descent.
+
+>d
+You allow yourself to slide off the green globe. Oof.
+
+Orrery
+You stand in a wide, tall, and dimly lit chamber. It has six sides; smaller
+alcoves open to the north and south.
+
+The chamber is dominated by a vast machine: an engine of gears, shafts, and
+clattering motion. It is primarily a great stately disk of brass which
+turns on a tilted axis. Smaller wheels pirouette on the disk's face,
+bearing globes of delicate glass in their complicated courses.
+
+You can also see a blue mask here.
+
+The silver wheel whirls past the top of its orbit. The copper wheel,
+opposite it, is at its lowest.
+
+>don belt
+You wrap the belt around your waist, under the cloak, and tie the ends
+loosely.
+
+The great brass disk continues its revolution. The copper wheel is borne
+out of reach.
+
+>take blue mask
+Taken.
+
+The great brass disk continues its revolution.
+
+[Your score has gone up.]
+
+>examine blue mask
+It looks like a blue paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a blue cutout of a face.
+
+The face shows distant interest.
+
+The copper wheel spins past the highest point of the great disk. The silver
+wheel is at the lowest.
+
+>don blue mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+The rooflines of the city are slate over brick; but the tower is older
+stone. A silver-haired figure looks down from an embrasured window. The
+largest building in view faces the tower, across the square, perhaps in
+challenge. Its brick arches frame an intricate web wrought of iron. The web
+shapes a symbol: an ornately styled crutch.
+
+A small carved crutch hangs at the figure's throat; but this is simple, a
+few splinters of wood. Absent fingers have smoothed the rough wood to a
+polish, here and there.
+
+The people in the square do not look up; they go about their business
+quietly. Or -- all do but one. One dark cloak is thrown down suddenly. A
+woman stands revealed in bright-dyed rags. She is shouting, up at the
+tower, out through the square, around at the citizens who move away from
+her. She spins, gesticulating. She points at the arched building; she
+points at the tower.
+
+Above, looking down, a brow furrows beneath silver hair.
+
+But the guards are coming, pushing through the crowd that melts away from
+the square. In moments, the ragged woman too is cleared from sight.
+
+The face in the window watches this. Not, perhaps, pleased; but satisfied
+enough. And then the face turns away, back to the books and artifices
+within the stone tower.
+
+The great brass disk continues its revolution. The silver wheel is borne
+out of reach.
+
+>n
+
+North Alcove
+This is a small, curved alcove, off a large chamber to the south. An
+archway to the north reveals a flight of ascending stairs.
+
+A pale gauzy rag is crumpled at the alcove's edge.
+
+"But is it reality?" The question sparkles with unheeded eagerness; the
+questioner's gaze is fiercely entangled among the turning rings and
+delicate gears.
+
+"Of course it is not," comes the reply. "The model has not even the right
+form. The sky is not full of wheels upon wheels. But--" overrunning the
+interruption "--that does not mean the model lacks power." The voice is
+suddenly dry. "Symbolism and intent, child. What better symbol for power
+than this: a machine just within our own limits of understanding?"
+
+The machine hums through new configurations.
+
+>take rag
+You lift the rag and spread it in your hands. It's finer than you had
+originally thought -- a delicate cobwebby gauze -- but the weave is wracked
+with holes.
+
+The machine clatters and whirrs.
+
+>examine rag
+The scrap is perfectly round; its weave spirals like a cobweb, and the fine
+strands glint pearl-pale. But holes mar it everywhere, as if an uncaring
+child had forced fingers through the gauze again and again.
+
+The machine spins on.
+
+>u
+You ascend the narrow stairs to a white door, which you pull open.
+
+Curving Hall, West End
+The curving corridor ends here, in a blank plaster wall relieved by a
+single window. The window looks out on a strange subterranean prospect to
+the west. You can return east, pass through the archway to the north, or
+take the stairs which descend to the south.
+
+>examine window
+A broad glass pane -- inhumanly smooth and flawless -- looks out over a
+dark cavern.
+
+This end of the corridor seems to be deep underground. A natural cave
+spreads out below; its mammoth columns and cascades of flowstone are only
+dimly picked out by the candlelight behind you. The farther reaches are
+hidden in darkness. But the shining waterfall before you is easily visible.
+A stream pours in from your right, tumbles from a ledge, and plummets into
+a pit beneath the window. The water seems to sparkle with some natural
+phosphorescence.
+
+>n
+
+Arboretum
+The walls here are painted white and are utterly undecorated. An archway
+leads south.
+
+In the center of the room stands an earthenware tub. From it sprout a
+tangle of vines, broad fan-like leaves, and an enormous golden flower. The
+luxuriant growth clashes, you think, with the room's stark emptiness.
+
+An iron key is balanced neatly on the edge of the tub.
+
+>take iron key
+Taken.
+
+[Another key -- always a pleasant find. Remember that it could unlock
+either a door you have not yet found, or one you have already tried and
+found locked.]
+
+>smell flower
+You lean forward and take a deep breath of the flower's aroma.
+
+Memory nearly bursts through.
+
+
+
+
+Dank Jungle (in the earthenware tub)
+You are standing waist-deep in an empty earthenware tub, in the midst of a
+trackless jungle.
+
+Heavy, entangled trunks and vines loom in every direction, as far as you
+can see -- and you can't see far. The sky is entirely obscured by layers of
+vegetation. Only a murky green light filters down to you. But golden
+flowers dot the trees, like bursts of sun.
+
+>stand
+You swing your legs out of the tub, and find the world swinging around
+you...
+
+
+
+
+Arboretum
+The walls of the room are painted in green slashes, like the trunks of
+uncounted trees, and splashed with gold. An archway leads south.
+
+In the center of the room stands an earthenware tub. From it sprout a
+tangle of vines, broad fan-like leaves, and an enormous golden flower.
+
+>s
+
+Curving Hall, West End
+
+>e
+
+Curving Hall at Pedestal
+
+A short pedestal of black marble stands by the inner wall.
+
+>ne
+
+Harp Chamber
+Broad golden pillars march around the edge of this circular chamber. The
+walls between the pillars are deeply set, painted in variegated shades of
+blue and sea-green, and lit from some hidden source. An archway leads
+southwest, and there is a door to the east. The eastern door is closed;
+blinding light seeps out around its edges.
+
+In the center of the room, the remains of a tall harp stand in proud ruin.
+
+Off to one side, lying on the floor, you see something that looks like a
+short bundle of straw.
+
+>examine harp
+This once-proud instrument looks as if it was destroyed in inferno --
+although the room shows no other signs of a fire. The harp's pillar and
+frame are blackened and cracked; the soundbox is split apart. The few
+remaining strings are curled knots of ash.
+
+"What is this," you wonder, "in a wizard's house?" A failed spell? A
+defeated enemy? A strayed memory? Or a warning, or a word of past or
+prophecy. Or a splinter of charred wood.
+
+>examine straw
+You take a closer look at the bundle of straw. Your best guess is that it's
+a torch of some sort. The straw is tied tightly at one end, forming a
+handle; the other end is splayed, and seems to be slightly charred.
+
+>take torch
+Taken.
+
+>examine door
+Intolerable brilliance seeps around the edges of the closed door. You can
+see no keyhole, only a simple latch.
+
+>open door
+The door is jammed fast against its latch; you can move neither of them. It
+feels as if a mountain's weight leans against the other side of the door.
+
+>sw
+
+Curving Hall at Pedestal
+
+A short pedestal of black marble stands by the inner wall.
+
+>n
+You blink into the dimming light as you step through the arch.
+
+Natural Passage
+
+>put orange berry in torch
+You thrust the orange berry into the straw bundle. It bursts, spattering
+juice that immediately flashes to flame. Sparks lodge throughout the
+straw... which crackles in response. In seconds the torch is burning
+brightly.
+
+>n
+
+Vaulting Cavern
+A high, arched space opens around you, deep within the earth. The floor is
+unevenly interspersed with stalagmites and stone columns; your torchlight
+glitters in droplets from the stalactites above. Between the pale, hanging
+pinnacles of frozen stone, a vein of dark ore streaks the vault.
+
+A narrow passage leads away to the south. A broader one enters on the west
+side; it once crossed the cave, but the eastern exit has collapsed. A low
+crawl runs northeast. At one edge of the cave, a pit descends abruptly.
+Wisps of steam rise from its depths.
+
+>w
+
+Shore of River
+You stand on the eastern shore of a black river -- a silent sheet of
+mirror-dark water which slips by as you watch. Somewhere, far to the south,
+you hear the thin roar of falling water. A broad passage leads back to the
+east.
+
+The far shore is a narrow ledge of scree. You can see a green mask lying
+amid the rubble there.
+
+>put white berry in river
+You toss a white berry into the water.
+
+The response catches your breath away: planes of frost crackle across the
+river's surface. Water eddies up around the obstruction, and is subsumed as
+quickly. The ice snaps and groans, cracking and splitting and freezing
+again faster than you can follow.
+
+In seconds, an uneven sheet of ice has formed across the entire width of
+the river. It seems solid, although water hisses and bubbles underneath.
+
+>w
+Treading carefully, you cross the ice.
+
+Far Shore of River
+You have reached the western side of the subterranean river. A narrow shelf
+of loose rubble slopes down to the water's frozen edge. The ice still spans
+the river, although it is slowly wearing away in the silent current. The
+shore does not extend far up-stream or down; but at the top of the slope, a
+narrow crawl leads southwest, away from the river-passage.
+
+A green mask is lying in the scree.
+
+You can see the upstream edge of the ice slowly, but steadily, wearing away
+in the current.
+
+>take green mask
+Taken.
+
+[Your score has gone up.]
+
+>examine green mask
+It looks like a green paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a green cutout of a face.
+
+The face depicted shows satisfaction, but no triumph.
+
+The ice creaks alarmingly.
+
+>don green mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+A tent rests in mud; it is rigidly upright, defying its stains and any
+weariness. Once-gold laces twitch against once-white cloth. Then a figure
+is emerging. It too is rigidly upright, stained and dirtied, although the
+hair remains silver.
+
+Facing the tent are four soldiers. The man they surround is a soldier too;
+but his red sashes are hasty, crudely torn from some flag and stitched to a
+soldier's common clothes. He looks too young for them.
+
+The man carries no weapon, though his escorts eye him as if he might pull
+one out of any puddle of mud. What he carries instead is a length of hacked
+wood with a shattered handle. He kneels -- in the mud -- and lays it at the
+tall figure's feet.
+
+The eyes that peer down from beneath silver hair seem only tired. The
+figure turns away, and reaches for the tent flap again. But a fist clenches
+on the lacing; harsh yellow light splinters the air.
+
+A length of wood, which might once have been a crutch -- once, a war ago --
+flares into fire, ember, and ash.
+
+>sw
+
+River Crawl
+You are crouched in a narrow twisting crawlway. A faint rushing sound,
+distant above you, reveals that you are some way below the dark river. The
+crawl slopes upward to the northeast, back the way you came, and angles
+even more sharply downward to the southeast.
+
+>d
+You continue crawling down the steepening slope. You soon find it difficult
+to maintain your grip...
+
+Then, with a horrible lurch of your stomach, you slip. The stone floor
+drops away entirely; your torch goes spinning through empty space as you
+flail, falling, for a hold that is not there.
+
+After a long second, you slam into a rocky ledge.
+
+Ledge in Pit
+You are balanced on a ledge, leaning against the wall of a twisty,
+irregular pit. Across from you, and slightly above, you can see a narrow
+opening in the wall. A climbable rough path leads upward. You might be able
+to descend further, but the pit beneath you is nearly vertical, and the
+stone is damp and slippery with condensation.
+
+A warm breath of air rises slowly up the pit, steadily, carrying with it an
+eddying stream of mist.
+
+Your torch, thankfully, has landed nearby.
+
+>put white berry in pit
+The white berry vanishes into the depths, glancing crystalline motes from
+the stone as it falls.
+
+Seconds later, an icy crackle resounds from far below. The warm mist turns
+in an instant to a hard glitter in the air, as a wave of cold billows up
+the pit. The walls bloom white into frost.
+
+>take torch
+You pick up the flaming torch.
+
+>d
+You slowly inch your way down the pit.
+
+Deep in Pit
+The shaft is roughly vertical here, and you cling to holds in the wall,
+hoping desperately that you do not slip. Below you, the pit narrows even
+further; the smooth walls gleam with ice. The climb above looks marginally
+safer.
+
+The air is chill, and a skein of frost furs the stone all around.
+
+The cold seems a little less bitter now.
+
+>wait
+Time passes.
+
+>wait
+Time passes.
+
+The air grows milder; the frost on the pit walls is thinning.
+
+>wait
+Time passes.
+
+The last traces of frost are gone now.
+
+>d
+You brace your knees and back against the smooth stone, one way and the
+other, and begin the slow descent.
+
+Depths of Pit
+You hang in a narrow shaft, wedged knees-to-back between the walls. One
+hand clutches your torch; with the other, you cling to an angle in the
+rock. You are certain you cannot keep hold here for long.
+
+You see a tarnished bracelet before you, wedged into a hollow in the pit
+wall.
+
+Below you, the shaft widens out -- an impossible descent, which leads only
+to a bubbling underground pool, jagged with rocks and shattered ice.
+
+>take bracelet
+You steady your hold, lean slightly forwards, and manage to pop the
+tarnished bracelet out of its hollow. Even better, you manage not to drop
+it down the shaft.
+
+The air rising from the pit carries a hint of warmth.
+
+[An extra discovery has been added to your score.]
+
+>u
+You slowly chimney your way back upwards.
+
+Deep in Pit
+
+A wisp of steam rises past you now.
+
+>u
+You slowly inch your way back upwards.
+
+Ledge in Pit
+
+A warm breath of air rises slowly up the pit, steadily, carrying with it an
+eddying stream of mist.
+
+>u
+You reach the top of the pit safely.
+
+Vaulting Cavern
+
+The warm current of air is stronger now, and wisps of steam rise from the
+pit.
+
+>ne
+
+Confusing Passage
+The passageway runs from southwest to northeast, more or less. Great
+columns and masses of stone rise from floor to ceiling; the tunnel divides
+and enjoins around them, a confusing wrangle of minor branches.
+
+>ne
+You pick your way through the stone formations.
+
+Dead End
+The passage from the southwest comes to an abrupt end here, in a round,
+water-worn alcove. The eastern wall is of dressed granite -- an intrusion
+in these deep natural caverns. A heavy iron door is set into the wall; it
+is tightly shut.
+
+>e
+You push on the door -- and then set yourself and heave again; for it is as
+massive as it looks, and weighted to close of its own accord. By leaning
+hard against the iron, you get it open, and slip through.
+
+Cistern, West
+You are at the edge of an immense and empty elliptical chamber. The walls
+are of granite blocks, tightly fitted and dressed, bare of window or
+ornament. It feels like a vast cistern, not a place for human habitation.
+The only exit is the door directly west.
+
+The floor is a flat, perfect plane of black stone... or metal... or glass.
+You can't tell what it is. The roof, far above, is an equally flat and
+perfect surface of featureless, luminescent white. Both spread out
+eastward, defining the chamber between them. And halfway in between, a
+glass catwalk runs around the wall, girdling the room.
+
+A black column rises along the east wall, from the black floor up to the
+catwalk.
+
+The iron door swings to with a faint boom.
+
+>e
+
+Cistern, East
+You are at the eastern side of the elliptical cistern, standing next to a
+low glass platform. The platform is about three strides across; it juts out
+from the granite wall, a bare inch above the dead-black floor.
+
+High above you, a glass catwalk runs around the room's perimeter.
+
+A black column rises along the east wall, from the black floor up to the
+catwalk. It passes just to the right of the platform.
+
+A heavy iron lever rises from the platform, by the wall.
+
+>pull lever
+(first stepping onto the glass platform)
+You pull the lever, which clunks stiffly down. The clunk is echoed from
+below you.
+
+A curious thick gurgle sounds, somewhere below you.
+
+>d
+You step from the platform down onto the black surface.
+
+The gurgle is louder now.
+
+>z
+Time passes.
+
+Suddenly, the black surface beneath you -- the entire floor -- begins
+sinking away, in ripples, like draining oil. The black column lengthens (or
+is uncovered) as it goes. The true bottom of the cistern is quickly
+revealed: a deep, sloping well, lined with granite blocks, as the walls
+are.
+
+You are borne down with the tide, until the last few courses of stone
+emerge from the blackness beneath your feet.
+
+Cistern, Bottom
+You are at the bottom of the cistern, at the edge, where the down-sloping
+floor meets the east wall. Directly above you hangs the glass platform;
+yards above that, the catwalk circumnavigates the room; and above that, the
+white ellipse of the ceiling spreads its featureless radiance.
+
+A black column rises along the east wall, from the floor up to the catwalk.
+It passes just to the right of the platform.
+
+At the lowest angle of the floor, just by the wall, you see a black circle
+-- a small disk of the featureless substance which once floored this entire
+chamber. The black column merges into its rim.
+
+A heavy iron wheel is set into the eastern wall.
+
+[If you get tired of typing "look" or "l" every time you return to a room,
+you can try the "verbose" command. In "verbose" mode, the game will give a
+detailed description of each room as you enter it -- every time you move.]
+
+>z
+Time passes.
+
+>turn wheel
+You spin the wheel to the left until it stops. A faint vibration within the
+metal -- perceptible only when you laid hands on it -- slowly stills.
+
+Between a breath and a breath, the black column vanishes. It goes from the
+top end down -- like a rope cut loose from the catwalk, slithering straight
+down into the well without a waver or a splash.
+
+The remaining circle of black sinks away, revealing a brass grating at the
+bottom of the slope.
+
+You now see a line of handholds -- a ladder -- cut into the wall, where the
+column previously rose. They ascend from the cistern's bottom, where you
+stand, past the glass platform, up to the catwalk.
+
+>u
+You seize the stone handholds and begin climbing.
+
+Cistern, East (on the glass platform)
+
+Handholds cut into the wall, to the right of the platform, form a ladder
+leading both up and down.
+
+A heavy iron lever rises from the platform, by the wall.
+
+>u
+
+Cistern Catwalk, East
+You stand on the catwalk -- or rather, in the catwalk. The glass surface is
+curved, forming a shallow trough. It begins here, on the east side of the
+cistern, and follows the wall around to the north.
+
+Just past the end of the catwalk, a ladder runs down the wall.
+
+A heavy brass pipe protrudes from the wall, between the catwalk and the
+ladder. The end of the pipe is a curved fitting, which ends in a graceful
+brass spout. But the spout does not point down; it curves to the right,
+towards the ladder.
+
+A red mask is lying in the trough.
+
+>take red mask
+Taken.
+
+[Your score has gone up.]
+
+>examine red mask
+It looks like a red paper mask, half life-size. But its curves are only
+delicate shading; the mask is flat, a red cutout of a face.
+
+The face depicted wears a mix of confidence and anger.
+
+You raise your head. You think you can hear voices in the distance.
+
+>don red mask
+Gingerly, you raise the mask to your face....
+
+...Memory stirs...
+
+True and heavy beams of wood frame the hall; it is dominated by a high
+table. At the head of the table, a tall figure stands -- silver hair,
+intricately stitched robes -- drawing all eyes.
+
+A sharp gesture. To one side, a half-grown boy frowns, tries to ask a
+question. He is shushed fiercely and without a glance.
+
+At the door, uniformed guards carry in a bundle of cloth. The silver-haired
+figure stares at it -- stares at it for long moments.
+
+A guard, moved finally by the silence, unfolds the cloth. Eyes jerk; but
+there is still no sound.
+
+Eventually, the tall figure moves a hand again. The wet red stains that
+have been revealed sparkle, glow, and slowly vanish from the cloth. It is
+only a gesture; it is all anyone can do; it is nothing.
+
+Muffling a cry, the boy leaps up and limps for the door. Hurrying, his
+uneven steps are more halt than usual. His face twists in pain; but no one
+moves to help him.
+
+The distant voices are growing more distinct, if not louder.
+
+>examine pipe
+The pipe is a thick tube of hammered brass, with heavy fittings. It extends
+about a foot from the wall; it is just beyond the catwalk's end and just
+above the catwalk's level. The end of the pipe is a graceful curved spout,
+which bends towards the ladder.
+
+The spout looks slightly loose on its fitting, as if you could turn it.
+
+>turn spout
+You rotate the spout to the left. It now curves out over the catwalk.
+
+A note of laughter peaks amid the voices.
+
+>n
+
+Cistern Catwalk, Northeast
+You stand in the glass trough, on the northeast side of its arc. It runs
+northwest and southeast from here.
+
+A large, curved slab of glass is leaning in the trough here. It rests on
+edge, nearly upright, although the way it wedges against the sides keeps it
+from falling.
+
+You can also see two blobs of gum (a small gum blob and a big gum blob)
+here.
+
+>take slab, small gum, big gum
+large glass slab: The slab seems somewhat jammed in place, but you give a
+tug and lift it free.
+small gum blob: Taken.
+big gum blob: Taken.
+
+>nw
+
+Cistern Catwalk, North
+You stand in the glass trough, on the north side of the chamber. It runs
+east and west from here. The catwalk is somewhat cracked at this point. The
+cracks spiderweb several feet of the glass surface; at their center, a
+small hole is broken right through.
+
+>examine hole
+Several cracks converge, leaving a gap in the glass surface the size of
+your thumb.
+
+The distant voices natter imperiously.
+
+>put small gum in hole
+The blob fits perfectly into the hole; the resin squishes firmly around the
+edges.
+
+>w
+
+Cistern Catwalk, Northwest
+You stand in the glass trough, on the northwest side of the chamber. It
+runs southwest and northeast from here. The catwalk is rather cracked at
+this point. A web of cracks spreads nearly across the trough; at their
+center, a large hole is broken right through.
+
+>examine hole
+Several cracks converge, leaving a gap in the glass surface the size of
+your fist.
+
+>put big gum in hole
+The blob fits perfectly into the hole; the resin squishes firmly around the
+edges.
+
+>sw
+
+Cistern Catwalk, West
+You stand in the glass trough, at the west edge of the chamber. It runs
+south and north from here. The catwalk is heavily cracked at this point.
+The cracks spiderweb several feet of the glass surface; at their center, a
+medium-sized hole is broken right through.
+
+>examine hole
+Several cracks converge, leaving a gap in the glass surface the size of an
+egg.
+
+>s
+
+Cistern Catwalk, Southwest
+You stand in the glass trough, on the southwest side of its arc. It runs
+southeast and northwest from here.
+
+Parallel waves of cracks mar the glass surface. The fractures are even
+thicker to the east; there the trough seems ready to fall into splinters.
+
+>se
+The glass squeals alarmingly, and you feel sharp-edged splinters shifting
+under your foot's weight. You hastily step back, fearing that the cracked
+glass will give way entirely.
+
+>examine cracks
+You see nothing special about the cracks.
+
+One of the distant voices rises for a moment in anger.
+
+>put slab in cracks
+The cracked area is much too large to cover with your slab of glass.
+
+>nw
+
+Cistern Catwalk, West
+
+>put slab in hole
+You lower the slab carefully, covering the hole in the trough.
+
+>n
+
+Cistern Catwalk, Northwest
+
+>ne
+
+Cistern Catwalk, North
+
+>e
+
+Cistern Catwalk, Northeast
+
+>se
+
+Cistern Catwalk, East
+
+Just past the end of the catwalk, a ladder runs down the wall.
+
+A heavy brass pipe protrudes from the wall, between the catwalk and the
+ladder. The spout on the end of the pipe curves left, towards the catwalk.
+
+>s
+The catwalk ends here. You can only follow it north.
+
+>d
+You shift yourself to the handholds and descend.
+
+Cistern, East (on the glass platform)
+
+Handholds cut into the wall, to the right of the platform, form a ladder
+leading both up and down.
+
+A heavy iron lever rises from the platform, by the wall.
+
+>d
+
+Cistern, Bottom
+
+A brass grate is set into the lowest angle of the floor, just by the wall.
+
+Simple handholds cut into the wall form a ladder leading upwards.
+
+A heavy iron wheel is set into the eastern wall.
+
+>turn wheel
+You spin the wheel to the right until it stops. As you do, a faint,
+unsteady vibration grows in the metal.
+
+The black column reappears -- but not where it used to be. It spills down
+from the catwalk on the southeast side of the room, to the floor, and then
+down the slope, in one dark silent fall.
+
+Black pools on the grating, hiding it from sight. But the black substance
+rises no higher.
+
+>u
+You seize the stone handholds and begin climbing.
+
+Cistern, East (on the glass platform)
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+Handholds cut into the wall, to the right of the platform, form a ladder
+leading both up and down.
+
+A heavy iron lever rises from the platform, by the wall.
+
+The voices hasten into an urgent babble, for a moment.
+
+>u
+
+Cistern Catwalk, East
+
+A black column descends from the catwalk on the southeast side of the room.
+
+Just past the end of the catwalk, a ladder runs down the wall.
+
+A heavy brass pipe protrudes from the wall, between the catwalk and the
+ladder. The spout on the end of the pipe curves left, towards the catwalk.
+An arc of the blackness falls from the spout; it merges seamlessly into the
+black substance which fills the trough.
+
+>n
+
+Cistern Catwalk, Northeast
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>nw
+
+Cistern Catwalk, North
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>w
+
+Cistern Catwalk, Northwest
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>sw
+
+Cistern Catwalk, West
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>s
+
+Cistern Catwalk, Southwest
+
+A black column descends from the catwalk on the southeast side of the room.
+
+The voices hasten into an urgent babble, for a moment.
+
+>se
+
+Cistern Catwalk, South
+You stand on the black surface which fills the catwalk. It runs east and
+west from here.
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>e
+
+Cistern Catwalk, Southeast
+The black catwalk curves around from the southwest, but it bends sharply
+outward here -- straight into the southeast wall, where it ends.
+
+A brass grate is set into the wall, at the trough's end. The black
+substance runs up to the grate; but it does not pass through -- it seems to
+be blocked by a gauzy pale film that coats the brass. Instead, the
+blackness spills up and over the edges of the catwalk, joining the black
+column beneath your feet.
+
+A crumpled black wad is lying here, barely visible against the catwalk.
+
+>take wad
+(the crumpled black wad)
+You pluck the wad from the catwalk, and try to smooth it out. It proves to
+be a chart, incised with fine white lines and lettering.
+
+>examine chart
+The chart depicts ruling dynasties through time. Its lettering is inhumanly
+precise, etched in white on an odd black material. The chart's scale is so
+large that individual names do not appear; single lives are only jogs and
+serifs in the asterisms of descent.
+
+You recognize a few of the family names, a few of the countries and states
+and kingdoms -- not many, and all seem distant and unimportant. But your
+eye is drawn to a rift in the middle of the chart. Many lines end there.
+New lines begin beyond it. Dynasties across the world seem to break or
+shear from that brief stretch... though "brief" is an interval of
+centuries, if you read the scale correctly.
+
+A concise note by the rift reads: "Colloquially, the Silver Demon Age.
+Plague? War? Widespread turmoil and political instability. Records
+unusually rare from this era."
+
+And below that, in a different and familiar scrawl: "History is larger than
+any one man: this therefore is no history."
+
+>examine grate
+It's a round slab of rough hammered brass, pierced by finger-sized holes.
+The surface of the grate is covered with a pale gauzy web. The grating is
+half-submerged in the black substance, but nothing seems to be flowing
+through it.
+
+>sw
+
+Cistern Catwalk, South
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>w
+
+Cistern Catwalk, Southwest
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>nw
+
+Cistern Catwalk, West
+
+A black column descends from the catwalk on the southeast side of the room.
+
+The voices hasten into an urgent babble, for a moment.
+
+>n
+
+Cistern Catwalk, Northwest
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>ne
+
+Cistern Catwalk, North
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>e
+
+Cistern Catwalk, Northeast
+
+A black column descends from the catwalk on the southeast side of the room.
+
+>se
+
+Cistern Catwalk, East
+
+A black column descends from the catwalk on the southeast side of the room.
+
+Just past the end of the catwalk, a ladder runs down the wall.
+
+A heavy brass pipe protrudes from the wall, between the catwalk and the
+ladder. The spout on the end of the pipe curves left, towards the catwalk.
+An arc of the blackness falls from the spout; it merges seamlessly into the
+black substance which fills the trough.
+
+>s
+The catwalk ends here. You can only follow it north.
+
+>d
+You shift yourself to the handholds and descend.
+
+Cistern, East (on the glass platform)
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+Handholds cut into the wall, to the right of the platform, form a ladder
+leading both up and down.
+
+A heavy iron lever rises from the platform, by the wall.
+
+The distant voices natter imperiously.
+
+>d
+
+Cistern, Bottom
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+At the lowest angle of the floor, just by the wall, you see a black circle
+-- a small disk of the featureless substance which once floored this entire
+chamber. The black column angles down the slope to merge with its rim.
+
+Simple handholds cut into the wall form a ladder leading upwards.
+
+A heavy iron wheel is set into the eastern wall.
+
+>w
+You walk up the slope.
+
+Cistern, West
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+A brass grate is set into the the floor near the door.
+
+>examine grate
+It's a round slab of rough hammered brass, pierced by finger-sized holes.
+You can see only darkness below.
+
+The distant voices continue to murmur.
+
+>put gauze on grate
+You begin spreading the circle of gauze across the grating. It clings, and
+seems almost to shift in your fingers; and now you see that the holes in
+the pale web line up precisely with the holes in the brass beneath it. In a
+few moments, the grating is entirely covered.
+
+>e
+You walk down the angled floor.
+
+Cistern, Bottom
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+At the lowest angle of the floor, just by the wall, you see a black circle
+-- a small disk of the featureless substance which once floored this entire
+chamber. The black column angles down the slope to merge with its rim.
+
+Simple handholds cut into the wall form a ladder leading upwards.
+
+A heavy iron wheel is set into the eastern wall.
+
+>u
+You seize the stone handholds and begin climbing.
+
+Cistern, East (on the glass platform)
+
+A black column descends along the southeast wall, from the catwalk down to
+the floor, and then down the slope to the bottom of the room.
+
+Handholds cut into the wall, to the right of the platform, form a ladder
+leading both up and down.
+
+A heavy iron lever rises from the platform, by the wall.
+
+The voices seem to intone a single word in unison.
+
+>push lever
+You push the lever, which clunks stiffly back up. The clunk is echoed from
+below you.
+
+A curious thick gurgle sounds, somewhere below you.
+
+>wait
+Time passes.
+
+The gurgle is louder now.
+
+>wait
+Time passes.
+
+The distant voices natter imperiously.
+
+The bottom of the cistern begins filling once again with the black
+substance. It ripples outward from the base of the column.
+
+The black tide rises to the level of the platform. Then it is rising
+beneath your feet; and the catwalk is approaching; and then the catwalk is
+submerged as well. The tide lifts you towards the shining roof.
+
+>wait
+Time passes.
+
+The black floor continues to rise, and you along with it.
+
+>wait
+Time passes.
+
+Your ascent continues. The chamber is beginning to seem much less lofty
+than it once was.
+
+>wait
+Time passes.
+
+The voices are very, very far away.
+
+The bright glow of the roof is getting closer.
+
+>wait
+Time passes.
+
+The roof is nearly within reach now.
+
+You glance around in panic. You still can't see any way out.
+
+>wait
+Time passes.
+
+The black floor and the white ceiling meet, and merge. The infinitesmal
+gap, too narrow even for a ray of light or darkness, excludes all
+possibility; within that moment you see all your own time, moving more
+swiftly than thought.
+
+Nothing is simpler, for that moment, than to move into it.
+
+
+
+
+Grey Chamber
+This space forms an ellipse around you; but the walls are featureless, and
+the planes above and below are indistinct, indistinguishable. You do not
+recognize this world. Even the silence is not the silence of the caverns.
+Your movements raise no echo.
+
+A small gap to the west reveals an opening to more familiar stone and
+darkness.
+
+A shield, a gleaming triangular buckler, hangs between floor and roof. Its
+bright lines are the only sharp edges about this place.
+
+>take buckler
+Taken.
+
+The voices are muted and infinitely far.
+
+[An extra discovery has been added to your score.]
+
+>w
+You creep into the gap. The air seems to change around you, to the common
+cool damp of the caverns. In moments, you emerge -- into a familiar
+confusion of stone. You look behind you, trying to remember which passage
+let you free.
+
+Confusing Passage
+
+A small gap is visible in the stone to the southeast.
+
+"The technique of the memory palace is commonplace," says a voice you
+remember, "not just among wizards, but in all the mantic disciplines. One
+commonly uses one's home as an anchor: familiar rooms, passages,
+possessions become the keys to organized thought and knowledge. By passing
+through the house-in-mind, one passes unerringly through memory."
+
+"Of course, among wizards, the technique may be elevated to a new plane."
+
+>sw
+You pick your way back to the cavern.
+
+Vaulting Cavern
+
+>s
+
+Natural Passage
+
+>s
+
+Curving Hall at Pedestal
+
+A short pedestal of black marble stands by the inner wall.
+
+>se
+
+Curving Hall
+
+The distant voices continue to murmur.
+
+>w
+
+Sitting Room
+
+>se
+
+Curtained Room
+The walls of this small room are entirely swathed in heavy brocade
+curtains. The only openings are to the west and northwest, and a closed
+lead-slab door to the south.
+
+In the center of the room is a massive, high-backed chair of some pale
+wood. Directly before it is a tall mirror in a standing frame.
+
+As you cross the room's threshold, the voices go silent -- a sudden and
+simultaneous hush, as of exultant expectation.
+
+>examine mirror
+It seems to be a plain oval mirror, suspended in a frame of iron bars. You
+can't look directly into it from where you're standing.
+
+>examine chair
+The chair is cut from heavy planks of pale wood. It has a solid base, high
+arms and back -- nearly a throne, you think. The joinery is rough, but the
+surface has been finished to a smooth fineness. The chair is positioned in
+front of a standing mirror.
+
+>sit on chair
+You sit down in the chair, facing the mirror.
+
+>examine mirror
+You blink and stare into the mirror. How odd.
+
+The mirror reflects your chair, and the curtains behind you, perfectly. But
+your own form is unclear -- as if the mirror were touched with some
+distorting oil. The blurring is strongest around your upper body; your head
+appears to be a faceless blank.
+
+Nervously, you raise your hand to your own face. Everything feels in its
+place. But your reflection has raised a blurred hand to a featureless void.
+
+And dim red, green, blue, black, brown, gold, and white shadows seem to
+flit around your reflected body. Then they are gone.
+
+[If you want a hint on using the masks, type "help hint".
+
+If you want the Tutorial Voice to stop popping up to offer hints, you can
+type "tutorial off". The hints themselves will still be available via the
+"help hint" command.]
+
+>put white mask on mirror
+You hold the white mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror. Or is it now worn by your reflection?
+
+You know this: When you sneak out at night to gaze up at the stars, you can
+hear them laugh and tell each other stories. Cannot everyone?
+
+>put gold mask on mirror
+You hold the gold mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror.
+
+You know this: Life takes its own course, and sometimes no reason nor
+argument nor urgent need can divert its speaking tide.
+
+>put red mask on mirror
+You hold the red mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror.
+
+You know this: The incidents are not the essence, and the blood is not the
+life. But the incidents of blood are a symbol beneath every human thought.
+
+>put brown mask on mirror
+You hold the brown mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror.
+
+You know this: Mathematic art may chart the course of a messenger, or an
+army, more precisely than a knotted string on a peg-nailed map. But the
+simple string is an art which can be seen and felt. Thus does the general
+see and feel.
+
+>put green mask on mirror
+You hold the green mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror.
+
+You know this: To win a battle is never a gain. It only means you may
+resume the burdens you bore before the war. You do not look forward to
+them.
+
+>put blue mask on mirror
+You hold the blue mask up against the mirror, over the reflection of your
+face. Then the mask is no longer in your grasp; it seems to float in the
+surface of the mirror.
+
+You know this: The dance of symbols is the movement of the people. Perhaps
+you have not studied them enough... but your own studies, the symbols of
+worlds within and above, press you so.
+
+>put black mask on mirror
+You hold the torn black mask up against the mirror, over the reflection of
+your face. Then the mask is no longer in your grasp; it seems to float in
+the surface of the mirror.
+
+You know this: These people interrupt your studies--
+
+
+
+And your mind, splintered and cleaved as it is, begins to draw together.
+The masks -- yes! elements of yourself; you see the structure! -- seek
+reabsorption. It will be slow, but unceasing.
+
+>examine mirror
+Your reflection is a patchwork -- fragments orbiting lazily above the
+chair. You nonetheless feel sure that one is missing.
+
+>stand
+You stand up from the chair, as layers of memory shift like waves within
+you.
+
+One layer is still broken and half-blind. The missing fragment of the
+seventh. What part of you....
+
+>w
+
+Crowded Study
+
+"You tear the borders of nations!" comes the angry shout. "No. You are the
+nail, obdurate from an ancient age, upon which nations snag and tear
+themselves. No thought has passed in the civilized world for an dozen
+centuries which did not scrape upon your presence!"
+
+"So?" you reply. "Then soon you shall have peace. I shall tear open the
+borders of the world. I shall take the step outside."
+
+And your eye snags again upon the book, the heart of this place, in which
+you have nearly done that work.
+
+>read book
+The book lies open to the critical page:
+
+    The Theory & UNDERSTANDING of Portalls;
+The lesser, which make a single place of many, and the Greater, which open
+from NOW into Time in Memory, or Prophecy Foretold, or even a Moment's
+Fancy;
+
+All portals are perilous. Perilous thresholds to cross, and more perilous
+to create; For there is no plying of the World, or of Time, that does not
+happen in the Mind of the learned one who conceives of the journey. Of your
+Thought is the portal built, arch and capstone. Slip but a moment of your
+attention, and the Portal will fall into ruin; All its might, and yours,
+crumbled into eggshell fragments that stray upon the Wind; ...
+
+The facing page shows an elaborate circular diagram, annotated here and
+there with tiny mathematical notes. This is the culminating step of your
+long work. You are sure, in the yet-fogged halls of your memory, that every
+other preparation is complete. You recall writing the comment in the
+margin: "Best to draw in a well-insulated space -- 35 Ll. of uncut stone? 
+-- move house to Emmen Valley, work into mountain?"
+
+You have no recollection of the labor that must have followed. But it will
+come; and there is no reason to delay turning initial failure into triumph.
+The door to your laboratory is before you, and the privacy spell can no
+longer confound you.
+
+>turn page
+You flip back through the formulae, reacquainting yourself with the
+arguments.
+
+>unlock door with iron key
+The iron key unlocks the door. You turn the knob and swing it open.
+
+>s
+
+Iron Corridor
+This hall is a windowless square tube of dark hammered iron, stretching
+south. Yellow light trembles in a hanging sconce above you.
+
+Ahead, the air is mirrored with the privacy spell you left in place. The
+lamp is reflected in it, again and again, into the seeming distance.
+
+>examine spell
+The spell hovers to the south, mindlessly awaiting the approach of some
+uncrafty explorer. It isn't even smart enough to recognize you, although
+you could smash it with a thought.
+
+>break spell
+You reach into the spell, grasp a strand of the thought you bound into it,
+and snap. The spell unweaves neatly.
+
+"The work was well enough, for an offhand guard spell." You shrug off the
+reflexive criticism. Far more interesting work awaits.
+
+Iron Passage
+You are in a short connecting passage, walled in hammered iron. A heavy
+wooden door stands to the north; to the south is a large chamber. A single
+sconce hangs above your head.
+
+>s
+
+Laboratory
+You stand in a chamber built of massive squared stones. The only exit is a
+plain doorway in the north wall. Shelves line the east side of the room;
+the opposite wall is painted with an elaborate mural. Between them, a
+worktable -- a single heavy granite slab, cluttered with the tools of your
+work.
+
+In the center of the worktable is a complex apparatus of mirrors and
+lenses. The table also contains an empty flask, a wooden basket, a leaden
+jar, and a scrap of paper.
+
+>examine table
+The granite table is several inches thick; it rests on immovable boulders.
+The work space is dominated by a complex optical apparatus. Also on the
+table are an empty flask, a wooden basket, a leaden jar, and a scrap of
+paper.
+
+>look under table
+The table is supported by four irregular outcrops of granite, which rise
+through the floor to precisely equal height. Between them, a small drain
+opens between the slate flagstones.
+
+>examine drain
+You see a small hole in the floor, beneath the worktable. The rim is
+slightly stained from all the various concoctions and alchemic mistakes
+you've poured down it.
+
+>examine scrap
+You have the formulation of the necessary ink scrawled here: "Winter
+lithontree resin, and sea-blood corundum -- combine -- ensolve by exposure
+to (2 pulses) month-aged noonlight." Easy enough to repeat. The hard part
+was gathering those substances.
+
+>examine basket
+Standing on the table is a rough wooden basket. It is at least two feet
+tall, and broad and heavy to match. The basket is full of lumps of golden
+resin.
+
+>examine jar
+It's a cylindrical jar of grey lead, with a narrow pouring-spout. You can
+see a stock of glittering blue dust inside.
+
+>take resin
+You choose a lump from the basket.
+
+>put resin in flask
+(the lump of resin in the empty flask)
+The lump of resin plunks into the flask.
+
+>take jar
+Taken.
+
+>pour dust in flask
+You carefully pour blue dust onto the lump of resin in the flask, until it
+is full.
+
+>put jar on table
+You put the leaden jar on the table.
+
+>take flask
+Taken.
+
+>examine apparatus
+An intertwined bloom of struts supports shining lenses and mirrors, all
+held in precise positions. An oval loop of wire projects out from a niche
+in the arrangement. The oval loop is empty. Next to the loop hangs a gold
+pull-chain.
+
+>put flask in loop
+The flask fits neatly into the heart of the apparatus.
+
+>pull chain
+You pull the chain, and the flask swings up into the apparatus. After a
+moment of blinding refractions, it swings back down. The lump of resin is
+visibly swelling, even as the light fades; the blue dust is being absorbed
+within. In moments, the mixture is a homogenous brown gel.
+
+>again
+You pull the chain, and the flask swings up into the apparatus. After a
+moment of blinding refractions, it swings back down. The gel has liquified
+into a beautiful velvet-black ink.
+
+>take flask
+You pluck the flask from the optical apparatus.
+
+>examine mural
+(the mural)
+The mural is stylized but finely detailed. You wonder once again at its
+origin... it was here when you built the room. Such things are inevitable
+in a house such as yours. But you still wonder.
+
+The angular figure is painted against a red sky -- dawn or dusk, you've
+never been sure. It strides confidently forward towards a curious sign: a
+recircled orb, marked with the astrological symbol of the Doorstep of
+Heaven.
+
+The figure wears a black cloak, open enough to show a silver snakeskin belt
+beneath, and a heavy gauntlet which might be leather. Slung on one shoulder
+is a small, decorative shield; the other arm bears a dark bracer or
+wristlet. The figure holds a black dagger outstretched in its gauntlet. The
+other hand holds high an intricately knotted thread; and the figure's eyes
+are fixed upon this, as if upon a map or the key to a riddle.
+
+You look upon the painted figure, and then upon your possessions. All
+present; but they're not properly arrayed.
+
+>inventory
+You are carrying a flask (containing some ink), a buckler, a crumpled black
+chart, a tarnished bracelet, a burning straw torch, an iron key, a grey
+leather belt (being worn), a night cloak (being worn), an obsidian dagger,
+a knotted string, a desert landscape painting, a crumpled white letter, a
+mountain landscape painting, a handful of orange berries, a handful of
+white berries, a glove (being worn), a copper key, and a quill pen.
+
+[You're carrying quite a lot of stuff -- including two handfuls of berries.
+You might be wondering how you can juggle it all. Some games limit the
+number of things you can carry, or provide you with some kind of sack to
+carry your loot around in.
+
+However, many games -- including this one -- simply ignore the problem.
+Packing your luggage, or stowing it in some central location, isn't all
+that much fun. Therefore, the game lets you carry around as much as you
+want.]
+
+>don bracelet
+With some effort, you slip the bracelet over your left hand.
+
+>examine mural
+(the mural)
+The mural is stylized but finely detailed. You wonder once again at its
+origin... it was here when you built the room. Such things are inevitable
+in a house such as yours. But you still wonder.
+
+The angular figure is painted against a red sky -- dawn or dusk, you've
+never been sure. It strides confidently forward towards a curious sign: a
+recircled orb, marked with the astrological symbol of the Doorstep of
+Heaven.
+
+The figure wears a black cloak, open enough to show a silver snakeskin belt
+beneath, and a heavy gauntlet which might be leather. Slung on one shoulder
+is a small, decorative shield; the other arm bears a dark bracer or
+wristlet. The figure holds a black dagger outstretched in its gauntlet. The
+other hand holds high an intricately knotted thread; and the figure's eyes
+are fixed upon this, as if upon a map or the key to a riddle.
+
+You look upon the painted figure, and then upon yourself, in satisfaction.
+
+>n
+
+Iron Passage
+
+>n
+
+Crowded Study
+
+>examine desk
+The desk is heavy and plain, a massive wooden construction. Surprisingly,
+the surface is bare, except for a torn black shred and an immense book.
+
+>take shred
+Taken.
+
+>examine shred
+It's the left side of a face, sketched on black paper. It seems to have
+been torn from a drawing of you.
+
+>don shred
+You hold the black shred up before your left eye.
+
+-- too late, for your bitter wrath is descending--
+
+You yank it away, shivering. Could that have been you?
+
+>e
+
+Curtained Room
+
+In the center of the room is a massive, high-backed chair of some pale
+wood. Directly before it is a tall mirror in a standing frame.
+
+>sit on chair
+You sit down in the chair, facing the mirror.
+
+>put shred on mirror
+You hold the torn black shred up against the mirror, over the reflection of
+your eye.
+
+And then it is gone, and your reflection is complete.
+
+--the mail-clad mob swirled, and turned, and began to run. Of course it was
+too late. You watched their life force separate into strands... still
+swirling. Interesting. You regarded the scene until the last tendrils
+dissipated. There had been a pattern to it, beyond the overlay of animal
+pain and terror.
+
+You returned to your cityworld, considering a possible theorem. Further
+interruptions would be unlikely, for at least a generation, and you needed
+the time to think.
+
+And you have made good use of that time. The mistake in your portal diagram
+is obvious in retrospect. A thousand worlds await beyond that threshold;
+and you plan to make use of them all.
+
+
+    *** You have come to an ending ***
+
+
+
+[This is an ending of THE DREAMHOLD. But it is not the only ending. Many IF
+games encompass variations, and it is often worth going back to see if you
+missed a more satisfying outcome. If you want to back up and try a
+different way, type "undo".]
+
+Would you like to RESTART, RESTORE a saved game, UNDO your last move, or
+QUIT?
+> undo
+Curtained Room
+[Previous turn undone.]
+
+>stand
+You stand up from the chair.
+
+>nw
+
+Sitting Room
+
+>e
+
+Curving Hall
+
+>s
+
+Curving Hall, South End
+
+>w
+You ascend the stairs.
+
+Starry Dome, East
+
+>n
+
+Starry Dome, North
+
+>u
+You climb up, through the dome, and a long way farther...
+
+Translucent Dome
+
+A low platform fills the center of the floor. Upon it is a blazing bonfire.
+Its heat fills the dome, hot enough to sting on the skin.
+
+A tall triangle of beaten copper rises along the north side of the dome.
+
+>push copper triangle
+You reach wide to grasp the sail's edge, and give an experimental shove.
+You were right -- it slides along the track, although the motion is stiff
+and the track squeals painfully. With some effort, you drag the triangle
+sideways around the dome, until it stands on the east side.
+
+>push copper triangle
+You drag the triangle sideways around the dome, until it stands on the
+south side.
+
+>push copper triangle
+You drag the triangle sideways around the dome, until it stands on the west
+side.
+
+>u
+You climb up and out, into the night.
+
+Catwalk, South; Night
+
+>w
+You edge along the precarious catwalk, moving west around the dome.
+
+Catwalk, West; Night
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls west across the catwalk and
+out into the empty air.
+
+>w
+You step out onto the path of black shadow.
+
+Shadow Path, West of Dome; Night
+You are standing on a long, black tongue of shadow which hangs impossibly
+in empty air. To the east stands the fire-lit dome; the path stretches away
+to the west. To the north side of the path, the mountain towers, a black
+shape against the starry fields. On the other side, the garden slumbers in
+green; and below that, the valley.
+
+>w
+You venture farther from the dome.
+
+Shadow Path, Far West of Dome; Night
+The shadow path narrows as it runs; a few yards farther west, it converges
+to a point and is gone. The dome is a red bauble to the east. To one side,
+the mountain towers, a black shape against the stars. On the other side
+falls the dim green valley.
+
+>w
+The path will take you no further.
+
+>e
+
+Shadow Path, West of Dome; Night
+
+>e
+You step gingerly back to the safety of the catwalk.
+
+Catwalk, West; Night
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls west across the catwalk and
+out into the empty air.
+
+>s
+You edge along the precarious catwalk, moving south around the dome.
+
+Catwalk, South; Night
+
+>d
+You step up to the opening and climb down into the smoky heat of the dome.
+
+Translucent Dome
+
+A low platform fills the center of the floor. Upon it is a blazing bonfire.
+Its heat fills the dome, hot enough to sting on the skin.
+
+A tall triangle of beaten copper rises along the west side of the dome.
+
+>put white berry in fire
+You toss a white berry into the bonfire. An odd blue light crackles across
+the burning wood. And the fire changes.
+
+Blue and indigo flames dance across the wood, snap in the air, flash as
+high as the dome's apex. The embers burn turquoise and emerald. The heart
+of the bonfire is a dim, aching violet. And a piercing, insistent chill
+radiates from the flames -- numbing your skin and frosting your breath.
+
+>u
+A peculiar red glow spreads across the sky as you climb.
+
+Catwalk, South; Unearthly
+
+[An extra discovery has been added to your score.]
+
+>w
+You edge along the precarious catwalk, moving west around the dome.
+
+Catwalk, West; Unearthly
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls west across the catwalk and
+out into the empty air.
+
+>w
+You step out onto the path of black shadow.
+
+Shadow Path, West of Dome; Unearthly
+
+>w
+You venture farther from the dome.
+
+Shadow Path, Far West of Dome; Unearthly
+
+>w
+The ringed moon hovers before you. You settle your regalia about yourself,
+and step forward.
+
+For a moment, the voices of the stars are a thousandfold rushing whisper.
+And then the portal opens; and you can understand every word and note.
+
+Somewhere, a child runs through a moonlit forest, gazing up at a bright-
+marked figure which has always shone, will always shine beyond the
+Doorstep. It is only within your mind that the song begins at this
+moment... The stars are welcoming you home.
+
+
+    *** The end ***
+
+
+Thank you for playing. You've reached the end of THE DREAMHOLD; but that
+doesn't mean there isn't more hidden in the game. You made seven additional
+discoveries beyond the riddle of the masks; there may be others.
+
+And there are many other games to discover beyond THE DREAMHOLD. If this
+game was your first experience of interactive fiction, and if you enjoyed
+it, then you should play more. You are now familiar enough with the IF
+interface to try any well-designed game. (I won't promise that you won't
+have trouble! Some games are meant to be tricky. But you'll have as fair a
+shot as any IF player.)
+
+IF comes in a huge range of forms and styles. THE DREAMHOLD is a fairly
+serious, surrealist fantasy exploration. But there are also silly games,
+detective stories, science fiction scenarios, romances, and nightmares.
+Some games are puzzle-fests; others focus on character, dialogue, or
+branching story variants. All these can be found at the IF Archive:
+<http://ifarchive.org/>
+
+So many games are collected there that it's hard to navigate them. Baf's
+Guide is an excellent categorized index: <http://wurb.com/if/>
+
+Baf's Guide lets you search for IF games by author, title, genre, rating,
+or origin. It also contains capsule reviews, to help you choose the game
+you want to play.
+
+I hope you've gotten a glimpse of what text adventure gaming can be. Have
+fun. 
+
+                                -- Andrew Plotkin, <erkyrath@eblong.com>
+
+Would you like to RESTART, RESTORE a saved game, UNDO your last move, or
+QUIT?
+> undo
+Shadow Path, Far West of Dome; Unearthly
+[Previous turn undone.]
+
+>e
+
+Shadow Path, West of Dome; Unearthly
+
+>e
+You step gingerly back to the safety of the catwalk.
+
+Catwalk, West; Unearthly
+
+The copper sail inside the dome is visible here, a dark silhouette. It
+blocks the firelight; a long black shadow falls west across the catwalk and
+out into the empty air.
+
+>s
+You edge along the precarious catwalk, moving south around the dome.
+
+Catwalk, South; Unearthly
+
+>d
+You step up to the opening and climb down into the welcome coolness of the
+dome.
+
+Translucent Dome
+
+A low platform fills the center of the floor. Upon it is a bonfire, blazing
+in strange shades of blue. An icy chill radiates from the flames.
+
+A tall triangle of beaten copper rises along the west side of the dome.
+
+>d
+You descend.
+
+Starry Dome, North
+
+>e
+
+Starry Dome, East
+
+>e
+You descend the narrow stairs.
+
+Curving Hall, South End
+
+You abruptly hear the sound of harp music, although you can see no source.
+
+>n
+
+Curving Hall
+
+>w
+
+Sitting Room
+
+>s
+
+Crowded Study
+
+>examine diagram
+The diagram takes up an entire page of the immense book. The whole is
+inscribed in a circle; but it has countless partitions, spirals, and inner
+elaborations.
+
+You glare at the diagram in irritation. You have spent months studying it.
+You could redraw it perfectly if you were blindfolded, drunk, and singing
+bawdy Morovnan sea ballads. What could have gone wrong?
+
+>w
+You descend for a long while.
+
+Narrow Hallway
+
+>w
+You duck your head and push through the gap.
+
+Cell
+
+>dip pen in ink
+You dip the quill's nib carefully into the ink. When you withdraw it, ebon
+light refracts from a quivering droplet.
+
+>draw diagram
+You kneel on the floor, bring the diagram clear in your inner eye, and
+begin. The first line is clear and precise, ink-black against the smooth
+white floor.
+
+Your work is swift, but not hasty. You dare not miss one mark or detail; it
+was just such an error which destroyed your last attempt, and nearly
+destroyed you. After a time your knees ache, and your neck is sore, from
+your bent position. You do not slow. Magic requires concentration.
+
+When the last arc closes the circle, your mind is clear -- neither
+surprised nor relieved. All is now ready.
+
+>enter diagram
+You step into the center of the circle, and seize the spell with both
+hands.
+
+Around you, the world folds into kaleidoscope reflections.
+
+
+
+
+Cell, Possibly
+This space, barely wider than your outstretched arms, seems to have been
+chopped raw from unfinished stone. Only the floor is smooth -- an intricate
+web of geometric marks which swirls from wall to wall. Eight narrow gaps
+pierce the walls, one in each compass direction.
+
+>ne
+You move across the diagram.
+
+White Hallway, Possibly
+You are in a high, dim corridor, walled in cracked and moldering white
+plaster. The only light comes from tiny flickering candles above; intricate
+geometric marks cover the floor. The hall curves gently away in all eight
+directions.
+
+You hear words:
+
+"It's easy to think of \||/|| as a story." The name is a meaningless burst
+of noise. "That's self-delusion. A story is about someone else, but the
+story is told to you -- or you tell it. It's about part of you.
+
+"There's a story about the birth of /||\|||, the first word, the first
+spell. The first child. But the end of |/|/\| wasn't a story, because /\/
+wasn't about anything about \|/|/|, at the end."
+
+>e
+You move across the diagram.
+
+Gold Harp Chamber, Possibly
+Broad golden pillars march around the edge of this circular chamber. The
+walls between the pillars are deeply set, painted in variegated shades of
+yellow and amber, and lit from some hidden source. The floor is still awash
+with geometric marks. Archways lead in all directions.
+
+In the center of the room stands an unstrung harp of gold.
+
+You hear words:
+
+"I remember the master saying that the world was blind bits of meaningless
+matter. All us kids reacted the same way, of course -- that's silly, that's
+only unalive things, people are different. /||/\\| was saying it with the
+rest of us. |/|\/ was already seeing life and thought and that stuff
+directly -- saying it was all dead was even sillier to \|/ than to the rest
+of us.
+
+"||||/\| got a funny look after that, though. Like, thinking about the
+little charts and patterns we were taught in basic alchemy, the ones that
+controlled how dead matter moved and combined. Once \|\ said something
+about if people moved the same way. I said, what, if they were dead? Then
+we laughed and yelled Necromancy, you know, and ran down to the pond to
+play chase-the-zombie. Little kids."
+
+>se
+You move across the diagram.
+
+Red-Curtained Room, Possibly
+The walls of this small room are entirely swathed in heavy red brocade
+curtains. Geometric diagrams cover the floor. Openings lead in all eight
+directions.
+
+In the center of the room is a standing mirror frame, which is empty.
+
+You hear words:
+
+"Well, I hardly know. What does any mother know? Isn't your baby the most
+beautiful thing in the world? Your own blood... but you think of yourself
+as the child's blood, really. \|\|\ was more perfect and wonderful than we
+were. We knew that.
+
+"And then, such a talent -- my husband and I were never surprised. It was
+only fair. All parents are like that.
+
+"Afterward, I might have wondered if it was too much. But I wasn't alive
+any more, of course."
+
+>s
+You move across the diagram.
+
+Brown Shed, Possibly
+This room looks like nothing so much as a small, windowless garden shed.
+The floor is a plane of geometric diagrams, but the walls are unfinished
+brown planks. Narrow openings in every direction lead to eight steep
+stairways, which climb away into darkness.
+
+You hear words:
+
+"Is it possible? None of it is possible. The world is meaningless points of
+dumb matter; that's the first thing we tell them. Matter can't stand up and
+start changing the world. Except that it does; we do. You have to start
+with the absurdity, or you won't get anywhere.
+
+"And the meaning in our heads, which can't be there in the first place,
+certainly can't get out and start changing the world, ignoring even the
+blind interacting strictures of matter. That's impossible too. Except that
+it happens.
+
+"That's why we call magic 'the Moral Art' -- it's about the way we see the
+world, not about the world itself. Maybe it always has been in our heads,
+and not in the world at all. That would just mean that it's more real to us
+than the world is -- as real to us as we are.
+
+"I love that idea. Wouldn't it be funny?"
+
+>sw
+You move across the diagram.
+
+Green Bower, Possibly
+A tiny pleasance-garden is nestled here, high on a mountainside. Shrubs and
+raised flowerbeds lie atop a plane of geometric markings. A lush green
+valley is visible in the distance; eight paths run in all directions.
+
+You hear words:
+
+"See, now, you're talking about \/|\\/| as a General, as a Princeps, as a
+Pontifect. And that made sense once. If you speak for the people you're a
+Pontifect, if you lead an army you're a General, if you conquer a city-
+state you're a Princeps.
+
+"After the boy died, though, |\\\ stopped doing that. Sure-sure, it took
+decades really. /\\\/| still marched with the armies and collected the
+taxes and heard the Pontifects and sat over the laws.
+
+"But if you rewrite trade routes by changing the weather, then you're a, a
+what? How do you talk about that? If you invent a new nation, what are you?
+If you change what money means? If you create a new way to make laws, based
+on something you see in dreams of another world?
+
+"I was born in a city-state and I died in a nation -- that's what they were
+calling it -- and I didn't even live more than one lifetime. I can't
+imagine what it's like for ///|||/. Well, that goes without saying, sure."
+
+>w
+You move across the diagram.
+
+Blue Mosaic Room, Possibly
+The walls and ceiling of this room are entirely covered with tiny blue
+tiles. The floor is a plane of geometric diagrams. Archways lead in all
+directions.
+
+A tiny brass bird perches on a curved stand in the center of the room.
+
+You hear words:
+
+"Everyone who can read knows the world is a ball. Some wizards can fly or
+see high enough to see the curve. I suppose you cannot see towns or roads
+from that high. Much as you cannot see people from up on a mountain.
+
+"You can still see yourself, however. And you aren't any bigger.
+Comparisons are misleading.
+
+"Events seem smaller as they move into the past, and that's just as much an
+illusion. The tragedy or triumph looms as large as ever it did. You may not
+feel it, but the influence has shaped everything you've been since then."
+
+>nw
+You move across the diagram.
+
+Black Night, Perhaps
+You are surrounded by deep sky. In all directions you see stars in their
+slow-eternal coursing. The infinite diagram remains below you, dark
+markings on blackness, but even its geometry is not dense enough to bisect
+the night.
+
+Someone is talking, though not to you:
+
+"Limits? I don't believe I know any."
+
+>n
+Around you, the world goes as flat as a page in a book.
+
+
+
+
+You pause between moments to consider the possibilities. What might stand
+ahead? The fragments of your past seem no more than the shuffled cards of a
+lost game. The future is anywhere, now.
+
+You move into the next moment.
+
+
+    *** The end ***
+
+
+Thank you for playing. You've reached the end of THE DREAMHOLD; but that
+doesn't mean there isn't more hidden in the game. You made seven additional
+discoveries beyond the riddle of the masks; there may be others.
+
+And there are many other games to discover beyond THE DREAMHOLD. If this
+game was your first experience of interactive fiction, and if you enjoyed
+it, then you should play more. You are now familiar enough with the IF
+interface to try any well-designed game. (I won't promise that you won't
+have trouble! Some games are meant to be tricky. But you'll have as fair a
+shot as any IF player.)
+
+IF comes in a huge range of forms and styles. THE DREAMHOLD is a fairly
+serious, surrealist fantasy exploration. But there are also silly games,
+detective stories, science fiction scenarios, romances, and nightmares.
+Some games are puzzle-fests; others focus on character, dialogue, or
+branching story variants. All these can be found at the IF Archive:
+<http://ifarchive.org/>
+
+So many games are collected there that it's hard to navigate them. Baf's
+Guide is an excellent categorized index: <http://wurb.com/if/>
+
+Baf's Guide lets you search for IF games by author, title, genre, rating,
+or origin. It also contains capsule reviews, to help you choose the game
+you want to play.
+
+I hope you've gotten a glimpse of what text adventure gaming can be. Have
+fun. 
+
+                                -- Andrew Plotkin, <erkyrath@eblong.com>
+
+Would you like to RESTART, RESTORE a saved game, UNDO your last move, or
+QUIT?
+>
+

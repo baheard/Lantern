@@ -1,0 +1,444 @@
+﻿# The Dreamhold (Andrew Plotkin, 2004) -- canonical command list for headless replay
+# Source: IF Archive standard-mode walkthrough (Dreamhold-WalkthroughStandard.log)
+# Achieves maximum score 7 + 7 in standard mode (no expert mode). 438 turns.
+# No @random elements identified -- full walkthrough to end-game is included.
+#
+# Verify: node tools/play.cjs dreamhold --file docs/games/walkthroughs/dreamhold.cmds.txt --strict
+inventory
+examine pen
+e
+e
+examine desk
+read book
+turn page
+take white mask
+examine white mask
+don white mask
+open trunk
+take copper key
+examine books
+examine door
+unlock door with copper key
+n
+examine painting
+take painting
+examine door
+unlock door with copper key
+e
+s
+examine window
+e
+take glove
+examine glove
+u
+u
+u
+u
+s
+e
+examine bush
+take white berries
+don glove
+take white berries
+w
+w
+examine bush
+take orange berries
+e
+s
+examine statue
+climb statue
+push statue
+take gold mask
+examine gold mask
+don gold mask
+n
+n
+n
+w
+n
+e
+examine cage
+examine apple
+open cage
+w
+ne
+look in telescope
+n
+take brown mask
+examine brown mask
+don brown mask
+s
+take mountain painting
+look in telescope
+n
+s
+put desert painting on easel
+look in telescope
+n
+take wad
+examine letter
+s
+take desert painting
+take palette
+put palette on easel
+look in telescope
+n
+take string
+examine string
+s
+sw
+nw
+n
+n
+s
+go toward light
+n
+go away from light
+go away from light
+go away from light
+go away from light
+go away from light
+take dagger
+examine dagger
+enter rent
+stand
+examine fire
+take sphere
+e
+s
+w
+n
+w
+s
+n
+examine pyramid
+open pyramid
+examine wire
+put sphere in wire
+close pyramid
+wait
+wait
+wait
+wait
+wait
+examine bull
+examine crutch
+e
+examine galley
+examine wall
+s
+examine cloak
+take cloak
+examine cloak
+don cloak
+examine axe
+w
+examine doorstep
+n
+examine moth
+u
+u
+w
+n
+e
+s
+d
+examine copper triangle
+examine track
+examine wood
+put orange berry in wood
+u
+w
+n
+examine shadow
+n
+take black mask
+examine black mask
+don black mask
+s
+e
+s
+d
+d
+d
+n
+examine brass disk
+examine blue globe
+examine copper wheel
+examine red globe
+examine green globe
+examine silver wheel
+examine violet globe
+examine tan globe
+wait
+wait
+wait
+take tan globe
+wait
+wait
+d
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+d
+wait
+wait
+take strip
+examine strip
+d
+don belt
+take blue mask
+examine blue mask
+don blue mask
+n
+take rag
+examine rag
+u
+examine window
+n
+take iron key
+smell flower
+stand
+s
+e
+ne
+examine harp
+examine straw
+take torch
+examine door
+open door
+sw
+n
+put orange berry in torch
+n
+w
+put white berry in river
+w
+take green mask
+examine green mask
+don green mask
+sw
+d
+put white berry in pit
+take torch
+d
+wait
+wait
+wait
+d
+take bracelet
+u
+u
+u
+ne
+ne
+e
+e
+pull lever
+d
+z
+z
+turn wheel
+u
+u
+take red mask
+examine red mask
+don red mask
+examine pipe
+turn spout
+n
+take slab, small gum, big gum
+nw
+examine hole
+put small gum in hole
+w
+examine hole
+put big gum in hole
+sw
+examine hole
+s
+se
+examine cracks
+put slab in cracks
+nw
+put slab in hole
+n
+ne
+e
+se
+s
+d
+d
+turn wheel
+u
+u
+n
+nw
+w
+sw
+s
+se
+e
+take wad
+examine chart
+examine grate
+sw
+w
+nw
+n
+ne
+e
+se
+s
+d
+d
+w
+examine grate
+put gauze on grate
+e
+u
+push lever
+wait
+wait
+wait
+wait
+wait
+wait
+wait
+take buckler
+w
+sw
+s
+s
+se
+w
+se
+examine mirror
+examine chair
+sit on chair
+examine mirror
+put white mask on mirror
+put gold mask on mirror
+put red mask on mirror
+put brown mask on mirror
+put green mask on mirror
+put blue mask on mirror
+put black mask on mirror
+examine mirror
+stand
+w
+read book
+turn page
+unlock door with iron key
+s
+examine spell
+break spell
+s
+examine table
+look under table
+examine drain
+examine scrap
+examine basket
+examine jar
+take resin
+put resin in flask
+take jar
+pour dust in flask
+put jar on table
+take flask
+examine apparatus
+put flask in loop
+pull chain
+again
+take flask
+examine mural
+inventory
+don bracelet
+examine mural
+n
+n
+examine desk
+take shred
+examine shred
+don shred
+e
+sit on chair
+put shred on mirror
+undo
+stand
+nw
+e
+s
+w
+n
+u
+push copper triangle
+push copper triangle
+push copper triangle
+u
+w
+w
+w
+w
+e
+e
+s
+d
+put white berry in fire
+u
+w
+w
+w
+w
+undo
+e
+e
+s
+d
+d
+e
+e
+n
+w
+s
+examine diagram
+w
+w
+dip pen in ink
+draw diagram
+enter diagram
+ne
+e
+se
+s
+sw
+w
+nw
+n
