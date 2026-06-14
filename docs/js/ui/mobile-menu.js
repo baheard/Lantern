@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Quick Actions Menu - Vertical dropdown menu for all screen sizes
  *
  * Menu button shows a vertical dropdown with quick actions:
@@ -9,7 +9,7 @@
  */
 
 // Local storage keys for quick access preferences
-const QA_PREFS_KEY = 'iftalk_quick_access_prefs';
+const QA_PREFS_KEY = 'lantern_quick_access_prefs';
 
 // DOM refs populated during initMobileMenu
 let menuEl = null;
@@ -214,7 +214,7 @@ async function handleMenuAction(action) {
       break;
 
     case 'home':
-      localStorage.removeItem('iftalk_last_game');
+      localStorage.removeItem('lantern_last_game');
       location.reload();
       break;
 

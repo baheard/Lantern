@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Audio Feedback Module
  *
  * Provides audio cues for different actions:
@@ -72,7 +72,7 @@ export function initAudioContext() {
  * Centralized volume control for all audio feedback
  */
 function getMasterVolume() {
-  const saved = getItem('iftalk_masterVolume');
+  const saved = getItem('lantern_masterVolume');
   return saved ? parseInt(saved) / 100 : 1.0;
 }
 
@@ -81,7 +81,7 @@ function getMasterVolume() {
  * @returns {boolean} True if sound effects should play
  */
 function areSoundEffectsEnabled() {
-  const setting = getItem('iftalk_soundEffectsEnabled', 'true');
+  const setting = getItem('lantern_soundEffectsEnabled', 'true');
   return setting !== 'false';
 }
 

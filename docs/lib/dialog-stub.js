@@ -1,4 +1,4 @@
-/* Minimal Dialog stub for basic game play without save/load */
+﻿/* Minimal Dialog stub for basic game play without save/load */
 
 var Dialog = function() {
 
@@ -7,7 +7,7 @@ var dialog_el_id = 'dialog';
 /* Stub implementations */
 function dialog_open(tosave, usage, gameid, callback) {
     // Dispatch event for IFTalk to handle (it will call callback)
-    var event = new CustomEvent('iftalk-dialog-open', {
+    var event = new CustomEvent('lantern-dialog-open', {
         detail: {
             tosave: tosave,
             usage: usage,
@@ -88,7 +88,7 @@ function file_write(ref, content, israw) {
                 } : {}
             };
 
-            var customKey = 'iftalk_customsave_' + gameName + '_' + saveName;
+            var customKey = 'lantern_customsave_' + gameName + '_' + saveName;
             localStorage.setItem(customKey, JSON.stringify(saveData));
 
             // Show system message in game area
@@ -100,7 +100,7 @@ function file_write(ref, content, israw) {
         }
 
         // Normal Dialog save
-        var key = 'iftalk_' + ref.usage + '_' + ref.filename;
+        var key = 'lantern_' + ref.usage + '_' + ref.filename;
         localStorage.setItem(key, israw ? content : JSON.stringify(content));
         return true;
     } catch (e) {
@@ -118,7 +118,7 @@ function file_read(ref, israw) {
             var saveName = window._customRestoreFilename;
             window._customRestoreFilename = null; // Clear after use
 
-            var customKey = 'iftalk_customsave_' + gameName + '_' + saveName;
+            var customKey = 'lantern_customsave_' + gameName + '_' + saveName;
             var saveDataStr = localStorage.getItem(customKey);
 
             if (!saveDataStr) {
@@ -164,7 +164,7 @@ function file_read(ref, israw) {
         }
 
         // Normal Dialog read
-        var key = 'iftalk_' + ref.usage + '_' + ref.filename;
+        var key = 'lantern_' + ref.usage + '_' + ref.filename;
         var data = localStorage.getItem(key);
         if (data === null) return null;
         return israw ? data : JSON.parse(data);
@@ -179,7 +179,7 @@ function file_ref_exists(ref) {
     if (ref.usage === 'save' && window._customRestoreFilename) {
         var gameName = window.state ? window.state.currentGameName : 'unknown';
         var saveName = window._customRestoreFilename;
-        var customKey = 'iftalk_customsave_' + gameName + '_' + saveName;
+        var customKey = 'lantern_customsave_' + gameName + '_' + saveName;
         var exists = localStorage.getItem(customKey) !== null;
         return exists;
     }
@@ -190,13 +190,13 @@ function file_ref_exists(ref) {
     }
 
     // Normal Dialog check
-    var key = 'iftalk_' + ref.usage + '_' + ref.filename;
+    var key = 'lantern_' + ref.usage + '_' + ref.filename;
     var exists = localStorage.getItem(key) !== null;
     return exists;
 }
 
 function file_remove_ref(ref) {
-    var key = 'iftalk_' + ref.usage + '_' + ref.filename;
+    var key = 'lantern_' + ref.usage + '_' + ref.filename;
     localStorage.removeItem(key);
 }
 
@@ -226,7 +226,7 @@ function autosave_write(key, snapshot) {
 
         }
 
-        localStorage.setItem('iftalk_auto_' + key, JSON.stringify(snapshot));
+        localStorage.setItem('lantern_auto_' + key, JSON.stringify(snapshot));
     } catch (e) {
         console.error('[Dialog] Autosave write error:', e);
     }
@@ -234,7 +234,7 @@ function autosave_write(key, snapshot) {
 
 function autosave_read(key) {
     try {
-        var data = localStorage.getItem('iftalk_auto_' + key);
+        var data = localStorage.getItem('lantern_auto_' + key);
         var snapshot = data ? JSON.parse(data) : null;
 
         if (snapshot) {

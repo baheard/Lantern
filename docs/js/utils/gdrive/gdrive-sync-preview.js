@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Google Drive Sync Preview Functions
  *
  * Functions for comparing saves and syncing individual files for the preview modal
@@ -67,7 +67,7 @@ export async function compareSaves(gameName, direction) {
       } else if (key.startsWith(`${APP_CONFIG.storagePrefix}_quicksave_`)) {
         saveGameName = key.substring(`${APP_CONFIG.storagePrefix}_quicksave_`.length);
       } else if (key.startsWith(`${APP_CONFIG.storagePrefix}_customsave_`)) {
-        // Custom save: iftalk_customsave_GAMENAME_savename
+        // Custom save: lantern_customsave_GAMENAME_savename
         const afterPrefix = key.substring(`${APP_CONFIG.storagePrefix}_customsave_`.length);
         const firstUnderscore = afterPrefix.indexOf('_');
         saveGameName = firstUnderscore > 0
@@ -262,7 +262,7 @@ function getSaveNameFromKey(key, gameName) {
  */
 export function createConflictBackup(localStorageKey, localData) {
   const timestamp = Date.now();
-  const backupKey = `${localStorageKey.replace('iftalk_', 'iftalk_backup_')}_${timestamp}`;
+  const backupKey = `${localStorageKey.replace('lantern_', 'lantern_backup_')}_${timestamp}`;
   localStorage.setItem(backupKey, JSON.stringify(localData));
 
   const isAutosave = localStorageKey.includes('_autosave_');
@@ -348,5 +348,5 @@ export async function syncSaveFile(item, direction) {
   // Update last sync time
   const syncTime = new Date().toISOString();
   state.gdriveLastSyncTime = syncTime;
-  localStorage.setItem('iftalk_lastSyncTime', syncTime);
+  localStorage.setItem('lantern_lastSyncTime', syncTime);
 }

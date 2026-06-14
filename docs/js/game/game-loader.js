@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Game Loader Module
  *
  * Handles game selection and initialization using browser-based ZVM with custom display.
@@ -36,9 +36,9 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     state.currentGameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
 
     // Per-game auto-sync: inherit global default on first play, then use per-game value
-    const perGameSyncKey = `iftalk_gdrive_autosync_${state.currentGameName}`;
+    const perGameSyncKey = `lantern_gdrive_autosync_${state.currentGameName}`;
     if (localStorage.getItem(perGameSyncKey) === null) {
-      localStorage.setItem(perGameSyncKey, localStorage.getItem('iftalk_gdrive_autosync') === 'true');
+      localStorage.setItem(perGameSyncKey, localStorage.getItem('lantern_gdrive_autosync') === 'true');
     }
     state.gdriveSyncEnabled = localStorage.getItem(perGameSyncKey) === 'true';
     window.dispatchEvent(new Event('gameContextChanged'));
@@ -166,16 +166,16 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     // Prepare VM with story data
     vm.prepare(storyData, options);
     // Check if user requested to skip autoload (restart game)
-    const skipAutoload = localStorage.getItem('iftalk_skip_autoload');
+    const skipAutoload = localStorage.getItem('lantern_skip_autoload');
     if (skipAutoload === 'true') {
-      localStorage.removeItem('iftalk_skip_autoload');
-      localStorage.removeItem(`iftalk_autosave_${state.currentGameName}`);
+      localStorage.removeItem('lantern_skip_autoload');
+      localStorage.removeItem(`lantern_autosave_${state.currentGameName}`);
     }
 
     // Check for pending restore request (from 'R' key restore dialog)
-    const pendingRestoreJson = sessionStorage.getItem('iftalk_pending_restore');
+    const pendingRestoreJson = sessionStorage.getItem('lantern_pending_restore');
     if (pendingRestoreJson) {
-      sessionStorage.removeItem('iftalk_pending_restore');
+      sessionStorage.removeItem('lantern_pending_restore');
       try {
         const pendingRestore = JSON.parse(pendingRestoreJson);
         // Set flag for restore - VoxGlk will handle it
@@ -195,7 +195,7 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     }
 
     // Check for autosave - will restore after VM starts (on first update)
-    const autosaveKey = `iftalk_autosave_${state.currentGameName}`;
+    const autosaveKey = `lantern_autosave_${state.currentGameName}`;
     const hasAutosave = !skipAutoload && !pendingRestoreJson && localStorage.getItem(autosaveKey) !== null;
 
 
@@ -243,7 +243,7 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     }
 
     // Save as last played game for auto-resume
-    localStorage.setItem('iftalk_last_game', gamePath);
+    localStorage.setItem('lantern_last_game', gamePath);
 
     // Reset narration state
     resetNarrationState();
@@ -274,7 +274,7 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     if (status) status.classList.add('hidden');
 
     // Clear last game so we don't auto-retry on refresh
-    localStorage.removeItem('iftalk_last_game');
+    localStorage.removeItem('lantern_last_game');
 
     // Update settings context to hide game-specific items (map button, etc.)
     updateSettingsContext();
@@ -332,14 +332,14 @@ export function unloadGame() {
 
   // Clear game state
   window._inGame = false;
-  localStorage.removeItem('iftalk_last_game');
+  localStorage.removeItem('lantern_last_game');
 
   // Update settings context to hide game-specific items (map button, etc.)
   updateSettingsContext();
   updateMobileMenuForGameState(false); // Hide game-specific mobile menu icons
 
   // Reset gdriveSyncEnabled to global default when no game is loaded
-  state.gdriveSyncEnabled = localStorage.getItem('iftalk_gdrive_autosync') === 'true';
+  state.gdriveSyncEnabled = localStorage.getItem('lantern_gdrive_autosync') === 'true';
   window.dispatchEvent(new Event('gameContextChanged'));
 
   // Update status
@@ -358,7 +358,7 @@ async function launchGame(gamePath, gameName, onOutput, { trackFn = null } = {})
     await checkDriveForNewerAutosave(gameName);
   }
 
-  const autosaveKey = `iftalk_autosave_${gameName}`;
+  const autosaveKey = `lantern_autosave_${gameName}`;
   const hasAutosave = localStorage.getItem(autosaveKey) !== null;
 
   if (hasAutosave) {
@@ -396,7 +396,7 @@ export function initGameSelection(onOutput) {
     const gamePath = card.dataset.game;
     if (gamePath) {
       const gameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
-      const autosaveKey = `iftalk_autosave_${gameName}`;
+      const autosaveKey = `lantern_autosave_${gameName}`;
       const hasSave = localStorage.getItem(autosaveKey) !== null;
 
       const badge = card.querySelector('[data-save-indicator]');
@@ -420,7 +420,7 @@ export function initGameSelection(onOutput) {
   if (dom.selectGameBtn) {
     dom.selectGameBtn.addEventListener('click', () => {
       // Clear last game so it doesn't auto-load
-      localStorage.removeItem('iftalk_last_game');
+      localStorage.removeItem('lantern_last_game');
       location.reload();
     });
   }
@@ -437,10 +437,10 @@ export function initGameSelection(onOutput) {
 
       if (confirmed) {
         // Set flag to skip autoload on next page load
-        localStorage.setItem('iftalk_skip_autoload', 'true');
+        localStorage.setItem('lantern_skip_autoload', 'true');
         // Clear the map data for this game
         if (state.currentGameName) {
-          localStorage.removeItem(`iftalk_map_${state.currentGameName}`);
+          localStorage.removeItem(`lantern_map_${state.currentGameName}`);
         }
         // Reload to restart the game from beginning
         location.reload();
@@ -496,23 +496,23 @@ export function initGameSelection(onOutput) {
     if (window._inGame) {
       // Clear last game and reload for clean state
       // (Reloading is simpler than trying to reset all VM/VoxGlk state)
-      localStorage.removeItem('iftalk_last_game');
+      localStorage.removeItem('lantern_last_game');
       location.reload();
     }
   });
 
   // Check for pending restore (from Quick Load or RESTORE command)
-  const pendingRestoreJson = sessionStorage.getItem('iftalk_pending_restore');
+  const pendingRestoreJson = sessionStorage.getItem('lantern_pending_restore');
   let shouldAutoLoad = false;
   let gameToLoad = null;
 
   // Declare these variables in outer scope for later access
-  let lastGame = localStorage.getItem('iftalk_last_game');
+  let lastGame = localStorage.getItem('lantern_last_game');
   let lastGameName = lastGame ? lastGame.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase() : null;
-  let hasAutosave = lastGameName ? localStorage.getItem(`iftalk_autosave_${lastGameName}`) !== null : false;
+  let hasAutosave = lastGameName ? localStorage.getItem(`lantern_autosave_${lastGameName}`) !== null : false;
 
   // Check if user requested to skip autoload (restart game)
-  const skipAutoload = localStorage.getItem('iftalk_skip_autoload');
+  const skipAutoload = localStorage.getItem('lantern_skip_autoload');
   if (skipAutoload === 'true' && lastGame) {
     // Force load last game even without autosave (for restart)
     // Note: startGame() will remove the flag and autosave
@@ -523,7 +523,7 @@ export function initGameSelection(onOutput) {
     const pendingRestore = JSON.parse(pendingRestoreJson);
 
     // Set flags for voxglk.js to pick up
-    sessionStorage.removeItem('iftalk_pending_restore');
+    sessionStorage.removeItem('lantern_pending_restore');
     window.shouldAutoRestore = true;
     window.pendingRestoreType = pendingRestore.type;
     window.pendingRestoreKey = pendingRestore.key;
@@ -565,7 +565,7 @@ export function initGameSelection(onOutput) {
   } else {
     // Clear last game if no autosave (user should pick from welcome screen)
     if (lastGame && !hasAutosave) {
-      localStorage.removeItem('iftalk_last_game');
+      localStorage.removeItem('lantern_last_game');
     }
 
     // Fade out loading overlay to reveal welcome screen

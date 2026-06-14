@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Google Drive Sync Logic Module
  *
  * Handles bidirectional manual sync and conflict resolution.
@@ -21,16 +21,16 @@ import { createConflictBackup } from './gdrive-sync-preview.js';
 /**
  * Return a human-readable label for a save localStorage key.
  * Strips the game name so only the save type / custom name is shown.
- * e.g. iftalk_autosave_anchorhead        → "Autosave"
- *      iftalk_quicksave_anchorhead        → "Quicksave"
- *      iftalk_customsave_anchorhead_slot1 → "slot1"
+ * e.g. lantern_autosave_anchorhead        → "Autosave"
+ *      lantern_quicksave_anchorhead        → "Quicksave"
+ *      lantern_customsave_anchorhead_slot1 → "slot1"
  */
 function saveLabel(key, gameName) {
   const type = key.split('_')[1];
   if (type === 'autosave') return 'Autosave';
   if (type === 'quicksave') return 'Quicksave';
   if (type === 'customsave' && gameName) {
-    const prefix = `iftalk_customsave_${gameName}_`;
+    const prefix = `lantern_customsave_${gameName}_`;
     if (key.startsWith(prefix)) return key.slice(prefix.length) || 'Custom save';
   }
   return key.split('_').slice(3).join('_') || type || key;
@@ -97,7 +97,7 @@ export async function syncAllNow(gameName = null) {
       if (gameName) {
         // More precise matching: key must end with _{gameName}
         const parts = key.split('_');
-        const saveGameName = parts.slice(2).join('_'); // After "iftalk_type_"
+        const saveGameName = parts.slice(2).join('_'); // After "lantern_type_"
         if (saveGameName !== gameName) {
           continue;
         }
@@ -221,7 +221,7 @@ export async function syncAllNow(gameName = null) {
 
     const syncTime = new Date().toISOString();
     state.gdriveLastSyncTime = syncTime;
-    localStorage.setItem('iftalk_lastSyncTime', syncTime);
+    localStorage.setItem('lantern_lastSyncTime', syncTime);
     state.gdriveError = null;
 
     const total = uploadCount + downloadCount;
@@ -233,7 +233,7 @@ export async function syncAllNow(gameName = null) {
       if (downloadCount > 0) parts.push(`${downloadCount} downloaded`);
       updateStatus(`Synced: ${parts.join(', ')}`, 'success');
     }
-    window.dispatchEvent(new CustomEvent('iftalk:synccomplete', { detail: { gameName } }));
+    window.dispatchEvent(new CustomEvent('lantern:synccomplete', { detail: { gameName } }));
 
     return total;
   } catch (error) {
@@ -365,7 +365,7 @@ async function flushSyncQueue() {
 
   const syncTime = new Date().toISOString();
   state.gdriveLastSyncTime = syncTime;
-  localStorage.setItem('iftalk_lastSyncTime', syncTime);
+  localStorage.setItem('lantern_lastSyncTime', syncTime);
 
   if (skipped.length > 0) {
     const skippedGameName = state.currentGameName || skipped[0]?.key?.split('_')[2] || '';
@@ -387,7 +387,7 @@ async function flushSyncQueue() {
     // dismissal silences that save for the rest of the session unconditionally.
     const unacked = skipped.filter(s => {
       if (sessionAckedConflicts.has(`autosync_skip_${s.key}`)) return false;
-      const ackKey = `iftalk_conflict_ack_${s.key}`;
+      const ackKey = `lantern_conflict_ack_${s.key}`;
       const ack = (() => { try { return JSON.parse(localStorage.getItem(ackKey)); } catch { return null; } })();
       if (ack && ack.driveTime === s.driveTime) return false;
       return true;
@@ -408,7 +408,7 @@ async function flushSyncQueue() {
         // until the Drive version changes.
         for (const s of unacked) {
           sessionAckedConflicts.add(`autosync_skip_${s.key}`);
-          localStorage.setItem(`iftalk_conflict_ack_${s.key}`, JSON.stringify({ driveTime: s.driveTime }));
+          localStorage.setItem(`lantern_conflict_ack_${s.key}`, JSON.stringify({ driveTime: s.driveTime }));
         }
       }
     }
@@ -457,9 +457,9 @@ export async function checkDriveForNewerAutosave(gameName) {
     // All saves belonging to this game across all save types
     const gameFiles = driveFiles.filter(f => {
       const key = filenameToLocalStorageKey(f.name);
-      return key === `iftalk_autosave_${gameName}` ||
-             key === `iftalk_quicksave_${gameName}` ||
-             key.startsWith(`iftalk_customsave_${gameName}_`);
+      return key === `lantern_autosave_${gameName}` ||
+             key === `lantern_quicksave_${gameName}` ||
+             key.startsWith(`lantern_customsave_${gameName}_`);
     });
 
     if (gameFiles.length === 0) return;
@@ -513,7 +513,7 @@ export async function checkDriveForNewerAutosave(gameName) {
         // else: gap is just upload lag — treat as in sync, skip silently
       } else if (movesComparable && driveTimestampNewer !== driveMoveCountHigher) {
         // Both signals available but disagree — genuine conflict, ask user
-        const ackKey = `iftalk_conflict_ack_${localKey}`;
+        const ackKey = `lantern_conflict_ack_${localKey}`;
         const sessionKey = `${localKey}_${localTime}_${driveTime}`;
         const ack = (() => { try { return JSON.parse(localStorage.getItem(ackKey)); } catch { return null; } })();
         if (sessionAckedConflicts.has(sessionKey)) continue;

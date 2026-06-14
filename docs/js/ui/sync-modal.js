@@ -416,7 +416,7 @@ async function executeSync() {
     body.insertBefore(summaryEl, progressList);
 
     updateStatus(summaryText, failed > 0 ? 'error' : 'success');
-    document.dispatchEvent(new CustomEvent('iftalk:synccomplete', { detail: { gameName: currentGameName } }));
+    document.dispatchEvent(new CustomEvent('lantern:synccomplete', { detail: { gameName: currentGameName } }));
   } catch (err) {
     const errEl = document.createElement('div');
     errEl.className = 'sm-progress-summary sm-progress-err';

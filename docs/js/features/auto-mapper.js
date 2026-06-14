@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Auto-Mapper - Location Tracking for Interactive Fiction
  *
  * Version 6: Name-based tracking using status bar text.
@@ -19,6 +19,7 @@ let mapData = {
 
 // Track last known location and command
 let lastLocationName = null;
+let lastStatusContext = '';  // right-aligned status region (e.g. "day one, evening") — for phase-scoped hints
 let lastCommand = null;
 let startCheckTimeout = null;
 let pendingSceneBreak = false; // Set when a screen clear happens — next location change gets no edge
@@ -71,6 +72,24 @@ export function getCurrentLocation(statusBarText) {
 }
 
 /**
+ * Get the secondary "phase" context from the status bar — the right-aligned region
+ * the location parser discards (e.g. "day one, evening", "Chapter 2", "Score: 10").
+ * This is the game-agnostic signal hint sections can scope to via an optional `phase`
+ * field (see hints-data.js). Returns '' when the status bar has no right-aligned region.
+ *
+ * @param {string} statusBarText - Raw status bar text from the game
+ * @returns {string}
+ */
+export function getStatusContext(statusBarText) {
+  if (!statusBarText || !statusBarText.trim()) return '';
+  const line = statusBarText.split('\n')[0];
+  // The right region is whatever follows a run of 3+ spaces (status bars right-align
+  // stats/act/time there). Greedy from the first such gap to end of line.
+  const m = line.match(/\S\s{3,}(\S.*)$/);
+  return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+}
+
+/**
  * Check for location change and dispatch event if changed
  * Called after each game turn from voxglk.js
  * @param {string} statusBarText - Status bar text from the game
@@ -98,6 +117,10 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
     // Don't add to journey or fire location change events
     return;
   }
+
+  // Update phase context every real turn — it can change while the room name stays
+  // the same (e.g. Master Bedroom: "day one, evening" → "day two").
+  lastStatusContext = getStatusContext(statusBarText);
 
   const locationChanged = location.name !== lastLocationName;
 
@@ -196,7 +219,7 @@ export function getVisitedCount() {
  */
 export function initAutoMapper(gameName) {
   // Check for restored auto-mapper data from save file
-  const restoreKey = `iftalk_automapper_restore_${gameName}`;
+  const restoreKey = `lantern_automapper_restore_${gameName}`;
   const restoredDataStr = localStorage.getItem(restoreKey);
 
   if (restoredDataStr) {
@@ -282,6 +305,7 @@ export function resetAutoMapper() {
     journey: []
   };
   lastLocationName = null;
+  lastStatusContext = '';
   lastCommand = null;
 }
 
@@ -291,6 +315,15 @@ export function resetAutoMapper() {
  */
 export function getLastLocationName() {
   return lastLocationName;
+}
+
+/**
+ * Get the last known status "phase" context (e.g. "day one, evening").
+ * Used by phase-scoped hint matching. '' if none seen.
+ * @returns {string}
+ */
+export function getLastStatusContext() {
+  return lastStatusContext;
 }
 
 /**

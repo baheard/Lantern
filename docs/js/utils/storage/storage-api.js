@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Storage API - Centralized localStorage access layer
  * Provides consistent interface for all localStorage operations
  * Eliminates duplication and improves error handling
@@ -159,9 +159,9 @@ export function getAllKeys() {
 export function getGameKey(type, gameName = null) {
     const game = gameName || state.currentGameName;
     if (!game) {
-        return `iftalk_${type}`;
+        return `lantern_${type}`;
     }
-    return `iftalk_${type}_${game}`;
+    return `lantern_${type}_${game}`;
 }
 
 /**
@@ -174,7 +174,7 @@ export function getGameKeys(gameName = null) {
     if (!game) {
         return [];
     }
-    return getItemsByPrefix(`iftalk_`).filter(key => key.includes(`_${game}`));
+    return getItemsByPrefix(`lantern_`).filter(key => key.includes(`_${game}`));
 }
 
 /**
@@ -200,7 +200,7 @@ export function clearGameData(gameName = null) {
 export function getStorageInfo() {
     try {
         const keys = getAllKeys();
-        const iftalkKeys = keys.filter(k => k.startsWith('iftalk_'));
+        const iftalkKeys = keys.filter(k => k.startsWith('lantern_'));
 
         let totalSize = 0;
         const sizeByType = {};

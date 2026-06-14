@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Meta-Command Handlers Module
  *
  * Handles all meta-commands (SAVE, RESTORE, DELETE, QUIT, REPAIR) and game dialog intercepts.
@@ -120,7 +120,7 @@ export async function handleQuitCommand() {
   // Return to game selection after brief delay
   setTimeout(() => {
     // Clear last game so it doesn't auto-resume
-    localStorage.removeItem('iftalk_last_game');
+    localStorage.removeItem('lantern_last_game');
 
     // Reload to return to welcome screen
     window.location.reload();
@@ -351,20 +351,20 @@ async function handleRestoreResponse(input, saves) {
   // Manual restore requires page reload to reset glkapi.js state
   // Set pending restore flag and reload
   if (save.type === 'quicksave') {
-    sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+    sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
       type: 'quicksave',
       key: save.gameSignature || state.currentGameName,
       gameName: state.currentGameName
     }));
   } else if (save.type === 'customsave') {
-    sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+    sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
       type: 'customsave',
       key: save.name,  // Just the save name
       gameName: state.currentGameName
     }));
   } else {
     // Autosave - shouldn't normally be selected via RESTORE command, but handle it
-    sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+    sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
       type: 'autosave',
       key: state.currentGameName,
       gameName: state.currentGameName
@@ -372,7 +372,7 @@ async function handleRestoreResponse(input, saves) {
   }
 
   // Preserve player/mic state across the reload
-  sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
+  sessionStorage.setItem('lantern_restore_ui_state', JSON.stringify({
     autoplayEnabled: state.autoplayEnabled,
     micUnmuted: !state.isMuted,
   }));
@@ -526,12 +526,12 @@ async function handleGameRestoreResponse(input, saves) {
   const pendingRestore = save.type === 'autosave'
     ? { type: 'autosave', key: state.currentGameName, gameName: state.currentGameName }
     : { type: 'customsave', key: save.name, gameName: state.currentGameName };
-  sessionStorage.setItem('iftalk_pending_restore', JSON.stringify(pendingRestore));
+  sessionStorage.setItem('lantern_pending_restore', JSON.stringify(pendingRestore));
 
   respondAsGame(`<div class="system-message">Restoring from "${save.name}"...</div>`);
 
   // Preserve player/mic state across the reload
-  sessionStorage.setItem('iftalk_restore_ui_state', JSON.stringify({
+  sessionStorage.setItem('lantern_restore_ui_state', JSON.stringify({
     autoplayEnabled: state.autoplayEnabled,
     micUnmuted: !state.isMuted,
   }));
@@ -550,7 +550,7 @@ async function handleGameRestoreResponse(input, saves) {
  * Handles in-game save/restore prompts (like "press r to restore" in Anchorhead)
  */
 export function initDialogInterceptor() {
-  window.addEventListener('iftalk-dialog-open', (e) => {
+  window.addEventListener('lantern-dialog-open', (e) => {
     const { tosave, usage, gameid, callback } = e.detail;
 
     // Check if this is a save/restore request

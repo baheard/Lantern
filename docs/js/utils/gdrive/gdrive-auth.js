@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Google Drive Authentication Module
  *
  * Handles OAuth authentication, token management, sign in/out.
@@ -169,7 +169,7 @@ export async function initGDriveSync() {
       }
     }
 
-    const lastSyncTime = localStorage.getItem('iftalk_lastSyncTime');
+    const lastSyncTime = localStorage.getItem('lantern_lastSyncTime');
     if (lastSyncTime) state.gdriveLastSyncTime = lastSyncTime;
 
   } catch (error) {

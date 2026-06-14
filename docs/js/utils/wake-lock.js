@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Keep Awake Module
  *
  * Prevents the device screen from dimming/locking during gameplay.
@@ -116,7 +116,7 @@ function startPeriodicCheck() {
  */
 export async function enableKeepAwake() {
   enabled = true;
-  localStorage.setItem('iftalk_keep_awake', 'true');
+  localStorage.setItem('lantern_keep_awake', 'true');
   await requestWakeLock();
   startPeriodicCheck();
 }
@@ -126,7 +126,7 @@ export async function enableKeepAwake() {
  */
 export async function disableKeepAwake() {
   enabled = false;
-  localStorage.setItem('iftalk_keep_awake', 'false');
+  localStorage.setItem('lantern_keep_awake', 'false');
   await releaseWakeLock();
 }
 
@@ -163,7 +163,7 @@ export function isWakeLockSupported() {
  * Initialize keep awake from saved preference
  */
 export function initKeepAwake() {
-  const saved = localStorage.getItem('iftalk_keep_awake');
+  const saved = localStorage.getItem('lantern_keep_awake');
   enabled = saved === 'true';
 
   // Re-acquire wake lock when page becomes visible again

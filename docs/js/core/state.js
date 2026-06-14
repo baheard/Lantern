@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Centralized Application State
  *
  * Single source of truth for all application state.
@@ -132,10 +132,10 @@ export const state = _state;
 // Expose state to window for debugging — dev/opt-in only. state includes
 // openAiTtsConfig (the user's plaintext API key), so exposing it globally in
 // production turns any XSS into one-line key exfiltration. Localhost gets it
-// automatically; on a deployed device run: localStorage.iftalk_debug_state = 'on'
+// automatically; on a deployed device run: localStorage.lantern_debug_state = 'on'
 if (typeof window !== 'undefined') {
   let debugFlag = false;
-  try { debugFlag = localStorage.getItem('iftalk_debug_state') === 'on'; } catch { /* storage unavailable */ }
+  try { debugFlag = localStorage.getItem('lantern_debug_state') === 'on'; } catch { /* storage unavailable */ }
   const isLocalDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
   if (isLocalDev || debugFlag) {
     window.state = state;

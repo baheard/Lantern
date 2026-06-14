@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Save Manager Module
  *
  * Manages quick save/load for browser-based ZVM games.
@@ -221,7 +221,7 @@ async function restoreMapData(optimizedMapData, gameName) {
         try {
             const { initAutoMapper, setSuppressNextJourneyClear } = await import('../features/auto-mapper.js');
             // Store temporarily so initAutoMapper can pick it up on game load
-            localStorage.setItem(`iftalk_automapper_restore_${gameName}`, JSON.stringify(optimizedMapData.autoMapper));
+            localStorage.setItem(`lantern_automapper_restore_${gameName}`, JSON.stringify(optimizedMapData.autoMapper));
             // Immediately restore to memory (gameLoaded event doesn't fire on quickload/restore)
             initAutoMapper(gameName);
             // Suppress the first scene-break journey clear after restore — the game's
@@ -254,7 +254,7 @@ async function restoreMapData(optimizedMapData, gameName) {
         }
     } else {
         // Save had no canvas data — clear localStorage so stale edits don't persist
-        localStorage.removeItem(`iftalk_map_${gameName}`);
+        localStorage.removeItem(`lantern_map_${gameName}`);
     }
 }
 
@@ -662,8 +662,8 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                     }
                 } else {
                     // Old save with no map data — clear canvas so stale edits don't persist
-                    localStorage.removeItem(`iftalk_map_${saveData.gameName}`);
-                    localStorage.removeItem(`iftalk_automapper_restore_${saveData.gameName}`);
+                    localStorage.removeItem(`lantern_map_${saveData.gameName}`);
+                    localStorage.removeItem(`lantern_automapper_restore_${saveData.gameName}`);
                 }
             }
 
@@ -756,7 +756,7 @@ export async function quickSave() {
         return false;
     }
 
-    const key = `iftalk_quicksave_${state.currentGameName}`;
+    const key = `lantern_quicksave_${state.currentGameName}`;
     const success = await performSave(key, 'quicksave');
 
     // Create backup after successful save
@@ -776,7 +776,7 @@ export async function customSave(saveName) {
         return false;
     }
 
-    const key = `iftalk_customsave_${state.currentGameName}_${saveName}`;
+    const key = `lantern_customsave_${state.currentGameName}_${saveName}`;
 
     // Before overwriting an existing named save, keep a single backup of its prior
     // contents so the previous state can be recovered. Each named save keeps exactly
@@ -797,7 +797,7 @@ export async function customLoad(saveName) {
         return false;
     }
 
-    const key = `iftalk_customsave_${state.currentGameName}_${saveName}`;
+    const key = `lantern_customsave_${state.currentGameName}_${saveName}`;
     return await performRestore(key, saveName, {
         showSystemMessage: true,
         restoreNarrationState: true
@@ -825,7 +825,7 @@ export async function autoSave() {
         callStackDepth: window.zvmInstance?.callstack?.length || 0
     };
 
-    const key = `iftalk_autosave_${state.currentGameName}`;
+    const key = `lantern_autosave_${state.currentGameName}`;
     const success = await performSave(key, null, { verification });
 
     if (success) {
@@ -849,12 +849,12 @@ export async function autoLoad() {
     }
 
     // Check if this is from a file import
-    const wasFileImported = sessionStorage.getItem('iftalk_file_imported') === 'true';
+    const wasFileImported = sessionStorage.getItem('lantern_file_imported') === 'true';
     if (wasFileImported) {
-        sessionStorage.removeItem('iftalk_file_imported');
+        sessionStorage.removeItem('lantern_file_imported');
     }
 
-    const key = `iftalk_autosave_${state.currentGameName}`;
+    const key = `lantern_autosave_${state.currentGameName}`;
     return await performRestore(key, null, {
         successStatus: wasFileImported ? 'File restored' : 'Restored from last session'
     });
@@ -870,7 +870,7 @@ export async function quickLoad() {
         return false;
     }
 
-    const key = `iftalk_quicksave_${state.currentGameName}`;
+    const key = `lantern_quicksave_${state.currentGameName}`;
     return await performRestore(key, 'quicksave', {
         showSystemMessage: true,
         restoreNarrationState: true,
@@ -891,7 +891,7 @@ export async function exportSaveToFile() {
         }
 
         // Get the autosave from localStorage
-        const key = `iftalk_autosave_${state.currentGameName}`;
+        const key = `lantern_autosave_${state.currentGameName}`;
         let saveData = getJSON(key);
 
         // If no autosave exists, create one first
@@ -973,7 +973,7 @@ export async function importSaveFromFile() {
             updateStatus('Error: No game loaded', 'error');
             return;
         }
-        const key = `iftalk_autosave_${state.currentGameName}`;
+        const key = `lantern_autosave_${state.currentGameName}`;
         if (!setJSON(key, saveData)) {
             updateStatus('Import failed: storage full. Export old saves and clear data.', 'error');
             return;
@@ -986,7 +986,7 @@ export async function importSaveFromFile() {
 
         if (shouldLoad) {
             // Set flag so we can show "File Restored" message on reload
-            sessionStorage.setItem('iftalk_file_imported', 'true');
+            sessionStorage.setItem('lantern_file_imported', 'true');
 
             // Reload the page to load the imported save
             window.location.reload();
@@ -1015,7 +1015,7 @@ export async function createBackup(saveType, exemptFromLimit = false) {
     }
 
     // Get current save
-    const saveKey = `iftalk_${saveType}_${state.currentGameName}`;
+    const saveKey = `lantern_${saveType}_${state.currentGameName}`;
     const saveData = getJSON(saveKey);
 
     if (!saveData) {
@@ -1025,8 +1025,8 @@ export async function createBackup(saveType, exemptFromLimit = false) {
     // Create timestamped backup
     const timestamp = Date.now();
     const backupKey = exemptFromLimit
-        ? `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}_exempt`
-        : `iftalk_backup_${saveType}_${state.currentGameName}_${timestamp}`;
+        ? `lantern_backup_${saveType}_${state.currentGameName}_${timestamp}_exempt`
+        : `lantern_backup_${saveType}_${state.currentGameName}_${timestamp}`;
 
     if (!setJSON(backupKey, saveData)) {
         return false;
@@ -1057,11 +1057,11 @@ export async function createBackup(saveType, exemptFromLimit = false) {
 function backupNamedSaveBeforeOverwrite(saveName) {
     if (!state.currentGameName || !saveName) return;
 
-    const saveKey = `iftalk_customsave_${state.currentGameName}_${saveName}`;
+    const saveKey = `lantern_customsave_${state.currentGameName}_${saveName}`;
     const existing = getJSON(saveKey);
     if (!existing) return; // first save of this name — nothing to back up
 
-    const backupKey = `iftalk_backup_customsave_${state.currentGameName}_${saveName}`;
+    const backupKey = `lantern_backup_customsave_${state.currentGameName}_${saveName}`;
     setJSON(backupKey, existing);
 }
 
@@ -1071,7 +1071,7 @@ function backupNamedSaveBeforeOverwrite(saveName) {
  * @param {string} saveType - Save type ('autosave', 'quicksave', 'customsave')
  */
 function cleanupOldBackups(gameName, saveType = 'autosave') {
-    const prefix = `iftalk_backup_${saveType}_${gameName}_`;
+    const prefix = `lantern_backup_${saveType}_${gameName}_`;
 
     // Find all backup keys for this game and save type (exclude exempt backups)
     const backupKeys = [];

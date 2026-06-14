@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Backup Saves Dialog
  *
  * Shows a modal listing backup saves for the current game and lets the user
@@ -23,7 +23,7 @@ async function restoreBackup(backupKey) {
     const saveType = backupKey.includes('_autosave_') ? 'autosave' : 'quicksave';
     const gameId = state.currentGameName.replace(/\.[^.]+$/, '').toLowerCase();
 
-    const currentSaveKey = `iftalk_${saveType}_${gameId}`;
+    const currentSaveKey = `lantern_${saveType}_${gameId}`;
     const currentSave = localStorage.getItem(currentSaveKey);
 
     // Create a backup of current state first (exempt from the rotation limit)
@@ -33,11 +33,11 @@ async function restoreBackup(backupKey) {
     }
 
     // Restore the backup by writing it as the active save
-    localStorage.setItem(`iftalk_${saveType}_${gameId}`, backupData);
+    localStorage.setItem(`lantern_${saveType}_${gameId}`, backupData);
 
     // Also write to autosave slot so it's picked up by autoLoad() on reload
     // (quicksave backups would otherwise only restore the quicksave slot, not load into game)
-    localStorage.setItem(`iftalk_autosave_${gameId}`, backupData);
+    localStorage.setItem(`lantern_autosave_${gameId}`, backupData);
 
     updateStatus(`Restoring ${saveType} from backup...`);
     window.location.reload();
@@ -62,12 +62,12 @@ export function showBackupSavesDialog() {
   const backups = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.startsWith('iftalk_backup_') && key.includes(`_${gameId}_`) && !key.endsWith('_exempt')) {
+    if (key && key.startsWith('lantern_backup_') && key.includes(`_${gameId}_`) && !key.endsWith('_exempt')) {
       const value = localStorage.getItem(key);
       if (value) {
         try {
           const data = JSON.parse(value);
-          const match = key.match(/iftalk_backup_(autosave|quicksave)_[^_]+_(\d+)/);
+          const match = key.match(/lantern_backup_(autosave|quicksave)_[^_]+_(\d+)/);
           if (match) {
             backups.push({ key, type: match[1], timestamp: parseInt(match[2]), data });
           }

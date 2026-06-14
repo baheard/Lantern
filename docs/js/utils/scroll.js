@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Scroll Utility Module
  *
  * Centralized scroll behavior for consistent UX.
@@ -68,7 +68,7 @@ export function scrollToNewContent(newElement, container) {
   // ALSO: Respect user preference to keep keyboard open
   const mapOverlay = document.getElementById('mapCanvasOverlay');
   const isMapOpen = mapOverlay && mapOverlay.classList.contains('visible');
-  const keepKeyboardOpen = localStorage.getItem('iftalk_keep_keyboard_open') === 'true';
+  const keepKeyboardOpen = localStorage.getItem('lantern_keep_keyboard_open') === 'true';
 
   if (vv && vv.height < window.innerHeight && !isMapOpen && !keepKeyboardOpen) {
     // Keyboard is open (visual viewport is smaller than window)

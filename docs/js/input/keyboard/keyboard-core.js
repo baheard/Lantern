@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Keyboard Input Core Module
  *
  * Handles keyboard input via messaging interface in controls panel.
@@ -521,7 +521,7 @@ export function initKeyboardInput() {
 
   // Function to update cursor based on tap-to-examine setting
   function updateTapExamineCursor() {
-    const enabled = localStorage.getItem('iftalk_tap_to_examine') !== 'false';
+    const enabled = localStorage.getItem('lantern_tap_to_examine') !== 'false';
     document.body.classList.toggle('tap-to-examine-enabled', enabled);
   }
 
@@ -530,7 +530,7 @@ export function initKeyboardInput() {
 
   // Listen for storage changes (when setting changed in another tab or by settings panel)
   window.addEventListener('storage', (e) => {
-    if (e.key === 'iftalk_tap_to_examine') {
+    if (e.key === 'lantern_tap_to_examine') {
       updateTapExamineCursor();
     }
   });

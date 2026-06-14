@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Map Canvas - Configuration and Shared State
  */
 
@@ -101,7 +101,7 @@ export const NODE_RADIUS_SMALL = 12;  // 60% of normal
 export const SMALL_NODE_FADE_SCALE = 0.6;  // Fade out small nodes below this zoom
 export const TOUCH_TARGET = 44;
 export const LONG_PRESS_DURATION = 400;
-export const FIRST_USE_KEY = 'iftalk_map_first_use_shown';
+export const FIRST_USE_KEY = 'lantern_map_first_use_shown';
 
 // Map size limits (for performance and localStorage constraints)
 export const NODE_COUNT_WARNING = 200;  // Warn when approaching limits

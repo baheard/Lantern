@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Map Canvas - Interactive Game Map with Auto-Mapping
  *
  * UX Principles:
@@ -69,7 +69,7 @@ export function initMapCanvas() {
 
   // If game already loaded before map module initialized, load map data now
   if (window._inGame) {
-    const gameName = localStorage.getItem('iftalk_last_game')?.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+    const gameName = localStorage.getItem('lantern_last_game')?.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
     if (gameName) loadMapForGame(gameName);
   }
 
@@ -487,7 +487,7 @@ function setupResizeHandle() {
     try {
       const rect = panel.getBoundingClientRect();
       const leftPercent = (rect.left / window.innerWidth) * 100;
-      localStorage.setItem('iftalk_map_left_percent', leftPercent.toString());
+      localStorage.setItem('lantern_map_left_percent', leftPercent.toString());
     } catch (e) {
       console.error('Failed to save map panel position:', e);
     }
@@ -518,7 +518,7 @@ function setupResizeHandle() {
 
   // Restore saved left position on map show (with error handling)
   try {
-    const savedLeftPercent = localStorage.getItem('iftalk_map_left_percent');
+    const savedLeftPercent = localStorage.getItem('lantern_map_left_percent');
     if (savedLeftPercent) {
       const leftPercent = parseFloat(savedLeftPercent);
       const minLeft = getMinLeftPercent();
@@ -1248,7 +1248,7 @@ function updateNodeCount() { /* node count display removed */ }
 // TOAST NOTIFICATION SYSTEM
 // ============================================================================
 
-const TOAST_STORAGE_KEY = 'iftalk_map_toasts_dismissed';
+const TOAST_STORAGE_KEY = 'lantern_map_toasts_dismissed';
 let toastQueue = [];
 let currentToast = null;
 let toastContainer = null;
@@ -1821,7 +1821,7 @@ function clearActiveMapData() {
   mapState.deletedEdges = new Set(); mapState.deletedNodes = new Set();
   mapState.viewport = { x: 0, y: 0, scale: 1 };
   mapState.selectedNode = null; mapState.currentNodeId = null;
-  const automapPref = localStorage.getItem('iftalk_automap_default');
+  const automapPref = localStorage.getItem('lantern_automap_default');
   mapState.autoMapEnabled = automapPref !== null ? automapPref === 'true' : true;
   mapState.undoStack = [];
   mapState.redoStack = [];
@@ -1920,7 +1920,7 @@ function deleteMap(mapId) {
     mapState.mapOrder = [{ id: newId, name: 'Map 1' }];
     _allMapsData = {};
     clearActiveMapData();          // resets nodes/viewport and restores the automap pref
-    if (mapState.gameName) localStorage.removeItem(`iftalk_automapper_restore_${mapState.gameName}`);
+    if (mapState.gameName) localStorage.removeItem(`lantern_automapper_restore_${mapState.gameName}`);
     clearJourney();
     if (mapState.autoMapEnabled) seedCurrentLocation();
   } else if (mapState.activeMapId === mapId) {
@@ -2070,7 +2070,7 @@ function loadMapForGame(gameName) {
   _pendingNewAreaHint = false;
   setSuppressJourneyClear(false);
 
-  const saved = localStorage.getItem(`iftalk_map_${gameName}`);
+  const saved = localStorage.getItem(`lantern_map_${gameName}`);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -2294,7 +2294,7 @@ function saveMapImmediately() {
       mapOrder: mapState.mapOrder,
       maps: _allMapsData
     };
-    localStorage.setItem(`iftalk_map_${mapState.gameName}`, JSON.stringify(dataToSave));
+    localStorage.setItem(`lantern_map_${mapState.gameName}`, JSON.stringify(dataToSave));
     updateMapBadge();
     return true;
   } catch (e) {
@@ -2400,7 +2400,7 @@ export function exportMapState(gameName) {
   if (!gameName) return null;
   flushMapSave();
 
-  const raw = localStorage.getItem(`iftalk_map_${gameName}`);
+  const raw = localStorage.getItem(`lantern_map_${gameName}`);
   if (!raw) return null;
 
   let stored;
@@ -2443,7 +2443,7 @@ export function importMapState(optimizedData, gameName) {
     v2 = { v: 2, activeMapId: mapId, mapOrder: [{ id: mapId, name: 'Map 1' }], maps: { [mapId]: expandMapData(optimizedData) } };
   }
 
-  localStorage.setItem(`iftalk_map_${gameName}`, JSON.stringify(v2));
+  localStorage.setItem(`lantern_map_${gameName}`, JSON.stringify(v2));
 }
 
 function resetMap() {
@@ -2642,7 +2642,7 @@ export async function syncMapFromAutoMapper(gameName) {
   }
 
   // Load existing map canvas from localStorage
-  const mapKey = `iftalk_map_${gameName}`;
+  const mapKey = `lantern_map_${gameName}`;
   const existing = localStorage.getItem(mapKey);
   if (!existing) {
     return; // No map canvas to update

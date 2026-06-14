@@ -45,7 +45,7 @@ export function startKeepAlive() {
     // Set up Media Session API for lock screen controls
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: 'IFTalk Narration',
+        title: 'Lantern Narration',
         artist: 'Interactive Fiction',
         album: state.currentGameName || 'Game'
       });

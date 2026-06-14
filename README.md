@@ -1,8 +1,8 @@
-# IF Talk 🎮🎤
+# Lantern 🎮🎤
 
 **Voice-powered interactive fiction player with AI natural language commands**
 
-Play classic text adventure games using your voice and natural language! IF Talk combines:
+Play classic text adventure games using your voice and natural language! Lantern combines:
 - 🎤 **Voice input** - Speak your commands naturally
 - 🔊 **Voice output** - Browser TTS narration
 - 🤖 **AI translation** - Natural language → game commands

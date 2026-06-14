@@ -1,10 +1,14 @@
-/**
+﻿/**
  * IFTalk - Voice-Powered Interactive Fiction
  * Main Application Entry Point
  *
  * This file wires together all modules and initializes the app.
  * Uses browser-based ZVM + GlkOte instead of server-side Frotz.
  */
+
+// Storage prefix migration (must be first — runs before any module touches localStorage)
+// Temporary: remove after transition period once all users have upgraded.
+import './utils/storage/storage-migration.js';
 
 // Remote console (must be first for iOS debugging)
 import './utils/remote-console.js';
@@ -311,7 +315,7 @@ function initVoice() {
   };
 
   // Initialize voice controls visibility from global settings
-  const voiceControlsEnabled = localStorage.getItem('iftalk_voiceControlsEnabled') !== 'false';
+  const voiceControlsEnabled = localStorage.getItem('lantern_voiceControlsEnabled') !== 'false';
   const controls = document.getElementById('controls');
   if (controls && !voiceControlsEnabled) {
     controls.classList.add('hidden');
@@ -320,10 +324,10 @@ function initVoice() {
 
   // Load global audio settings into state
   if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
-  state.browserVoiceConfig.voice = localStorage.getItem('iftalk_narratorVoice') || state.browserVoiceConfig.voice;
-  state.browserVoiceConfig.appVoice = localStorage.getItem('iftalk_appVoice') || state.browserVoiceConfig.appVoice;
-  state.browserVoiceConfig.rate = parseFloat(localStorage.getItem('iftalk_speechRate') || state.browserVoiceConfig.rate || '1.0');
-  state.browserVoiceConfig.volume = parseFloat(localStorage.getItem('iftalk_masterVolume') || '100') / 100;
+  state.browserVoiceConfig.voice = localStorage.getItem('lantern_narratorVoice') || state.browserVoiceConfig.voice;
+  state.browserVoiceConfig.appVoice = localStorage.getItem('lantern_appVoice') || state.browserVoiceConfig.appVoice;
+  state.browserVoiceConfig.rate = parseFloat(localStorage.getItem('lantern_speechRate') || state.browserVoiceConfig.rate || '1.0');
+  state.browserVoiceConfig.volume = parseFloat(localStorage.getItem('lantern_masterVolume') || '100') / 100;
 }
 
 function initUIComponents() {
@@ -374,7 +378,7 @@ function initUIComponents() {
     tapLabel.querySelector('.setting-description').textContent = 'Click words to enter them in the command input';
   }
   if (tapToExamineToggle) {
-    const saved = localStorage.getItem('iftalk_tap_to_examine');
+    const saved = localStorage.getItem('lantern_tap_to_examine');
     tapToExamineToggle.checked = saved !== 'false'; // default enabled
 
     // Set initial body class based on saved setting
@@ -385,7 +389,7 @@ function initUIComponents() {
     }
 
     tapToExamineToggle.addEventListener('change', (e) => {
-      localStorage.setItem('iftalk_tap_to_examine', e.target.checked.toString());
+      localStorage.setItem('lantern_tap_to_examine', e.target.checked.toString());
       updateStatus(`Tap to examine ${e.target.checked ? 'enabled' : 'disabled'}`);
 
       // Update cursor immediately via body class
@@ -400,7 +404,7 @@ function initUIComponents() {
   // Initialize push-to-talk mode toggle
   const pushToTalkToggle = document.getElementById('pushToTalkToggle');
   if (pushToTalkToggle) {
-    const saved = localStorage.getItem('iftalk_push_to_talk');
+    const saved = localStorage.getItem('lantern_push_to_talk');
     state.pushToTalkMode = saved === 'true'; // default disabled
     pushToTalkToggle.checked = state.pushToTalkMode;
 
@@ -412,7 +416,7 @@ function initUIComponents() {
 
     pushToTalkToggle.addEventListener('change', (e) => {
       state.pushToTalkMode = e.target.checked;
-      localStorage.setItem('iftalk_push_to_talk', e.target.checked.toString());
+      localStorage.setItem('lantern_push_to_talk', e.target.checked.toString());
 
       if (e.target.checked) {
         updateStatus('Push-to-talk mode enabled - Hold mic button to speak');
@@ -456,11 +460,11 @@ function initUIComponents() {
   // Initialize keep keyboard open toggle (mobile only)
   const keepKeyboardOpenToggle = document.getElementById('keepKeyboardOpenToggle');
   if (keepKeyboardOpenToggle) {
-    const saved = localStorage.getItem('iftalk_keep_keyboard_open');
+    const saved = localStorage.getItem('lantern_keep_keyboard_open');
     keepKeyboardOpenToggle.checked = saved === 'true'; // default disabled
 
     keepKeyboardOpenToggle.addEventListener('change', (e) => {
-      localStorage.setItem('iftalk_keep_keyboard_open', e.target.checked.toString());
+      localStorage.setItem('lantern_keep_keyboard_open', e.target.checked.toString());
       updateStatus(`Keyboard ${e.target.checked ? 'will stay open' : 'will auto-close'}`);
     });
   }
@@ -1028,9 +1032,9 @@ function wireLifecycle() {
 // Initialize app
 async function initApp() {
   // Restore player/mic state preserved across a restore reload
-  const savedUiState = sessionStorage.getItem('iftalk_restore_ui_state');
+  const savedUiState = sessionStorage.getItem('lantern_restore_ui_state');
   if (savedUiState) {
-    sessionStorage.removeItem('iftalk_restore_ui_state');
+    sessionStorage.removeItem('lantern_restore_ui_state');
     try {
       const ui = JSON.parse(savedUiState);
       if (ui.autoplayEnabled) {

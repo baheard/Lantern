@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Recently Played UI
  *
  * Manages the "Recently Played" section on the welcome screen: tracking custom
@@ -20,14 +20,14 @@ const PREDEFINED_GAMES = [
 export function trackCustomGame(url, gameName) {
   if (PREDEFINED_GAMES.includes(gameName.toLowerCase())) return;
 
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
+  const customGames = JSON.parse(localStorage.getItem('lantern_custom_games') || '{}');
   customGames[gameName] = {
     url: url,
     name: gameName,
     displayName: gameName.replace(/([A-Z])/g, ' $1').trim().replace(/^\w/, c => c.toUpperCase()),
     lastPlayed: Date.now()
   };
-  localStorage.setItem('iftalk_custom_games', JSON.stringify(customGames));
+  localStorage.setItem('lantern_custom_games', JSON.stringify(customGames));
 }
 
 /**
@@ -35,9 +35,9 @@ export function trackCustomGame(url, gameName) {
  * @param {string} gameName - Normalized game name
  */
 export function removeCustomGame(gameName) {
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
+  const customGames = JSON.parse(localStorage.getItem('lantern_custom_games') || '{}');
   delete customGames[gameName];
-  localStorage.setItem('iftalk_custom_games', JSON.stringify(customGames));
+  localStorage.setItem('lantern_custom_games', JSON.stringify(customGames));
 }
 
 /**
@@ -45,11 +45,11 @@ export function removeCustomGame(gameName) {
  * @returns {Array} Array of custom game objects with autosaves
  */
 export function getCustomGamesWithAutosaves() {
-  const customGames = JSON.parse(localStorage.getItem('iftalk_custom_games') || '{}');
+  const customGames = JSON.parse(localStorage.getItem('lantern_custom_games') || '{}');
   const gamesWithSaves = [];
 
   for (const [gameName, gameData] of Object.entries(customGames)) {
-    const autosaveKey = `iftalk_autosave_${gameName}`;
+    const autosaveKey = `lantern_autosave_${gameName}`;
     if (localStorage.getItem(autosaveKey) !== null) {
       gamesWithSaves.push(gameData);
     }
@@ -117,12 +117,12 @@ export function showResumeDialog(gamePath, gameName) {
       if (!action) return;
 
       if (action === 'restart') {
-        localStorage.removeItem(`iftalk_autosave_${gameName}`);
-        localStorage.removeItem(`iftalk_map_${gameName}`);
+        localStorage.removeItem(`lantern_autosave_${gameName}`);
+        localStorage.removeItem(`lantern_map_${gameName}`);
         // Skip autoload on the upcoming startGame, otherwise Drive auto-sync
         // re-downloads the cloud autosave and restores it anyway. Mirrors the
         // "Restart Game" settings button.
-        localStorage.setItem('iftalk_skip_autoload', 'true');
+        localStorage.setItem('lantern_skip_autoload', 'true');
       }
 
       overlay.remove();

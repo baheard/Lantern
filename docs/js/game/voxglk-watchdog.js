@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VoxGlk Watchdog & REPAIR Flow
  *
  * Detects when the Z-machine stops responding to input and surfaces an
@@ -106,7 +106,7 @@ export async function startWatchdog(currentGeneration, getCurrentGeneration, isB
   clearWatchdog();
 
   lastInputGeneration = currentGeneration;
-  currentRepairFlagKey = `iftalk_last_repair_attempt_${state.currentGameName}`;
+  currentRepairFlagKey = `lantern_last_repair_attempt_${state.currentGameName}`;
 
   watchdogTimer = setTimeout(async () => {
     if (getCurrentGeneration() !== lastInputGeneration) {
@@ -181,14 +181,14 @@ export async function performRepair() {
     }
 
     // Step 3: Set up pending restore (same mechanism as manual RESTORE command)
-    sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+    sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
       type: 'autosave',
       key: state.currentGameName,
       gameName: state.currentGameName
     }));
 
     // Step 4: Set flag to track repair attempt (prevents infinite loop)
-    const repairFlagKey = `iftalk_last_repair_attempt_${state.currentGameName}`;
+    const repairFlagKey = `lantern_last_repair_attempt_${state.currentGameName}`;
     sessionStorage.setItem(repairFlagKey, Date.now().toString());
 
     // Step 5: Reload page to restore

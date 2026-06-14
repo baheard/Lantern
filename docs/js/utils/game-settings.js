@@ -1,18 +1,18 @@
-/**
+﻿/**
  * Game Settings Module
  *
  * Manages per-game settings with localStorage persistence.
  *
  * Hierarchy:
  * 1. Per-game settings (gameSettings_{name}) - overrides for specific game
- * 2. App defaults (iftalk_app_defaults) - inherited by all games
+ * 2. App defaults (lantern_app_defaults) - inherited by all games
  * 3. Hardcoded defaults - fallback if nothing else set
  */
 
 import { state } from '../core/state.js';
 import { getJSON, setJSON, removeItem, hasItem, getItem, getItemsByPrefix } from './storage/storage-api.js';
 
-const APP_DEFAULTS_KEY = 'iftalk_app_defaults';
+const APP_DEFAULTS_KEY = 'lantern_app_defaults';
 
 /**
  * Get localStorage key for current game's settings
@@ -243,7 +243,7 @@ export function getGameData(gameName = null) {
       getJSON(`gameSettings_${name}`, {}) :
       loadGameSettings(),
     saves: {
-      quicksave: getItem(`iftalk_quicksave_${name}`),
+      quicksave: getItem(`lantern_quicksave_${name}`),
       glkoteSave: getItem(`glkote_quetzal_${name}`)
     }
   };
@@ -257,7 +257,7 @@ export function getGameData(gameName = null) {
 export function hasGameData(gameName) {
   return {
     hasSettings: hasItem(`gameSettings_${gameName}`),
-    hasQuickSave: hasItem(`iftalk_quicksave_${gameName}`),
+    hasQuickSave: hasItem(`lantern_quicksave_${gameName}`),
     hasGlkoteSave: hasItem(`glkote_quetzal_${gameName}`)
   };
 }
@@ -270,8 +270,8 @@ export function clearAllGameData(gameName = null) {
   const name = gameName || state.currentGameName || 'default';
 
   removeItem(`gameSettings_${name}`);
-  removeItem(`iftalk_quicksave_${name}`);
-  removeItem(`iftalk_autosave_${name}`);
+  removeItem(`lantern_quicksave_${name}`);
+  removeItem(`lantern_autosave_${name}`);
   removeItem(`glkote_quetzal_${name}`);
   removeItem(`zvm_autosave_${name}`);
 }
@@ -281,7 +281,7 @@ export function clearAllGameData(gameName = null) {
  * Used by "Delete All Data" on welcome screen
  */
 export function clearAllAppData() {
-  const prefixes = ['iftalk_', 'gameSettings_', 'glkote_quetzal_', 'zvm_autosave_'];
+  const prefixes = ['lantern_', 'gameSettings_', 'glkote_quetzal_', 'zvm_autosave_'];
   let totalRemoved = 0;
 
   // Find and remove all IFTalk-related keys
@@ -324,7 +324,7 @@ export function listAllGames() {
   };
 
   processKeys('gameSettings_', 'hasSettings');
-  processKeys('iftalk_quicksave_', 'hasQuickSave');
+  processKeys('lantern_quicksave_', 'hasQuickSave');
   processKeys('glkote_quetzal_', 'hasGlkoteSave');
 
   return Array.from(games.values()).sort((a, b) => a.gameName.localeCompare(b.gameName));

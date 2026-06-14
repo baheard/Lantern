@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Map Canvas - Bottom Sheet and Node/Edge CRUD
  */
 
@@ -256,7 +256,7 @@ export function closeNodeSheet() {
 // SHEET DRAG-TO-DISMISS
 // ============================================================================
 
-const SHEET_TOP_KEY = 'iftalk_map_sheet_top_percent';
+const SHEET_TOP_KEY = 'lantern_map_sheet_top_percent';
 let sheetDragState = { isDragging: false, startY: 0, startTop: 0 };
 
 export function setupSheetDragHandlers() {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Voice Selection Module
  *
  * Handles voice dropdown population, defaults, filtering, and testing.
@@ -286,24 +286,24 @@ export function loadBrowserVoiceConfig() {
   if (!state.browserVoiceConfig) state.browserVoiceConfig = {};
 
   // Load global voice settings from localStorage
-  const savedNarratorVoice = localStorage.getItem('iftalk_narratorVoice');
+  const savedNarratorVoice = localStorage.getItem('lantern_narratorVoice');
   if (savedNarratorVoice) {
     state.browserVoiceConfig.voice = savedNarratorVoice;
   }
 
-  const savedAppVoice = localStorage.getItem('iftalk_appVoice');
+  const savedAppVoice = localStorage.getItem('lantern_appVoice');
   if (savedAppVoice) {
     state.browserVoiceConfig.appVoice = savedAppVoice;
   }
 
   // Load global speech rate
-  const savedSpeechRate = localStorage.getItem('iftalk_speechRate');
+  const savedSpeechRate = localStorage.getItem('lantern_speechRate');
   if (savedSpeechRate) {
     state.browserVoiceConfig.rate = parseFloat(savedSpeechRate);
   }
 
   // Load global volume
-  const savedVolume = localStorage.getItem('iftalk_masterVolume');
+  const savedVolume = localStorage.getItem('lantern_masterVolume');
   const volume = savedVolume ? parseInt(savedVolume) / 100 : 1.0;
   state.browserVoiceConfig.volume = volume;
 
@@ -325,7 +325,7 @@ export function initVoiceSelection() {
       state.browserVoiceConfig.voice = e.target.value;
 
       // Save to global localStorage
-      localStorage.setItem('iftalk_narratorVoice', e.target.value);
+      localStorage.setItem('lantern_narratorVoice', e.target.value);
       updateStatus(`✓ Narrator voice: ${e.target.value}`);
     });
   }
@@ -337,7 +337,7 @@ export function initVoiceSelection() {
       state.browserVoiceConfig.appVoice = e.target.value;
 
       // Save to global localStorage
-      localStorage.setItem('iftalk_appVoice', e.target.value);
+      localStorage.setItem('lantern_appVoice', e.target.value);
       updateStatus(`✓ App voice: ${e.target.value}`);
     });
   }

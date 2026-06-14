@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Save List Formatter Module
  *
  * Functions for retrieving and formatting save game lists.
@@ -13,7 +13,7 @@ import { getJSON } from '../../utils/storage/storage-api.js';
  */
 export function getCustomSaves() {
   const saves = [];
-  const prefix = `iftalk_customsave_${state.currentGameName}_`;
+  const prefix = `lantern_customsave_${state.currentGameName}_`;
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -42,12 +42,12 @@ export function getCustomSaves() {
 export function getQuicksave() {
   // Try game signature first (newer saves), then game name (older saves)
   const gameSignature = window.zvmInstance?.get_signature?.() || state.currentGameName;
-  let key = `iftalk_quicksave_${gameSignature}`;
+  let key = `lantern_quicksave_${gameSignature}`;
   let saved = localStorage.getItem(key);
 
   // Fallback to game name if signature key doesn't exist
   if (!saved && gameSignature !== state.currentGameName) {
-    key = `iftalk_quicksave_${state.currentGameName}`;
+    key = `lantern_quicksave_${state.currentGameName}`;
     saved = localStorage.getItem(key);
   }
 
@@ -68,7 +68,7 @@ export function getQuicksave() {
  * @returns {object|null} Autosave object or null
  */
 export function getAutosave() {
-  const key = `iftalk_autosave_${state.currentGameName}`;
+  const key = `lantern_autosave_${state.currentGameName}`;
   const saved = localStorage.getItem(key);
 
   if (!saved) return null;

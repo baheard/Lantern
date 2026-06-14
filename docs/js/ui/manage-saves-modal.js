@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Manage Saves Modal
  *
  * Lists all local saves for the current game with Save/Load actions.
@@ -17,7 +17,7 @@ let portalDropdown = null;
 const expandedBackups = new Set();
 const driveStatusCache = new Map(); // key → { hint, color }
 
-document.addEventListener('iftalk:synccomplete', ({ detail }) => {
+document.addEventListener('lantern:synccomplete', ({ detail }) => {
   refreshDriveStatusCache(detail.gameName);
   if (overlayEl && !overlayEl.classList.contains('hidden')) {
     refreshSavesList();
@@ -80,7 +80,7 @@ function getBackupsForSave(save) {
   // Named (custom) saves keep a single backup of the last overwritten state at a
   // fixed key (no timestamp suffix). Look it up directly — see backupNamedSaveBeforeOverwrite.
   if (save.type === 'customsave') {
-    const key = `iftalk_backup_customsave_${gameName}_${save.name}`;
+    const key = `lantern_backup_customsave_${gameName}_${save.name}`;
     const saveData = getJSON(key);
     if (!saveData) return [];
     const ts = saveData.timestamp ? Date.parse(saveData.timestamp) : Date.now();
@@ -88,7 +88,7 @@ function getBackupsForSave(save) {
   }
 
   if (save.type !== 'autosave' && save.type !== 'quicksave') return [];
-  const prefix = `iftalk_backup_${save.type}_${gameName}_`;
+  const prefix = `lantern_backup_${save.type}_${gameName}_`;
   const results = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -167,19 +167,19 @@ function getCloudStatus(save) {
 function collectSaves(gameName) {
   const saves = [];
 
-  const autosaveKey = `iftalk_autosave_${gameName}`;
+  const autosaveKey = `lantern_autosave_${gameName}`;
   const autosaveData = getJSON(autosaveKey);
   if (autosaveData) {
     saves.push({ type: 'autosave', key: autosaveKey, name: 'Autosave', bar: 'ms-bar-auto', timestamp: autosaveData.timestamp, saveData: autosaveData });
   }
 
-  const quicksaveKey = `iftalk_quicksave_${gameName}`;
+  const quicksaveKey = `lantern_quicksave_${gameName}`;
   const quicksaveData = getJSON(quicksaveKey);
   if (quicksaveData) {
     saves.push({ type: 'quicksave', key: quicksaveKey, name: 'Quick Save', bar: 'ms-bar-quick', timestamp: quicksaveData.timestamp, saveData: quicksaveData });
   }
 
-  const prefix = `iftalk_customsave_${gameName}_`;
+  const prefix = `lantern_customsave_${gameName}_`;
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key?.startsWith(prefix)) continue;
@@ -253,8 +253,8 @@ async function loadSave(save) {
   }
   const gameName = state.currentGameName;
   if (!gameName) return;
-  localStorage.setItem(`iftalk_autosave_${gameName}`, JSON.stringify(save.saveData));
-  sessionStorage.setItem('iftalk_manage_saves_restore', save.name);
+  localStorage.setItem(`lantern_autosave_${gameName}`, JSON.stringify(save.saveData));
+  sessionStorage.setItem('lantern_manage_saves_restore', save.name);
   window.location.reload();
 }
 
@@ -269,7 +269,7 @@ async function deleteSave(save, rowEl) {
   // Named saves carry a single overwrite-backup at a fixed key — remove it too so it
   // doesn't linger orphaned in localStorage once the save itself is gone.
   if (save.type === 'customsave') {
-    removeItem(`iftalk_backup_customsave_${save.saveData.gameName || state.currentGameName}_${save.name}`);
+    removeItem(`lantern_backup_customsave_${save.saveData.gameName || state.currentGameName}_${save.name}`);
   }
   updateStatus(`Deleted: ${save.name}`);
 
@@ -765,9 +765,9 @@ export function initManageSavesModal() {
     if (e.key === 'Escape' && !overlayEl.classList.contains('hidden')) closeManageSavesModal();
   });
 
-  const restoreName = sessionStorage.getItem('iftalk_manage_saves_restore');
+  const restoreName = sessionStorage.getItem('lantern_manage_saves_restore');
   if (restoreName) {
-    sessionStorage.removeItem('iftalk_manage_saves_restore');
+    sessionStorage.removeItem('lantern_manage_saves_restore');
     updateStatus(`Restoring: ${restoreName}...`);
   }
 }

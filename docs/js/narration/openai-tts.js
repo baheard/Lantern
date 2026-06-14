@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OpenAI TTS Module
  *
  * Calls OpenAI's /v1/audio/speech directly from the browser using the user's
@@ -11,7 +11,7 @@
 import { state } from '../core/state.js';
 
 const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech';
-const CACHE_NAME = 'iftalk-openai-tts-v1';
+const CACHE_NAME = 'lantern-openai-tts-v1';
 const MAX_CHARS = 4000;
 const COST_PER_MILLION_CHARS = 15.00;
 
@@ -72,7 +72,7 @@ function splitIntoChunks(text) {
  */
 async function makeCacheKey(text, voice, speed) {
   const hash = await sha256(`${voice}:${speed}:${text}`);
-  return `https://tts-cache.iftalk.local/${hash}`;
+  return `https://tts-cache.lantern.local/${hash}`;
 }
 
 async function getCachedBlob(cacheKey) {
@@ -470,7 +470,7 @@ export async function testOpenAITTS() {
 }
 
 export function loadOpenAITTSConfig() {
-  const raw = localStorage.getItem('iftalk_openaiTts');
+  const raw = localStorage.getItem('lantern_openaiTts');
   if (raw) {
     try {
       state.openAiTtsConfig = JSON.parse(raw);
@@ -483,5 +483,5 @@ export function loadOpenAITTSConfig() {
 }
 
 export function saveOpenAITTSConfig() {
-  localStorage.setItem('iftalk_openaiTts', JSON.stringify(state.openAiTtsConfig || {}));
+  localStorage.setItem('lantern_openaiTts', JSON.stringify(state.openAiTtsConfig || {}));
 }

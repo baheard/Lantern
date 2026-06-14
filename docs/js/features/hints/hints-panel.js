@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Hints Panel - UHS-style progressive hint browser
  *
  * Full-screen overlay presenting a collapsible section → question → hint tree.
@@ -55,7 +55,7 @@ export function initHintsPanel() {
 
     // Load hints data for the current game if one is loaded
     if (window._inGame) {
-        const gameName = localStorage.getItem('iftalk_last_game')
+        const gameName = localStorage.getItem('lantern_last_game')
             ?.split('/')
             .pop()
             .replace(/\.[^.]+$/, '')
@@ -88,7 +88,7 @@ export function initHintsPanel() {
 /** @param {CustomEvent} e */
 function handleGameLoaded(e) {
     const gameName = e.detail?.gameName
-        || localStorage.getItem('iftalk_last_game')
+        || localStorage.getItem('lantern_last_game')
             ?.split('/')
             .pop()
             .replace(/\.[^.]+$/, '')
@@ -177,7 +177,7 @@ const HINTS_RESIZE = {
     DEFAULT_WIDTH_VW: 75,
     MIN_WIDTH_VW: 35,
     MAX_WIDTH_VW: 92,
-    STORAGE_KEY: 'iftalk_hints_width_vw',
+    STORAGE_KEY: 'lantern_hints_width_vw',
 };
 
 function setupResizeHandle() {

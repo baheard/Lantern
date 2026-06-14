@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Settings Panel Module
  *
  * Manages settings panel visibility, context updates, and various settings controls.
@@ -440,7 +440,7 @@ export function initSettings() {
   const volumeValue = document.getElementById('masterVolumeValue');
   if (volumeSlider && volumeValue) {
     // Load saved volume (global setting)
-    const savedVolume = localStorage.getItem('iftalk_masterVolume');
+    const savedVolume = localStorage.getItem('lantern_masterVolume');
     const volume = savedVolume ? parseInt(savedVolume) : 100;
     volumeSlider.value = volume;
     volumeValue.textContent = volume + '%';
@@ -458,7 +458,7 @@ export function initSettings() {
       }
 
       // Save globally (not per-game)
-      localStorage.setItem('iftalk_masterVolume', vol.toString());
+      localStorage.setItem('lantern_masterVolume', vol.toString());
       updateStatus(`Volume: ${vol}%`);
     });
   }
@@ -468,7 +468,7 @@ export function initSettings() {
   const speechRateValue = document.getElementById('speechRateValue');
   if (speechRateSlider && speechRateValue) {
     // Load saved speech rate from global localStorage
-    const savedRate = localStorage.getItem('iftalk_speechRate');
+    const savedRate = localStorage.getItem('lantern_speechRate');
     const rate = savedRate ? parseFloat(savedRate) : 1.0;
     speechRateSlider.value = rate;
     speechRateValue.textContent = rate.toFixed(1) + 'x';
@@ -486,7 +486,7 @@ export function initSettings() {
       }
 
       // Save to global localStorage
-      localStorage.setItem('iftalk_speechRate', rate.toString());
+      localStorage.setItem('lantern_speechRate', rate.toString());
       updateStatus(`✓ Speech speed: ${rate.toFixed(1)}x`);
     });
   }
@@ -494,13 +494,13 @@ export function initSettings() {
   // Voice Controls toggle
   const voiceControlsToggle = document.getElementById('voiceControlsToggle');
   if (voiceControlsToggle) {
-    const voiceControlsEnabled = localStorage.getItem('iftalk_voiceControlsEnabled') !== 'false';
+    const voiceControlsEnabled = localStorage.getItem('lantern_voiceControlsEnabled') !== 'false';
     voiceControlsToggle.checked = voiceControlsEnabled;
     updateVoiceControlsVisibility(voiceControlsEnabled);
 
     voiceControlsToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
-      localStorage.setItem('iftalk_voiceControlsEnabled', enabled);
+      localStorage.setItem('lantern_voiceControlsEnabled', enabled);
       updateVoiceControlsVisibility(enabled);
       updateStatus(enabled ? '✓ Voice controls shown' : '✗ Voice controls hidden');
     });
@@ -509,12 +509,12 @@ export function initSettings() {
   // Sound Effects toggle
   const soundEffectsToggle = document.getElementById('soundEffectsToggle');
   if (soundEffectsToggle) {
-    const soundEffectsEnabled = localStorage.getItem('iftalk_soundEffectsEnabled') !== 'false';
+    const soundEffectsEnabled = localStorage.getItem('lantern_soundEffectsEnabled') !== 'false';
     soundEffectsToggle.checked = soundEffectsEnabled;
 
     soundEffectsToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
-      localStorage.setItem('iftalk_soundEffectsEnabled', enabled);
+      localStorage.setItem('lantern_soundEffectsEnabled', enabled);
       updateStatus(enabled ? '✓ Sound effects enabled' : '✗ Sound effects disabled');
     });
   }
@@ -522,12 +522,12 @@ export function initSettings() {
   // Auto-save toggle
   const autosaveToggle = document.getElementById('autosaveToggle');
   if (autosaveToggle) {
-    const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
+    const autosaveEnabled = localStorage.getItem('lantern_autosaveEnabled') !== 'false';
     autosaveToggle.checked = autosaveEnabled;
 
     autosaveToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
-      localStorage.setItem('iftalk_autosaveEnabled', enabled);
+      localStorage.setItem('lantern_autosaveEnabled', enabled);
       updateStatus(enabled ? '✓ Auto-save enabled' : '✗ Auto-save disabled');
     });
   }
@@ -535,13 +535,13 @@ export function initSettings() {
   // Automap by Default toggle (welcome screen only)
   const automapByDefaultToggle = document.getElementById('automapByDefaultToggle');
   if (automapByDefaultToggle) {
-    const automapPref = localStorage.getItem('iftalk_automap_default');
+    const automapPref = localStorage.getItem('lantern_automap_default');
     const automapByDefault = automapPref !== null ? automapPref === 'true' : true; // Default: enabled
     automapByDefaultToggle.checked = automapByDefault;
 
     automapByDefaultToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
-      localStorage.setItem('iftalk_automap_default', enabled);
+      localStorage.setItem('lantern_automap_default', enabled);
       updateStatus(enabled ? '✓ New games will auto-map by default' : '✗ Auto-mapping off by default');
     });
   }
@@ -549,12 +549,12 @@ export function initSettings() {
   // Keep Screen Awake toggle (already uses global state)
   const keepAwakeToggle = document.getElementById('keepAwakeToggle');
   if (keepAwakeToggle) {
-    const keepAwake = localStorage.getItem('iftalk_keepScreenAwake') === 'true';
+    const keepAwake = localStorage.getItem('lantern_keepScreenAwake') === 'true';
     keepAwakeToggle.checked = keepAwake;
 
     keepAwakeToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
-      localStorage.setItem('iftalk_keepScreenAwake', enabled);
+      localStorage.setItem('lantern_keepScreenAwake', enabled);
       // Update screen wake lock if available
       if (window.screenLock) {
         if (enabled) {
@@ -590,12 +590,12 @@ export function initSaveHandlers() {
         updateStatus('Error: No game loaded', 'error');
         return;
       }
-      const key = `iftalk_quicksave_${state.currentGameName}`;
+      const key = `lantern_quicksave_${state.currentGameName}`;
       if (!getItem(key)) {
         updateStatus('No quick save found - Use Quick Save button first', 'error');
         return;
       }
-      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+      sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
         type: 'quicksave',
         key: state.currentGameName,
         gameName: state.currentGameName
@@ -611,12 +611,12 @@ export function initSaveHandlers() {
         updateStatus('Error: No game loaded', 'error');
         return;
       }
-      const key = `iftalk_quicksave_${state.currentGameName}`;
+      const key = `lantern_quicksave_${state.currentGameName}`;
       if (!getItem(key)) {
         updateStatus('No quick save found - Use Quick Save button first', 'error');
         return;
       }
-      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+      sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
         type: 'quicksave',
         key: state.currentGameName,
         gameName: state.currentGameName

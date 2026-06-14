@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Command Router Module
  *
  * Main entry point for command processing, routing, and meta-command interception.
@@ -126,7 +126,7 @@ async function interceptMetaCommand(cmd, displayCmd = null) {
     case 'app help':
       respondAsGame(`
 <div class="system-message">
-<b>IFTalk App Commands</b><br>
+<b>Lantern App Commands</b><br>
 <br>
 These commands work whether typed or spoken:<br>
 <br>
@@ -297,11 +297,11 @@ See Settings → Voice Commands for complete reference.
     case 'quickrestore': {
       playAppCommand();
       if (!state.currentGameName) { updateStatus('No game loaded', 'error'); return true; }
-      if (!localStorage.getItem(`iftalk_quicksave_${state.currentGameName}`)) {
+      if (!localStorage.getItem(`lantern_quicksave_${state.currentGameName}`)) {
         updateStatus('No quick save found - Use Quick Save button first', 'error');
         return true;
       }
-      sessionStorage.setItem('iftalk_pending_restore', JSON.stringify({
+      sessionStorage.setItem('lantern_pending_restore', JSON.stringify({
         type: 'quicksave',
         key: state.currentGameName,
         gameName: state.currentGameName

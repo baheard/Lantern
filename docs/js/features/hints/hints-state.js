@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Hints State - Reveal-state persistence for UHS-style hints
  *
  * Persists per-game hint reveal counts to localStorage using storage-api.js.
- * Key pattern: getGameKey('hints') → "iftalk_hints_<gameName>"
+ * Key pattern: getGameKey('hints') → "lantern_hints_<gameName>"
  *
  * Storage format: { revealed: { "<questionId>": <count>, ... }, updatedAt }
  *

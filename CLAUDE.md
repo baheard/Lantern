@@ -46,6 +46,31 @@ cd /e/Project/IFTalk && npm start
 # Access at http://localhost:3002 (port set in config.json)
 ```
 
+## Dev Tools
+
+### Headless replay harness — `tools/play.cjs`
+
+Drives our **real** ZVM stack (the same `docs/lib/zvm.js` + `glkapi.js` the browser loads)
+headlessly, replaying a list of commands and printing the transcript. Use it to **verify
+walkthroughs and probe game mechanics without the browser/web-agent** — fast, deterministic,
+cheap. Location names are derived with the app's own `getCurrentLocation()`, so they match
+what the auto-mapper records.
+
+```bash
+node tools/play.cjs <game.z8|gameName> --status -- "se" "push can against wall" "up"
+node tools/play.cjs anchorhead --file cmds.txt --quiet   # one cmd/line; show last turn only
+```
+
+Flags: `--status` (print `[@ location]` per turn), `--quiet`, `--raw`, `--file <path>`,
+`--stdin`, `--key <c>` (key to dismiss char-mode prompts, default space).
+
+- **Replay-from-start, by design** — it never calls `restore_file()`, so it sidesteps the
+  whole bootstrap-restore bug class. Branch-probe a mechanic by changing the command tail.
+- **Caveats:** `@random` is clock-seeded so randomized puzzles differ each run; the typed
+  command echoes twice (Glk echo + CLI header); in-game `SAVE`/`RESTORE` are stubbed off.
+- Full design + gotchas: `.tome/headless-replay-harness.md`. Primary consumer: the
+  `generate-hints` skill (Steps 3 and 3.5).
+
 ## Working with Claude
 
 **Current Branch:** `claude/map-canvas-4hYUa` - Auto-mapper and interactive map canvas feature development
@@ -100,7 +125,7 @@ cd /e/Project/IFTalk && npm start
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.561
+**Current Version:** v1.5.562
 
 ## Third-Party Libraries
 
@@ -144,6 +169,20 @@ For detailed technical information, see the `reference/` folder:
 ### Development & Debugging
 - **[Remote Debugging](reference/remote-debugging.md)** - iOS/mobile debugging via local server logging
 - **[Reference Index](reference/README.md)** - Full table of contents for all reference docs
+
+## Pending Cleanup
+
+### IFTalk → Lantern migration scaffolding (added 2026-06-13, remove after transition)
+
+Once users have had enough time to upgrade (suggested: ~4-6 weeks after first Lantern release), ask me to remove this temporary migration code:
+
+1. **Delete** `docs/js/utils/storage/storage-migration.js`
+2. **`docs/js/app.js`** — remove the migration import (the 3-line block at the very top that imports `storage-migration.js`)
+3. **`docs/js/utils/gdrive/gdrive-api.js`** — remove `findFolderByName()`, `renameDriveFolder()`, and the legacy-rename block inside `ensureAppFolder()` (the `existingId`/`LEGACY`/`legacyId` section); replace with just `appFolderId = await findOrCreateFolder(folderName, null);`
+
+After removal, do a final `grep -r "IFTalk\|iftalk"` across `docs/` to confirm no stragglers.
+
+---
 
 ## Recent Changes
 

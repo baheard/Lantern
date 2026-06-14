@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Offline Debug Console
  *
  * Logs timing information to localStorage and displays on screen
  * for debugging offline PWA load times
  */
 
-const DEBUG_KEY = 'iftalk_offline_debug_logs';
+const DEBUG_KEY = 'lantern_offline_debug_logs';
 const MAX_LOGS = 50;
 
 // Store logs in localStorage

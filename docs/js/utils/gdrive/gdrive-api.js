@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Google Drive API Module
  *
  * Handles Drive API operations: folder management, upload, download, list, delete.
@@ -23,7 +23,7 @@ export function clearAppFolderId() {
  * @returns {string|null} Folder ID or null to use default folder name
  */
 export function getDriveFolderId() {
-  return localStorage.getItem('iftalk_gdrive_folder_id');
+  return localStorage.getItem('lantern_gdrive_folder_id');
 }
 
 /**
@@ -31,7 +31,7 @@ export function getDriveFolderId() {
  * @returns {string} Folder name
  */
 export function getDriveFolderName() {
-  return localStorage.getItem('iftalk_gdrive_folder_name') || APP_CONFIG.driveFolderName;
+  return localStorage.getItem('lantern_gdrive_folder_name') || APP_CONFIG.driveFolderName;
 }
 
 /**
@@ -40,8 +40,8 @@ export function getDriveFolderName() {
  * @param {string} folderName - Folder name
  */
 export function setDriveFolder(folderId, folderName) {
-  localStorage.setItem('iftalk_gdrive_folder_id', folderId);
-  localStorage.setItem('iftalk_gdrive_folder_name', folderName);
+  localStorage.setItem('lantern_gdrive_folder_id', folderId);
+  localStorage.setItem('lantern_gdrive_folder_name', folderName);
   // Clear cached folder ID so next sync uses new folder
   appFolderId = null;
 }
@@ -50,8 +50,8 @@ export function setDriveFolder(folderId, folderName) {
  * Clear Drive folder selection (revert to default)
  */
 export function clearDriveFolder() {
-  localStorage.removeItem('iftalk_gdrive_folder_id');
-  localStorage.removeItem('iftalk_gdrive_folder_name');
+  localStorage.removeItem('lantern_gdrive_folder_id');
+  localStorage.removeItem('lantern_gdrive_folder_name');
   appFolderId = null;
 }
 
@@ -112,6 +112,40 @@ async function findOrCreateFolder(folderName, parentId = null) {
 }
 
 /**
+ * Find a folder by name without creating it. Returns ID or null.
+ */
+async function findFolderByName(folderName, parentId = null) {
+  const accessToken = getAccessToken();
+  const parentQuery = parentId ? `'${parentId}' in parents` : "'root' in parents";
+  const query = `name='${folderName}' and ${parentQuery} and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+    { headers: { 'Authorization': `Bearer ${accessToken}` } }
+  );
+  if (!response.ok) return null;
+  const data = await response.json();
+  return (data.files && data.files.length > 0) ? data.files[0].id : null;
+}
+
+/**
+ * Rename a Drive folder in-place. Returns the same folderId.
+ * Temporary — used for one-time IFTalk→Lantern migration.
+ */
+async function renameDriveFolder(folderId, newName) {
+  const accessToken = getAccessToken();
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: newName })
+  });
+  if (!response.ok) throw new Error(`Failed to rename Drive folder to ${newName}`);
+  return folderId;
+}
+
+/**
  * Ensure app folder exists in Google Drive (handles nested paths)
  * @returns {Promise<string>} Folder ID
  */
@@ -145,9 +179,22 @@ export async function ensureAppFolder() {
     return appFolderId;
   }
 
-  // Otherwise, use default folder name (single folder at root)
+  // Default folder — migrate legacy folder name to new name if needed.
+  // Temporary: remove after transition period.
   const folderName = getDriveFolderName();
-  appFolderId = await findOrCreateFolder(folderName, null);
+  const existingId = await findFolderByName(folderName, null);
+  if (existingId) {
+    appFolderId = existingId;
+  } else {
+    // Concat to guard against future bulk renames catching this string.
+    const LEGACY = 'IF' + 'Talk';
+    const legacyId = await findFolderByName(LEGACY, null);
+    if (legacyId) {
+      appFolderId = await renameDriveFolder(legacyId, folderName);
+    } else {
+      appFolderId = await findOrCreateFolder(folderName, null);
+    }
+  }
 
   return appFolderId;
 }
@@ -375,7 +422,7 @@ export async function deleteFile(fileId) {
  */
 export function localStorageKeyToFilename(key) {
   // Remove prefix and add .json extension
-  // iftalk_autosave_lostpig -> lostpig_autosave.json
+  // lantern_autosave_lostpig -> lostpig_autosave.json
   const prefix = APP_CONFIG.storagePrefix + '_';
   if (key.startsWith(prefix)) {
     const rest = key.substring(prefix.length);
@@ -395,7 +442,7 @@ export function localStorageKeyToFilename(key) {
  * @returns {string} localStorage key
  */
 export function filenameToLocalStorageKey(filename) {
-  // lostpig_autosave.json -> iftalk_autosave_lostpig
+  // lostpig_autosave.json -> lantern_autosave_lostpig
   const name = filename.replace('.json', '');
   const parts = name.split('_');
   if (parts.length >= 2) {
@@ -447,7 +494,7 @@ export async function deleteGameDataFromDrive(gameName) {
 }
 
 /**
- * Delete ALL data from Google Drive (entire IFTalk folder)
+ * Delete ALL data from Google Drive (entire Lantern folder)
  */
 export async function deleteAllDataFromDrive() {
   const { ensureAuthenticated } = await import('./gdrive-auth.js');

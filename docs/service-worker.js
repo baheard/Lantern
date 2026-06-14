@@ -3,12 +3,12 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.561';
+const CACHE_VERSION = 'v1.5.562';
 const CACHE_NAMES = {
-  core: `iftalk-core-${CACHE_VERSION}`,
-  games: `iftalk-games-${CACHE_VERSION}`,
-  fonts: `iftalk-fonts-${CACHE_VERSION}`,
-  icons: `iftalk-icons-${CACHE_VERSION}`
+  core: `lantern-core-${CACHE_VERSION}`,
+  games: `lantern-games-${CACHE_VERSION}`,
+  fonts: `lantern-fonts-${CACHE_VERSION}`,
+  icons: `lantern-icons-${CACHE_VERSION}`
 };
   
 // Core app assets (HTML, CSS, JS, libs)
@@ -156,7 +156,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       const cachesToDelete = cacheNames.filter(name => {
-        return name.startsWith('iftalk-') && !Object.values(CACHE_NAMES).includes(name);
+        return name.startsWith('lantern-') && !Object.values(CACHE_NAMES).includes(name);
       });
 
       return Promise.all(

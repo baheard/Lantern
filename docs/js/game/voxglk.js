@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VoxGlk - Voice-Enabled Glk Display Engine
  *
  * Custom Glk display layer for IFTalk that renders beautiful frotz-style HTML
@@ -637,7 +637,7 @@ export function createVoxGlk(textOutputCallback) {
           // Auto-save after each turn (only on line input, skip first 3)
           // Skip autosave if we just exited char mode (VM state needs to settle)
           // Check global auto-save setting
-          const autosaveEnabled = localStorage.getItem('iftalk_autosaveEnabled') !== 'false';
+          const autosaveEnabled = localStorage.getItem('lantern_autosaveEnabled') !== 'false';
           if (autosaveEnabled && !s.skipFirstAutosave && shouldAutosaveThisTurn && !shouldSkipFirstN && !s.justExitedCharMode) {
             setTimeout(async () => {
               try {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Google Drive UI Module
  *
  * Handles Google Drive sign in/out, sync buttons, and UI state updates.
@@ -7,11 +7,11 @@
 import { state } from '../../core/state.js';
 import { updateStatus } from '../../utils/status.js';
 
-const GLOBAL_AUTO_SYNC_KEY = 'iftalk_gdrive_autosync';
+const GLOBAL_AUTO_SYNC_KEY = 'lantern_gdrive_autosync';
 
 function getAutoSyncKey() {
   return state.currentGameName
-    ? `iftalk_gdrive_autosync_${state.currentGameName}`
+    ? `lantern_gdrive_autosync_${state.currentGameName}`
     : GLOBAL_AUTO_SYNC_KEY;
 }
 
@@ -39,7 +39,7 @@ function updateGDriveUI() {
     // Update connection status: email + folder (with clickable (change) link)
     if (connectionInfo) {
       const email = state.gdriveEmail || 'Unknown';
-      const folderName = localStorage.getItem('iftalk_gdrive_folder_name') || 'IFTalk';
+      const folderName = localStorage.getItem('lantern_gdrive_folder_name') || 'Lantern';
       connectionInfo.innerHTML = `${email}<br><span style="font-size: 13px; color: var(--text-secondary, #999);">Using folder "${folderName}" <a href="#" id="gdriveFolderLink" style="color: var(--accent-primary, #4CAF50); text-decoration: none;">(change)</a></span>`;
     }
   } else {
@@ -78,27 +78,27 @@ export async function openFolderPicker() {
       return;
     }
 
-    const currentFolderName = localStorage.getItem('iftalk_gdrive_folder_name') || 'IFTalk';
+    const currentFolderName = localStorage.getItem('lantern_gdrive_folder_name') || 'Lantern';
 
     const { confirmDialog } = await import('../confirm-dialog.js');
     const result = await confirmDialog(
-      'Enter the folder path where you want to save your games.\nUse / for subfolders (e.g., "MyGames/IF" or just "IFTalk").',
+      'Enter the folder path where you want to save your games.\nUse / for subfolders (e.g., "MyGames/IF" or just "Lantern").',
       {
         title: 'Choose Folder',
         okText: 'Save',
         inputValue: currentFolderName,
         inputLabel: 'Folder Path',
-        inputPlaceholder: 'IFTalk',
-        inputHint: 'Examples: IFTalk, Games/Interactive Fiction',
+        inputPlaceholder: 'Lantern',
+        inputHint: 'Examples: Lantern, Games/Interactive Fiction',
       }
     );
 
     if (!result && result !== '') return;
 
-    let folderPath = (result || '').trim().replace(/^\/+|\/+$/g, '') || 'IFTalk';
+    let folderPath = (result || '').trim().replace(/^\/+|\/+$/g, '') || 'Lantern';
 
-    localStorage.setItem('iftalk_gdrive_folder_name', folderPath);
-    localStorage.setItem('iftalk_gdrive_folder_id', 'path:' + folderPath);
+    localStorage.setItem('lantern_gdrive_folder_name', folderPath);
+    localStorage.setItem('lantern_gdrive_folder_id', 'path:' + folderPath);
 
     const { clearAppFolderId } = await import('../../utils/gdrive/gdrive-api.js');
     clearAppFolderId();
@@ -182,7 +182,7 @@ export function initGDriveUI() {
       if (state.gdriveSyncEnabled) {
         const { confirmDialog } = await import('../confirm-dialog.js');
         await confirmDialog(
-          'Auto-sync is now enabled. IFTalk will sync your saves with Google Drive now, and automatically after each save going forward.',
+          'Auto-sync is now enabled. Lantern will sync your saves with Google Drive now, and automatically after each save going forward.',
           { title: 'Auto-Sync Enabled', okOnly: true }
         );
         // Immediately do a full bidirectional sync to establish parity
