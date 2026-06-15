@@ -235,27 +235,27 @@ function autosave_write(key, snapshot) {
  * window.state.currentGameName (set by game-loader before Glk.init) to find it,
  * format-detect (saveFormat === 'engine'), and return the decompressed snapshot.
  *
- * Returns null when there is no save, or the save is legacy Quetzal format — in
- * which case the engine boots a fresh intro and the legacy performRestore path
- * (shouldAutoRestore) handles restoration instead (coexistence). The app-side
- * reattachment (displayHTML, map, narration, etc.) is NOT done here; performRestore
- * owns it for both formats. See save-manager.performRestore.
+ * Returns null when there is no save, or the save is legacy Quetzal format. As of
+ * Phase 6b the legacy bootstrap-restore path is gone: a legacy save boots a fresh
+ * intro and performRestore rejects it gracefully ("older format, can't restore").
+ * The app-side reattachment (displayHTML, map, narration, etc.) is NOT done here;
+ * performRestore owns it. See save-manager.performRestore.
  */
 function autosave_read(key) {
     try {
         var gameName = (window.state && window.state.currentGameName) || null;
         if (!gameName) return null;
 
-        // Phase 6a: read the slot game-loader resolved for this boot (autosave by default,
-        // or the quicksave/customsave slot the user asked to restore). This lets quick/custom
-        // restore reuse boot-time do_autorestore instead of the legacy live-VM bootstrap.
+        // Read the slot game-loader resolved for this boot (autosave by default, or the
+        // quicksave/customsave slot the user asked to restore). All restores now reuse
+        // boot-time do_autorestore.
         var restoreKey = window.__engineRestoreKey || ('lantern_autosave_' + gameName);
         var raw = localStorage.getItem(restoreKey);
         if (!raw) return null;
 
         var saveData = JSON.parse(raw);
         if (!saveData || saveData.saveFormat !== 'engine' || !saveData.engineSnapshot) {
-            return null; // legacy Quetzal save → let the legacy restore path handle it
+            return null; // legacy Quetzal save → performRestore rejects it gracefully
         }
 
         var snapshotStr = saveData.engineSnapshot;

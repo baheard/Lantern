@@ -219,20 +219,13 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     }
     window.__engineRestoreKey = engineRestoreStorageKey;
 
-    // Engine-autorestore coexistence (autorestore-migration-plan.md, Phases 3 + 4).
-    //
     // Read plumbing keys off the SAVE FORMAT, not the write flag: an engine snapshot
     // can ONLY be restored by the engine's do_autorestore at boot, which needs
     // GiDispa + do_vm_autosave wired before Glk.init. So whenever the existing autosave
     // is engine-format we enable that plumbing regardless of the flag — otherwise
-    // flipping the flag off (or the Phase 5 default flip) would strand existing engine
-    // saves. The write flag (useEngineAutorestore) independently controls which format
-    // the NEXT autosave is written in (performSave.buildEngineSnapshot).
-    //
-    // When the engine restores the VM at boot, the legacy bootstrap "wake" kick must be
-    // skipped (VM already parked at the correct glk_select); app-side reattachment
-    // (displayHTML/map/narration) still runs via performRestore. __engineAutorestoreActive
-    // signals that to voxglk-bootstrap.handleAutoRestore.
+    // flipping the flag off would strand existing engine saves. The write flag
+    // (useEngineAutorestore) independently controls which format the NEXT autosave is
+    // written in (performSave.buildEngineSnapshot).
     // Format-detect the TARGET slot (engineRestoreStorageKey), not just the autosave —
     // a quicksave/customsave restore must check its own slot's format.
     let saveIsEngineFormat = false;
@@ -244,7 +237,6 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
         saveIsEngineFormat = false;
       }
     }
-    window.__engineAutorestoreActive = saveIsEngineFormat;
 
     // Enable the engine plumbing when either we'll WRITE engine format (flag on) or we
     // must READ an existing engine-format save (any slot). Mutates the shared options
@@ -252,8 +244,8 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     // (write) AND restore_allstate (read); do_vm_autosave:true makes vm.start() run
     // do_autorestore, which reads window.__engineRestoreKey (set above) — so it restores
     // the requested quicksave/customsave slot, not blindly the autosave. A legacy Quetzal
-    // target still returns null from autosave_read → fresh intro → handleAutoRestore's
-    // legacy bootstrap path restores it (coexistence preserved until 6b removes legacy).
+    // target returns null from autosave_read → fresh intro → performRestore rejects it
+    // gracefully (Phase 6b retired the legacy bootstrap restore path).
     if (APP_CONFIG.useEngineAutorestore || saveIsEngineFormat) {
       options.GiDispa = createGiDispaShim();
       options.do_vm_autosave = true;

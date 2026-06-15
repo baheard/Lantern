@@ -21,13 +21,9 @@ import {
 import { processGridUpdates, resetGridState } from './voxglk-grid.js';
 import {
   resetBootstrapState,
-  captureIntroInputType,
-  checkSuppressUpdate,
-  isBootstrapping,
   isJustRestored,
   clearJustRestored,
   handleAutoRestore,
-  consumeSeededBufaddr,
 } from './voxglk-bootstrap.js';
 
 /**
@@ -326,10 +322,6 @@ export function createVoxGlk(textOutputCallback) {
           updateInputVisibility();
         }
 
-        // Suppress output after bootstrap input (the "look" bootstrap response)
-        const hasInput = !!(arg.input && arg.input.length > 0);
-        if (checkSuppressUpdate(s.inputType, hasInput)) return;
-
         // Process window definitions
         if (arg.windows) {
           arg.windows.forEach(win => {
@@ -618,10 +610,6 @@ export function createVoxGlk(textOutputCallback) {
           }
           s.previousInputType = s.inputType;
 
-          // Capture the intro input type (first request at gen 1) for bootstrap after restore
-          captureIntroInputType(s.generation, s.inputType);
-
-
           // Note: Command line visibility is handled automatically by keyboard.js polling
 
           // Only autosave on line input (not char input)
@@ -792,7 +780,7 @@ export function sendInput(text, type = 'line') {
 
   // Start watchdog BEFORE sending input (Glk may call update synchronously)
   // Don't await - we want the watchdog to start immediately without blocking
-  startWatchdog(s.generation, () => s.generation, isBootstrapping()).catch(err => {
+  startWatchdog(s.generation, () => s.generation, false).catch(err => {
     // Watchdog start failed silently
   });
 
@@ -815,45 +803,6 @@ export function sendInput(text, type = 'line') {
         }
       }
     } catch (e) { /* ignore — e.g. window not yet created */ }
-  }
-
-  // After a bootstrap restore, glkapi may write line input to a different Z-machine
-  // buffer address than the one the VM actually reads from. Write the player's command
-  // to the saved (seeded) bufaddr too so the VM executes the correct command.
-  if (type === 'line') {
-    const seededAddr = consumeSeededBufaddr();
-    if (seededAddr && window.zvmInstance?.m) {
-      const m = window.zvmInstance.m;
-      // Version-aware text-buffer layout (matches the seed in save-manager.js):
-      //   V1-4: chars start at byte1, NUL-terminated, no count byte
-      //   V5+ : byte1=count, chars start at byte2
-      const zversion = m.getUint8(0);
-      if (zversion < 5) {
-        for (let i = 0; i < text.length; i++) {
-          m.setUint8(seededAddr + 1 + i, text.charCodeAt(i));
-        }
-        m.setUint8(seededAddr + 1 + text.length, 0); // NUL terminator
-      } else {
-        m.setUint8(seededAddr + 1, text.length);
-        for (let i = 0; i < text.length; i++) {
-          m.setUint8(seededAddr + 2 + i, text.charCodeAt(i));
-        }
-      }
-      // ROOT FIX for "the"→"tv2" abbreviation corruption (Theatre, see
-      // .tome/text-decode-corruption.md). After a bootstrap restore the ZVM's
-      // in-progress aread still holds the stale PRE-restore intro bufaddr
-      // (observed = 63), so the restored continuation copies this first typed
-      // command into memory at address 63 — which in Theatre overlaps the
-      // Z-string abbreviation table strings (~0x40), garbling every "the" on the
-      // next room redraw. Redirect read_data.bufaddr to the saved game-loop buffer
-      // BEFORE acceptCallback so the input lands where it belongs, not on the
-      // abbreviations. (Can't be done at restore time — the resuming aread resets
-      // read_data.bufaddr back to 63 during the char bootstrap.) The dual-write
-      // above is now redundant but kept as belt-and-suspenders.
-      if (window.zvmInstance?.read_data) {
-        window.zvmInstance.read_data.bufaddr = seededAddr;
-      }
-    }
   }
 
   // Send the input event to Glk

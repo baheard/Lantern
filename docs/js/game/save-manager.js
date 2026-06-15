@@ -16,70 +16,6 @@ import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
 import { APP_CONFIG } from '../config.js';
 
 // ============================================================================
-// QUETZAL SCREEN WIDTH DECODER
-// ============================================================================
-
-/**
- * Decode the screen_width (uint16 at header offset 0x22) from raw Quetzal bytes,
- * before restore_file() applies the data and update_screen_size() overwrites it.
- *
- * Quetzal stores dynamic RAM as either UMem (raw) or CMem (XOR-diff vs origram).
- * We need the value the save had at 0x22 so we can find and fix any game globals
- * that cached a stale screen_width after restore.
- *
- * @param {Uint8Array} bytes   - Raw Quetzal bytes
- * @param {Uint8Array} origram - Original ROM dynamic segment (zvmInstance.origram)
- * @returns {number|null} Saved screen_width, or null if unreadable
- */
-function decodeQuetzalScreenWidth(bytes, origram) {
-    if (!bytes || bytes.length < 12 || !origram) return null;
-
-    // Verify FORM/IFZS signature
-    if (bytes[0] !== 0x46 || bytes[1] !== 0x4F || bytes[2] !== 0x52 || bytes[3] !== 0x4D) return null;
-    if (bytes[8] !== 0x49 || bytes[9] !== 0x46 || bytes[10] !== 0x5A || bytes[11] !== 0x53) return null;
-
-    let offset = 12;
-    while (offset + 8 <= bytes.length) {
-        const chunkType = String.fromCharCode(bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]);
-        const chunkLen = (bytes[offset+4] << 24) | (bytes[offset+5] << 16) | (bytes[offset+6] << 8) | bytes[offset+7];
-        const dataStart = offset + 8;
-        const dataEnd = dataStart + chunkLen;
-
-        if (chunkType === 'UMem') {
-            if (chunkLen >= 0x24) {
-                return (bytes[dataStart + 0x22] << 8) | bytes[dataStart + 0x23];
-            }
-            return null;
-        }
-
-        if (chunkType === 'CMem') {
-            // Decode XOR-diff stream up to offset 0x23
-            // Non-zero byte: XOR with origram[j]; zero byte: skip next+1 positions
-            let i = dataStart, j = 0;
-            const hi = origram[0x22], lo = origram[0x23];
-            let savedHi = hi, savedLo = lo;
-            let foundHi = false, foundLo = false;
-
-            while (i < dataEnd && !(foundHi && foundLo)) {
-                const temp = bytes[i++];
-                if (temp === 0) {
-                    const skip = (bytes[i++] || 0) + 1;
-                    j += skip;
-                } else {
-                    if (j === 0x22) { savedHi = temp ^ hi; foundHi = true; }
-                    if (j === 0x23) { savedLo = temp ^ lo; foundLo = true; }
-                    j++;
-                }
-            }
-            return (savedHi << 8) | savedLo;
-        }
-
-        offset = dataEnd + (chunkLen % 2);
-    }
-    return null;
-}
-
-// ============================================================================
 // COMPRESSION HELPERS
 // ============================================================================
 
@@ -524,113 +460,21 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             return false;
         }
 
-        // Two restore formats coexist (autorestore-migration-plan.md). For the engine
-        // format the VM has ALREADY been restored by the engine's do_autorestore during
-        // vm.start() (inside Glk.init) — see dialog-stub.autosave_read — so there is no
-        // Quetzal blob to decode and no restore_file() to call here. We default result=2
-        // (success) and fall straight through to the shared app-side reattachment below.
-        // The legacy screen-width patch and bufaddr/parseaddr bootstrap seed inside the
-        // result===2 block are natural no-ops for engine saves: savedScreenWidth stays
-        // null and engine saves carry no voxglkState (bufaddr/parseaddr undefined).
-        const isEngineFormat = saveData.saveFormat === 'engine';
-        let savedScreenWidth = null;
-        let result = 2;
-
-        if (!isEngineFormat) {
-            // Decompress quetzalData if compressed — fail loudly on corruption
-            // rather than feeding garbage into atob()/restore_file()
-            let quetzalDataBase64 = saveData.quetzalData;
-            if (saveData.quetzalDataCompressed) {
-                quetzalDataBase64 = decompressString(saveData.quetzalData);
-                if (quetzalDataBase64 === null) {
-                    updateStatus('Restore failed: save data is corrupted', 'error');
-                    return false;
-                }
-            }
-
-            // Decode base64 to binary
-            const binaryString = atob(quetzalDataBase64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            // Decode the screen_width stored in this save BEFORE restore_file() overwrites it.
-            // restore_file() calls update_screen_size() which writes the current correct width
-            // back to the header, but game globals that cached the old (wrong) width are left as-is.
-            savedScreenWidth = decodeQuetzalScreenWidth(bytes, window.zvmInstance?.origram);
-
-            // Restore using ZVM
-            result = window.zvmInstance.restore_file(bytes.buffer);
+        // Engine-format restore only (autorestore-migration-plan.md Phase 6b). The VM has
+        // ALREADY been restored by the engine's do_autorestore during vm.start() (inside
+        // Glk.init) — see dialog-stub.autosave_read — so there is no Quetzal blob to decode
+        // and no restore_file() to call here; this function only reattaches the app-side
+        // display/narration/map state. Legacy Quetzal saves (and their bootstrap-seed path)
+        // were retired in Phase 6b: detect and reject them gracefully rather than crash.
+        if (saveData.saveFormat !== 'engine') {
+            updateStatus('This save is in an older format and can no longer be restored.', 'error');
+            return false;
         }
 
-        if (result === 2) { // ZVM returns 2 on successful restore
-            // Fix stale screen_width in game globals.
-            // restore_file() correctly updates io.width and the Z-machine header via
-            // update_screen_size(), but any game global that cached an old wrong screen_width
-            // (e.g. from a save made before MIN_COLUMNS was enforced) is still wrong.
-            // Scan all globals: patch any that equal the save's screen_width to the current
-            // correct value. This breaks the perpetuation cycle where autosave re-captures
-            // the wrong cached value each session.
-            const correctWidth = window.zvmInstance?.io?.width;
-            const globalsBase = window.zvmInstance?.globals;
-            const mem = window.zvmInstance?.m;
-            let screenWidthPatched = false;
-            if (savedScreenWidth != null && correctWidth > 0 && savedScreenWidth !== correctWidth
-                    && globalsBase && mem) {
-                for (let i = 0; i < 240; i++) {
-                    const addr = globalsBase + i * 2;
-                    if (mem.getUint16(addr) === savedScreenWidth) {
-                        mem.setUint16(addr, correctWidth);
-                        screenWidthPatched = true;
-                    }
-                }
-            }
-
-            // Seed the text buffer with 'l' (look) for the char bootstrap.
-            // After Quetzal restore, the bootstrap fires a CharInput event whose char
-            // code (1 for '\x01') the Z-machine aread continuation reads as the line
-            // length.  With length=1 and linebuf[0]='l', the parser executes "look"
-            // (re-describe room) — a safe no-side-effect command.  This avoids the
-            // empty-input path ("I beg your pardon?") which puts some parsers
-            // (e.g. Anchorhead Z8) into a disambiguation mode that rejects the
-            // first real player command.
-            // Also zero the parse buffer so games that read stale tokens before
-            // calling aread (e.g. Theatre) don't re-execute the previous command.
-            const { bufaddr, parseaddr } = saveData.voxglkState || {};
-
-            // NOTE: read_data.bufaddr is also bogus here (stale pre-restore intro
-            // buffer, observed = 63) and causes the "the"→"tv2" abbreviation
-            // corruption, but it CANNOT be fixed here — when the restored aread
-            // resumes during the char bootstrap it re-reads its operands and resets
-            // read_data.bufaddr back to 63. The correction is applied at command-
-            // submit time in voxglk.js sendInput() via the seededBufaddr one-shot.
-            // See .tome/text-decode-corruption.md.
-
-            if (bufaddr && window.zvmInstance?.m) {
-                // Z-machine text-buffer layout differs by version:
-                //   V1-4: byte0=max, chars start at byte1, NUL-terminated (no count byte)
-                //   V5+ : byte0=max, byte1=count, chars start at byte2 (no terminator)
-                // The seed must match the version the restored aread will read, or the
-                // parser tokenizes garbage and corrupts game state (Wishbringer Z3:
-                // "Your body seems unwilling to respond." — see .tome/bootstrap-restore-flow.md).
-                const zversion = window.zvmInstance.m.getUint8(0);
-                if (zversion < 5) {
-                    window.zvmInstance.m.setUint8(bufaddr + 1, 'l'.charCodeAt(0)); // look
-                    window.zvmInstance.m.setUint8(bufaddr + 2, 0);                 // NUL terminator
-                } else {
-                    window.zvmInstance.m.setUint8(bufaddr + 1, 1);                 // count = 1
-                    window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look
-                }
-                // Track the seeded address so sendInput() can also write the player's first
-                // real command there. After bootstrap restore, glkapi may use a different
-                // buffer address than the ZVM reads from — writing to both ensures correctness.
-                const { setSeededBufaddr } = await import('./voxglk-bootstrap.js');
-                setSeededBufaddr(bufaddr);
-            }
-            if (parseaddr && window.zvmInstance?.m) {
-                window.zvmInstance.m.setUint8(parseaddr + 1, 0); // parse buffer word count = 0
-            }
+        // Past the format gate an engine restore has already succeeded (the VM was
+        // restored at boot); this block only reattaches app-side state. Bare scope block
+        // retained to keep the const declarations below local.
+        {
             // Restore app-tracked move count
             state.appMoveCount = saveData.appMoveCount ?? 0;
 
@@ -645,10 +489,7 @@ async function performRestore(storageKey, displayName = null, options = {}) {
                 const upperWindowEl = document.getElementById('upperWindow');
                 const lowerWindowEl = document.getElementById('lowerWindow');
 
-                if (statusBarEl && saveData.displayHTML.statusBar && !screenWidthPatched) {
-                    // Only restore the saved status bar HTML when the screen_width was correct
-                    // at save time. If we just patched stale globals, the saved HTML was also
-                    // rendered with the wrong width — skip it and let the game redraw on first move.
+                if (statusBarEl && saveData.displayHTML.statusBar) {
                     const safeStatusBar = sanitizeRestoredHTML(saveData.displayHTML.statusBar);
                     statusBarEl.innerHTML = safeStatusBar;
                     statusBarEl.style.display = '';
@@ -813,11 +654,6 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             }
 
             return true;
-        } else {
-            if (displayName) {
-                updateStatus(`Restore failed: Invalid save data`, 'error');
-            }
-            return false;
         }
 
     } catch (error) {
@@ -1044,8 +880,12 @@ export async function importSaveFromFile() {
         const text = await file.text();
         const saveData = JSON.parse(text);
 
-        // Validate save data
-        if (!saveData.quetzalData || !saveData.gameName) {
+        // Validate save data. Two payload formats coexist: 'engine' (ZVM full-state
+        // snapshot) and legacy 'quetzal' (Quetzal save_file bytes). Accept either.
+        const hasPayload = saveData.saveFormat === 'engine'
+            ? !!saveData.engineSnapshot
+            : !!saveData.quetzalData;
+        if (!hasPayload || !saveData.gameName) {
             updateStatus('Invalid save file format', 'error');
             return;
         }
