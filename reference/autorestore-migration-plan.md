@@ -107,6 +107,35 @@ executing the opcode — `restore_file` just rewinds RAM/stack/PC. Our seam exis
 refresh gives a fresh-intro Glk that disagrees with the restored VM. For the page-reload case
 Parchment uses `do_autorestore` (full dual-system snapshot) — exactly this migration.
 
+## Parity inventory — everything the legacy path does that the engine path MUST carry
+
+The engine snapshot replaces only the **VM-state + bootstrap** machinery. Every other behavior
+below is feature parity and must survive on the engine path (Phase 2 = write, Phase 3 = reattach).
+This is an explicit acceptance gate for those phases — none of these may silently drop.
+
+**GOES AWAY on engine path (the point of the migration):** VoxGlk gen/bufaddr/parseaddr carry
+(`save-manager.js:404`/`541-573`), the `'l'` look-seed + `setSeededBufaddr`, `skipNextUpdateAfterBootstrap`/
+`seededBufaddr`, the mid-`aread` resume, `shouldAutoRestore`. The screen_width global patch
+(`decodeQuetzalScreenWidth` + globals scan, `:33-79`/`:516-529`) stays as a post-restore pass
+until proven unnecessary (engine `restore_allstate` may already fix it — verify in Phase 3).
+
+**MUST carry forward (re-wire onto the engine snapshot):**
+- **Save (Phase 2):** (a) `displayHTML` statusBar+upperWindow+**lowerWindow scrollback**, gzip +
+  `*Compressed` flags; (b) `cleanHTMLForSave` (strip system-msg / app-command / low-confidence);
+  (c) `limitHTMLHistory` 100-turn cap; (d) map data — auto-mapper journey + canvas + journey-seed
+  anchor (`getOptimizedMapData`); (e) `hintsMilestone`; (f) `appMoveCount`; (g) **key by
+  `gameName`** (`lantern_autosave_<gameName>`); (h) **Google Drive auto-sync** (`scheduleDriveSync`);
+  (i) **backup rotation** — autosave 3-deep/5-min, quicksave 3-deep, named-save 1-deep-before-overwrite,
+  `_exempt` backups (`createBackup`/`cleanupOldBackups`/`backupNamedSaveBeforeOverwrite`);
+  (j) quota-exceeded handling.
+- **Restore (Phase 3):** (k) `displayHTML` reattach + `sanitizeRestoredHTML`; (l) `fitUpperWindow`
+  grid scaling; (m) **narration chunk invalidation + `currentGameTextElement` repoint** (the
+  "don't narrate the title screen" fix); (n) map restore + `setSuppressNextJourneyClear`;
+  (o) `hintsMilestone` restore (permits down-move to earlier act); (p) autosave **grace period**
+  (skip 3 moves) + backup-cooldown reset; (q) `_pendingRepeatAfterRestore` narration-on-restore.
+- **Untouched but must keep working against the new format:** export/import `.sav` JSON
+  (`exportSaveToFile`/`importSaveFromFile`) — Phase 4 format-detect applies on import too.
+
 ## Files touched
 `config.js` (flag), `game-loader.js` (options + flag-gated restore plumbing),
 `gidispa-shim.js` (new), `dialog-stub.js` (autosave_write/read: fix IDs, compression, gameName
@@ -135,9 +164,10 @@ advances.
   writes new format → reload → engine path restores.
 - Flag off → byte-for-byte current behavior (regression guard).
 
-**Acceptance criteria.** Headless matrix all green; the four prior bug-class symptoms cannot
-reproduce on the engine path; flag-off unchanged; SW-cache discipline when testing each build
-(unregister SW + `caches.delete` + confirm served version).
+**Acceptance criteria.** Headless matrix all green; **every item in the Parity inventory verified
+present on the engine path** (Phase 2/3 sign-off checklist); the four prior bug-class symptoms
+cannot reproduce on the engine path; flag-off unchanged; SW-cache discipline when testing each
+build (unregister SW + `caches.delete` + confirm served version).
 
 **Risks.** (1) `restore_allstate` rebuilds windows differently than VoxGlk expects → reconcile
 against the first update, don't pre-paint. (2) GiDispa shim incompleteness → headless matrix

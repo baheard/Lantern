@@ -349,6 +349,19 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
       '})();',
       ctx, { filename: 'harness-boot' }
     );
+    // --xorshift <n>: force the VM's internal Xorshift RNG on (nonzero seed) AFTER the
+    // intro has run, so @random becomes deterministic AND part of the VM snapshot. With
+    // seed 0 (the default), @random falls through to Math.random (zvm.js:3372), whose
+    // mulberry32 closure state lives in this CLI process — NOT the snapshot — so a
+    // restored run draws a fresh stream and @random-flavored prose (e.g. NPC follow text)
+    // diverges from a full replay. Seeding here (fresh path only; the restore path inherits
+    // the seed from the snapshot via restore_allstate) makes prefix+tail RNG reproducible
+    // and round-trip-exact. The intro itself still ran with seed 0, but it precedes every
+    // snapshot point and compared tail, so its non-determinism is never observed.
+    if (opts.xorshift != null) {
+      ctx.__xorshift = opts.xorshift;
+      vmMod.runInContext('if (globalThis.__vm && __xorshift) { __vm.xorshift_seed = __xorshift; }', ctx, { filename: 'harness-xorshift' });
+    }
   }
 
   const turns = [];
@@ -588,7 +601,7 @@ function resolveStory(arg) {
 }
 
 function parseArgs(argv) {
-  const opts = { quiet: false, status: false, statusraw: false, raw: false, file: null, stdin: false, key: ' ', strict: false, stopOnDeath: false, summary: false, seed: 1, snapshotOut: null, snapshotIn: null, snapshotAt: null, snapshotAtIndex: null };
+  const opts = { quiet: false, status: false, statusraw: false, raw: false, file: null, stdin: false, key: ' ', strict: false, stopOnDeath: false, summary: false, seed: 1, xorshift: null, snapshotOut: null, snapshotIn: null, snapshotAt: null, snapshotAtIndex: null };
   const commands = [];
   const inlineCmds = [];   // from --cmds "a ; b ; c" — appended like a tiny file (after --)
   let game = null, afterDashDash = false;
@@ -608,6 +621,7 @@ function parseArgs(argv) {
     else if (a === '--key') opts.key = argv[++i];
     else if (a === '--seed') opts.seed = parseInt(argv[++i], 10);
     else if (a === '--random') opts.seed = null;
+    else if (a === '--xorshift') opts.xorshift = parseInt(argv[++i], 10);
     else if (a === '--snapshot-out') opts.snapshotOut = argv[++i];
     else if (a === '--snapshot-in') opts.snapshotIn = argv[++i];
     else if (a === '--snapshot-at') opts.snapshotAt = argv[++i];

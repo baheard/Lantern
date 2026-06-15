@@ -64,7 +64,11 @@ node tools/play.cjs anchorhead --file cmds.txt --quiet   # one cmd/line; show la
 Flags: `--status` (print `[@ location]` per turn), `--quiet`, `--raw`, `--file <path>`,
 `--stdin`, `--key <c>` (key to dismiss char-mode prompts, default space), `--strict` (halt on
 parser desync), `--stop-on-death` (halt on death/win screen), `--summary` (one machine-readable
-final-state line: turns/location/status/score), and the snapshot pair:
+final-state line: turns/location/status/score), `--xorshift <n>` (force the VM's internal
+Xorshift RNG on with seed `<n>`, applied after the intro — makes `@random` deterministic AND
+snapshot-carried, so randomized-flavor prose round-trips bit-exact across snapshot/restore; with
+the default seed 0, `@random` falls through to the CLI's Math.random closure which is NOT in the
+snapshot), and the snapshot pair:
 - `--snapshot-out <file>` — after replaying all commands, serialize full VM state to JSON.
 - `--snapshot-in <file>` — restore from that snapshot instead of a fresh boot, then replay the
   (short) command tail. Skips O(n²) prefix re-replay when extending a long walkthrough. Snapshots
@@ -139,7 +143,7 @@ final-state line: turns/location/status/score), and the snapshot pair:
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.571
+**Current Version:** v1.5.572
 
 ## Third-Party Libraries
 
