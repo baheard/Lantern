@@ -37,6 +37,11 @@ let populatedWordLength = 0;
 // Track input focus state (before blur from clicking buttons)
 let inputWasFocused = false;
 
+// Command history navigation (terminal-style Up/Down recall)
+// -1 means "not navigating" (showing the user's current draft)
+let historyNavIndex = -1;
+let historyNavDraft = '';
+
 // Track keyboard state based on viewport resize events
 let keyboardIsOpen = false;
 let baselineViewportHeight = null;
@@ -313,6 +318,43 @@ export function initKeyboardInput() {
       if (e.key === 'Enter') {
         e.preventDefault();
         sendCommand();
+        return;
+      }
+
+      // Terminal-style history recall (only in line mode)
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (getInputType() === 'char') return; // char mode maps arrows to movement
+        const history = state.commandHistoryItems;
+        if (!history || history.length === 0) return;
+
+        e.preventDefault();
+
+        if (e.key === 'ArrowUp') {
+          // Going further back into history (history is newest-first)
+          if (historyNavIndex === -1) {
+            // Starting to navigate: stash the current draft
+            historyNavDraft = messageInputEl.value;
+          }
+          if (historyNavIndex < history.length - 1) {
+            historyNavIndex++;
+          }
+          messageInputEl.value = history[historyNavIndex].original;
+        } else {
+          // ArrowDown: moving back toward the present
+          if (historyNavIndex === -1) return; // not navigating
+          if (historyNavIndex > 0) {
+            historyNavIndex--;
+            messageInputEl.value = history[historyNavIndex].original;
+          } else {
+            // Past the most recent entry: restore the draft
+            historyNavIndex = -1;
+            messageInputEl.value = historyNavDraft;
+          }
+        }
+
+        // Place cursor at end of recalled text
+        const len = messageInputEl.value.length;
+        messageInputEl.setSelectionRange(len, len);
       }
     });
 
@@ -334,6 +376,8 @@ export function initKeyboardInput() {
     // Clear flag when user types (manual editing)
     messageInputEl.addEventListener('input', () => {
       wordJustPopulated = false;
+      // Manual edit cancels history navigation
+      historyNavIndex = -1;
     });
 
     // On focus, select populated word for easy replacement (mobile only)
@@ -818,6 +862,10 @@ function sendCommand() {
 
   // Store last command for echo detection
   window.lastSentCommand = cmd;
+
+  // Reset history navigation so the next Up starts from the newest command
+  historyNavIndex = -1;
+  historyNavDraft = '';
 
   // Play feedback tone
   playCommandSent();

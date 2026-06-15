@@ -824,9 +824,20 @@ export function sendInput(text, type = 'line') {
     const seededAddr = consumeSeededBufaddr();
     if (seededAddr && window.zvmInstance?.m) {
       const m = window.zvmInstance.m;
-      m.setUint8(seededAddr + 1, text.length);
-      for (let i = 0; i < text.length; i++) {
-        m.setUint8(seededAddr + 2 + i, text.charCodeAt(i));
+      // Version-aware text-buffer layout (matches the seed in save-manager.js):
+      //   V1-4: chars start at byte1, NUL-terminated, no count byte
+      //   V5+ : byte1=count, chars start at byte2
+      const zversion = m.getUint8(0);
+      if (zversion < 5) {
+        for (let i = 0; i < text.length; i++) {
+          m.setUint8(seededAddr + 1 + i, text.charCodeAt(i));
+        }
+        m.setUint8(seededAddr + 1 + text.length, 0); // NUL terminator
+      } else {
+        m.setUint8(seededAddr + 1, text.length);
+        for (let i = 0; i < text.length; i++) {
+          m.setUint8(seededAddr + 2 + i, text.charCodeAt(i));
+        }
       }
       // ROOT FIX for "the"→"tv2" abbreviation corruption (Theatre, see
       // .tome/text-decode-corruption.md). After a bootstrap restore the ZVM's

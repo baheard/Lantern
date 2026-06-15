@@ -549,8 +549,20 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             // See .tome/text-decode-corruption.md.
 
             if (bufaddr && window.zvmInstance?.m) {
-                window.zvmInstance.m.setUint8(bufaddr + 1, 1);   // text buffer length = 1
-                window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look
+                // Z-machine text-buffer layout differs by version:
+                //   V1-4: byte0=max, chars start at byte1, NUL-terminated (no count byte)
+                //   V5+ : byte0=max, byte1=count, chars start at byte2 (no terminator)
+                // The seed must match the version the restored aread will read, or the
+                // parser tokenizes garbage and corrupts game state (Wishbringer Z3:
+                // "Your body seems unwilling to respond." — see .tome/bootstrap-restore-flow.md).
+                const zversion = window.zvmInstance.m.getUint8(0);
+                if (zversion < 5) {
+                    window.zvmInstance.m.setUint8(bufaddr + 1, 'l'.charCodeAt(0)); // look
+                    window.zvmInstance.m.setUint8(bufaddr + 2, 0);                 // NUL terminator
+                } else {
+                    window.zvmInstance.m.setUint8(bufaddr + 1, 1);                 // count = 1
+                    window.zvmInstance.m.setUint8(bufaddr + 2, 'l'.charCodeAt(0)); // look
+                }
                 // Track the seeded address so sendInput() can also write the player's first
                 // real command there. After bootstrap restore, glkapi may use a different
                 // buffer address than the ZVM reads from — writing to both ensures correctness.

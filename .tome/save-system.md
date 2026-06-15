@@ -15,6 +15,39 @@ Two independent save mechanisms; users frequently confuse them.
 - Restored by the home-screen **Resume Game** dialog, which appears for a game with an autosave when you re-enter the app.
 - Status bar after resume: "Restored from last session".
 
+### Autosave timing: the first ~3 moves do NOT autosave (two independent skips)
+
+A fresh game (or a freshly reloaded one) will show **no autosave key for the first 3
+line-input turns** — this surprises debugging ("I made a move, why is there no
+autosave?"). There are TWO separate 3-move skip mechanisms, easily conflated:
+
+1. **`voxglk.js` `autosaveCounter < 3`** (lines ~630-635): skips the first 3 line-input
+   turns on **every page load** — fresh start *and* restore. Rationale: avoid persisting
+   title-screen / intro interactions. The counter resets on every load. This is the one
+   that bites a fresh game: autosave first lands on roughly the 3rd–4th real command.
+   Only **line** input counts (`shouldAutosaveThisTurn = s.inputType === 'line'`); char-mode
+   turns don't increment it.
+2. **`save-manager.js` `state.autosaveGraceMoves = 3`** (set in `performRestore`, line ~696;
+   decremented in `autoSave()` lines ~826-830): a *separate* grace applied **only after a
+   restore**, so the VM state settles before the first post-restore autosave overwrites the
+   save. Also gives the player a few moves to react to a bad restore before it's persisted.
+
+So after a restore both can stack. Net: don't expect an autosave to exist until several
+moves in. When scripting a restore-bug repro, **make ~3-4 line moves before reloading** or
+there's nothing to restore. Verified live on Wishbringer 2026-06-15.
+
+### Key-prefix migration in flight: `iftalk_` → `lantern_`
+
+Current source writes saves under the **`lantern_`** prefix (`save-manager.js:~839`
+`lantern_autosave_<gameName>`). Older builds used **`iftalk_`**. A browser running a stale
+SW-cached bundle (observed: v1.5.562 still live while source was v1.5.569) writes/reads the
+**`iftalk_`** keys — so a debug check against `lantern_autosave_<game>` reads `false` while
+the real autosave sits under `iftalk_autosave_<game>`. **When a save key looks missing,
+check BOTH prefixes** and confirm the served version (status bar / `APP_CONFIG.version`)
+before concluding anything. The storage-layout list below still shows the legacy `iftalk_`
+names; the migration scaffolding (see CLAUDE.md "Pending Cleanup") renames them. See
+[[dev-gotchas]] for the SW-cache trap that produces this stale-prefix confusion.
+
 ## Quick Save / Quick Restore
 - Single manual slot, one per game. Triggered by `#quickSaveBtn` / `#quickRestoreBtn` (or `#mobileSaveIcon` / `#mobileLoadIcon`).
 - Confirmation toast: "Game saved - quicksave" / "Game restored - quicksave".
