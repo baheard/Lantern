@@ -13,6 +13,7 @@ import { addGameText } from '../ui/game-output.js';
 import { setJSON, getJSON, removeItem } from '../utils/storage/storage-api.js';
 import { getReachedMilestone, setReachedMilestone } from '../features/hints/hints-state.js';
 import { escapeHtml, sanitizeRestoredHTML } from '../utils/text-processing.js';
+import { APP_CONFIG } from '../config.js';
 
 // ============================================================================
 // QUETZAL SCREEN WIDTH DECODER
@@ -340,6 +341,34 @@ function getCurrentDisplayState() {
  * @param {Object} additionalData - Extra data to include in save (e.g., saveName, verification)
  * @returns {boolean} Success/failure
  */
+/**
+ * Build the ZVM engine's full-state autorestore snapshot
+ * (autorestore-migration-plan.md, Phase 2).
+ *
+ * Drives the engine's own do_autosave() serializer so the snapshot is byte-for-byte
+ * what do_autorestore expects (the exact path proven bit-exact by the headless oracle,
+ * tools/_autorestore_oracle.cjs). do_autosave(0) builds the snapshot and routes it to
+ * Dialog.autosave_write, which stashes it on window.__engineAutosaveSnapshot (see
+ * dialog-stub.js). Requires the GiDispa shim, which game-loader wires in only when
+ * APP_CONFIG.useEngineAutorestore is on.
+ *
+ * @returns {object|null} the snapshot {glk, io, ram, read_data, xorshift_seed}, or null
+ */
+function buildEngineSnapshot() {
+    const vm = window.zvmInstance;
+    if (!vm || typeof vm.do_autosave !== 'function') return null;
+    try {
+        window.__engineAutosaveSnapshot = null;
+        vm.do_autosave(0); // save >= 0 → build snapshot and hand to Dialog.autosave_write
+        const snap = window.__engineAutosaveSnapshot;
+        window.__engineAutosaveSnapshot = null;
+        return snap || null;
+    } catch (e) {
+        window.__engineAutosaveSnapshot = null;
+        return null;
+    }
+}
+
 async function performSave(storageKey, displayName = null, additionalData = {}) {
     try {
         const gameSignature = getGameSignature();
@@ -348,12 +377,44 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             return false;
         }
 
-        // Get Quetzal save data from ZVM
-        const pc = window.zvmInstance.pc;
-        const quetzalData = window.zvmInstance.save_file(pc);
+        // Capture the VM-state payload. Two formats coexist (autorestore-migration-plan.md):
+        //   'engine' — the ZVM full-state snapshot (do_autosave), restored via do_autorestore.
+        //   'quetzal' (legacy) — Quetzal save_file bytes + the bootstrap/voxglk carry fields.
+        // We attempt the engine snapshot only when the flag is on AND the shim produced one;
+        // otherwise we fall back to Quetzal so a save is never lost.
+        const engineSnapshot = APP_CONFIG.useEngineAutorestore ? buildEngineSnapshot() : null;
+        const useEngineFormat = !!engineSnapshot;
 
-        // Convert to base64 for localStorage
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(quetzalData)));
+        let payloadFields;
+        if (useEngineFormat) {
+            const snapshotStr = JSON.stringify(engineSnapshot);
+            const compressedSnapshot = compressString(snapshotStr);
+            payloadFields = {
+                saveFormat: 'engine',
+                engineSnapshot: compressedSnapshot !== null ? compressedSnapshot : snapshotStr,
+                engineSnapshotCompressed: compressedSnapshot !== null
+            };
+        } else {
+            // Legacy Quetzal payload + bootstrap/voxglk carry state
+            const pc = window.zvmInstance.pc;
+            const quetzalData = window.zvmInstance.save_file(pc);
+            const base64Data = btoa(String.fromCharCode(...new Uint8Array(quetzalData)));
+            const compressedQuetzalData = compressString(base64Data);
+
+            const { getGeneration, getInputWindowId, getInputType } = await import('./voxglk.js');
+            const readData = window.zvmInstance?.read_data;
+            payloadFields = {
+                quetzalData: compressedQuetzalData !== null ? compressedQuetzalData : base64Data,
+                quetzalDataCompressed: compressedQuetzalData !== null,
+                voxglkState: {
+                    generation: getGeneration(),
+                    inputWindowId: getInputWindowId(),
+                    inputType: getInputType(),
+                    bufaddr: readData?.bufaddr,
+                    parseaddr: readData?.parseaddr
+                }
+            };
+        }
 
         // Get current display state (status bar, upper window, lower window)
         const displayHTML = getCurrentDisplayState();
@@ -364,22 +425,10 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         const limitedLowerWindow = limitHTMLHistory(displayHTML.lowerWindowHTML, 100);
         const compressedLowerWindow = compressString(limitedLowerWindow);
 
-        // Compress quetzalData
-        const compressedQuetzalData = compressString(base64Data);
-
         // Get optimized map data (auto-mapper + map canvas) and compress
         const optimizedMapData = await getOptimizedMapData(state.currentGameName);
         const mapDataStr = optimizedMapData ? JSON.stringify(optimizedMapData) : '';
         const compressedMapData = mapDataStr ? compressString(mapDataStr) : '';
-
-        // Get VoxGlk state
-        const { getGeneration, getInputWindowId, getInputType } = await import('./voxglk.js');
-        const savedGeneration = getGeneration();
-        const savedInputWindowId = getInputWindowId();
-        const savedInputType = getInputType();
-
-        // Capture read_data addresses so we can clear stale buffers on restore
-        const readData = window.zvmInstance?.read_data;
 
         // Build save data object with compressed data
         const saveData = {
@@ -387,8 +436,7 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             gameName: state.currentGameName,
             gameSignature: gameSignature,
             appMoveCount: state.appMoveCount,
-            quetzalData: compressedQuetzalData !== null ? compressedQuetzalData : base64Data,
-            quetzalDataCompressed: compressedQuetzalData !== null,
+            ...payloadFields, // engine snapshot OR legacy quetzalData + voxglkState
             displayHTML: {
                 statusBar: displayHTML.statusBarHTML,
                 upperWindow: displayHTML.upperWindowHTML,
@@ -397,13 +445,6 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
             },
             mapData: compressedMapData !== null ? compressedMapData : mapDataStr,
             mapDataCompressed: !!compressedMapData,
-            voxglkState: {
-                generation: savedGeneration,
-                inputWindowId: savedInputWindowId,
-                inputType: savedInputType,
-                bufaddr: readData?.bufaddr,
-                parseaddr: readData?.parseaddr
-            },
             // Hints milestone (act index) travels with the save so restoring any slot
             // restores the correct act — see hints-data.js updateMilestone / hints scoping.
             hintsMilestone: getReachedMilestone(state.currentGameName),

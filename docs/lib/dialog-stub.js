@@ -200,33 +200,25 @@ function file_remove_ref(ref) {
     localStorage.removeItem(key);
 }
 
-/* Autosave with HTML content extension */
+/* Engine autorestore migration (autorestore-migration-plan.md, Phase 2).
+ *
+ * When config.useEngineAutorestore is on, the VM (via Glk.update with
+ * do_vm_autosave) or the app's autoSave() drives vm.do_autosave(), which lands
+ * here with the full-state engine snapshot. We do NOT persist or wrap it here:
+ * save-manager.performSave is the single owner of the parity envelope (gzip,
+ * displayHTML, map data, hintsMilestone, appMoveCount, gameName keying, Drive
+ * sync, backup rotation, quota handling). So this just stashes the raw snapshot
+ * on a global for performSave to pick up. A null snapshot (engine quit/error
+ * path, save<0) must NOT wipe a good autosave — we record the quit signal and
+ * leave storage to the app.
+ */
 function autosave_write(key, snapshot) {
     try {
-        // If snapshot exists, extend it with HTML content
         if (snapshot) {
-            // Capture window HTML
-            var statusBarEl = document.getElementById('status-bar');
-            var upperWindowEl = document.getElementById('upper-window');
-            var lowerWindowEl = document.getElementById('lower-window');
-
-            snapshot.displayHTML = {
-                statusBar: statusBarEl ? statusBarEl.innerHTML : '',
-                upperWindow: upperWindowEl ? upperWindowEl.innerHTML : '',
-                lowerWindow: lowerWindowEl ? lowerWindowEl.innerHTML : ''
-            };
-
-            // Capture narration state if available
-            if (window.state) {
-                snapshot.narrationState = {
-                    currentChunkIndex: window.state.currentChunkIndex || 0,
-                    chunksLength: window.state.narrationChunks ? window.state.narrationChunks.length : 0
-                };
-            }
-
+            window.__engineAutosaveSnapshot = snapshot;
+        } else {
+            window.__engineAutosaveQuit = true;
         }
-
-        localStorage.setItem('lantern_auto_' + key, JSON.stringify(snapshot));
     } catch (e) {
         console.error('[Dialog] Autosave write error:', e);
     }
