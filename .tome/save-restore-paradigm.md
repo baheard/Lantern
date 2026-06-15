@@ -2,7 +2,7 @@
 title: Save/Restore Paradigm — Why Bootstrap Bugs Recur & Three Options
 tags: [zvm, save-restore, voxglk, design, bootstrap, architecture]
 created: 2026-05-30
-updated: 2026-05-30
+updated: 2026-06-15
 aliases: [bootstrap bug class, full snapshot, input buffer ownership, restore paradigm]
 ---
 
@@ -149,3 +149,37 @@ IFTalk↔engine seam honest and composes with #1; **#2 only** if profiling shows
 left a resume seam. As of 2026-06-15 the Wishbringer Z3 wedge (above) makes #1 the
 recommended next move, on its own branch — see scope estimate in [[bootstrap-restore-flow]]
 / the wishbringer_restore_z3 track.
+
+## Implementation status — Option 1 is now the DEFAULT (Phase 5, v1.5.577, 2026-06-15)
+
+Option 1 (engine `do_autosave`/`do_autorestore`) is implemented and browser-verified, and as of
+v1.5.577 it is the **default** path. `config.useEngineAutorestore` flipped from opt-in to opt-OUT
+(`!== 'false'`; clear/omit the localStorage key → on, set `'false'` → legacy). Phases 0–5 done;
+Phase 6 (remove the legacy bootstrap machinery + decide quicksave/customsave) is the remainder.
+See `reference/autorestore-migration-plan.md` and the `savegame_conversion` track.
+Browser-verified on 9:05 (Z5), Anchorhead (Z8 char-intro), Wishbringer (Z3 — the wedge above),
+and amfv (Z4 multi-MORE char-intro); oracle 18/18; Drive sync is format-agnostic (spreads the whole
+save object, conflict-detects on timestamp/appMoveCount which engine saves carry). Engine restore
+round-trips, next command parses, clock advances, no resurrection.
+Key files: `docs/js/game/gidispa-shim.js`, `save-manager.js` (`buildEngineSnapshot`, format
+branch in `performSave`/`performRestore`), `dialog-stub.js` (`autosave_write` stash /
+`autosave_read` boot feed), `game-loader.js` (plumbing wiring), `voxglk-bootstrap.js` (skip kick).
+
+### GOTCHA — `vm.prepare()` copies options, so wire the plumbing BEFORE it
+`ZVM.prepare()` does `this.options = utils.extend({}, default_options, options)` (`zvm.js:971`)
+— a COPY. So `options.do_vm_autosave` + `options.GiDispa` must be set BEFORE `vm.prepare()`,
+or the VM's `this.options` never sees them and `vm.start()` skips `do_autorestore` entirely.
+Symptom when wrong: VM boots a fresh intro (autosave_read never called) while the app's HTML
+reattach paints the saved scrollback over it → stuck at a char "press key to continue" with
+intro text bleeding in. game-loader defers `vm.prepare()` until after the engine-plumbing
+decision for this reason. Cost an hour of Anchorhead debugging; the headless oracle can't
+catch it because it never exercises the browser boot/`Glk.init` ordering.
+
+### Coexistence rule — read plumbing keys off SAVE FORMAT, not the write flag
+An engine snapshot can only be restored by `do_autorestore` at boot (needs GiDispa +
+do_vm_autosave wired before `Glk.init`). So enable that plumbing whenever the *existing
+autosave* is engine-format (`saveData.saveFormat==='engine'`), regardless of the write flag —
+otherwise flipping the flag off (or the eventual default flip) strands existing engine saves.
+The flag independently controls the NEXT save's format, so flag-off cleanly downgrades to
+legacy Quetzal on the next autosave. Engine WRITE is gated to the autosave slot only
+(quicksave/customsave stay legacy until Phase 6); a pending manual restore forces the legacy path.

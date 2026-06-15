@@ -52,6 +52,7 @@ const MATRIX = [
   { game: 'anchorhead',  file: 'anchorhead.cmds.txt',  points: [6, 12, 18], note: 'Z8 char-intro' },
   { game: '905',         cmds: GENERIC,                 points: [3, 6, 9],   note: 'Z5 line-intro (generic cmds)' },
   { game: 'seastalker',  cmds: GENERIC,                 points: [3, 6, 9],   note: 'Z3 press-any-key intro (generic cmds)' },
+  { game: 'amfv',        cmds: GENERIC,                 points: [3, 6, 9],   note: 'Z4 multi-MORE char-intro (generic cmds)' },
 ];
 
 function loadCmds(entry) {
