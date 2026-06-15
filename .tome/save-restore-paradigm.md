@@ -45,7 +45,29 @@ no bootstrap kick. Eliminates the seam entirely.
 - **Mitigation if pursued:** hybrid — full-snapshot only for the disposable,
   same-session autosave/resume path; keep Quetzal as the portable/export format
   for manual saves that must survive an engine bump.
-- **Status:** deferred 2026-05-30 — fragility not worth it today.
+- **Status:** deferred 2026-05-30 — fragility not worth it today. **Reopened
+  2026-06-15** as the recommended fix after the Wishbringer Z3 wedge (see proof
+  below) + the GiDispa reconciliation (next bullet).
+- **Why this wasn't done in the first place — and why that reason is stale.** The
+  custom Quetzal+bootstrap system (Dec 2025, commit `335fea3`) exists because the team
+  TRIED `do_autosave` and it crashed: `save_allstate` → `GiDispa.get_retained_array(null)`.
+  They concluded (`reference/save-restore-research.md`) it was "fundamentally incompatible
+  with Z-machine" because GiDispa is a Glulx-only dispatch layer. **That conclusion is
+  wrong.** `save_allstate` touches GiDispa only to resolve the addr/len of a retained
+  line/memory buffer (`glkapi.js:800`). A **minimal GiDispa shim** (~25 lines, just the
+  methods `save_allstate`/`restore_allstate` call) makes the built-in path work for
+  Z-machine. We already have a working one: `tools/play.cjs:144-168` runs `do_autorestore`
+  on Z3 Wishbringer cleanly. The Dec-2025 attempt simply ran with no GiDispa at all
+  (`do_vm_autosave:false`). So Option 1's only *real* remaining cost is the version-
+  fragility above (mitigated by the hybrid) — the historical "incompatible" blocker is gone.
+- **Migration shape (de-risked):** (1) port the harness GiDispa shim into the browser +
+  flip `do_vm_autosave:true`; (2) re-home app-layer reattachment (displayHTML scrollback,
+  status bar, screen-width global patch, narration-chunk invalidation, map-state,
+  autosave-grace) onto a *fully-restored* Glk window tree instead of a fresh one;
+  (3) coexistence/fallback for existing Quetzal+HTML autosaves. `save_allstate` saves
+  window metadata NOT text, so keep saving displayHTML alongside (this was the *valid*
+  half of the 2024 finding). Own branch; regression-test Z3/Z5/Z8 × line/char intro with
+  `play.cjs` as oracle.
 
 ## Option 2 — Restore at a clean prompt boundary (rejected for now)
 

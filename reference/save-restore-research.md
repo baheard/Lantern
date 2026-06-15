@@ -445,6 +445,17 @@ if (win.linebuf !== null) {
 - `save_allstate()` crashes when trying to save line buffers
 - Built-in autosave is **fundamentally incompatible** with Z-machine
 
+> ⚠️ **CORRECTION (2026-06-15): the "fundamentally incompatible" conclusion below is WRONG.**
+> The crash is real, but the cause is *missing wiring*, not a Z-machine limitation.
+> `save_allstate()` only touches `GiDispa` to resolve the addr/len of a retained
+> line/memory buffer (`glkapi.js:800` `get_retained_array`). Supply a **minimal GiDispa
+> shim** (~25 lines implementing just the methods `save_allstate`/`restore_allstate` call)
+> and `do_autosave`/`do_autorestore` work fine for Z-machine. Proof in-repo:
+> `tools/play.cjs` runs `do_autorestore` on **Z3 Wishbringer** cleanly using exactly such a
+> shim (`play.cjs:144-168`). The original attempt simply ran with no GiDispa at all
+> (`do_vm_autosave:false`). So the built-in path is a viable target for migration — see
+> the rewritten Conclusion and `.tome/save-restore-paradigm.md`.
+
 ### Why This Matters
 
 IFTalk primarily uses **Z-machine games** (.z3, .z5, .z8 files):
@@ -508,9 +519,27 @@ If IFTalk ever supports Glulx games:
 
 ## Conclusion
 
-**IFTalk's custom save-manager.js implementation is architecturally correct and necessary.** The approach of saving HTML content separately and suppressing post-restore output is the standard solution for web-based IF interpreters, and is the **only viable approach for Z-machine games**.
+**(Original Dec 2024 conclusion — superseded; kept for history.)**
+~~IFTalk's custom save-manager.js implementation is architecturally correct and necessary…
+cannot be replaced with ifvms.js's built-in autosave due to fundamental architectural
+differences between Z-machine and Glulx.~~
 
-The system works correctly for Z-machine games (which IFTalk uses) and cannot be replaced with ifvms.js's built-in autosave due to fundamental architectural differences between Z-machine and Glulx.
+**Revised conclusion (2026-06-15):** The custom save system was a *reasonable* response to a
+real crash, but its central premise — that built-in autosave can't work for Z-machine — is
+false. The crash was missing-GiDispa wiring, not an architectural wall (see the CORRECTION
+banner above). The custom `restore_file`-mid-`aread` + bootstrap path has since produced a
+recurring bug class (char-bootstrap disambiguation v1.5.268, bufaddr/tv2 corruption
+v1.5.367/409, and the Wishbringer Z3 "body unwilling" wedge — the latter proven to be the
+custom path, since the engine's `do_autorestore` restores the identical snapshot cleanly).
+
+The still-valid part of the original finding: `save_allstate()` saves window *metadata*, not
+rendered *text*, so the visible transcript/narration state must still be saved alongside
+(as `displayHTML`) — but that's compatible with the built-in path, not a reason to avoid it.
+
+**Recommended direction:** migrate the autosave/resume path to the engine's
+`do_autosave`/`do_autorestore` with a browser GiDispa shim (hybrid — keep Quetzal for
+portable manual exports). Retires the whole bootstrap bug class. Full analysis +
+empirical proof: `.tome/save-restore-paradigm.md`.
 
 ---
 
