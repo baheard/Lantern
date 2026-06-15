@@ -1040,9 +1040,13 @@ async function initApp() {
       if (ui.autoplayEnabled) {
         state.autoplayEnabled = true;
         window._suppressFirstNarration = true;  // suppress intro text on the page-reload update
+        // Only speak "Game restored" + auto-read the section when autoplay was ON before
+        // the reload. Otherwise stay silent — restoring with play off must not narrate.
+        // (Pre-6a, quick/custom restore used the live-VM bootstrap with no reload, so this
+        // never fired for them; the boot-reload path now does, exposing the unconditional set.)
+        window._pendingRepeatAfterRestore = true;  // speak app message + read section after restore
       }
       if (ui.micUnmuted) window._pendingRestoreMic = true;
-      window._pendingRepeatAfterRestore = true;  // speak app message + read section after restore
     } catch (e) {
       console.warn('[App] Could not restore UI state after reload (mic/autoplay reset to defaults):', e);
     }
