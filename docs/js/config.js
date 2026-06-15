@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   // App identity
   name: 'Lantern',
   displayName: 'Lantern',
-  version: '1.5.575',
+  version: '1.5.576',
 
   // Storage prefixes (used in localStorage keys)
   storagePrefix: 'lantern',
@@ -27,6 +27,9 @@ export const APP_CONFIG = {
   // Save/restore migration (autorestore-migration-plan.md).
   // When true, autosave/resume uses the ZVM engine's built-in full-state
   // do_autosave/do_autorestore (with a GiDispa shim) instead of the custom
-  // Quetzal+bootstrap path. Default false until proven in-browser, then flipped.
-  useEngineAutorestore: false,
+  // Quetzal+bootstrap path. Default false; flip per-device for testing/bake via
+  //   localStorage.setItem('lantern_useEngineAutorestore', 'true')
+  // (read once at load — reload to apply). Phase 5 will flip the default here.
+  useEngineAutorestore: (typeof localStorage !== 'undefined'
+    && localStorage.getItem('lantern_useEngineAutorestore') === 'true'),
 };

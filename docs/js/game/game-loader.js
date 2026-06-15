@@ -165,16 +165,12 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
       do_vm_autosave: false  // Disabled - custom Quetzal+bootstrap path handles Z-machine autosave
     };
 
-    // Engine autorestore migration (autorestore-migration-plan.md, Phase 1).
-    // When enabled, supply a GiDispa shim + turn on the engine's full-state
-    // do_autosave/do_autorestore. Otherwise keep the legacy custom path.
-    if (APP_CONFIG.useEngineAutorestore) {
-      options.GiDispa = createGiDispaShim();
-      options.do_vm_autosave = true;
-    }
+    // NOTE: vm.prepare() is deliberately deferred until AFTER the engine-autorestore
+    // plumbing is decided below. vm.prepare COPIES options into this.options
+    // (zvm.js: utils.extend), so options MUST be fully configured (GiDispa +
+    // do_vm_autosave) before prepare runs — mutating options after prepare would not
+    // reach the VM and vm.start() would never call do_autorestore.
 
-    // Prepare VM with story data
-    vm.prepare(storyData, options);
     // Check if user requested to skip autoload (restart game)
     const skipAutoload = localStorage.getItem('lantern_skip_autoload');
     if (skipAutoload === 'true') {
@@ -209,19 +205,48 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     const autosaveRaw = (!skipAutoload && !pendingRestoreJson) ? localStorage.getItem(autosaveKey) : null;
     const hasAutosave = autosaveRaw !== null;
 
-    // Detect engine-format autosaves (autorestore-migration-plan.md, Phase 3).
-    // For these, the engine restores the VM itself during Glk.init (via
-    // Dialog.autosave_read → do_autorestore), so the legacy bootstrap "wake" kick
-    // must be skipped — the VM is already parked at the correct glk_select. The
-    // app-side reattachment (displayHTML/map/narration) still runs via performRestore.
-    window.__engineAutorestoreActive = false;
-    if (hasAutosave && APP_CONFIG.useEngineAutorestore) {
+    // Engine-autorestore coexistence (autorestore-migration-plan.md, Phases 3 + 4).
+    //
+    // Read plumbing keys off the SAVE FORMAT, not the write flag: an engine snapshot
+    // can ONLY be restored by the engine's do_autorestore at boot, which needs
+    // GiDispa + do_vm_autosave wired before Glk.init. So whenever the existing autosave
+    // is engine-format we enable that plumbing regardless of the flag — otherwise
+    // flipping the flag off (or the Phase 5 default flip) would strand existing engine
+    // saves. The write flag (useEngineAutorestore) independently controls which format
+    // the NEXT autosave is written in (performSave.buildEngineSnapshot).
+    //
+    // When the engine restores the VM at boot, the legacy bootstrap "wake" kick must be
+    // skipped (VM already parked at the correct glk_select); app-side reattachment
+    // (displayHTML/map/narration) still runs via performRestore. __engineAutorestoreActive
+    // signals that to voxglk-bootstrap.handleAutoRestore.
+    let saveIsEngineFormat = false;
+    if (hasAutosave) {
       try {
-        window.__engineAutorestoreActive = JSON.parse(autosaveRaw).saveFormat === 'engine';
+        saveIsEngineFormat = JSON.parse(autosaveRaw).saveFormat === 'engine';
       } catch (e) {
-        window.__engineAutorestoreActive = false;
+        saveIsEngineFormat = false;
       }
     }
+    window.__engineAutorestoreActive = saveIsEngineFormat;
+
+    // Enable the engine plumbing when either we'll WRITE engine format (flag on) or we
+    // must READ an existing engine-format save. Mutates the shared options object before
+    // Glk.init (see NOTE above). GiDispa is required for save_allstate (write) AND
+    // restore_allstate (read); do_vm_autosave:true makes vm.start() run do_autorestore.
+    //
+    // EXCEPTION: a pending manual restore (quicksave/customsave via the 'R' reload) must
+    // use the legacy path — those slots are always Quetzal (Phase 6 territory). If we left
+    // do_vm_autosave on, vm.start() would auto-restore the AUTOSAVE snapshot at boot instead
+    // of the quicksave the user asked for. Forcing legacy here boots a fresh intro and lets
+    // handleAutoRestore → quickLoad/customLoad restore the right (Quetzal) slot.
+    if (!pendingRestoreJson && (APP_CONFIG.useEngineAutorestore || saveIsEngineFormat)) {
+      options.GiDispa = createGiDispaShim();
+      options.do_vm_autosave = true;
+    }
+
+    // Prepare VM with story data — AFTER options are fully configured (see NOTE above),
+    // since prepare snapshots options into this.options.
+    vm.prepare(storyData, options);
 
     // Flag to trigger auto-restore on first update (after VM is running)
     if (hasAutosave) {
