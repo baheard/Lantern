@@ -152,7 +152,12 @@ export async function handleAutoRestore(generation, getAcceptCallback) {
         justRestored = true;
 
         const isManualRestore = (restoreType === 'quicksave' || restoreType === 'customsave');
-        const shouldSendBootstrap = isManualRestore || generation === 1;
+        // Engine-format autorestore (autorestore-migration-plan.md, Phase 3): the engine
+        // already restored the VM during Glk.init and parked it at the correct glk_select.
+        // Sending a bootstrap "wake" input here would EXECUTE an extra command against the
+        // restored state — so skip the kick entirely for the engine path.
+        const shouldSendBootstrap = !window.__engineAutorestoreActive
+          && (isManualRestore || generation === 1);
 
         if (shouldSendBootstrap) {
           setTimeout(() => {

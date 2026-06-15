@@ -206,8 +206,22 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
 
     // Check for autosave - will restore after VM starts (on first update)
     const autosaveKey = `lantern_autosave_${state.currentGameName}`;
-    const hasAutosave = !skipAutoload && !pendingRestoreJson && localStorage.getItem(autosaveKey) !== null;
+    const autosaveRaw = (!skipAutoload && !pendingRestoreJson) ? localStorage.getItem(autosaveKey) : null;
+    const hasAutosave = autosaveRaw !== null;
 
+    // Detect engine-format autosaves (autorestore-migration-plan.md, Phase 3).
+    // For these, the engine restores the VM itself during Glk.init (via
+    // Dialog.autosave_read → do_autorestore), so the legacy bootstrap "wake" kick
+    // must be skipped — the VM is already parked at the correct glk_select. The
+    // app-side reattachment (displayHTML/map/narration) still runs via performRestore.
+    window.__engineAutorestoreActive = false;
+    if (hasAutosave && APP_CONFIG.useEngineAutorestore) {
+      try {
+        window.__engineAutorestoreActive = JSON.parse(autosaveRaw).saveFormat === 'engine';
+      } catch (e) {
+        window.__engineAutorestoreActive = false;
+      }
+    }
 
     // Flag to trigger auto-restore on first update (after VM is running)
     if (hasAutosave) {

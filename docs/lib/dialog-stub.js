@@ -224,39 +224,50 @@ function autosave_write(key, snapshot) {
     }
 }
 
+/* Engine autorestore migration (autorestore-migration-plan.md, Phase 3).
+ *
+ * Called by the VM during vm.start() (inside Glk.init) when do_vm_autosave is on.
+ * If it returns a snapshot, the engine runs do_autorestore immediately — before
+ * any intro — and lands cleanly at the next glk_select (no bootstrap seam).
+ *
+ * The engine snapshot lives inside the app's parity envelope, keyed by gameName
+ * (lantern_autosave_<gameName>), NOT by the raw VM signature passed here. We use
+ * window.state.currentGameName (set by game-loader before Glk.init) to find it,
+ * format-detect (saveFormat === 'engine'), and return the decompressed snapshot.
+ *
+ * Returns null when there is no save, or the save is legacy Quetzal format — in
+ * which case the engine boots a fresh intro and the legacy performRestore path
+ * (shouldAutoRestore) handles restoration instead (coexistence). The app-side
+ * reattachment (displayHTML, map, narration, etc.) is NOT done here; performRestore
+ * owns it for both formats. See save-manager.performRestore.
+ */
 function autosave_read(key) {
     try {
-        var data = localStorage.getItem('lantern_auto_' + key);
-        var snapshot = data ? JSON.parse(data) : null;
+        var gameName = (window.state && window.state.currentGameName) || null;
+        if (!gameName) return null;
 
-        if (snapshot) {
-            // If we have HTML to restore, schedule it after do_autorestore completes
-            if (snapshot.displayHTML) {
-                // Use setTimeout to restore HTML after ifvms.js finishes do_autorestore
-                setTimeout(function() {
-                    var statusBarEl = document.getElementById('status-bar');
-                    var upperWindowEl = document.getElementById('upper-window');
-                    var lowerWindowEl = document.getElementById('lower-window');
+        var raw = localStorage.getItem('lantern_autosave_' + gameName);
+        if (!raw) return null;
 
-                    if (statusBarEl) statusBarEl.innerHTML = snapshot.displayHTML.statusBar;
-                    if (upperWindowEl) upperWindowEl.innerHTML = snapshot.displayHTML.upperWindow;
-                    if (lowerWindowEl) lowerWindowEl.innerHTML = snapshot.displayHTML.lowerWindow;
-
-                    // Restore narration state
-                    if (snapshot.narrationState && window.state) {
-                        window.state.currentChunkIndex = snapshot.narrationState.currentChunkIndex;
-                    }
-
-                    // Suppress next VoxGlk update to prevent overwriting
-                    window.ignoreNextVoxGlkUpdate = true;
-                }, 0);
-            }
+        var saveData = JSON.parse(raw);
+        if (!saveData || saveData.saveFormat !== 'engine' || !saveData.engineSnapshot) {
+            return null; // legacy Quetzal save → let the legacy restore path handle it
         }
 
-        return snapshot;
+        var snapshotStr = saveData.engineSnapshot;
+        if (saveData.engineSnapshotCompressed) {
+            var binaryString = atob(saveData.engineSnapshot);
+            var bytes = new Uint8Array(binaryString.length);
+            for (var i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            snapshotStr = pako.ungzip(bytes, { to: 'string' });
+        }
+
+        return JSON.parse(snapshotStr);
     } catch (e) {
         console.error('[Dialog] Autosave read error:', e);
-        return null;
+        return null; // treat as no-autosave → clean boot, never a hard crash
     }
 }
 

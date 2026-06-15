@@ -520,31 +520,45 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             return false;
         }
 
-        // Decompress quetzalData if compressed — fail loudly on corruption
-        // rather than feeding garbage into atob()/restore_file()
-        let quetzalDataBase64 = saveData.quetzalData;
-        if (saveData.quetzalDataCompressed) {
-            quetzalDataBase64 = decompressString(saveData.quetzalData);
-            if (quetzalDataBase64 === null) {
-                updateStatus('Restore failed: save data is corrupted', 'error');
-                return false;
+        // Two restore formats coexist (autorestore-migration-plan.md). For the engine
+        // format the VM has ALREADY been restored by the engine's do_autorestore during
+        // vm.start() (inside Glk.init) — see dialog-stub.autosave_read — so there is no
+        // Quetzal blob to decode and no restore_file() to call here. We default result=2
+        // (success) and fall straight through to the shared app-side reattachment below.
+        // The legacy screen-width patch and bufaddr/parseaddr bootstrap seed inside the
+        // result===2 block are natural no-ops for engine saves: savedScreenWidth stays
+        // null and engine saves carry no voxglkState (bufaddr/parseaddr undefined).
+        const isEngineFormat = saveData.saveFormat === 'engine';
+        let savedScreenWidth = null;
+        let result = 2;
+
+        if (!isEngineFormat) {
+            // Decompress quetzalData if compressed — fail loudly on corruption
+            // rather than feeding garbage into atob()/restore_file()
+            let quetzalDataBase64 = saveData.quetzalData;
+            if (saveData.quetzalDataCompressed) {
+                quetzalDataBase64 = decompressString(saveData.quetzalData);
+                if (quetzalDataBase64 === null) {
+                    updateStatus('Restore failed: save data is corrupted', 'error');
+                    return false;
+                }
             }
+
+            // Decode base64 to binary
+            const binaryString = atob(quetzalDataBase64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            // Decode the screen_width stored in this save BEFORE restore_file() overwrites it.
+            // restore_file() calls update_screen_size() which writes the current correct width
+            // back to the header, but game globals that cached the old (wrong) width are left as-is.
+            savedScreenWidth = decodeQuetzalScreenWidth(bytes, window.zvmInstance?.origram);
+
+            // Restore using ZVM
+            result = window.zvmInstance.restore_file(bytes.buffer);
         }
-
-        // Decode base64 to binary
-        const binaryString = atob(quetzalDataBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        // Decode the screen_width stored in this save BEFORE restore_file() overwrites it.
-        // restore_file() calls update_screen_size() which writes the current correct width
-        // back to the header, but game globals that cached the old (wrong) width are left as-is.
-        const savedScreenWidth = decodeQuetzalScreenWidth(bytes, window.zvmInstance?.origram);
-
-        // Restore using ZVM
-        const result = window.zvmInstance.restore_file(bytes.buffer);
 
         if (result === 2) { // ZVM returns 2 on successful restore
             // Fix stale screen_width in game globals.
