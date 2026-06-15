@@ -382,11 +382,11 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         //   'quetzal' (legacy) — Quetzal save_file bytes + the bootstrap/voxglk carry fields.
         // We attempt the engine snapshot only when the flag is on AND the shim produced one;
         // otherwise we fall back to Quetzal so a save is never lost.
-        // Engine format is gated to the AUTOSAVE slot only. Quicksave/customsave keep
-        // writing legacy Quetzal: their restore runs through the live VM (no boot-time
-        // do_autorestore), so an engine snapshot there couldn't be restored until Phase 6.
-        const engineEligible = storageKey.startsWith('lantern_autosave_');
-        const engineSnapshot = (APP_CONFIG.useEngineAutorestore && engineEligible) ? buildEngineSnapshot() : null;
+        // Phase 6a: engine format now applies to ALL slots (autosave/quicksave/customsave).
+        // Quick/custom restore reuses the proven boot-time do_autorestore (game-loader points
+        // dialog-stub.autosave_read at the requested slot via window.__engineRestoreKey) instead
+        // of the legacy live-VM bootstrap, so an engine snapshot in any slot is now restorable.
+        const engineSnapshot = APP_CONFIG.useEngineAutorestore ? buildEngineSnapshot() : null;
         const useEngineFormat = !!engineSnapshot;
 
         let payloadFields;

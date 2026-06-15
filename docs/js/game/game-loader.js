@@ -205,6 +205,20 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     const autosaveRaw = (!skipAutoload && !pendingRestoreJson) ? localStorage.getItem(autosaveKey) : null;
     const hasAutosave = autosaveRaw !== null;
 
+    // Phase 6a: determine WHICH slot the engine's do_autorestore will read at boot.
+    // For a pending manual restore (quicksave/customsave/autosave via reload) it's that
+    // slot; otherwise the autosave. We expose the resolved storage key on
+    // window.__engineRestoreKey so dialog-stub.autosave_read pulls the engine snapshot
+    // from the slot the user actually asked for — this is what lets quick/custom restore
+    // reuse the proven boot-time do_autorestore instead of the legacy live-VM bootstrap.
+    let engineRestoreStorageKey = autosaveKey;
+    if (window.pendingRestoreType === 'quicksave') {
+      engineRestoreStorageKey = `lantern_quicksave_${state.currentGameName}`;
+    } else if (window.pendingRestoreType === 'customsave') {
+      engineRestoreStorageKey = `lantern_customsave_${state.currentGameName}_${window.pendingRestoreKey}`;
+    }
+    window.__engineRestoreKey = engineRestoreStorageKey;
+
     // Engine-autorestore coexistence (autorestore-migration-plan.md, Phases 3 + 4).
     //
     // Read plumbing keys off the SAVE FORMAT, not the write flag: an engine snapshot
@@ -219,10 +233,13 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     // skipped (VM already parked at the correct glk_select); app-side reattachment
     // (displayHTML/map/narration) still runs via performRestore. __engineAutorestoreActive
     // signals that to voxglk-bootstrap.handleAutoRestore.
+    // Format-detect the TARGET slot (engineRestoreStorageKey), not just the autosave —
+    // a quicksave/customsave restore must check its own slot's format.
     let saveIsEngineFormat = false;
-    if (hasAutosave) {
+    const targetRestoreRaw = localStorage.getItem(engineRestoreStorageKey);
+    if (targetRestoreRaw) {
       try {
-        saveIsEngineFormat = JSON.parse(autosaveRaw).saveFormat === 'engine';
+        saveIsEngineFormat = JSON.parse(targetRestoreRaw).saveFormat === 'engine';
       } catch (e) {
         saveIsEngineFormat = false;
       }
@@ -230,16 +247,14 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     window.__engineAutorestoreActive = saveIsEngineFormat;
 
     // Enable the engine plumbing when either we'll WRITE engine format (flag on) or we
-    // must READ an existing engine-format save. Mutates the shared options object before
-    // Glk.init (see NOTE above). GiDispa is required for save_allstate (write) AND
-    // restore_allstate (read); do_vm_autosave:true makes vm.start() run do_autorestore.
-    //
-    // EXCEPTION: a pending manual restore (quicksave/customsave via the 'R' reload) must
-    // use the legacy path — those slots are always Quetzal (Phase 6 territory). If we left
-    // do_vm_autosave on, vm.start() would auto-restore the AUTOSAVE snapshot at boot instead
-    // of the quicksave the user asked for. Forcing legacy here boots a fresh intro and lets
-    // handleAutoRestore → quickLoad/customLoad restore the right (Quetzal) slot.
-    if (!pendingRestoreJson && (APP_CONFIG.useEngineAutorestore || saveIsEngineFormat)) {
+    // must READ an existing engine-format save (any slot). Mutates the shared options
+    // object before Glk.init (see NOTE above). GiDispa is required for save_allstate
+    // (write) AND restore_allstate (read); do_vm_autosave:true makes vm.start() run
+    // do_autorestore, which reads window.__engineRestoreKey (set above) — so it restores
+    // the requested quicksave/customsave slot, not blindly the autosave. A legacy Quetzal
+    // target still returns null from autosave_read → fresh intro → handleAutoRestore's
+    // legacy bootstrap path restores it (coexistence preserved until 6b removes legacy).
+    if (APP_CONFIG.useEngineAutorestore || saveIsEngineFormat) {
       options.GiDispa = createGiDispaShim();
       options.do_vm_autosave = true;
     }

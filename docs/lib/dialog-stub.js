@@ -246,7 +246,11 @@ function autosave_read(key) {
         var gameName = (window.state && window.state.currentGameName) || null;
         if (!gameName) return null;
 
-        var raw = localStorage.getItem('lantern_autosave_' + gameName);
+        // Phase 6a: read the slot game-loader resolved for this boot (autosave by default,
+        // or the quicksave/customsave slot the user asked to restore). This lets quick/custom
+        // restore reuse boot-time do_autorestore instead of the legacy live-VM bootstrap.
+        var restoreKey = window.__engineRestoreKey || ('lantern_autosave_' + gameName);
+        var raw = localStorage.getItem(restoreKey);
         if (!raw) return null;
 
         var saveData = JSON.parse(raw);
