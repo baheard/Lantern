@@ -10,6 +10,8 @@ import { updateStatus } from '../utils/status.js';
 import { updateNavButtons } from '../ui/nav-buttons.js';
 import { stopNarration } from '../narration/tts-player.js';
 import { createVoxGlk, sendInput, getInputType } from './voxglk.js';
+import { APP_CONFIG } from '../config.js';
+import { createGiDispaShim } from './gidispa-shim.js';
 import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
 import { closeSettings } from '../ui/settings/settings-panel.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
@@ -160,8 +162,16 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
       Glk: window.Glk,
       GlkOte: voxglk,  // Pass VoxGlk as GlkOte - duck typing!
       Dialog: window.Dialog,
-      do_vm_autosave: false  // Disabled - ifvms.js autosave only works for Glulx, not Z-machine
+      do_vm_autosave: false  // Disabled - custom Quetzal+bootstrap path handles Z-machine autosave
     };
+
+    // Engine autorestore migration (autorestore-migration-plan.md, Phase 1).
+    // When enabled, supply a GiDispa shim + turn on the engine's full-state
+    // do_autosave/do_autorestore. Otherwise keep the legacy custom path.
+    if (APP_CONFIG.useEngineAutorestore) {
+      options.GiDispa = createGiDispaShim();
+      options.do_vm_autosave = true;
+    }
 
     // Prepare VM with story data
     vm.prepare(storyData, options);

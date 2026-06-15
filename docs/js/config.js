@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   // App identity
   name: 'Lantern',
   displayName: 'Lantern',
-  version: '1.5.572',
+  version: '1.5.573',
 
   // Storage prefixes (used in localStorage keys)
   storagePrefix: 'lantern',
@@ -23,4 +23,10 @@ export const APP_CONFIG = {
 
   // Device tracking
   deviceIdKey: 'lantern_device_id',
+
+  // Save/restore migration (autorestore-migration-plan.md).
+  // When true, autosave/resume uses the ZVM engine's built-in full-state
+  // do_autosave/do_autorestore (with a GiDispa shim) instead of the custom
+  // Quetzal+bootstrap path. Default false until proven in-browser, then flipped.
+  useEngineAutorestore: false,
 };
