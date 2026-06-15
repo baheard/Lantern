@@ -91,9 +91,39 @@ reintroduce the bug.
 - **Scope:** small and contained (the three spots above). Optional. Do it when the
   code bites again or you're already in there; not urgent now that tv2 is fixed.
 
+## Empirical proof the seam (not the data) is the culprit — Wishbringer Z3 (2026-06-15)
+
+The class bit again on **Wishbringer (the first Z3 game)**: after autorestore every
+turn-taking command returns "Your body seems unwilling to respond." and the retired
+"What next?" prompt resurrects; the in-game clock freezes. Instrumentation + a headless
+A/B nailed it to the seam, not the save:
+
+- **Not the seed layout.** The bootstrap 'l' seed *did* hardcode the Z5+ buffer layout
+  (wrong for Z1-4 — see [[bootstrap-restore-flow]]); fixed it version-aware (v1.5.571).
+  Wedge persisted. And for a **line-mode intro the seed is moot anyway** — glkapi
+  overwrites the seeded buffer with the bootstrap's `value` ('bootstrap wake'), so the VM
+  executes that, not "look".
+- **Not the buffer/address.** Live diag: restored `read_data.bufaddr` == saved bufaddr
+  (10588, no mismatch); the first real command lands at the right address in correct Z3
+  layout. Still wedged, clock still frozen.
+- **Not the saved data.** Decisive A/B: snapshot the exact post-lock save point, then
+  restore it through the **engine's own `do_autorestore`** (`tools/play.cjs --snapshot-in`
+  → `Glk.restore_allstate` + `restart(1)` + `restore_file`). Result: `take umbrella` →
+  "Taken." (clock advances), `e` → next room. **No wedge.** Same snapshot, clean restore.
+
+So the only variable that produces the wedge is the **app's custom restore path**
+(`restore_file` mid-`aread` + fake line bootstrap), exactly the "two systems, one restore"
+seam. The corrupted state is a game global the bootstrap turn clobbers post-restore;
+`do_autorestore` never resumes mid-`aread`, so it can't. This is direct confirmation that
+**Option 1 retires the bug** — and that our headless harness already runs the fixed path
+in production zvm. Headless `play.cjs` is the ready-made regression oracle for the
+migration (default replay = no-restore baseline; `--snapshot-in` = do_autorestore path).
+
 ## Bottom line
 
 If/when this class bites again: **#1 (hybrid) is the structural fix** that retires
 the most bug surface; **#3 is the standing discipline** that makes the
 IFTalk↔engine seam honest and composes with #1; **#2 only** if profiling shows #1
-left a resume seam. None are scheduled as of 2026-05-30.
+left a resume seam. As of 2026-06-15 the Wishbringer Z3 wedge (above) makes #1 the
+recommended next move, on its own branch — see scope estimate in [[bootstrap-restore-flow]]
+/ the wishbringer_restore_z3 track.
