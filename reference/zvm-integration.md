@@ -2,7 +2,7 @@
 
 ## Architecture: Browser-Based Game Engine
 
-IFTalk uses **ifvms.js** (Z-machine interpreter) + **GlkOte** (display library) to run games entirely in the browser.
+Lantern uses **ifvms.js** (Z-machine interpreter) + **GlkOte** (display library) to run games entirely in the browser.
 
 ### Key Components
 

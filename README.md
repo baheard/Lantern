@@ -14,7 +14,7 @@ Play classic text adventure games using your voice and natural language! Lantern
 ### 1. Install Dependencies
 
 ```bash
-cd C:\source\IFTalk
+cd C:\source\Lantern
 npm install
 ```
 
@@ -201,7 +201,7 @@ The web app uses **Web Speech API** (built into browsers):
 ## Adding More Games
 
 1. Download any Z-machine (.z3, .z5, .z8) or Glulx (.ulx) game
-2. Place in IFTalk directory
+2. Place in Lantern directory
 3. Add to `public/index.html` game list
 4. Or select via file picker (optional feature)
 

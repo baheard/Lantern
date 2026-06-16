@@ -1,4 +1,4 @@
-﻿# IFTalk Code Review
+﻿# Lantern Code Review
 
 Started: 2026-04-25
 Scope: `docs/js/**/*.js`, `docs/styles/**/*.css`, `docs/index.html`
@@ -138,7 +138,7 @@ _Status: complete (2026-04-25)_
 
 - `[x]` **Low** â€” `docs/js/game/commands/command-router.js:34-36` â€” Dynamic `await import('../../app.js')` to access `voiceCommandHandlers`. **Fixed in v1.5.226: voiceCommandHandlers is now in `voice/command-handlers.js`, imported statically. The `getVoiceCommandHandlers()` workaround function is gone, and ~16 `await getVoiceCommandHandlers()` call sites collapsed to direct references.**
 - `[ ]` **Low** â€” `docs/js/game/voxglk.js`, `docs/js/ui/game-output.js`, `docs/js/narration/tts-player.js` â€” Multiple dynamic `await import(...)` calls inside per-output / per-chunk hot paths (e.g., voxglk.js loads `updateStatus`/`addGameText`/`autoSave` dynamically each time). Modules are cached by the runtime so the perf cost is small, but it muddies the dependency graph. These look like incremental cycle-avoidance accumulated over time â€” could be statically imported if no actual cycle exists.
-- `[ ]` **Low** â€” `window.*` globals as cross-module channel: `window.lastSentCommand`, `window.lastCommandWasVoice`, `window.lastCommandConfidence`, `window.getCurrentLocation`, `window.getMapData`, `window.showMap`/`hideMap`/`toggleMap`, `window.state`, `window.IFTalkStorage`. Most are debug hooks or one-shot signal flags. The signal flags (`lastSentCommand` for voice echo detection) could be moved to `state.js` for clarity; the debug ones are fine to leave.
+- `[ ]` **Low** â€” `window.*` globals as cross-module channel: `window.lastSentCommand`, `window.lastCommandWasVoice`, `window.lastCommandConfidence`, `window.getCurrentLocation`, `window.getMapData`, `window.showMap`/`hideMap`/`toggleMap`, `window.state`, `window.LanternStorage`. Most are debug hooks or one-shot signal flags. The signal flags (`lastSentCommand` for voice echo detection) could be moved to `state.js` for clarity; the debug ones are fine to leave.
 
 #### Verified safe
 - No `export * from '...'` wildcard re-exports anywhere.
@@ -390,7 +390,7 @@ _Status: complete (2026-04-27)_
 - `[ ]` **Low** â€” `docs/js/narration/chunking.js:257` â€” Empty `catch (e) {}` in `insertRealMarkersAtIDs` (DOM manipulation failure during marker insertion) lacks an intent comment. Same pattern fixed across `auto-mapper.js`, `remote-console.js`, and `app.js` in v1.5.223 â€” add a brief comment explaining that marker failures are expected for certain DOM structures and narration continues without that marker.
 - `[ ]` **Low** â€” `docs/js/narration/chunking.js:186-202` â€” `while (prevSibling) { /* check classList */; break; }` is always a single-iteration loop â€” the `break` is unconditional, making this semantically identical to `if (prevSibling) { /* check classList */ }`. The comment "Only check immediate previous sibling" confirms the intent. Rewrite as `if (prevSibling)` to remove the misleading loop construct.
 - `[ ]` **Low** â€” `docs/js/narration/tts-player.js:223` â€” `text` parameter of `speakTextChunked` is documented "Unused (chunks come from state.narrationChunks)". All callers pass `null`. The parameter is a vestigial API remnant. Rename to `_text` or remove; if removed, update the two `speakTextChunked(null, ...)` calls in `navigation.js` (lines 99, 153).
-- `[ ]` **Low** â€” `docs/js/narration/highlighting.js:156-168` â€” `updateTextHighlight()` dispatches a `chunkHighlighted` CustomEvent on every chunk (the hot narration path). Commented as "for debugging/testing". No production listener exists â€” this is pure overhead on every spoken sentence. Gate behind a debug flag (e.g., `window._iftalkDebug`) or remove.
+- `[ ]` **Low** â€” `docs/js/narration/highlighting.js:156-168` â€” `updateTextHighlight()` dispatches a `chunkHighlighted` CustomEvent on every chunk (the hot narration path). Commented as "for debugging/testing". No production listener exists â€” this is pure overhead on every spoken sentence. Gate behind a debug flag (e.g., `window._lanternDebug`) or remove.
 - `[ ]` **Low** â€” `docs/js/narration/highlighting.js:127` â€” `removeHighlight()` fetches `gameOutput` via `document.getElementById('gameOutput')` directly. Every other module uses the pre-cached `dom.gameOutput` from `core/dom.js`. Import `dom` and use `dom.gameOutput` for consistency.
 - `[ ]` **Low** â€” `docs/js/narration/highlighting.js:14-16` â€” `initScrollDetection()` is a no-op export kept "for API compatibility". It is called from `app.js:295` but does nothing. Remove the export from `highlighting.js` and the import+call from `app.js`.
 

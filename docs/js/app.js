@@ -1,5 +1,5 @@
 ﻿/**
- * IFTalk - Voice-Powered Interactive Fiction
+ * Lantern - Voice-Powered Interactive Fiction
  * Main Application Entry Point
  *
  * This file wires together all modules and initializes the app.
@@ -340,6 +340,7 @@ function initUIComponents() {
   initScrollDownButton();
   initSaveHandlers();
   initDialogInterceptor();
+  import('./features/location-art.js').then(({ initLocationArt }) => initLocationArt());
   // Initialize Google Drive sync (optional, non-blocking)
   import('./utils/gdrive/index.js').then(({ initGDriveSync }) => {
     return initGDriveSync();

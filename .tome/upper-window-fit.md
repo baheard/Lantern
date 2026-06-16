@@ -107,4 +107,4 @@ Other games put quote boxes / titles in a multiline upper window. They now rende
 scaled monospace grid instead of reflowed inline text — slightly smaller on narrow
 screens but faithful to the original presentation. This was a deliberate tradeoff: a
 reliable rule (never reflow a grid) beat trying to auto-distinguish "compass" from
-"quote." See also [[parchment-vs-iftalk-engine]] for how the engine models windows.
+"quote." See also [[parchment-vs-lantern-engine]] for how the engine models windows.

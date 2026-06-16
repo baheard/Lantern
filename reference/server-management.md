@@ -14,7 +14,7 @@
 ## Starting the Development Server
 
 ```bash
-cd /e/Project/IFTalk && npm start
+cd /e/Project/Lantern && npm start
 ```
 
 The server runs on **port 3000**.

@@ -33,7 +33,7 @@ const { execFileSync } = require('child_process');
 const REPO = path.resolve(__dirname, '..');
 const PLAY = path.join(REPO, 'tools', 'play.cjs');
 const WALK = path.join(REPO, 'docs/games/walkthroughs');
-const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'iftalk-autorestore-'));
+const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'lantern-autorestore-'));
 
 const TAIL_LEN = 4; // commands replayed after each snapshot point
 

@@ -1,6 +1,6 @@
 ---
 name: trace-walkthrough
-description: Find authoritative walkthrough(s) for an IFTalk game and produce a --strict-clean, replayable command list verified against our EXACT build. Triggered when the user says "trace walkthrough for <game>", "trace <game>", "build/verify a walkthrough for <game>" — and invoked by other skills (e.g. generate-hints) when they need a verified command list that doesn't exist yet.
+description: Find authoritative walkthrough(s) for a Lantern game and produce a --strict-clean, replayable command list verified against our EXACT build. Triggered when the user says "trace walkthrough for <game>", "trace <game>", "build/verify a walkthrough for <game>" — and invoked by other skills (e.g. generate-hints) when they need a verified command list that doesn't exist yet.
 ---
 
 # trace-walkthrough skill

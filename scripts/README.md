@@ -2,7 +2,7 @@
 
 ## feedback-to-github.gs — Feedback → GitHub Issues Pipeline
 
-Converts IFTalk in-app feedback form submissions into GitHub Issues and deletes processed rows from the Google Sheet.
+Converts Lantern in-app feedback form submissions into GitHub Issues and deletes processed rows from the Google Sheet.
 
 ### One-Time Setup
 

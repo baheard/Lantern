@@ -1,4 +1,4 @@
-# IFTalk TODO
+# Lantern TODO
 
 ## Medium Priority
 

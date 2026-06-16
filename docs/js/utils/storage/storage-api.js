@@ -200,12 +200,12 @@ export function clearGameData(gameName = null) {
 export function getStorageInfo() {
     try {
         const keys = getAllKeys();
-        const iftalkKeys = keys.filter(k => k.startsWith('lantern_'));
+        const lanternKeys = keys.filter(k => k.startsWith('lantern_'));
 
         let totalSize = 0;
         const sizeByType = {};
 
-        iftalkKeys.forEach(key => {
+        lanternKeys.forEach(key => {
             const value = localStorage.getItem(key);
             if (value) {
                 const size = key.length + value.length;
@@ -219,18 +219,18 @@ export function getStorageInfo() {
 
         return {
             totalKeys: keys.length,
-            iftalkKeys: iftalkKeys.length,
+            lanternKeys: lanternKeys.length,
             estimatedSizeKB: (totalSize / 1024).toFixed(2),
             estimatedSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
             sizeByType: Object.entries(sizeByType).map(([type, bytes]) => ({
                 type,
                 sizeKB: (bytes / 1024).toFixed(2),
-                count: iftalkKeys.filter(k => k.includes(`_${type}_`)).length
+                count: lanternKeys.filter(k => k.includes(`_${type}_`)).length
             })),
-            keys: iftalkKeys
+            keys: lanternKeys
         };
     } catch (error) {
-        return { totalKeys: 0, iftalkKeys: 0, estimatedSizeKB: 0, estimatedSizeMB: 0, sizeByType: [], keys: [] };
+        return { totalKeys: 0, lanternKeys: 0, estimatedSizeKB: 0, estimatedSizeMB: 0, sizeByType: [], keys: [] };
     }
 }
 
@@ -246,7 +246,7 @@ export function printStorageReport() {
         return { key, sizeKB: parseFloat(((value ? value.length : 0) / 1024).toFixed(2)) };
     }).sort((a, b) => b.sizeKB - a.sizeKB).slice(0, 10);
 
-    console.group(`IFTalk Storage Report — ${info.estimatedSizeMB} MB (~${usagePercent}% of ${estimatedQuotaMB}MB), ${info.iftalkKeys}/${info.totalKeys} keys`);
+    console.group(`Lantern Storage Report — ${info.estimatedSizeMB} MB (~${usagePercent}% of ${estimatedQuotaMB}MB), ${info.lanternKeys}/${info.totalKeys} keys`);
     console.table(info.sizeByType);
     console.log('Top 10 largest items:');
     console.table(itemSizes);
@@ -260,5 +260,5 @@ export function printStorageReport() {
 
 // Expose to window for console debugging
 if (typeof window !== 'undefined') {
-    window.IFTalkStorage = { getStorageInfo, printStorageReport };
+    window.LanternStorage = { getStorageInfo, printStorageReport };
 }

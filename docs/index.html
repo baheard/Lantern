@@ -54,7 +54,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Voxi">
+  <meta name="apple-mobile-web-app-title" content="Lantern">
 
   <!-- iOS icons -->
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -117,6 +117,24 @@
               <input type="checkbox" id="automapByDefaultToggle" class="toggle-switch">
             </label>
             <p class="setting-description">Auto-enable map tracking when starting new games</p>
+          </div>
+
+          <!-- Show Location Art by Default (welcome screen only) -->
+          <div class="setting-item welcome-section-item">
+            <label>
+              Show Location Art by Default
+              <input type="checkbox" id="locationArtByDefaultToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Show generated location images for games (can be turned off per game)</p>
+          </div>
+
+          <!-- Location Art (per-game) -->
+          <div class="setting-item game-section-item">
+            <label>
+              Location Art
+              <input type="checkbox" id="locationArtToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Show a generated image for the current location</p>
           </div>
 
           <!-- Keep Screen Awake toggle -->
@@ -489,7 +507,7 @@
             <button id="pwaInstallBtn" class="compact-btn quick-action-btn">
               <span class="material-icons">install_mobile</span> Install App for Offline Use
             </button>
-            <p class="setting-description" id="pwaInstallDescription">Install Voxi as a standalone app that works without internet</p>
+            <p class="setting-description" id="pwaInstallDescription">Install Lantern as a standalone app that works without internet</p>
           </div>
 
           <!-- Google Drive Sync -->
@@ -806,8 +824,12 @@
     <div class="game-output hidden" id="gameOutput">
       <!-- Three-primitive Z-machine window model -->
       <div class="game-header" id="gameHeader">
-        <div class="status-bar" id="statusBar"></div>
-        <div class="upper-window" id="upperWindow"></div>
+        <!-- Location-art thumbnail icon (in flow, pushes the status text over) is
+             injected here by location-art.js as the first child. -->
+        <div class="game-header-windows" id="gameHeaderWindows">
+          <div class="status-bar" id="statusBar"></div>
+          <div class="upper-window" id="upperWindow"></div>
+        </div>
       </div>
       <div class="lower-window" id="lowerWindow">
         <!-- Inline command input (hidden by default) -->

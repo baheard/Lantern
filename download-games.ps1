@@ -1,5 +1,5 @@
 # Download all IF games to public/games folder
-$gamesDir = "E:\Project\IFTalk\public\games"
+$gamesDir = "E:\Project\Lantern\public\games"
 
 # Create directory if it doesn't exist
 if (-not (Test-Path $gamesDir)) {

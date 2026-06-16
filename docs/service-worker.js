@@ -1,9 +1,9 @@
 ﻿/**
- * IFTalk PWA Service Worker
+ * Lantern PWA Service Worker
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.582';
+const CACHE_VERSION = 'v1.5.602';
 const CACHE_NAMES = {
   core: `lantern-core-${CACHE_VERSION}`,
   games: `lantern-games-${CACHE_VERSION}`,
@@ -19,6 +19,12 @@ const CORE_ASSETS = [
   './favicon.png',
   './images/lantern-hero.png',
   './images/lantern-hero-mobile.jpg',
+  // Placeholder glyphs (shown when a game has art but a room doesn't)
+  './assets/glyphs/selected.json',
+  './assets/glyphs/lantern-a.svg',
+  './assets/glyphs/lantern-b.svg',
+  './assets/glyphs/lantern-c.svg',
+  './assets/glyphs/lantern-d.svg',
   // CSS files
   './styles/base.css',
   './styles/controls.css',
@@ -40,7 +46,9 @@ const CORE_ASSETS = [
   './js/core/app-commands.js',
   './js/core/dom.js',
   './js/core/state.js',
+  './js/features/art-overlay.js',
   './js/features/auto-mapper.js',
+  './js/features/location-art.js',
   './js/features/map-canvas.js',
   './js/features/hints/hints-data.js',
   './js/features/hints/hints-state.js',

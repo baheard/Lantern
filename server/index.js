@@ -1,5 +1,5 @@
 /**
- * IFTalk Server Entry Point
+ * Lantern Server Entry Point
  *
  * Main server initialization and startup.
  */

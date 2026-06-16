@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * IFTalk headless ZVM driver — stateless replay CLI.
+ * Lantern headless ZVM driver — stateless replay CLI.
  *
  * Loads our EXACT interpreter stack (docs/lib/zvm.js + docs/lib/glkapi.js) with a
  * minimal headless GlkOte shim in place of the browser's VoxGlk display layer, then

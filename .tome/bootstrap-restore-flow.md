@@ -2,11 +2,20 @@
 title: Bootstrap Restore Flow
 tags: [zvm, save-restore, voxglk]
 created: 2026-04-26
-updated: 2026-05-28
+updated: 2026-06-15
 aliases: [auto-restore, bootstrap input, just-restored, char-bootstrap, disambiguation-mode, bufaddr mismatch, seededBufaddr]
 ---
 
 # Bootstrap Restore Flow
+
+> **⚠️ HISTORICAL — this mechanism was DELETED in Phase 6b (v1.5.582, `4da25f5`, 2026-06-15).**
+> Restore now runs entirely on ZVM's built-in `do_autosave`/`do_autorestore` (see
+> [[save-restore-paradigm]] "Implementation status — COMPLETE"). The bootstrap kick, the `'l'` seed,
+> `skipNextUpdateAfterBootstrap`/`checkSuppressUpdate`, and `seededBufaddr`/bufaddr-mismatch dual-write
+> described below NO LONGER EXIST in the code. The "two systems, one restore" seam these all fought is
+> gone because `do_autorestore` never resumes mid-`aread`. Kept as the definitive record of *why* the
+> seam existed and the entire bug class it spawned (v1.5.215 → v1.5.409) — invaluable if the engine
+> path is ever reconsidered, but do NOT treat any file/flag reference here as live.
 
 When a game's autosave is restored on load, the Z-machine doesn't simply pick up where it left off — the VM's input loop has to be "kicked" with a dummy input so it processes the restore and re-emits its current view. This is non-obvious and easy to break during refactors of `voxglk.js`.
 

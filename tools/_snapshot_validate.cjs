@@ -22,7 +22,7 @@ const os = require('os');
 const REPO = path.resolve(__dirname, '..');
 const PLAY = path.join(REPO, 'tools', 'play.cjs');
 // Write working files to the OS temp dir so we never leave snapshot/json noise in the repo.
-const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'iftalk-snaptest-'));
+const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'lantern-snaptest-'));
 
 const GAME = 'wishbringer';
 const CMDS_FILE = path.join(REPO, 'docs/games/walkthroughs/wishbringer.cmds.txt');

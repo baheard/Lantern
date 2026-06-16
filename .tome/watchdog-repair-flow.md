@@ -8,7 +8,7 @@ aliases: [watchdog, repair command, vm hang, broken state]
 
 # VM Watchdog & REPAIR Flow
 
-The Z-machine occasionally enters a stuck state where it stops responding to input. IFTalk has a watchdog that detects this and offers in-game recovery via a manual `REPAIR` command. The flow lives in `docs/js/game/voxglk-watchdog.js` (detection + state + repair execution) with two trigger points in `voxglk.js` (call `startWatchdog` from `sendInput`, `clearWatchdog` from `update`) and the user-facing REPAIR command in `commands/meta-command-handlers.js`.
+The Z-machine occasionally enters a stuck state where it stops responding to input. Lantern has a watchdog that detects this and offers in-game recovery via a manual `REPAIR` command. The flow lives in `docs/js/game/voxglk-watchdog.js` (detection + state + repair execution) with two trigger points in `voxglk.js` (call `startWatchdog` from `sendInput`, `clearWatchdog` from `update`) and the user-facing REPAIR command in `commands/meta-command-handlers.js`.
 
 ## Detection
 

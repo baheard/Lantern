@@ -1,7 +1,7 @@
 ﻿/**
  * VoxGlk - Voice-Enabled Glk Display Engine
  *
- * Custom Glk display layer for IFTalk that renders beautiful frotz-style HTML
+ * Custom Glk display layer for Lantern that renders beautiful frotz-style HTML
  * and integrates seamlessly with TTS/voice features.
  */
 

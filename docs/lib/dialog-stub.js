@@ -6,7 +6,7 @@ var dialog_el_id = 'dialog';
 
 /* Stub implementations */
 function dialog_open(tosave, usage, gameid, callback) {
-    // Dispatch event for IFTalk to handle (it will call callback)
+    // Dispatch event for Lantern to handle (it will call callback)
     var event = new CustomEvent('lantern-dialog-open', {
         detail: {
             tosave: tosave,

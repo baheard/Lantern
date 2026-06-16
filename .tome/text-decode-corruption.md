@@ -107,7 +107,7 @@ a PAK shows it again, and a fresh restart was clean.
 - Reproduces from a specific corrupted Theatre save (the one synced/restored in
   the live tab as of 2026-05-30).
 - NOT yet root-caused. Likely a save/restore memory-corruption bug, possibly
-  ifvms.js-specific (see [[parchment-vs-iftalk-engine]] — Parchment uses bocfel,
+  ifvms.js-specific (see [[parchment-vs-lantern-engine]] — Parchment uses bocfel,
   not ifvms, so this class of bug wouldn't appear there).
 - To investigate: decode the abbreviation table region (header 0x18 = abbrev
   table address) from the live VM memory vs origram; check whether restore is

@@ -1,6 +1,6 @@
 {
-  "name": "Voxi - Voice-Powered Interactive Fiction",
-  "short_name": "Voxi",
+  "name": "Lantern - Voice-Powered Interactive Fiction",
+  "short_name": "Lantern",
   "description": "Play classic text adventure games with voice control and narration. Featuring 28 bundled games and offline support.",
   "start_url": "./",
   "display": "standalone",

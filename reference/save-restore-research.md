@@ -2,7 +2,7 @@
 
 **Date:** December 17, 2024
 **⚠️ Historical research doc** — architecture conclusions are still valid; code snippets reference old `commands.js` / `voxglk.js` monoliths that have since been modularized. The `ignoreNextVoxGlkUpdate` flag documented here was replaced by `skipNextUpdateAfterBootstrap` in `game/voxglk-bootstrap.js`.
-**Purpose:** Research how ifvms.js and GlkOte handle save/restore to inform IFTalk's implementation
+**Purpose:** Research how ifvms.js and GlkOte handle save/restore to inform Lantern's implementation
 
 ---
 
@@ -13,11 +13,11 @@
 1. **GlkOte's `save_allstate()` does NOT save window content** - it only saves metadata (metrics, command history, default colors)
 2. **ifvms.js has built-in autosave support** through `do_autosave()` and `do_autorestore()` functions
 3. **Window content must be saved separately** - neither the Z-machine nor Glk specification includes display content in save files
-4. **IFTalk's HTML-saving approach is necessary and correct** - this is the standard solution for web interpreters
+4. **Lantern's HTML-saving approach is necessary and correct** - this is the standard solution for web interpreters
 
 ### Recommendation
 
-**IFTalk's current implementation is sound.** The issue is NOT with the approach, but likely with **timing** or **event handling** during the restore process.
+**Lantern's current implementation is sound.** The issue is NOT with the approach, but likely with **timing** or **event handling** during the restore process.
 
 ---
 
@@ -111,7 +111,7 @@ Quote: "The I/O state must include the same number of windows, same text visible
 
 ---
 
-## IFTalk's Implementation Analysis
+## Lantern's Implementation Analysis
 
 ### Current Approach (Correct ✅)
 
@@ -198,7 +198,7 @@ do_autorestore(snapshot) {
 }
 ```
 
-### IFTalk's Custom Approach
+### Lantern's Custom Approach
 
 ```javascript
 // In save-manager.js
@@ -223,7 +223,7 @@ autoLoad() {
 
 ### Key Differences
 
-| Aspect | Standard ifvms.js | IFTalk Custom |
+| Aspect | Standard ifvms.js | Lantern Custom |
 |--------|------------------|---------------|
 | **VM State** | ✅ `save_file()` | ✅ `save_file()` |
 | **Glk Metadata** | ✅ `save_allstate()` | ❌ Not used |
@@ -231,11 +231,11 @@ autoLoad() {
 | **Output Suppression** | ❓ App-dependent | ✅ `ignoreNextVoxGlkUpdate` |
 | **Storage** | `Dialog.autosave_*` | `localStorage` directly |
 
-**Verdict:** IFTalk's approach is more complete because it saves window content, which the standard approach does NOT.
+**Verdict:** Lantern's approach is more complete because it saves window content, which the standard approach does NOT.
 
 ---
 
-## Why IFTalk's Implementation Might Not Be Working
+## Why Lantern's Implementation Might Not Be Working
 
 ### Potential Issues
 
@@ -458,7 +458,7 @@ if (win.linebuf !== null) {
 
 ### Why This Matters
 
-IFTalk primarily uses **Z-machine games** (.z3, .z5, .z8 files):
+Lantern primarily uses **Z-machine games** (.z3, .z5, .z8 files):
 - ❌ Lost Pig (Z8)
 - ❌ Anchorhead (Z5)
 - ❌ Zork series (Z3/Z5)
@@ -480,7 +480,7 @@ This didn't help because `save_allstate()` is called internally and still requir
 
 ### Solution: Custom Autosave System
 
-**IFTalk's custom save-manager.js is the correct approach for Z-machine games:**
+**Lantern's custom save-manager.js is the correct approach for Z-machine games:**
 
 ```javascript
 // voxglk.js - Manual autosave after each turn
@@ -505,12 +505,12 @@ const options = {
 
 1. **ifvms.js autosave is Glulx-only** - Not a bug, architectural limitation
 2. **Z-machine games need custom autosave** - Save HTML separately, suppress post-restore output
-3. **IFTalk's approach is correct** - Our custom save-manager.js is the proper solution
+3. **Lantern's approach is correct** - Our custom save-manager.js is the proper solution
 4. **Don't try to use do_vm_autosave for Z-machine** - It will crash in save_allstate()
 
 ### For Future Reference
 
-If IFTalk ever supports Glulx games:
+If Lantern ever supports Glulx games:
 - Glulx games CAN use `do_vm_autosave: true`
 - GiDispa will exist and `save_allstate()` will work
 - Would still need to extend with HTML content via Dialog.autosave_write/read
@@ -520,7 +520,7 @@ If IFTalk ever supports Glulx games:
 ## Conclusion
 
 **(Original Dec 2024 conclusion — superseded; kept for history.)**
-~~IFTalk's custom save-manager.js implementation is architecturally correct and necessary…
+~~Lantern's custom save-manager.js implementation is architecturally correct and necessary…
 cannot be replaced with ifvms.js's built-in autosave due to fundamental architectural
 differences between Z-machine and Glulx.~~
 
@@ -571,7 +571,7 @@ When cancelled with no saves:
 - Game continues to intro text
 - Input mode changes to line input for commands
 
-### IFTalk's Failed Approaches
+### Lantern's Failed Approaches
 
 We tried several approaches that didn't work:
 
@@ -610,7 +610,7 @@ callback(null);
 
 **Problem:** Game still ended up in a different state. Extra input events were being sent, causing confusion.
 
-### IFTalk's Final Solution (December 2024)
+### Lantern's Final Solution (December 2024)
 
 **The Problem:** VoxGlk wasn't including the `gen` field in specialresponse, causing glkapi.js to reject it due to generation mismatch.
 
@@ -641,7 +641,7 @@ window.addEventListener('iftalk-dialog-open', (e) => {
 **Result:**
 - User presses 'R' on Anchorhead intro → Game shows "Restore failed." and continues to intro text
 - Game is in predictable state (ready for commands)
-- Users use typed `SAVE`/`RESTORE` commands for IFTalk's custom save system
+- Users use typed `SAVE`/`RESTORE` commands for Lantern's custom save system
 
 ### Why This Works
 

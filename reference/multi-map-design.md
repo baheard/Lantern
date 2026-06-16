@@ -6,7 +6,7 @@
 
 ## Overview
 
-Design for supporting multiple maps per game in IFTalk's map canvas feature. Addresses the need for:
+Design for supporting multiple maps per game in Lantern's map canvas feature. Addresses the need for:
 - Separate maps for different game areas (Overworld, Dungeon, City, etc.)
 - User-created named maps with manual control
 - Automatic detection of disconnected regions with user approval

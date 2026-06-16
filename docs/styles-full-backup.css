@@ -23,7 +23,7 @@
   /* Text colors (theme-specific) */
   --color-user-typed: #60a5fa;    /* Blue - typed commands */
   --color-user-spoken: #a78bfa;   /* Purple - voice commands */
-  --color-app-system: #2dd4bf;    /* Teal - IFTalk system messages */
+  --color-app-system: #2dd4bf;    /* Teal - Lantern system messages */
   --color-game-text: #f5f5f5;     /* Off-white - game narrative */
   --color-game-system: #fbbf24;   /* Amber - game system messages */
 

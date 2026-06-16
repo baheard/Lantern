@@ -2,7 +2,7 @@
 
 ## Overview
 
-Google Drive sync provides optional cloud backup and cross-device synchronization for IFTalk game saves. The implementation uses OAuth 2.0 for authentication and the Google Drive API v3 for file storage.
+Google Drive sync provides optional cloud backup and cross-device synchronization for Lantern game saves. The implementation uses OAuth 2.0 for authentication and the Google Drive API v3 for file storage.
 
 **Key Features:**
 - ✅ **Manual Sync**: "Sync Now" button uploads all saves on demand
@@ -49,7 +49,7 @@ docs/styles.css                 # Drive UI styles
 - `waitForGoogleApi()` - Poll for Google API script load
 - `handleAuthCallback()` - Process OAuth response
 - `fetchUserInfo()` - Get email from Google OAuth2 API
-- `ensureAppFolder()` - Create/find "IFTalk" folder in Drive
+- `ensureAppFolder()` - Create/find "Lantern" folder in Drive
 - `uploadFile()` - Upload or update file in Drive
 - `downloadFile()` - Download file from Drive
 - `listFiles()` - List all files in app folder
@@ -312,7 +312,7 @@ function localStorageKeyToFilename(key) {
 **Process:**
 1. **Ensure app folder exists:**
    - Call `ensureAppFolder()`
-   - Search for "IFTalk" folder in Drive
+   - Search for "Lantern" folder in Drive
    - Create if not found
    - Cache `appFolderId`
 
@@ -640,7 +640,7 @@ function updateGDriveUI() {
 
 **1. Create Project:**
 - Go to https://console.cloud.google.com/
-- Create project: "IFTalk"
+- Create project: "Lantern"
 
 **2. Enable API:**
 - Navigate to: APIs & Services → Library
@@ -650,7 +650,7 @@ function updateGDriveUI() {
 **3. Configure OAuth Consent Screen:**
 - APIs & Services → OAuth consent screen
 - User Type: External
-- App name: IFTalk
+- App name: Lantern
 - User support email: (your email)
 - Developer contact: (your email)
 - Scopes: (skip, use default)
@@ -660,7 +660,7 @@ function updateGDriveUI() {
 - APIs & Services → Credentials
 - Create Credentials → OAuth client ID
 - Application type: Web application
-- Name: IFTalk Web Client
+- Name: Lantern Web Client
 - Authorized JavaScript origins:
   - `http://localhost:3000`
   - `https://baheard.github.io` (if deploying)
@@ -679,15 +679,15 @@ export const APP_CONFIG = {
 ```javascript
 export const APP_CONFIG = {
   // App identity
-  name: 'IFTalk',
-  displayName: 'IFTalk',
+  name: 'Lantern',
+  displayName: 'Lantern',
   version: '1.0.0',
 
   // Storage prefixes (localStorage keys)
   storagePrefix: 'iftalk',
 
   // Google Drive folder name
-  driveFolderName: 'IFTalk',
+  driveFolderName: 'Lantern',
 
   // OAuth Client ID (from Google Cloud Console)
   googleClientId: '159814585278-bgntpcpcpa4pcmc77vimbr9t3e0ogfta.apps.googleusercontent.com',
@@ -803,7 +803,7 @@ async function getValidToken() {
 **Search for folder:**
 ```http
 GET https://www.googleapis.com/drive/v3/files
-?q=name='IFTalk' and mimeType='application/vnd.google-apps.folder' and trashed=false
+?q=name='Lantern' and mimeType='application/vnd.google-apps.folder' and trashed=false
 Authorization: Bearer {accessToken}
 ```
 
@@ -814,7 +814,7 @@ Authorization: Bearer {accessToken}
 Content-Type: application/json
 
 {
-  "name": "IFTalk",
+  "name": "Lantern",
   "mimeType": "application/vnd.google-apps.folder"
 }
 ```
@@ -908,7 +908,7 @@ https://www.googleapis.com/auth/userinfo.email
 - [x] After sign-in, email displayed
 - [x] "Sync Now" button visible when signed in
 - [x] Click "Sync Now" → saves upload to Drive
-- [x] Check Drive → "IFTalk" folder exists
+- [x] Check Drive → "Lantern" folder exists
 - [x] Drive folder contains `{game}_{type}.json` files
 - [x] Open file in Drive → contains device info
 - [x] Sign out → UI resets
@@ -982,7 +982,7 @@ if (state.gdriveSignedIn) {
 
 **Folder Structure:**
 ```
-IFTalk/
+Lantern/
 ├── lostpig_autosave.json       # Current (latest)
 ├── lostpig_quicksave.json
 └── backups/
@@ -1062,7 +1062,7 @@ IFTalk/
 
 **Fix:**
 1. Check `appFolderId` is set
-2. Search Drive for "IFTalk" folder
+2. Search Drive for "Lantern" folder
 3. Check file permissions (should be owned by you)
 4. Try manual folder creation and update code with folder ID
 
@@ -1254,7 +1254,7 @@ await uploadFile('lostpig_autosave.json', enrichedData);
 - Implemented OAuth 2.0 with Google Identity Services
 - Added device ID generation and tracking
 - Implemented Drive API operations (upload, download, list)
-- Added folder management (IFTalk folder in Drive)
+- Added folder management (Lantern folder in Drive)
 
 **Phase 2: Manual Sync UI**
 - Added Google API script to index.html
@@ -1291,9 +1291,9 @@ await uploadFile('lostpig_autosave.json', enrichedData);
 **Phase 4: Versioned Backups** ✅ COMPLETE
 - Added `backupHistoryToggle` checkbox in Cloud Sync UI (default: OFF)
 - Implemented backup folder structure:
-  - `IFTalk/backups/{saveKey}/v001.json` → `v010.json`
+  - `Lantern/backups/{saveKey}/v001.json` → `v010.json`
 - Added backup versioning functions:
-  - `ensureBackupFolder()` - creates `IFTalk/backups/` folder
+  - `ensureBackupFolder()` - creates `Lantern/backups/` folder
   - `ensureSaveBackupFolder()` - creates save-specific subfolder
   - `uploadWithBackup()` - uploads with version rotation
   - `listBackupVersions()` - lists versions for a save

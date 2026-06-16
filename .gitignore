@@ -7,6 +7,10 @@ node_modules/
 .env.*.local
 config.json
 
+# Location-art staging (review images + ad-hoc); approved images ARE committed
+docs/games/images/**/_review/
+docs/games/images/_adhoc.png
+
 # Development
 .claude/*
 # ...but keep project skills under source control

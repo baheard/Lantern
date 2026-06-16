@@ -1,4 +1,4 @@
-# IFTalk Feature Implementation Guide
+# Lantern Feature Implementation Guide
 
 ## Cloud-Free Save System (localStorage)
 

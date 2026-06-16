@@ -40,7 +40,7 @@ All interactive elements must be at least 44×44px. This is the Apple HIG / Mate
 ## Never use alert() / confirm() — use confirmDialog
 
 `window.alert()`, `confirm()`, and `prompt()` are silently swallowed (no-op, no dialog
-shown, no error) when IFTalk runs as an installed iOS home-screen PWA (standalone
+shown, no error) when Lantern runs as an installed iOS home-screen PWA (standalone
 display-mode). A button whose only feedback is `alert()` will appear completely
 unresponsive on a phone, even when its logic ran successfully.
 

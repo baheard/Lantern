@@ -1,4 +1,4 @@
-# IFTalk Codebase Refactoring Plan
+# Lantern Codebase Refactoring Plan
 
 ## Status Overview (Last Updated: December 25, 2024)
 
@@ -196,7 +196,7 @@
 
 ## Overview
 
-Comprehensive refactoring of IFTalk codebase to eliminate code duplication and break up monolithic files through 7 incremental phases.
+Comprehensive refactoring of Lantern codebase to eliminate code duplication and break up monolithic files through 7 incremental phases.
 
 **Current State**: 39 files, 12,842 lines
 **Target**: ~52-55 files, ~11,800-12,000 lines

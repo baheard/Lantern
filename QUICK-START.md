@@ -1,11 +1,11 @@
-# IF Talk - Quick Start Guide
+# Lantern - Quick Start Guide
 
 ## 🚀 Get Started in 30 Seconds
 
 ### 1. Run the Server
 
 ```bash
-cd C:\source\IFTalk
+cd C:\source\Lantern
 npm start
 ```
 
@@ -90,7 +90,7 @@ The server will show you the URLs:
 ### Server won't start
 ```bash
 # Make sure you're in the right directory
-cd C:\source\IFTalk
+cd C:\source\Lantern
 
 # Check if Ollama is running
 # In another terminal:

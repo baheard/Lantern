@@ -145,18 +145,34 @@ migration (default replay = no-restore baseline; `--snapshot-in` = do_autorestor
 
 If/when this class bites again: **#1 (hybrid) is the structural fix** that retires
 the most bug surface; **#3 is the standing discipline** that makes the
-IFTalk↔engine seam honest and composes with #1; **#2 only** if profiling shows #1
+Lantern↔engine seam honest and composes with #1; **#2 only** if profiling shows #1
 left a resume seam. As of 2026-06-15 the Wishbringer Z3 wedge (above) makes #1 the
 recommended next move, on its own branch — see scope estimate in [[bootstrap-restore-flow]]
 / the wishbringer_restore_z3 track.
 
-## Implementation status — Option 1 is now the DEFAULT (Phase 5, v1.5.577, 2026-06-15)
+## Implementation status — COMPLETE (Phase 6b, v1.5.582, 2026-06-15)
 
-Option 1 (engine `do_autosave`/`do_autorestore`) is implemented and browser-verified, and as of
-v1.5.577 it is the **default** path. `config.useEngineAutorestore` flipped from opt-in to opt-OUT
-(`!== 'false'`; clear/omit the localStorage key → on, set `'false'` → legacy). Phases 0–5 done;
-Phase 6 (remove the legacy bootstrap machinery + decide quicksave/customsave) is the remainder.
-See `reference/autorestore-migration-plan.md` and the `savegame_conversion` track.
+Option 1 (engine `do_autosave`/`do_autorestore`) is the **sole** restore path. Migration is done
+end-to-end (phases 0–6b all committed; 6b = `4da25f5`, v1.5.582). The custom Quetzal+bootstrap
+mechanism is **deleted**, not just bypassed:
+
+- **Phase 5 (v1.5.577):** flipped `config.useEngineAutorestore` from opt-in to opt-OUT (`!== 'false'`;
+  clear/omit the localStorage key → on, set `'false'` → legacy). Engine became the default.
+- **Phase 6a (v1.5.578, `8506d3e`):** quick/custom restore moved onto the boot `do_autorestore` path.
+  `window.__engineRestoreKey` (resolved in game-loader) tells `dialog-stub.autosave_read` which slot
+  to feed (autosave / quicksave / customsave_<name>) — making ALL slots restorable via the boot path.
+- **Phase 6b (v1.5.582, `4da25f5`):** retired the legacy Quetzal restore + all bootstrap-kick
+  machinery. Deleted from `voxglk-bootstrap.js`: `skipNextUpdateAfterBootstrap`/`checkSuppressUpdate`/
+  `isBootstrapping`, `seededBufaddr`/`setSeededBufaddr`/`consumeSeededBufaddr`, `introInputType`/
+  `captureIntroInputType`, and the bootstrap-wake kick block — leaving just `justRestored` lifecycle +
+  `handleAutoRestore` engine dispatch. `save-manager.performRestore` dropped the Quetzal decode branch,
+  the `'l'` seed, parse-buffer zero, screen-width patch, and `decodeQuetzalScreenWidth`; it now rejects
+  non-engine saves up front with a graceful "older format" message. `importSaveFromFile` now also
+  accepts `engineSnapshot` (was a separate pre-existing bug). Engine WRITE now applies to ALL slots.
+  **Old Quetzal saves are stranded by design** — a legacy save boots a fresh intro and `performRestore`
+  rejects it gracefully (no crash). The whole [[bootstrap-restore-flow]] seam is now dead code/history.
+
+See `reference/autorestore-migration-plan.md`. The `savegame_conversion` track is closed.
 Browser-verified on 9:05 (Z5), Anchorhead (Z8 char-intro), Wishbringer (Z3 — the wedge above),
 and amfv (Z4 multi-MORE char-intro); oracle 18/18; Drive sync is format-agnostic (spreads the whole
 save object, conflict-detects on timestamp/appMoveCount which engine saves carry). Engine restore

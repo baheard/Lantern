@@ -1,5 +1,5 @@
 /**
- * IFTalk Feedback → GitHub Issues
+ * Lantern Feedback → GitHub Issues
  *
  * Paste this entire file into Google Apps Script (script.google.com),
  * bound to the Google Sheet that collects your feedback form responses.
@@ -16,7 +16,7 @@
  *
  * HOW IT WORKS:
  *  - On every form submission the trigger calls onFormSubmit()
- *  - The response is turned into a GitHub issue on baheard/IFTalk
+ *  - The response is turned into a GitHub issue on baheard/Lantern
  *  - That row is then deleted from the sheet so the backlog stays clean
  *  - processBacklog() can be run manually to handle any rows that were
  *    missed (e.g. if the trigger fired but GitHub was unreachable)
@@ -27,7 +27,7 @@
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
-const GITHUB_REPO  = 'baheard/IFTalk';
+const GITHUB_REPO  = 'baheard/Lantern';
 const GITHUB_API   = 'https://api.github.com';
 const SHEET_NAME   = 'Form Responses 1';   // change if your sheet tab has a different name
 const LABEL_BASE   = ['feedback'];          // always applied
@@ -214,7 +214,7 @@ function createGithubIssue(title, body, labels) {
     headers    : {
       Authorization: `token ${token}`,
       Accept       : 'application/vnd.github.v3+json',
-      'User-Agent' : 'IFTalk-Feedback-Script',
+      'User-Agent' : 'Lantern-Feedback-Script',
     },
     payload    : payload,
     muteHttpExceptions: true,

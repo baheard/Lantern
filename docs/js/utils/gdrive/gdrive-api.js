@@ -129,7 +129,7 @@ async function findFolderByName(folderName, parentId = null) {
 
 /**
  * Rename a Drive folder in-place. Returns the same folderId.
- * Temporary — used for one-time IFTalk→Lantern migration.
+ * Temporary — used for one-time legacy-folder migration.
  */
 async function renameDriveFolder(folderId, newName) {
   const accessToken = getAccessToken();

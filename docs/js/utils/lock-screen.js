@@ -1,7 +1,7 @@
 /**
  * Lock Screen Module
  *
- * Prevents accidental touches on mobile devices when using IFTalk voice-controlled IF.
+ * Prevents accidental touches on mobile devices when using Lantern voice-controlled IF.
  * Features:
  * - Transparent/frosty overlay (game content visible underneath)
  * - Narration highlights continue to work

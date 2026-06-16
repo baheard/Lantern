@@ -284,7 +284,7 @@ export function clearAllAppData() {
   const prefixes = ['lantern_', 'gameSettings_', 'glkote_quetzal_', 'zvm_autosave_'];
   let totalRemoved = 0;
 
-  // Find and remove all IFTalk-related keys
+  // Find and remove all Lantern-related keys
   prefixes.forEach(prefix => {
     const keys = getItemsByPrefix(prefix);
     keys.forEach(key => removeItem(key));

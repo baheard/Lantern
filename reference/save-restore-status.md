@@ -494,7 +494,7 @@ Game at gen:10 → Quick Load → Page reload → glkapi reset to gen:0
 
 ### Overview
 
-Games can trigger native save/restore dialogs (e.g., "Press 'R' to restore" in Anchorhead intro, or in-game SAVE commands). IFTalk intercepts these dialogs and provides a custom UI using the system entry mode paradigm with save list selection.
+Games can trigger native save/restore dialogs (e.g., "Press 'R' to restore" in Anchorhead intro, or in-game SAVE commands). Lantern intercepts these dialogs and provides a custom UI using the system entry mode paradigm with save list selection.
 
 ### Implementation
 

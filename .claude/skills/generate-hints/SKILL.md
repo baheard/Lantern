@@ -1,11 +1,11 @@
 ---
 name: generate-hints
-description: Generate or review a UHS-style hint JSON file for an IFTalk game. Triggered when the user says "generate hints for <game>", "create hints for <game>", "add hints to <game>", or "review <game>" / "review hints for <game>".
+description: Generate or review a UHS-style hint JSON file for a Lantern game. Triggered when the user says "generate hints for <game>", "create hints for <game>", "add hints to <game>", or "review <game>" / "review hints for <game>".
 ---
 
 # generate-hints skill
 
-Produces a `docs/games/hints/<gameName>.json` file for a game in the IFTalk library following the static UHS/InvisiClues-style schema (schema version 1).
+Produces a `docs/games/hints/<gameName>.json` file for a game in the Lantern library following the static UHS/InvisiClues-style schema (schema version 1).
 
 ## Overview
 
@@ -117,7 +117,7 @@ The shape of a good ladder: **visible symptom → think → look → mechanism �
    **The counterintuitive-mechanism trap.** The puzzles where you most want to share the mechanism early — a shadow you can walk on, a machine you ride, an object that works backwards — are exactly the ones where rung 1's job matters most. The mechanism feels like a generous clue precisely because it's surprising, so the temptation is to front-load it. Resist: the more counterintuitive the solution, the more precious the player's discovery. Rung 1: rule out the obvious wrong approach ("you won't leap it"). Rung 2 at earliest: name the unexpected medium ("a shadow, with a strong enough light behind it, can bear weight in this house"). Bad rung 1 — "You won't leap it — but you can build a bridge out of something unexpected: a shadow. And a shadow needs a strong light, and something to cast it." Good rung 1 — "You won't leap it, and climbing is no better. But a bridge of some kind might be possible — just not a conventional one."
 6. **The final hint is non-negotiable: complete, literal, exact commands.** A ladder that never fully resolves is the cardinal failure. The sum of all final hints should constitute a minimal walkthrough of every progress gate. **Conversely, *only* the final hint uses literal parser commands.** Every rung above it directs the mind in prose — "open the chest", "look in the coal bin", "follow the crow" — never a capitalised command like `OPEN CHEST`. A parser command appearing above the answer rung is a solution that has leaked up the ladder: demote it to a nudge. Middle rungs name an action in plain language at most; they never spell the keystrokes.
    - **The answer rung may — and usually should — name in-world places, objects, and provenance:** "UNLOCK DOOR WITH SHINY KEY (from the Boiler Room)", "Go down to the lobby and PUT LENS IN SPOTLIGHT." That is *orientation*, the opposite of a spoiler at this tier, and it's exactly where the player wants it. It is **not** a cross-reference: rule 10 bans pointers to other hint *entries*, not mentions of the game world. Don't strip provenance out of an answer for fear of rule 10 — name the room, the item, and where it came from freely.
-7. **Answers contain only progress-advancing commands — never inventory housekeeping.** Don't tell the player to `DROP` something "afterwards", `DROP` a now-useless item, or otherwise tidy their inventory. IFTalk games almost never require dropping things (there's no weight/inventory limit in play), so a drop instruction reads as a required step when it isn't — and rule 11 forbids implying requirements you haven't verified. **A walkthrough listing a `DROP` does not make it load-bearing.** Walkthroughs record a successful sequence, not a set of requirements, and authors drop things out of pure habit — verified: Theatre's walkthrough lists `DROP CAMERA` and `DROP KEY`, neither of which the game requires. So "the walkthrough says to drop it" is *not* the test. Include a drop **only** when it's genuinely a progress gate (e.g. a ceremony that fails unless you're empty-handed) *and* you've confirmed the requirement — from walkthrough text that states the requirement itself, or by probing (Step 3.5). Default: cut every drop, and cut any "you can drop X / you won't need X anymore" reassurance with it.
+7. **Answers contain only progress-advancing commands — never inventory housekeeping.** Don't tell the player to `DROP` something "afterwards", `DROP` a now-useless item, or otherwise tidy their inventory. Lantern games almost never require dropping things (there's no weight/inventory limit in play), so a drop instruction reads as a required step when it isn't — and rule 11 forbids implying requirements you haven't verified. **A walkthrough listing a `DROP` does not make it load-bearing.** Walkthroughs record a successful sequence, not a set of requirements, and authors drop things out of pure habit — verified: Theatre's walkthrough lists `DROP CAMERA` and `DROP KEY`, neither of which the game requires. So "the walkthrough says to drop it" is *not* the test. Include a drop **only** when it's genuinely a progress gate (e.g. a ceremony that fails unless you're empty-handed) *and* you've confirmed the requirement — from walkthrough text that states the requirement itself, or by probing (Step 3.5). Default: cut every drop, and cut any "you can drop X / you won't need X anymore" reassurance with it.
 8. **Never assert game state the player may not have.** No "you're carrying something made for catching light" — the player may not have the lens. Use conditionals ("Have you found anything made for catching light? If not, explore the attic first") or gates (below).
 9. **Gate prerequisites inside the ladder, Invisiclues-style:** an explicit early hint reading "Don't go on unless you've explored the attic" or "You can't solve this yet — you'll know when the time comes." A player lacking the prerequisite stops there unspoiled.
 10. **Don't cross-reference other questions or sections.** This bans pointers to other hint *entries* ("see 'A shadow creature keeps driving me back'") — **not** mentions of in-world places or objects, which are fine at any tier and expected in the answer (rule 6). Naming another entry treats the file as hypertext, goes stale the moment a title changes, and clutters the hint; the panel is browsable by location, so a player finds related puzzles by exploring — exactly as they explore the game. When a puzzle depends on another being solved first, state that prerequisite *in-world* as a gate (rule 9) — "lower the chandelier first", "you'll need something that flashes" — never as a pointer to the entry that covers it. The gate both protects against spoilers and tells the player what to pursue. (And a hint must still never spoil a different puzzle's solution.)
@@ -265,7 +265,7 @@ Step 1 (via `trace-walkthrough`) already produced a `--strict`-clean `docs/games
 ### Fallback method — live browser (web-agent)
 
 Use the real app only for things the harness can't observe: actual in-app **save-slot** behavior, UI/narration/highlighting, map rendering, or a game whose intro the harness can't get past. Then:
-1. `npm start` (from `E:\Project\IFTalk`), app at `http://localhost:3002`; load the game via the web-agent skill.
+1. `npm start` (from `E:\Project\Lantern`), app at `http://localhost:3002`; load the game via the web-agent skill.
 2. Location source that survives journey clears: `import('/js/features/auto-mapper.js').then(m => m.getLastLocationName())` (note: `window.getLastLocationName` does **not** exist — it's module-scoped). Capture **before** opening the in-app map, which calls `clearJourney()`.
 
 ---
@@ -305,7 +305,7 @@ That third case is a **design audit (rule 23)**: when a probe reveals a hard blo
 
 Use this only when the harness can't reach the state (e.g. a randomized-puzzle gate that needs an in-run value, or genuinely save-dependent behavior):
 1. Play to just before the questionable step.
-2. Save to the dedicated probe slot via the app's named-save meta-command: type `SAVE`, name the slot **`hint-runner`** (`iftalk_customsave_<game>_hint-runner`). **Never use the quicksave slot** — it's the user's.
+2. Save to the dedicated probe slot via the app's named-save meta-command: type `SAVE`, name the slot **`hint-runner`** (`lantern_customsave_<game>_hint-runner`). **Never use the quicksave slot** — it's the user's.
 3. Try the skip-path; record what the game says. `RESTORE` `hint-runner`, try the next variant.
 4. When done, delete the `hint-runner` slot (Manage Saves modal, or remove the localStorage key) so it doesn't linger in the user's save list.
 
@@ -337,7 +337,7 @@ Write the file to `docs/games/hints/<gameName>.json` where `<gameName>` is the g
 
 **Validate JSON parses:**
 ```powershell
-cd "E:\Project\IFTalk"
+cd "E:\Project\Lantern"
 node -e "JSON.parse(require('fs').readFileSync('docs/games/hints/<gameName>.json','utf8')); console.log('ok')"
 ```
 

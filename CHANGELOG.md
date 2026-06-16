@@ -1,4 +1,4 @@
-# IFTalk Changelog
+# Lantern Changelog
 
 ## January 2025
 

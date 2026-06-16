@@ -1,6 +1,6 @@
 # Reference Documentation
 
-Technical documentation for IFTalk internals.
+Technical documentation for Lantern internals.
 
 ## Table of Contents
 

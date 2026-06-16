@@ -1,4 +1,4 @@
-﻿# IFTalk - Interactive Fiction with Voice Control
+﻿# Lantern - Interactive Fiction with Voice Control
 
 ## Architecture Overview
 
@@ -42,7 +42,7 @@
 ## Quick Start
 
 ```bash
-cd /e/Project/IFTalk && npm start
+cd /e/Project/Lantern && npm start
 # Access at http://localhost:3002 (port set in config.json)
 ```
 
@@ -143,7 +143,7 @@ snapshot), and the snapshot pair:
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.582
+**Current Version:** v1.5.602
 
 ## Third-Party Libraries
 
@@ -190,7 +190,7 @@ For detailed technical information, see the `reference/` folder:
 
 ## Pending Cleanup
 
-### IFTalk → Lantern migration scaffolding (added 2026-06-13, remove after transition)
+### Legacy storage-prefix migration scaffolding (added 2026-06-13, remove after transition)
 
 Once users have had enough time to upgrade (suggested: ~4-6 weeks after first Lantern release), ask me to remove this temporary migration code:
 
@@ -198,7 +198,7 @@ Once users have had enough time to upgrade (suggested: ~4-6 weeks after first La
 2. **`docs/js/app.js`** — remove the migration import (the 3-line block at the very top that imports `storage-migration.js`)
 3. **`docs/js/utils/gdrive/gdrive-api.js`** — remove `findFolderByName()`, `renameDriveFolder()`, and the legacy-rename block inside `ensureAppFolder()` (the `existingId`/`LEGACY`/`legacyId` section); replace with just `appFolderId = await findOrCreateFolder(folderName, null);`
 
-After removal, do a final `grep -r "IFTalk\|iftalk"` across `docs/` to confirm no stragglers.
+After removal, do a final `grep -r "lantern_\|IFTalk"` across `docs/` to confirm no stragglers.
 
 ---
 

@@ -47,7 +47,7 @@ When `LOCAL_SERVER = true`, automatically captures from mobile devices:
 Sync localStorage from GitHub Pages to your dev environment (localhost, Tailscale, LAN).
 
 ### How It Works
-1. Dev server loads hidden iframe from `https://baheard.github.io/IFTalk/bridge.html`
+1. Dev server loads hidden iframe from `https://baheard.github.io/Lantern/bridge.html`
 2. Bridge page accesses GitHub Pages localStorage
 3. Data sent back via postMessage
 4. Dev server merges saves (newer timestamp wins)

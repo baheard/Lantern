@@ -1,12 +1,13 @@
 {
-  "name": "iftalk",
+  "name": "lantern",
   "version": "1.0.0",
   "description": "Voice-powered interactive fiction player with AI natural language commands",
   "type": "module",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "art-review": "node tools/review-server.cjs"
   },
   "keywords": [
     "interactive-fiction",
@@ -18,5 +19,8 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0"
   }
 }
