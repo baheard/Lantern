@@ -161,9 +161,13 @@ export async function initGDriveSync() {
         state.gdriveSignedIn = false;
         state.gdriveEmail = null;
 
-        // Token expired — attempt silent refresh immediately
-        const refreshed = await silentRefresh();
-        if (!refreshed) {
+        // Token expired — only attempt silent refresh if auto-sync is on;
+        // otherwise a requestAccessToken() call can trigger a popup on load.
+        const syncEnabled = localStorage.getItem('lantern_gdrive_autosync') === 'true';
+        if (syncEnabled) {
+          const refreshed = await silentRefresh();
+          if (!refreshed) window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
+        } else {
           window.dispatchEvent(new CustomEvent('gdriveSignInChanged'));
         }
       }
