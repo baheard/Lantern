@@ -1,0 +1,16 @@
+{
+  "game": "anchorhead",
+  "images": {
+    "Outside the Real Estate Office": "outside-the-real-estate-office.png",
+    "Alley": "alley.png",
+    "Foyer": "foyer.png",
+    "Cellar": "cellar.png",
+    "Family Plot": "family-plot.png",
+    "In the Crypt": "in-the-crypt.png",
+    "Outside the House": "outside-the-house.png",
+    "Junction": "junction.png",
+    "Narrow Street": "narrow-street.png",
+    "Office": "office.png",
+    "File Room": "file-room.png"
+  }
+}

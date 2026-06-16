@@ -8,6 +8,7 @@ import { state } from '../../core/state.js';
 import { dom } from '../../core/dom.js';
 import { updateStatus } from '../../utils/status.js';
 import { getItem } from '../../utils/storage/storage-api.js';
+import { getGameSetting, setGameSetting, getAppDefault, setAppDefault } from '../../utils/game-settings.js';
 // save-manager imported dynamically in initSaveHandlers to break the circular dep:
 // settings-panel → save-manager → game-output → tts-player → settings/index → settings-panel
 import { showBackupSavesDialog } from '../backup-saves-dialog.js';
@@ -138,6 +139,13 @@ export function updateSettingsContext() {
   welcomeItems.forEach(item => {
     item.style.display = isWelcome ? 'block' : 'none';
   });
+
+  // Sync the per-game Location Art toggle to the current game's effective setting
+  // (per-game override → app default → OFF).
+  const locationArtToggle = document.getElementById('locationArtToggle');
+  if (locationArtToggle) {
+    locationArtToggle.checked = getGameSetting('locationArt', true) !== false;
+  }
 
   // Sync audio settings visibility with current OpenAI state
   updateAudioSettingsVisibility();
@@ -543,6 +551,29 @@ export function initSettings() {
       const enabled = e.target.checked;
       localStorage.setItem('lantern_automap_default', enabled);
       updateStatus(enabled ? '✓ New games will auto-map by default' : '✗ Auto-mapping off by default');
+    });
+  }
+
+  // Location Art by Default toggle (welcome screen only) — app-wide default, OFF unless set.
+  const locationArtByDefaultToggle = document.getElementById('locationArtByDefaultToggle');
+  if (locationArtByDefaultToggle) {
+    locationArtByDefaultToggle.checked = getAppDefault('locationArt', true) !== false;
+    locationArtByDefaultToggle.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      setAppDefault('locationArt', enabled);
+      updateStatus(enabled ? '✓ New games will show location art' : '✗ Location art off by default');
+    });
+  }
+
+  // Location Art toggle (per-game). Initial checked state is synced on panel open
+  // (updateSettingsContext) since it depends on the current game.
+  const locationArtToggle = document.getElementById('locationArtToggle');
+  if (locationArtToggle) {
+    locationArtToggle.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      setGameSetting('locationArt', enabled);
+      import('../../features/location-art.js').then(({ refreshLocationArt }) => refreshLocationArt());
+      updateStatus(enabled ? '✓ Location art on' : '✗ Location art off');
     });
   }
 

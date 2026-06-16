@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- round paper lantern -->
+  <path d="M55 20 Q60 12 65 20" />
+  <path d="M48 30 L72 30" />
+  <ellipse cx="60" cy="78" rx="34" ry="40" />
+  <ellipse cx="60" cy="78" rx="22" ry="40" />
+  <ellipse cx="60" cy="78" rx="10" ry="40" />
+  <path d="M50 30 L70 30 L68 40 L52 40 Z" />
+  <path d="M52 116 L68 116 L66 126 L54 126 Z" />
+  <path d="M60 126 L60 142 M55 142 Q60 150 65 142" />
+</svg>

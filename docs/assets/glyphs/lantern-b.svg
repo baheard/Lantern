@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- hanging lantern with glow -->
+  <path d="M60 8 L60 22" stroke-dasharray="2 5" />
+  <circle cx="60" cy="26" r="4" />
+  <path d="M44 42 L60 28 L76 42 Z" />
+  <path d="M46 42 L74 42 L72 110 L48 110 Z" />
+  <path d="M56 44 L56 108 M64 44 L64 108" />
+  <path d="M48 110 L72 110 L76 124 L44 124 Z" />
+  <path d="M34 66 L28 64 M34 78 L27 78 M34 90 L28 92" />
+  <path d="M86 66 L92 64 M86 78 L93 78 M86 90 L92 92" />
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- handheld lantern casting light -->
+  <path d="M48 24 Q60 12 72 24" />
+  <path d="M50 36 L70 36 L67 30 L53 30 Z" />
+  <path d="M52 38 C46 52 46 76 52 90 L68 90 C74 76 74 52 68 38 Z" />
+  <path d="M48 90 L72 90 L75 102 L45 102 Z" />
+  <path d="M60 56 C57 62 57 70 60 74 C63 70 63 62 60 56 Z" />
+  <!-- light rays -->
+  <path d="M40 116 L30 132 M60 120 L60 140 M80 116 L90 132 M48 118 L42 138 M72 118 L78 138" />
+</svg>

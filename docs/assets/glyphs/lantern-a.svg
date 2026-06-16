@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- hurricane lantern -->
+  <path d="M45 32 Q60 14 75 32" />
+  <path d="M42 46 L50 33 L70 33 L78 46 Z" />
+  <path d="M53 46 L67 46 L65 54 L55 54 Z" />
+  <path d="M51 56 C41 72 41 104 51 118 L69 118 C79 104 79 72 69 56 Z" />
+  <path d="M46 118 L74 118 L78 132 L42 132 Z" />
+  <path d="M60 80 C56 88 56 96 60 100 C64 96 64 88 60 80 Z" />
+</svg>

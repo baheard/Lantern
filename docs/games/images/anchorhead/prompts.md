@@ -1,0 +1,686 @@
+# anchorhead — location art prompt pack
+
+Style: **gothic** · 102 locations · from `docs\games\walkthroughs\anchorhead.cmds.txt` (seed 1)
+
+---
+
+## Outside the Real Estate Office  `outside-the-real-estate-office`
+**Exits:** west → Narrow Street · northwest → Office
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A grim little cul-de-sac, tucked away in a corner of the claustrophobic tangle of narrow, twisting avenues that largely constitute the older portion of Anchorhead. Like most of the streets in this city, it is ancient, shadowy, and leads essentially nowhere. The lane ends here at the real estate agent's office, which lies to the east, and winds its way back toward the center of town to the west. A narrow, garbage-choked alley opens to the southeast.
+```
+
+## Alley  `alley`
+**Exits:** west → Outside the Real Estate Office
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This narrow aperture between two buildings is nearly blocked with piles of rotting cardboard boxes and overstuffed garbage cans. Ugly, half-crumbling brick walls to either side totter oppressively over you. The alley ends here at a tall, wooden fence. High up on the wall of the northern building there is a narrow, transom-style window.
+```
+
+## File Room  `file-room`
+**Exits:** up → Office
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Peering through the murk, you can make out the blocky outlines of filing cabinets lining the walls and a doorway to the west. A window high up on the south wall lets in a very faint illumination.
+```
+
+## Office  `office`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Pallid gray light trickles in through the drawn blinds. The office is deserted, papers still scattered across the top of the desk. The front door lies west, and the file room lies east. Sitting on the corner of the paper-strewn desk are a telephone and an answering machine. Someone seems to have left a cup of coffee sitting out, half-finished and cold.
+```
+
+## Narrow Street  `narrow-street`
+**Exits:** west → Junction · east → Whateley Bridge · north → Junction · south → Twisting Lane · southwest → Whateley Bridge
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: As the lane winds along from east to west, it narrows until the steep, jagged rooftops on either side of the street practically touch each other. To the south, a side street leads across Whateley Bridge toward the center of town, and a twisting lane leads up a hill to the northwest. A short flight of steps to the north leads down to the local watering hole. Overhead, the swollen clouds flicker ominously with a greenish haze of sheet lightning.
+```
+
+## Junction  `junction`
+**Exits:** west → University Court · southeast → Narrow Street · south → Narrow Street
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: To the north, a gap in the crowded press of gloomy buildings opens onto a country lane, heading out over a grassy heath. The main street continues to the east, while to the northwest, over the top of a steep rise, you can just make out the vaulted rooftops of the university.
+```
+
+## University Court  `university-court`
+**Exits:** northwest → Library · east → Junction
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Isolated and serene within its high, ivy-covered walls, Miskaton University represents this benighted town's single, if somewhat dubious, claim to cultural achievement. Founded some time in the early 1800s, the school's reputation and enrollment have diminished somewhat as Anchorhead drifts further and further into the abyss of provincial backwaterism. Still, it is generally recognized for its collection of folklore and esoteric mythology (one of the oldest and most extensive on the east coast). The Board of Deans was also kind enough to offer Michael a full professorship upon hearing of his recently discovered heritage and his plans to move into the estate. Ivory tower, perhaps, but at least they take care of their own.
+```
+
+## Library  `library`
+**Exits:** west → Circulation Desk · south → University Court · north → Study
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Shadows roost thickly in the vaulted ceiling, and small, green-shaded desk lamps cast pools of warm radiance here and there around the library's dim interior. You pause a moment to let the hushed peacefulness of this place soak in -- a welcome relief from the unsettling events of the day. An exit lies east, and a small alcove to the north houses the circulation counter. Peering through the shadows, you spot your husband sitting at one of the reading desks, absorbed in some sort of weighty tome and clearly oblivious to the time.
+```
+
+## Whateley Bridge  `whateley-bridge`
+**Exits:** south → Town Square · north → Narrow Street
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A hoary monument of crumbling, moss-eaten flagstones, Whateley Bridge is possibly older than any other structure in the entire city. Ponderously it spans the dark, torpid waters of the Miskaton River, connecting the north and south halves of the city and occasionally raining bits of gravel and mortar from its underside into the water. It looks just wide enough for two cars to pass each other between the flanking stone parapets, but you wouldn't volunteer to try it. Michael follows you.
+```
+
+## Town Square  `town-square`
+**Exits:** south → Riverwalk · north → Whateley Bridge
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A wide expanse of uneven pavestones lies open to the sky, bordered on all sides by the leaning, steep-roofed architecture that looms over everything in this city. The municipal courthouse stands at the south end of the square, next to the mouth of a dark, narrow alley to the southwest. Avenues to the west and east lead back into the cramped and ingrown streets, while to the north lies Whateley Bridge. In the center of the square, rising from a circular lawn of unhealthy-looking grass and weeds, stands a strange, stone obelisk. It seems to be a monument of some sort, although you can see no plaque or marker anywhere near it.
+```
+
+## Riverwalk  `riverwalk`
+**Exits:** east → Chilly Avenue · north → Town Square · west → Chilly Avenue
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A low, irregular brick wall to the north divides this street from the steep, mud-slick banks of the sinuous Miskaton, while a rusty iron gate provides access to a precarious flight of stone steps leading down the bank to the water's edge. The street bends south here, turning into a misty avenue between the trees. The town square lies west, a vacant lot lies east. Michael follows you. A sudden fit of coughing from Michael makes you worry. You need to find the house soon, or your husband will catch cold.
+```
+
+## Chilly Avenue  `chilly-avenue`
+**Exits:** south → Scenic View · northeast → Riverwalk
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Perhaps it is merely the effect of some unwholesome vapour rising from the murky waters of the nearby Miskaton, but the temperature along this street seems perceptibly cooler than normal, even for a New England autumn. Two dirt roads lead south and southwest, into the dense woods at the edge of town. A clammy mist hangs thickly in the air, seeping through your clothes and making you shiver. Michael follows you.
+```
+
+## Scenic View  `scenic-view`
+**Exits:** southwest → Outside the House · southeast → Chilly Avenue
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The treeline falls away on the north side of this northwest-northeast bend in the road, giving way to a panoramic view of the Miskaton River Valley and the grubby little town of Anchorhead nestled within it. From here you can see the paper mill almost directly to the north; the solitary lighthouse and surrounding ocean to the northeast; and the dilapidated stone church below you to the east. Winding through it all is the oily black ribbon of the Miskaton, and almost directly in the center lies the little clearing of Town Square. You can just make out the shape of the obelisk from here. Michael follows you.
+```
+
+## Outside the House  `outside-the-house`
+**Exits:** south → Scenic View · northwest → Foyer
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The lane runs up from the southeast and ends at a wide clearing surrounded by gnarled and ancient trees. A wide, curving driveway runs up to the front door of your house, which lies north. The fabled Verlac family mansion looms before you in the gloom, its dark creaking presence dominating the clearing and, somehow, even though it is not visible through the trees, the entire valley. The foreboding shadow of the Verlacs seems to enshroud all of Anchorhead from here. A typewritten notice has been attached to the front door. Michael strolls along after you.
+```
+
+## Foyer  `foyer`
+**Exits:** down → Dining Room · west → Upstairs Landing
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Although it appears spacious from the outside, the house's interior feels cramped and gloomy. The walls seem too close together; the ceiling is too high. The doorways, leading in several directions, are narrow and filled with shadows, and the stairs leading up to the second floor are steep and rickety. This is not a house that makes you feel welcome. It is a house that makes you feel tiny and timid, and afraid of dark places. It is a house that makes you feel alone. The front door stands open to the south. Carelessly stacked in a towering heap in the middle of the room are all your luggage and belongings, which you had sent ahead through a moving company before driving up to Massachusetts.
+```
+
+## Upstairs Landing  `upstairs-landing`
+**Exits:** up → Master Bedroom · south → Foyer · west → Foyer
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A narrow hallway runs east, from the top of the stairs down the length of the house. To the north, directly opposite the stairs, is the master bedroom.
+```
+
+## Master Bedroom  `master-bedroom`
+**Exits:** north → Bathroom
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The master bedroom is a picture-postcard of rustic New England charm. Faded sketches of rural landscapes adorn the walls; a beautifully carved dressing mirror stands in one corner; an old-fashioned accordion radiator gurgles quietly beneath the window. The most striking feature, an enormous, antique, four-poster bed, must be the largest piece of furniture in the house. Michael is curled up in bed, sound asleep. If it weren't for this hopelessly backwater town and the disturbing circumstances surrounding the house, you'd say this was your dream home.
+```
+
+## Bathroom  `bathroom`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A small chamber of cold, white tile and floral-print wallpaper. It sports a genuine, whitewashed, claw-foot bathtub with a shower attachment, which is a definite plus. The bedroom lies east.
+```
+
+## Dining Room  `dining-room`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Much of the elegance has faded from this room. The huge dining table running the length of it is covered with a thick gray film of dust, and the china cupboard standing against the far wall is draped in shadow. Doorways to the north and east offer little relief from the gloom. For what must be the hundredth time, you wish you could open the windows in this place.
+```
+
+## Kitchen  `kitchen`
+**Exits:** southeast → Back Hall · west → Pantry
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Where once pots and skillets and various utensils hung in profusion, the kitchen walls are now merely ranks of dusty cabinets and a forest of empty hooks. Doorways lead east and south, a small pantry lies to the northwest, and the back door to the north leads out of the house. Someone's flashlight is lying on the kitchen counter; one of the movers must have left it. An odd feeling of gloom overtakes you momentarily, and you find yourself thinking about the Verlac family's personal effects -- the everyday mundanities, such as kitchen utensils. Were they thrown out, or donated to charity, or auctioned off as grisly souvenirs? What about the canned goods? Did anyone think to take them? The cabinets might even still be stocked.
+```
+
+## Pantry  `pantry`
+**Exits:** up → Kitchen · northwest → Cellar
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The pantry is empty save for a layer of dust on the shelves. A door to the south leads down to the cellar, or you can return to the kitchen to the southeast. Leaning in the corner is an old broom.
+```
+
+## Cellar  `cellar`
+**Exits:** down → Storage · north → Pantry
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The old, flagstone walls gleam with unwholesome-smelling moisture, and the sagging timbers creak uneasily above your head. Ancient, frayed wiring festoons the ceiling like some strange species of clinging vine. Portions of the cellar extend south and east into the clammy darkness, though you could always beat a hasty retreat up the stairs to the north. One largish bundle of wires leads down to a rusty old fuse cabinet bolted to the far wall.
+```
+
+## Storage  `storage`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Old crates and boxes piled high against the walls make this room seem even smaller and dingier than it actually is, which is saying a lot. A doorway lies north; the other walls contain nothing but shadows and dirt-filled corners.
+```
+
+## Back Hall  `back-hall`
+**Exits:** east → Gallery · north → Kitchen
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A short hallway, connecting rooms to the east, west and south.
+```
+
+## Gallery  `gallery`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A long, oak-paneled room, with doorways to the south and west. Paintings line the walls, mounted beneath small, shaded lamps that would illuminate the canvasses nicely if only the electricity were working. Still, even in the shadowed gloom you can see that all were done by the same artist.
+```
+
+## Sitting Room  `sitting-room`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The east wall is occupied by a beautiful antique sofa, and a large, hand-woven rug covers the hardwood floor. The huge marble fireplace in the north wall helps complete the impression of comfort and warmth, and for a moment or two you can almost think of this place as somewhere you could live, as opposed to merely somewhere others have died. The foyer lies west, and a doorway to the left of the fireplace leads north. Your brief sense of comfort quickly drains away, however, as you become aware of the icy and maniacal stare emanating from the great portrait hanging over the mantelpiece. Under the malefic gaze of those red-rimmed eyes, the most comforting thought you can muster is that of immediate flight. On the sofa is a family album.
+```
+
+## Upstairs Hall  `upstairs-hall`
+**Exits:** east → Library · south → Children's Bedroom · north → Upstairs Landing · down → Upstairs Landing
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The shuttered window at the end of the hall throws a gloomy rectangle of light onto the bare wooden floor. Doorways lead north and south. There is a cord dangling in mid-air here, right about level with your face.
+```
+
+## Children's Bedroom  `childrens-bedroom`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This must be the children's bedroom. The bed is smaller than the one in the master bedroom, its bright coverlet providing one of the few feeble splashes of color in what must have been, for most of its history, a joylessly Puritan household. A small vanity table occupies the opposite wall, and in the corner under the window stands an ancient crib. The only exit is to the north. A child's jewelry box sits on the corner of the vanity.
+```
+
+## Path Behind the House  `path-behind-the-house`
+**Exits:** north → Family Plot · southeast → Kitchen
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A gravel path starts here at the back door of the house, and marks a trail nearly overgrown by weeds and briars. It disappears into the undergrowth to the northwest, framed by crooked trees with overhanging branches that seem to form a stunted, jagged archway into the dim recesses of the forest. A flurry of dead leaves goes skittering along the ground, swirling past you in the wind.
+```
+
+## Family Plot  `family-plot`
+**Exits:** up → Path Behind the House
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Old, moss-slimed tombstones, many broken off and leaning crazily like an old man's teeth, poke up from the soft, mulchy earth. In their midst stands an ancient marble crypt, its heavy iron door nearly obscured by thick draperies of ivy. The trees press close around this quiet enclave of death, leaning together over your head as if sharing secrets. A gap in the undergrowth to the southeast reveals a narrow gravel path.
+```
+
+## In the Crypt  `in-the-crypt`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The air is clammy and frigid, the stone walls damp and streaked with mud and lichen. Pale, swollen roots push through cracks in the masonry. The smell of damp corruption is almost overpowering here, though the stairs to the south lead toward fresher air. The walls of this chamber contain dozens of wide, shallow niches; in each niche, a coffin.
+```
+
+## Courthouse  `courthouse`
+**Exits:** south → Courthouse Basement · north → Town Square
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A long, dimly lit, north-south corridor stretches away from the courthouse entrance. Closed, unmarked doors line either side of the hall, their pebbled glass windows lit from within by a murky, yellow-orange light. Silence reigns here; your footsteps echo eerily on the tiled floor, and occasionally you can hear muted conversation behind one of the doors -- you can't tell which. At the hall's southern end, a staircase leads down into the basement; a sign hanging above it reads "RECORDS". You can return to Town Square to the north.
+```
+
+## Courthouse Basement  `courthouse-basement`
+**Exits:** south → Birth Records · northwest → Death Records · northeast → Courthouse
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A single bulb dangling from the ceiling casts a watery, yellow light against the brick walls. A rickety staircase to the north leads back up to the ground floor, and two narrow doorways lead into the record archives. Over the southeast door hangs a sign that reads "BIRTH RECORDS", while the southwest door bears the sign "DEATH RECORDS".
+```
+
+## Birth Records  `birth-records`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A bare room with cinderblock walls. Thousands of records and documents, most yellow and brittle with age, are stacked everywhere in towering piles. The exit lies northwest.
+```
+
+## Death Records  `death-records`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A bare room with cinderblock walls. Thousands of records and documents, most yellow and brittle with age, are stacked everywhere in towering piles. The exit lies northeast.
+```
+
+## Circulation Desk  `circulation-desk`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A high counter divides the public portion of the library from the reserved stacks -- all the more esoteric and mysterious volumes from the university's collection. If anything, the area behind the counter is even more shadowy than the side you're on. The main reading area lies south. Hanging on the wall next to the counter is a small, printed sign. Beneath the sign sits a heavy, dog-eared register, and sitting next to the register is a bell.
+```
+
+## Local Pub  `local-pub`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A dank, drafty old drinking hole lit by flickering, oil-burning lanterns. Smoke collects in greasy pools among the rafters, and shadows crowd thick around. The bar runs the length of the room to your right, while to the south a low doorway opens onto the street. Mill workers and fishermen occupy a few of the tables, drinking beer or puffing grimly at long-stemmed pipes. Each is wrapped in his solitude, soaking up the general miasma of dreary fatalism. The lantern sitting on the table nearest you sputters fitfully, throwing distorted shadows across the wall.
+```
+
+## Twisting Lane  `twisting-lane`
+**Exits:** east → Narrow Street
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The lane narrows here to little more than a badly cobbled sidewalk as it wends its way up through a series of tortuous bends and switchbacks. In some places, the street is so steep that steps have been cut into it, worn down over the years and slick with moss. Your progress is blocked at the top of the street by a blank brick wall. Someone has sprayed graffiti across the wall in black spraypaint.
+```
+
+## Hidden Court  `hidden-court`
+**Exits:** west → The Cauldron · north → Twisting Lane
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You had no idea this little courtyard even existed, cleverly tucked away amidst the confusing tangle of darker avenues. Although surrounded on all sides by steep rooftops and overshadowed by the ever-ominous clouds, this secluded circle somehow manages to convey a sense of peace and brightness, a safe harbor from the oppressive gloom pervading the rest of the town. To the south, a hanging sign marks a humble shop, while a sidestreet to the east leads back into the labyrinth.
+```
+
+## The Cauldron  `the-cauldron`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A warm and pleasantly dim light surrounds you and suffuses this cozy little shop. The shelves are crammed with every conceivable variety of new age curiosity: books, crystals, pendants, charms, herbs, potions, incense, candles and -- sure enough, on a display stand right near the door -- decorative cast-iron cauldron-shaped paperweights. How cute. In the rear of the store, a lit display case contains several items of interest. The courtyard lies outside, to the north. On the display case is a violin. The proprietor watches you quietly from behind the display case. The proprietor pulls a rag from his back pocket and polishes the top of the display case.
+```
+
+## Vacant Lot  `vacant-lot`
+**Exits:** northwest → Riverwalk
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Where once a building stood, there is now only cracked pavement and rampant weeds. A high chain-link fence surrounds this vacant lot; the only breaks lie to the west and southeast. An old man dressed in dirty rags sits on his mattress, muttering to himself as he stares intently out to sea.
+```
+
+## Wharf  `wharf`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The gentle creaking of hawsers and the hollow slap of water beneath the wooden pier provide a faint counterpoint to the endless, rhythmic surging of the sea. The fishing industry (like the paper industry) has all but died away in Anchorhead; nonetheless there are still a few boats tied to the pier. A path leads back through an opening in a chain-link fence to the northwest; otherwise, it's just you and the ocean. An old, discarded tin of fish oil sits at the end of the pier.
+```
+
+## Study  `study`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This smaller room adjoining the library seems comfortable enough, although it is dusty and cluttered from having not been lived in for the better part of a year. Aside from the desk and the chair and the empty shelves, the only real feature of the room is the large, ornate fireplace in the southern wall. A beautiful pair of mahogany sliding doors lead west, to the library. Michael's laptop sits in the middle of the desk, humming quietly to itself. Also on the desk is a letter opener.
+```
+
+## Attic  `attic`
+**Exits:** south → Upstairs Hall · east → Upstairs Hall
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: It's much cooler up here than in the rest of the house, and you find it hard to suppress a shiver. Grotesque, looming shadows crawl across the low, slanted ceiling, and the dust hangs thick and motionless in the air. To the west the ceiling dips even lower until the space beneath leaves hardly room enough to crawl, while to the north stands a wooden door, draped in shadows and half-hidden by the slanting eaves.
+```
+
+## Attic Cell  `attic-cell`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A cramped little annex off the main attic, with a tiny, shuttered window high up on the north wall. A pile of mouldering straw in the corner and what looks like pencil marks on the lower part of the walls seem to indicate that someone lived here once. Or, possibly, was kept here.
+```
+
+## Narrow Corridor  `narrow-corridor`
+**Exits:** southwest → Observatory
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The walls are bare wooden slats, patched with crumbling plaster and spiked with bent, rusted nails. The passage, no more than two feet wide at its widest point, bends and twist at confusing angles, making it hard to tell which direction you're heading in.
+```
+
+## Observatory  `observatory`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are in a small, enclosed cupola situated, by the look of the view through the dingy skylight over your head, on top of the roof of the house. The walls are covered with astrological and astronomical charts with equations and diagrams scribbled across them in crabbed, stilted handwriting. The only exit seems to be an oddly-angled corridor to the southeast. Dominating the center of the room is a large mounted telescope, pointed almost straight up through the skylight.
+```
+
+## Crawlspace  `crawlspace`
+**Exits:** southeast → Attic · northwest → Attic
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The ceiling descends here to no more than three feet from the floor; you are forced to crawl through the cramped darkness on your hands and knees. To the east the attic becomes more spacious, while the northwest corner opens into an oddly-angled corridor.
+```
+
+## Wine Cellar  `wine-cellar`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This wing of the cellar is even older than the rest, with walls of piled, unmortared stone. The entire room is filled with wine racks. They cover every wall except for one spot to the west, where an exit leads back to the main cellar. All of the racks are dust-covered and empty except for one against the north wall, which contains some forty or fifty dark bottles. You are reminded of something Michael told you during the long drive up: about how when the police arrived after the shooting, they found the wine cellar in a shambles -- nearly every bottle thrown to the floor and shattered, and the whole place reeking of rotted grapes. All except the bottles in the north rack. None of those had been touched. No one could posit a motive for it.
+```
+
+## Windy Passage  `windy-passage`
+**Exits:** north → Edge of the Pit
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The walls of this passageway are carved from solid rock with unearthly precision; ten feet wide, ten feet high, perfectly smooth and perfectly square. The passage runs north, sloping downward into the depths of the hillside. A foul wind gusts intermittently from the darkness below. Another blast of hot, foul-smelling air comes shrieking out of the pit.
+```
+
+## Edge of the Pit  `edge-of-the-pit`
+**Exits:** north → Other Side
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The passageway ends here at a fathomless pit, a puckered circular hole in the rock from which the foul wind seems to emanate, howling up from the depths like a reeking banshee. A thin and decrepit rope bridge spans the pit, shivering occasionally in the wind.
+```
+
+## Other Side  `other-side`
+**Exits:** north → Great Stairs · southwest → Crawlspace
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The passageway turns east here, the stone floor dropping down in a series of wide steps carved into the living rock. The stairs continue down to the northeast, eventually curving out of sight. The only other way on from here is a narrow, oddly-angled corridor in the northwest corner. A thin and decrepit rope bridge spans the pit, shivering occasionally in the wind.
+```
+
+## Great Stairs  `great-stairs`
+**Exits:** northeast → Bottom of Stairs · up → Other Side
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The vast, stone staircase plunges down into the earth. The seemingly interminable steps curve in a gentle sweep from the southwest, above you, dropping toward black, unplumbed depths to the north.
+```
+
+## Bottom of Stairs  `bottom-of-stairs`
+**Exits:** south → Great Stairs
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The stairs end here at a huge, greenish-gold door set into the north wall. There is nothing else here; nowhere to go but onward or back.
+```
+
+## Burial Mound  `burial-mound`
+**Exits:** north → Bottom of Stairs
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The cave is lined, floor to ceiling, with mummified human corpses. Shrunken and desiccated, they lie in jumbled heaps inside irregularly carved niches. Carvings cover the rock walls in between the niches -- grotesque, leering faces too horrible even to look upon, their features twitching and smirking in the wavering light that sifts down from above. And dominating the center of the chamber: a dark monolith rising up through the green, murky light -- what you first took to be a large, supporting pillar, you now realize can only be the true base of the town square obelisk. At the narrower, northern end of the vaguely egg-shaped cavern sits a massive stone altar, flanked on either side by a pair of strange, vibrating columns.
+```
+
+## Deserted Lane  `deserted-lane`
+**Exits:** south → Down the Road · north → Churchyard
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The gently winding lane makes its way through the birch woods south of town. New England foliage is famous for its splendid colors in the fall, but the oppressive weather and pervading murk have leached these trees of most of their tint. The road continues south into the increasingly dense forest, and in the other direction heads back to town. A paved walk also leads east through the trees.
+```
+
+## Down the Road  `down-the-road`
+**Exits:** east → Deserted Lane
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The forest grows denser as you go, crowding thickly up to either side of the road. The groping, tangled branches block out what little sunlight there is left. Your footsteps are muffled; whispering leaves and the slow drip of water are the only sounds you can hear. Beyond the watching trees, the shadows are impenetrably thick. The road stretches interminably, north to south. There's something strangely familiar about the woods here... scenes from last night's dream flicker through your memory, but you are unable to recall the details.
+```
+
+## Trampled Path  `trampled-path`
+**Exits:** west → Abandoned Slaughterhouse · northeast → Down the Road
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The tangled undergrowth has been beaten down in a path leading roughly from the east to the southwest. Shrubs and grass have been flattened and pushed aside, vines torn down, and small trees bent or even snapped in half, as though something heavy with huge, flat feet had simply trampled its way through.
+```
+
+## Abandoned Slaughterhouse  `abandoned-slaughterhouse`
+**Exits:** southwest → Crumbled Ruin · east → Trampled Path
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The decayed remains of an old slaughterhouse stand here, now little more than a shell of crumbling brick and gaping holes, surrounded by a clearing of yellow, sickly grass. A path leads northeast, back toward the road; to the west, a gaping hole that might once have been a doorway leads into the rotting building. The forest is unnaturally quiet here, you notice; there are no birds calling, no leaves rustling or branches creaking; even the whippoorwills have fallen silent. All is still, holding its collective breath in an expectant hush.
+```
+
+## Crumbled Ruin  `crumbled-ruin`
+**Exits:** east → Old Stone Well · north → Abandoned Slaughterhouse
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The roof has collapsed, leaving the interior open to the sky; the floor is nothing but bare, beaten dirt. Gaps in the bricks lead east and south. Although nothing stands now but the tottering, crumbling stonework (and that only barely), you fancy you can still detect a faint miasma of death -- a palpable, chilling reminder of the bloody work which once went on within these walls. There's something odd about the ground here; some faint marking or pattern. An old rusty meat hook sticks out of the ground nearby, its point half-buried in the dirt. Over in the far corner, a tattered sheet of drawing paper lies discarded on the ground.
+```
+
+## Old Stone Well  `old-stone-well`
+**Exits:** up → Crumbled Ruin · south → In the Well
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Beyond the south wall of the old slaughterhouse, there is nothing but a tangled thicket so dense as to be impenetrable in every direction except to the north, where you can slip back into the ruined slaughterhouse through a hole in the wall. Rising from the midst of the underbrush is a squat circle of stone: the top of an ancient well. A circle of rotting plywood covers the opening.
+```
+
+## In the Well  `in-the-well`
+**Exits:** up → Old Stone Well
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The sky is a dim circle of light far above you. The stone walls press in on you from all sides, and the air is clammy and frigid. A faint odor of decay drifts up from the floor; the smell of a trapped animal decomposing under the back porch. You are standing knee deep in a rattling jumble of children's bones.
+```
+
+## Churchyard  `churchyard`
+**Exits:** east → Behind the Church
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A low, wrought-iron fence, its spike-tipped bars bent or leaning at crazy angles, surrounds the overgrown yard of this dark, abandoned church. A gap in the fence leads back west, while a bare path beaten through the groping weeds leads around the church to the southeast.
+```
+
+## Behind the Church  `behind-the-church`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The forest encroaches right up to the iron fence here, some of which is literally buried in the tangled underbrush. There are no doors on this side, although a wooden trap door over by the corner of the building probably leads into a cellar. A path leads southwest, around to the front of the church.
+```
+
+## Church Cellar  `church-cellar`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Centipedes and beetles scurry away across the rotten floorboards as you shine your light across the room. Over in the corner sits a hulking shape of black metal that was probably once a wood-burning furnace; aside from that, the cellar looks empty. A dark alcove, the shadows within too thick to see through, opens in the west wall, and a trap door in the ceiling leads back up to the outside. At the very edge of your light's glow, you can just make out a horribly suggestive shape lying in the shadows behind the furnace.
+```
+
+## Empty Stairwell  `empty-stairwell`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This alcove used to house a stairwell leading up and down; now it contains only a few rotted boards jutting from the walls and an empty shaft dropping down out of sight. Above you hang the broken-off remains of the stairs leading up to the ground floor, the last shattered riser only a couple of tantalizing feet out of reach.
+```
+
+## Broken Stairs  `broken-stairs`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The stairs stop short about seven feet shy of the basement floor, the bottom-most steps hanging suspended over an empty shaft that descends beyond sight into the shadowy depths. What's left of the structure creaks and shifts uneasily under your feet. At the top of the stairs to the north, a doorway opens onto the ground floor of the church. The creaking under your feet is getting louder.
+```
+
+## Vestibule  `vestibule`
+**Exits:** west → Broken Stairs
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A dim antechamber, opening onto the main chapel to the east. To the west, the main doors to the church have been solidly nailed shut, and through a shadowy doorway to the south you can see stairs leading down. Piled in one dusty corner is a heap of old cloth.
+```
+
+## Chapel  `chapel`
+**Exits:** west → Vestibule
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Broken shards from the shattered the stained glass windows grits under your feet as you step around rows of overturned pews. The dust and cobwebs have been busy here, reclaiming another bit of this town's abandoned history. To the west lies the vestibule; to the east, a small doorway behind the pulpit leads to the back of the church. The big wooden cross that once hung above the pulpit has fallen, split in half. On the pulpit is a huge, black tome.
+```
+
+## Behind the Chapel  `behind-the-chapel`
+**Exits:** east → Steeple · down → Chapel
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This little room behind the chapel is hardly bigger than a broom closet. A ladder bolted to the wall leads up through a hatch, presumably up into the steeple.
+```
+
+## Steeple  `steeple`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A tiny space inside the tip of the church's steeple, barely five feet across, the walls tapering to only two feet across some twelve feet above your head. There is a narrow window, but it seems to have been painted black at some point. The only exit seems to be the ladder from which you just emerged. An old length of rope dangles down from a square hole cut in the ceiling.
+```
+
+## Hanging From the Rope  `hanging-from-the-rope`
+**Exits:** down → Darkness
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Your feet dangle over empty space. Looking down, you can barely make out a faint glimmer of water, far below. From far below you hear the faint lapping of water.
+```
+
+## Darkness  `darkness`
+**Exits:** north → Maintenance Access Tunnel
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: It is pitch dark, and you can't see a thing. Your score has just gone up by two points.
+```
+
+## Vaulted Tunnel  `vaulted-tunnel`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The walls of this long, rectangular chamber are made of crumbling brick, not concrete; most likely it was built at some earlier period than the rest of the tunnels. The ceiling is lost in darkness above you, but from the sounds of the echoes it must be pretty high. Water flowing in from the northwestern tunnel has pooled in a depression sunk into the limestone floor, becoming quite deep near the far end. The shattered wreckage of the church stairway lies half submerged in the water-filled depression. You're lucky to have missed it in your fall. You can also see a hooded robe and a lantern here.
+```
+
+## Sewer Tunnel  `sewer-tunnel`
+**Exits:** northwest → Dripping Tunnel
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The tunnel is ankle-deep in brackish water, though raised walkways on either side provide relatively dry footing. The walls are slick, the air damp and foul. The main tunnel runs north and southeast. Numerous smaller pipelines lead in all directions, but all are too small for you to crawl through. Iron rungs embedded in the wall lead up through an access shaft, back to the surface.
+```
+
+## Dripping Tunnel  `dripping-tunnel`
+**Exits:** north → Broken Tunnel
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The ceiling in this north-south tunnel is so low you must bend nearly double to navigate it. Water drips endlessly through the walls and ceiling, seeping in through thousands of invisible fissures, the constant plip-plip-plipping echoing loudly throughout the tunnel. The air is so damp you can hardly breathe. Unless your sense of direction is mistaken, you must be crossing the Miskaton River -- underneath it.
+```
+
+## Broken Tunnel  `broken-tunnel`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This looks to be an older part of the sewer system that has fallen into disrepair. Many of the pipes here have crumbled and are filled with debris. Set in the low ceiling is an old iron hatch.
+```
+
+## Outflow Tunnel  `outflow-tunnel`
+**Exits:** up → Narrow Beach
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: From the smell of it, this must be a sewage outflow tunnel. Filthy water swirls past a metal grate to the west and eddies around your hands and knees, on which you are forced to crawl in this cramped cylindrical passageway. To the east, the tunnel narrows still further, terminating about twenty feet further in a circle of dim light. Much of the water is pouring through an open hatch set in the floor of the tunnel.
+```
+
+## Narrow Beach  `narrow-beach`
+**Exits:** east → Alley
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: This narrow strip of beach is tucked away between two outcroppings in the predominantly rocky shoreline, accessible only from a steep, muddy slope to the west. The sand is filthy and strewn with rocks, seaweed, litter and other bits of storm-tossed detritus. Near the bottom of the slope, a sewage outflow pipe juts out over the beach, about three feet above the ground. A thin stream of acrid-smelling sewer water trickles out over the lip of the pipe, forming a puddle in the sand.
+```
+
+## Mill Road  `mill-road`
+**Exits:** north → Entrance to the Paper Mill · east → Breakwater · west → Entrance to the Paper Mill
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The road carries you across a desolate heath of gray, windswept grass. To the south, the black, jagged outline of Anchorhead's steep roofs and sharp, leaning gables cuts across the horizon. The road forks here to the west and east, heading across the railroad tracks in one direction, out toward the seashore in the other.
+```
+
+## Entrance to the Paper Mill  `entrance-to-the-paper-mill`
+**Exits:** west → Shanty Town · south → Bare Foundations · northeast → Mill Road
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The road turns southwest here and runs squarely through the front entrance to the old paper mill. A gate of heavy iron bars blocks the only opening into this charred fortress, although an overgrown path leads around the wall to the south. To the north, a rutted lane threads its way past a row of dilapidated shacks.
+```
+
+## Shanty Town  `shanty-town`
+**Exits:** west → Entrance to the Paper Mill
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The road peters out at a wide clearing of rutted mud, flanked by uneven rows of decrepit, clapboard shacks. The town is quiet, almost deserted; only a few bits of loose tarpaper blowing listlessly in the wind betray the overall stillness.
+```
+
+## #11 Mill Town Road  `11-mill-town-road`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A dirty, ramshackle home, scraped together out of the bits and ends of working-class poverty. The floor is warped and broken wood, bare dirt showing through the cracks between boards. Rags hang across the window in lieu of curtains. Over in the far corner is a rickety old stove; in the opposite corner a threadbare cot; it hits you suddenly that a family of three once lived, slept and ate all in this single room, which is slightly smaller than your bedroom back at the house. The woman watches you expectantly. On the threadbare cot is a teddy bear. A set of grime-smeared overalls hangs on a hook next to the front door to the west. Your score has just gone up by two points.
+```
+
+## Bare Foundations  `bare-foundations`
+**Exits:** south → Entrance to the Paper Mill
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The foundations of an older structure lie crumbling in a sunken square of ground, hidden away behind the imposing shadow of the mill wall. Weeds push up through cracked and buckling slabs of concrete; twisted rebar and rusting pipes poke up like the legs of dead insects. The ruins are surrounded on all sides by dense thickets, although narrow, overgrown trails lead northeast and southeast through the underbrush.
+```
+
+## Maintenance Access Tunnel  `maintenance-access-tunnel`
+**Exits:** south → Bare Foundations
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are at the southern end of a long, narrow crawlway leading northward into the mill. All around you, through the metallic walls, you can hear the oppressive thumping and grinding of heavy machinery. The air in here is hot and smells of burnt engine oil. A large metal valve wheel juts out from the middle of one of the many fat, sweating pipes lining the walls. Just to its left is a gauge of some sort.
+```
+
+## Mill Floor  `mill-floor`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Waves of heat and noise assault you from every corner. Towering above you on all sides are the enormous vats, presses and sundry machinery, the ever-churning inner workings of the paper mill. An opening in the base of the south wall leads back to the maintenance crawlway, and narrow aisles lead in several other directions through the chugging machinery. A grilled catwalk high over your head provides a more direct route across the factory; however, you see no way to get up there from here. A long chain dangles from overhead, its last few feet pooled on the floor next to a bank of controls.
+```
+
+## Catwalk  `catwalk`
+**Exits:** south → Mill Floor
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The catwalk stretches north, a narrow ribbon of metal grillwork dangling fifty feet over the factory floor and shuddering dangerously in time with the machines beneath it. There are no railings of any kind. At the far end you can see what looks like a wide balcony with several large banks of equipment. A long chain dangles from overhead, its last few feet wrapped securely around your waist. Your score has just gone up by two points.
+```
+
+## Workshop  `workshop`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Several workbenches and racks of arcane electronic equipment have been dragged together to form a sort of open laboratory on this wide balcony overlooking the mill. A wide table dominates the area, strewn with precision tools, bits of wire, and scribbled calculations. To the south, a narrow catwalk hangs above the mill floor, and a metal ladder leads down into the machinery below. Prominent among the strange tools scattered across the table is a strange caliper-like instrument. On the workbenches are some notes and some arcane electronic equipment. One of the racks contains a number of circular mirrors, stacked side by side like dishes in a dishwasher. Tacked up on the wall is a large technical blueprint.
+```
+
+## Breakwater  `breakwater`
+**Exits:** east → At the Foot of the Lighthouse · southwest → Mill Road
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are picking your way across the breakwater's bare, rocky spine, where the road has diminished to little more than a pair of dusty ruts. A hundred yards to the northeast, at the breakwater's far end, the lonely stone tower of Anchorhead's lighthouse stands vigil against the ocean.
+```
+
+## At the Foot of the Lighthouse  `at-the-foot-of-the-lighthouse`
+**Exits:** northeast → Bottom of the Lighthouse · southwest → Breakwater
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You stand in a circular clearing among the stones, surrounded on nearly every side by the sea. Before you looms the ancient, massive lighthouse, a vertiginous pillar of pale brick jabbing defiantly up at the sky. The road from the southwest ends here, although it looks as though you could pick your way down the rocks to the southeast, around the structure's base. The great bronze door of the lighthouse stands slightly ajar, revealing a narrow rectangle of blackness within.
+```
+
+## Bottom of the Lighthouse  `bottom-of-the-lighthouse`
+**Exits:** east → Top of the Lighthouse
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The sound of the ocean is muffled behind the thick cinderblock walls, and the air is damp and heavy. You can almost feel the weight of two hundred feet of hoary old whitewashed brick pressing down on you from above. To the west, a narrow strip of dim light marks the exit. Cracked concrete steps lead up.
+```
+
+## Top of the Lighthouse  `top-of-the-lighthouse`
+**Exits:** up → Padded Cell
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The stairs give onto a wide, circular chamber surrounded by windows. The glass is old and streaked with grime, but you still have to catch your breath at the magnificence of the view. In one direction, the dying heath and the stunted cluster of buildings that is Anchorhead; in the other, the ocean like a vast, undulating blanket. Sitting in the middle of the room is what looks like a swivel mount of some kind, although nothing is mounted on it now. Looking up, you see that it rests directly below a large, hexagonal skylight.
+```
+
+## Padded Cell  `padded-cell`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are in a padded cell, the kind typically reserved for raving lunatics. The room is barely eight feet by eight feet square, with walls and floor of concrete covered with thick, quilted padding. The door in the west wall is also covered with padding, except for a tiny observation window about five feet up, from which a feeble light trickles in.
+```
+
+## Hallway  `hallway`
+**Exits:** south → Top of Stairs
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A grim hallway of concrete and industrial green tiles. This is the north end; the hallway runs south from here. Doors lead east and west, and a narrow, barred window to the north looks out onto the dark corner outside. A shard of glass from the broken window lies on the floor. You hear strange, gibbering laughter coming from down the hall.
+```
+
+## Top of Stairs  `top-of-stairs`
+**Exits:** south → Bottom of Stairs
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are at the top of a stairwell leading down to the asylum's ground floor. A hallway lined with doors leads north. The madman hops awkwardly toward you, giggling and dripping saliva from his blood-smeared chin. *** ka-WHAM!!! *** A monstrous clap of thunder rolls across the sky, shaking the whole town to its foundations.
+```
+
+## Waiting Room  `waiting-room`
+**Exits:** north → Asylum Courtyard
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Ugly, mint-green tiles and walls of whitewashed cinderblock comprise the decor of this inhospitable waiting room. A hard little sofa upholstered in avocado vinyl and a feebly struggling potted palm are provided for the comfort of visitors, although you get the feeling that few inmates of this institution are fortunate enough to have visitors. A metal gate bars entrance to a southern passageway, which you assume leads to the inmates' section. The exit lies north. The orderly is lying face down in a pool of blood in the middle of the room. The orderly's name tag lies on the floor nearby. The madman hops awkwardly toward you, giggling and dripping saliva from his blood-smeared chin.
+```
+
+## Asylum Courtyard  `asylum-courtyard`
+**Exits:** north → Dark Corner
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The grim, white-washed edifice of Danvers Asylum bounds this tiny, shadowed courtyard to the south, its narrow, barred windows staring blankly down at you like ranks of shriveled, empty eye sockets. You can escape through a narrow gateway in the high, brick wall to the north. The madman comes prancing out the front door of the asylum, and suddenly stops dead in his tracks. He looks around, utterly dumbfounded. He looks up at the sky, and feels the raindrops striking his face. Slowly it dawns on his addled brain that he is outside; that he is, in fact, free.
+```
+
+## Dark Corner  `dark-corner`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The rooftops above you lean so close together as to nearly block out the sky altogether, making this a particularly dark and unpleasant section of the city. The street leads away to the east, and a shadowy driveway leads through a high brick wall to the south. A sudden gust of wind suddenly snatches the umbrella from your hands.
+```
+
+## Island of Flesh  `island-of-flesh`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: The island is barely forty feet across, its surface covered with an ankle-deep layer of slime and muck. Underneath the muck, the ground throbs -- heaving rhythmically to a blasphemous, living pulse. The sea thrashes against the shore with storm-driven fury. The robed guards hover to either side of you, waiting for you to make a move.
+```
+
+## Rocky Spur  `rocky-spur`
+**Exits:** west → At the Foot of the Lighthouse
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: A small outcropping of stone, just large enough for you to stand on, sticks out from the end of the breakwater. The hungry sea laps at your feet, surging over the rocks and then trickling down into crevices. To the southwest, an uneven trail leads back up the rocks, around the side of the lighthouse. The sea thrashes against the shore with storm-driven fury. Beyond the breakwater's tip, a small island has risen from the sea. It is quickly sinking back into the churning waters. The island is definitely sinking now.
+```
+
+## Home  `home`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: You are home, and it is a momentous event. Downstairs, Michael is waiting for you to bring him the wondrous news. To the east is the bedroom you both share, and to the north is your bathroom. A cool wave of uneasiness washes slowly over you; you're not sure why. Your score has just gone up by fifteen points.
+```
+
+## Your Bathroom  `your-bathroom`
+
+```
+Low-resolution atmospheric painted illustration, gothic horror mood, slightly soft and grainy, 1990s adventure-game feel. Muted desaturated palette — slate grey, sickly green, deep shadow, weak gaslight. Lovecraftian dread, rain and gloom, no people, no text or UI overlays. Wide establishing shot. 16:9. Scene: Your bathroom; an ordinary place. A normal, safe, familiar place. On the counter is a home pregnancy test.
+```

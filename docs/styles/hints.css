@@ -102,23 +102,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Simple vertical pill, flush near the edge (matches .sheet-handle) */
-.hints-resize-handle::before {
-  content: '';
-  width: 4px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-  transition: background 0.2s ease;
-}
-
-.hints-resize-handle:hover::before {
-  background: rgba(255, 255, 255, 0.45);
-}
-
-.hints-resize-handle.dragging::before {
-  background: rgba(59, 130, 246, 0.7);
-}
+/* Pill style is the shared standard in base.css (.hints-resize-handle::before). */
 
 body.hints-resizing {
   user-select: none;

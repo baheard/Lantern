@@ -250,7 +250,9 @@ body.tap-to-examine-enabled .game-text {
 
 /* Three-primitive Z-machine window model */
 
-/* Sticky header wrapper — holds statusBar + upperWindow so both stick together */
+/* Sticky header wrapper — holds the (location-art icon) + the grid-window stack
+   in a row so the icon takes a real column and pushes the status text over rather
+   than overlapping it. */
 .game-header {
   position: sticky;
   top: 0;
@@ -258,15 +260,251 @@ body.tap-to-examine-enabled .game-text {
   background: var(--bg-surface);
   width: 100%;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
 }
 
-/* Single separator shadow for the whole header — sits at the bottom of whichever
-   grid window(s) (status bar, upper window, or both stacked) are currently visible,
-   separating the header region from the main content below */
-.game-header:has(#statusBar:not([style*="display: none"])),
-.game-header:has(#upperWindow:not([style*="display: none"])) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+/* statusBar + upperWindow stay stacked, in the remaining width to the icon's right */
+.game-header-windows {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* In-flow location-art thumbnail icon, left of the status bar. Vertically centered
+   on the header (= the status line for games with no upper window). Tap → lightbox. */
+.location-art-status-icon {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 38px;
+  height: 38px;
+  margin: 0 8px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(196, 163, 90, 0.6);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: #0b0a0f;
+  cursor: pointer;
+}
+.location-art-status-icon.hidden { display: none; }
+
+/* No separator border/shadow on the header — it showed as a stray gray strip at
+   the top (esp. when the grid windows were empty/blank). The status-bar and
+   upper-window accents already delineate the header region. */
+
+/* Location-art side panel — a SEPARATE element from the game output (its own
+   <aside>, sibling of #gameOutput inside .container). One persistent image (the
+   current location), so the story history isn't littered. Shown only on wide
+   screens, only while a game is on screen, and only when the current room has art.
+   Takes up nearly the whole right side; the story column centers in the space
+   that's left. Narrow screens get no panel. */
+.location-art-panel {
+  display: none;
+}
+/* Layout is reserved by `.art-has-art` (set once the game is known to have art)
+   unless the user collapsed the panel (`.art-panel-collapsed`), NOT by whether the
+   current room has an image — so a missing or late image fills the already-reserved
+   column instead of reflowing the story. Wide + in-game only; mobile/narrow never
+   shows it. Width is the user-draggable --art-panel-w. */
+@media (min-width: 1000px) {
+  .container.art-has-art:has(.game-output:not(.hidden)) {
+    --art-panel-w: 32vw;   /* portrait images — narrower column than the old landscape */
+    justify-content: stretch;
+  }
+  /* Story column keeps its readable max-width, centered in the space that's left. */
+  .container.art-has-art:has(.game-output:not(.hidden)) .game-output {
+    flex: 1 1 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .container.art-has-art:has(.game-output:not(.hidden)) .location-art-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 var(--art-panel-w);
+    max-width: var(--art-panel-w);
+    min-width: 0;
+    padding: 20px 24px;
+    border-left: 1px solid var(--border-subtle);  /* visual separation from content */
+    overflow: hidden;
+    /* Animate width/slide so collapse & re-open glide rather than snap. */
+    transition: flex-basis 0.28s ease, max-width 0.28s ease, padding 0.28s ease,
+                transform 0.28s ease, opacity 0.2s ease;
+  }
+  /* Collapsed: slide the panel out and let the story reflow to full width. */
+  .container.art-has-art.art-panel-collapsed:has(.game-output:not(.hidden)) .location-art-panel {
+    flex-basis: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-left: none;
+    transform: translateX(24px);
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* Scroll-down arrow sits in the gap between the story column and the panel —
+     but only while the panel is open. When collapsed it reverts to the default
+     position relative to the centered content (base .scroll-down-btn rule). */
+  .container.art-has-art:not(.art-panel-collapsed):has(.game-output:not(.hidden)) .scroll-down-btn {
+    right: calc(var(--art-panel-w) + 22px);
+    transition: right 0.28s ease;
+  }
+}
+
+/* Drag handle on the panel's left edge. Pill style is the shared
+   standard in base.css (.location-art-resize::before); this is just the wrapper. */
+.location-art-resize {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.location-art-panel { position: relative; }  /* anchor for the handle */
+
+/* Image + caption stack, vertically centered in the reserved column. The whole
+   stack is height-bounded (height:100% + min-height:0) so the image shrinks before
+   the footer (title + collapse button) could ever push past the viewport. */
+.location-art-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+/* The image area: takes the room left after the footer, can shrink to fit. */
+.location-art-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  flex: 0 1 auto;
+}
+
+/* Image hidden until the current room actually has art (panel stays reserved).
+   Bounded by BOTH the column width and the available height — so it caps out at
+   the viewport height and never crops or overflows. */
+.location-art-panel-img {
+  display: none;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: #0b0a0f;
+}
+.location-art-panel.has-art .location-art-panel-img { display: block; }
+
+/* Faint lantern glyph shown when the game has art but THIS room doesn't. Reserves
+   a 3/4 frame, also capped to the available height. */
+.location-art-placeholder {
+  display: none;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(11, 10, 15, 0.4);
+  color: var(--color-accent, #c4a35a);
+  align-items: center;
+  justify-content: center;
+}
+.location-art-placeholder.show { display: flex; }
+.location-art-panel.has-art .location-art-placeholder { display: none; }
+.location-art-placeholder svg {
+  width: 46%;
+  height: 46%;
+  opacity: 0.28;
+}
+
+/* Footer row beneath the image: location name (left) + collapse button (right). */
+.location-art-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  flex: 0 0 auto;   /* never shrink — title + button stay in view */
+}
+/* Location name — quiet secondary text, no box, left aligned. */
+.location-art-caption {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  font-family: var(--font-serif);
+  font-size: var(--font-s, 13px);
+  color: var(--text-secondary);
+}
+/* Collapse button at the bottom-right, on the caption's row. */
+.location-art-collapse {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.location-art-collapse:hover {
+  color: var(--text-primary);
+  background: var(--border-subtle);
+}
+
+/* Edge tab to RE-OPEN a collapsed panel — wide only. Present whenever the game
+   has art so it can slide in/out; hidden (off-screen, inert) until collapsed. */
+.location-art-toggle { display: none; }
+@media (min-width: 1000px) {
+  .container.art-has-art:has(.game-output:not(.hidden)) .location-art-toggle {
+    display: flex;
+    position: fixed;
+    top: 50%;
+    right: 0;
+    z-index: 30;
+    width: 22px;
+    height: 60px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    background: var(--bg-elevated, #22272e);
+    color: var(--accent, #c4a35a);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    /* Off-screen + inert while the panel is open; slides in when collapsed. */
+    transform: translate(100%, -50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.28s ease, opacity 0.2s ease;
+  }
+  .container.art-has-art.art-panel-collapsed:has(.game-output:not(.hidden)) .location-art-toggle {
+    transform: translate(0, -50%);
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 /* Status bar - exactly 1 line, VM-owned (location/score) */
@@ -482,7 +720,6 @@ body.force-mobile #statusBar {
   text-align: center;
   word-wrap: break-word;
   padding: 8px;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
 body.force-mobile #upperWindow {

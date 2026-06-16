@@ -10,6 +10,32 @@ import {
 } from './map-config.js';
 import { render } from './map-render.js';
 import { escapeHtml } from '../utils/text-processing.js';
+import { getLocationImageUrl } from './location-art.js';
+import { ensureArtOverlay, openArtOverlay } from './art-overlay.js';
+
+// Look up + show (or hide) the location image for a node in the open sheet.
+// The `has-art` class on the sheet drives all visibility (inline image, header
+// thumbnail) via CSS; the responsive layout (side-by-side vs. stacked) is pure CSS.
+// Gated by the shared location-art setting (getLocationImageUrl returns null when off).
+async function updateNodeImage(node) {
+  const sheet = document.getElementById('nodeEditSheet');
+  const img = document.getElementById('nodeLocationImage');
+  const thumb = document.getElementById('nodeImageThumb');
+  if (!sheet || !img) return;
+  sheet.classList.remove('has-art');
+  img.removeAttribute('src');
+  if (thumb) thumb.removeAttribute('src');
+  const url = await getLocationImageUrl(node.name);
+  if (!url) return;
+  // Guard against a slow fetch resolving after the user opened a different node.
+  if (mapState.selectedNode !== node.id) return;
+  // If the file is listed but missing/unloadable, show nothing (no broken-image icon).
+  img.onerror = () => { sheet.classList.remove('has-art'); img.removeAttribute('src'); };
+  img.src = url;
+  img.alt = node.name;
+  if (thumb) thumb.src = url;
+  sheet.classList.add('has-art');
+}
 
 // Callbacks (set by map-canvas.js to avoid circular deps)
 let callbacks = {
@@ -62,12 +88,14 @@ export function createNodeEditSheet() {
         <div class="sheet-header-left">
           <span class="sheet-node-badge" id="sheetNodeBadge">Auto</span>
           <h3 id="sheetNodeName">Edit Location</h3>
+          <img id="nodeImageThumb" class="node-art-thumb" alt="" title="View location art">
         </div>
         <button class="sheet-close-btn" id="sheetCloseBtn" aria-label="Close">
           <span class="material-icons">close</span>
         </button>
       </div>
       <div class="sheet-body">
+        <div class="sheet-body-main">
         <div class="sheet-field sheet-field-inline">
           <div class="field-primary">
             <label for="nodeNameInput">Name <span class="field-hint">(max 100 characters)</span></label>
@@ -128,11 +156,27 @@ export function createNodeEditSheet() {
             <span class="material-icons">delete</span> Delete
           </button>
         </div>
+        </div>
+        <div class="sheet-body-art" id="nodeImageField">
+          <img id="nodeLocationImage" class="node-location-image" alt="" loading="lazy">
+        </div>
       </div>
     </div>
   `;
   // Append to body so it can appear above controls
   document.body.appendChild(sheet);
+
+  // Full-screen art lightbox is shared (art-overlay.js) — ensure it exists.
+  ensureArtOverlay();
+  // Tapping the inline image or the header thumbnail opens the overlay on the
+  // sheet's current image, captioned with the location name.
+  const openFromSheet = () => {
+    const img = document.getElementById('nodeLocationImage');
+    const nameInput = document.getElementById('nodeNameInput');
+    if (img && img.getAttribute('src')) openArtOverlay(img.src, nameInput ? nameInput.value : '');
+  };
+  sheet.querySelector('#nodeLocationImage').addEventListener('click', openFromSheet);
+  sheet.querySelector('#nodeImageThumb').addEventListener('click', openFromSheet);
 }
 
 // ============================================================================
@@ -173,6 +217,9 @@ export function openNodeSheet(node) {
   }
   document.getElementById('nodeNameInput').value = node.name || '';
   document.getElementById('nodeNotesInput').value = node.notes || '';
+
+  // Show the generated location art for this room, if we have any (async; self-guards).
+  updateNodeImage(node);
 
   // Update type picker - default to 'location' if no type set
   const nodeType = node.type || 'location';

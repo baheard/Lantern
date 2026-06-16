@@ -463,3 +463,36 @@ body {
   opacity: 0;
   pointer-events: none;
 }
+
+/* ============================================================
+   Standard drag handle — the single style for every draggable
+   panel edge (location-art side panel, map panel, hints panel).
+   A thin neutral pill that grows gently on hover/drag. Each
+   component keeps its own wrapper (edge, width, cursor); only
+   the pill (::before) and its states are defined here so they
+   stay consistent. Tune via the two variables below.
+   ============================================================ */
+:root {
+  --drag-handle: rgba(255, 255, 255, 0.22);
+  --drag-handle-active: rgba(255, 255, 255, 0.42);
+}
+.location-art-resize::before,
+.map-resize-handle::before,
+.hints-resize-handle::before {
+  content: '';
+  width: 4px;
+  height: 44px;
+  border-radius: 2px;
+  background: var(--drag-handle);
+  box-shadow: none;
+  transition: background 0.18s ease, height 0.18s ease;
+}
+.location-art-resize:hover::before,
+.map-resize-handle:hover::before,
+.hints-resize-handle:hover::before,
+.location-art-resize.dragging::before,
+.map-resize-handle.dragging::before,
+.hints-resize-handle.dragging::before {
+  background: var(--drag-handle-active);
+  height: 54px;   /* gentle grow, not a big pop */
+}
