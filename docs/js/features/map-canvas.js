@@ -785,7 +785,6 @@ function handleLocationChange(e) {
   }
 
   // Add new node (and immediately protect it from future auto-mapper changes)
-  let stateSuffixBase = null;
   if (!existingNode) {
     const direction = command ? getDirectionFromCommand(command) : null;
     const parentNode = previousLocationId ? mapState.nodes.get(previousLocationId) : null;
@@ -806,17 +805,6 @@ function handleLocationChange(e) {
     } else if (mapState.nodes.size > 0) {
       // No parent node - place near origin
       position = findAvailablePosition({ x: 0, y: 0 });
-    }
-
-    // Detect state-suffix variants before adding the node (e.g. "Catwalk, South; Night"
-    // is a suffix-delimiter extension of "Catwalk, South"). Only fires on "; " and " ("
-    // delimiters — loose substring overlap would produce false positives on rooms that
-    // merely share text ("Catwalk, South" vs "Catwalk, East").
-    for (const [existingName] of mapState.nodes) {
-      if (locationName.startsWith(existingName + '; ') || locationName.startsWith(existingName + ' (')) {
-        stateSuffixBase = existingName;
-        break;
-      }
     }
 
     mapState.nodes.set(locationName, {
@@ -845,10 +833,6 @@ function handleLocationChange(e) {
   mapState.currentNodeId = locationName;  // New node is the current location
   updateNodeCount();
   checkMapLimits();  // Check if approaching limits
-
-  if (stateSuffixBase) {
-    showHint(`"${locationName}" may be a state variant of "${stateSuffixBase}". Merge if same place.`);
-  }
 
   // If map is visible, center on the new location
   if (isVisible) {
