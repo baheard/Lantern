@@ -105,18 +105,25 @@ export function initHintsPanel() {
     // closed — so a section is "available" the moment you've stood there,
     // not only if you happened to have Hints open at the time. Stays
     // spoiler-safe: only sections matching the current room get marked seen.
-    window.addEventListener('locationChanged', () => {
-        if (_currentHintsData && _currentGameName) {
-            // Latch act-boundary milestones first so the topic match below is scoped
-            // to the act the player is actually in (recurring-room disambiguation).
-            // Pass the current turn's output text so `textMatch` triggers can fire on
-            // prose the status-bar location parser discards (e.g. "Witchville").
-            updateMilestone(_currentHintsData, _currentGameName, getLatestGameText());
-            const { sectionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
-            if (sectionIds.size > 0) markSectionsSeen(sectionIds, _currentGameName);
-        }
-        if (_isVisible) renderHintsContent();
-    });
+    window.addEventListener('locationChanged', handleTopicChange);
+
+    // Phase context can change while the room name stays the same (e.g. sleeping
+    // "day one" → "day two" in the same bedroom). The auto-mapper fires this when that
+    // happens so phase-scoped sections re-evaluate even with no locationChanged event.
+    window.addEventListener('statusContextChanged', handleTopicChange);
+}
+
+function handleTopicChange() {
+    if (_currentHintsData && _currentGameName) {
+        // Latch act-boundary milestones first so the topic match below is scoped
+        // to the act the player is actually in (recurring-room disambiguation).
+        // Pass the current turn's output text so `textMatch` triggers can fire on
+        // prose the status-bar location parser discards (e.g. "Witchville").
+        updateMilestone(_currentHintsData, _currentGameName, getLatestGameText());
+        const { sectionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
+        if (sectionIds.size > 0) markSectionsSeen(sectionIds, _currentGameName);
+    }
+    if (_isVisible) renderHintsContent();
 }
 
 /** @param {CustomEvent} e */

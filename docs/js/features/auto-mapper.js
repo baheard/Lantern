@@ -120,6 +120,7 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
 
   // Update phase context every real turn — it can change while the room name stays
   // the same (e.g. Master Bedroom: "day one, evening" → "day two").
+  const previousStatusContext = lastStatusContext;
   lastStatusContext = getStatusContext(statusBarText);
 
   const locationChanged = location.name !== lastLocationName;
@@ -129,6 +130,14 @@ export function checkLocationChange(statusBarText, generation, currentInputType 
     // real move. This happens after restore: the screen clears but the status bar still
     // shows the same room, so the break should be discarded here rather than carried forward.
     if (pendingSceneBreak) pendingSceneBreak = false;
+    // The room name didn't change but the phase context might have (e.g. sleeping
+    // "day one" → "day two" in the same bedroom). Phase-scoped hints need to re-evaluate,
+    // so signal the change — locationChanged won't fire to do it for them.
+    if (lastStatusContext !== previousStatusContext) {
+      window.dispatchEvent(new CustomEvent('statusContextChanged', {
+        detail: { locationName: location.name, statusContext: lastStatusContext, generation }
+      }));
+    }
     return;
   }
 
