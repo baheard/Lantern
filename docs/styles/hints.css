@@ -231,26 +231,16 @@ body.hints-resizing .hints-overlay * {
   opacity: 0.35;
 }
 
-/* Row holding the header button + location badge as siblings */
+/* The whole row is the toggle (full-width click target); the location pin is a nested
+   button "interruption" that sits inline after the title. */
 .hints-section-row {
   display: flex;
   align-items: center;
-}
-
-.hints-section.expanded .hints-section-row {
-  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.hints-section-header {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  min-width: 0;
-  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 14px;
   min-height: 44px;
-  border: none;
-  background: transparent;
   color: #e2e8f0;
   font-size: 0.95rem;
   font-weight: 600;
@@ -260,13 +250,24 @@ body.hints-resizing .hints-overlay * {
   transition: background 0.15s, color 0.15s;
 }
 
-.hints-section-header:hover {
+.hints-section-row:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.hints-section.expanded .hints-section-header {
+/* Interruption: while the pin is hovered, the row must not show its own hover styling. */
+.hints-section-row:has(.hints-location-badge:hover) {
+  background: transparent;
+}
+
+.hints-section-row:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.hints-section.expanded .hints-section-row {
   color: #93c5fd;
   border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .hints-section-chevron {
@@ -282,6 +283,7 @@ body.hints-resizing .hints-overlay * {
 }
 
 .hints-section-title {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

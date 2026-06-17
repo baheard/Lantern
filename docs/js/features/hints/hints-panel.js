@@ -216,7 +216,11 @@ function createHintsUI() {
     });
 
     // Event delegation for expand/reveal interactions inside hints-content
-    document.getElementById('hintsContent').addEventListener('click', handleContentClick);
+    const contentEl = document.getElementById('hintsContent');
+    contentEl.addEventListener('click', handleContentClick);
+    // The section row is a role=button div (not a native button), so wire Enter/Space to
+    // toggle it. Nested native buttons (pin, reveal, rate) keep their own keyboard handling.
+    contentEl.addEventListener('keydown', handleContentKeydown);
 
     setupResizeHandle();
 }
@@ -427,13 +431,16 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
         questionsHtml += renderQuestion(question, matchedQuestionIds.has(question.id), section.id);
     }
 
+    // The whole row is the toggle (full-width click target). The location pin is a nested
+    // <button> "interruption": handleContentClick routes via closest('[data-action]'), so a
+    // click on the pin resolves to open-map (not toggle), and CSS (:has) suppresses the row's
+    // hover styling while the pin is hovered. Row is role=button + tabindex for keyboard
+    // toggling (see handleContentKeydown); the pin keeps native button keyboard behaviour.
     return `
       <div class="hints-section${lockedClass}" data-section-id="${escHtml(section.id)}"${inertAttr}>
-        <div class="hints-section-row">
-          <button class="hints-section-header" aria-expanded="false" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
-            <span class="material-icons hints-section-chevron">chevron_right</span>
-            <span class="hints-section-title">${escHtml(section.title)}</span>
-          </button>
+        <div class="hints-section-row" role="button" tabindex="0" aria-expanded="false" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
+          <span class="material-icons hints-section-chevron">chevron_right</span>
+          <span class="hints-section-title">${escHtml(section.title)}</span>
           ${badgeHtml}
         </div>
         <div class="hints-section-body">
@@ -565,6 +572,16 @@ function renderRatingBar(questionId, sectionId, hintIndex, total, hintText) {
 // EVENT DELEGATION
 // ============================================================================
 
+function handleContentKeydown(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    // Only the role=button section row needs synthetic activation; native buttons
+    // (pin/reveal/rate) handle Enter/Space themselves, so ignore those targets.
+    const row = e.target.closest('.hints-section-row');
+    if (!row || e.target !== row) return;
+    e.preventDefault();
+    row.click();
+}
+
 function handleContentClick(e) {
     const target = e.target.closest('[data-action]');
     if (!target) return;
@@ -627,7 +644,7 @@ function handleContentClick(e) {
         if (willExpand) {
             _overlay.querySelectorAll('.hints-section.expanded').forEach(el => {
                 el.classList.remove('expanded');
-                const h = el.querySelector('.hints-section-header');
+                const h = el.querySelector('.hints-section-row');
                 if (h) h.setAttribute('aria-expanded', 'false');
             });
         }
