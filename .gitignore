@@ -11,6 +11,9 @@ config.json
 docs/games/images/**/_review/
 docs/games/images/_adhoc.png
 
+# Ephemeral /go-to dev-skill save snapshots — regenerated & overwritten each invocation
+docs/assets/*-go-to.snapshot.json
+
 # Development
 .claude/*
 # ...but keep project skills under source control

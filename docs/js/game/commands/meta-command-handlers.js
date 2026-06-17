@@ -9,7 +9,11 @@ import { respondAsGame } from '../../ui/respond-as-game.js';
 import { enterSystemEntryMode, exitSystemEntryMode } from '../../input/keyboard/index.js';
 import { getCustomSaves, getUnifiedSavesList, getRestoreList, formatSavesList } from './save-list-formatter.js';
 
-const MAX_SAVES = 5;
+const MAX_SAVES = 10;
+// Reserved slot written by the /go-to dev skill (tools/jump-to.cjs --name go-to).
+// It always overwrites a single fixed slot and is EXEMPT from MAX_SAVES — it neither
+// counts toward the limit nor can be created/overwritten through the SAVE command.
+const GO_TO_SAVE_NAME = 'go-to';
 
 const WORD_DIGITS = { one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',ten:'10' };
 function normalizeInput(input) {
@@ -287,13 +291,15 @@ function validateSaveName(input) {
     return { valid: false, errorMessage: 'Invalid save name. Use only letters, numbers, spaces, dashes, and underscores.' };
   }
 
-  if (['quicksave', 'autosave'].includes(targetSaveName.toLowerCase())) {
+  if (['quicksave', 'autosave', GO_TO_SAVE_NAME].includes(targetSaveName.toLowerCase())) {
     return { valid: false, errorMessage: 'That name is reserved. Please choose a different name.' };
   }
 
   const existingSave = getCustomSaves().find(s => s.name.toLowerCase() === targetSaveName.toLowerCase());
   if (existingSave) targetSaveName = existingSave.name; // preserve original case
-  if (!existingSave && getCustomSaves().length >= MAX_SAVES) {
+  // The go-to slot is exempt from the limit, so don't let it consume a slot in the count.
+  const countableSaves = getCustomSaves().filter(s => s.name.toLowerCase() !== GO_TO_SAVE_NAME);
+  if (!existingSave && countableSaves.length >= MAX_SAVES) {
     return { valid: false, errorMessage: `Save limit reached (${MAX_SAVES}). Delete or overwrite an existing save first.` };
   }
 

@@ -45,8 +45,10 @@ const PLAY           = path.join(__dirname, 'play.cjs');
 // ---------------------------------------------------------------------------
 
 function usage() {
-  console.error('Usage: node tools/jump-to.cjs <game> [marker]');
+  console.error('Usage: node tools/jump-to.cjs <game> [marker] [--name <slot>] [--at <N|substr>]');
   console.error('       node tools/jump-to.cjs anchorhead d1-michael');
+  console.error('       node tools/jump-to.cjs anchorhead d2-journal --name go-to   # /go-to skill');
+  console.error('       node tools/jump-to.cjs anchorhead --at 40 --name go-to       # by turn count');
   process.exit(1);
 }
 
@@ -88,7 +90,18 @@ function parseWalkthrough(filePath) {
 // Main
 // ---------------------------------------------------------------------------
 
-const args = process.argv.slice(2).filter(a => a !== '--inject');
+// --name <saveName> overrides the default `jump-<marker>` save slot. The /go-to skill
+// passes --name go-to so it writes ONE fixed, always-overwritten slot. Reserved save
+// names (go-to) are exempt from the app's custom-save limit — see meta-command-handlers.js.
+const rawArgs = process.argv.slice(2).filter(a => a !== '--inject');
+let customName = null;
+let atTarget = null; // --at <N|substr|"## marker"> : snapshot at an arbitrary point, not a slug
+const args = [];
+for (let i = 0; i < rawArgs.length; i++) {
+  if (rawArgs[i] === '--name') { customName = rawArgs[++i]; continue; }
+  if (rawArgs[i] === '--at')   { atTarget   = rawArgs[++i]; continue; }
+  args.push(rawArgs[i]);
+}
 const [gameName, markerSlug] = args;
 
 if (!gameName) usage();
@@ -107,7 +120,7 @@ if (!fs.existsSync(walkthroughPath)) {
 
 const markers = parseWalkthrough(walkthroughPath);
 
-if (!markerSlug) {
+if (!markerSlug && !atTarget) {
   console.log(`Markers for ${gameName}:`);
   const w = markers.reduce((n, m) => Math.max(n, m.slug.length), 0);
   for (const m of markers) {
@@ -116,22 +129,38 @@ if (!markerSlug) {
   process.exit(0);
 }
 
-const marker = markers.find(m => m.slug === markerSlug);
-if (!marker) {
-  console.error(`ERROR: marker [${markerSlug}] not found in ${gameName} walkthrough.`);
-  console.error('Run without a marker to list available ones.');
-  process.exit(1);
+// Resolve the snapshot target. A marker slug and --at are mutually exclusive ways to
+// name the point: a slug anchors to a `## [slug]` line (locations/scenarios authored in
+// the walkthrough); --at <N|substr|"## marker"> hits an arbitrary point (a turn count, a
+// prose substring) for targets that have no marker. Both feed play.cjs --snapshot-at.
+let snapshotAtArg, target;
+if (atTarget) {
+  snapshotAtArg = atTarget;
+  // cmdsBefore (appMoveCount) is only known for a numeric turn target; else leave 0.
+  const cmdsBefore = /^\d+$/.test(atTarget.trim()) ? Number(atTarget.trim()) : 0;
+  target = { label: atTarget, cmdsBefore };
+} else {
+  const marker = markers.find(m => m.slug === markerSlug);
+  if (!marker) {
+    console.error(`ERROR: marker [${markerSlug}] not found in ${gameName} walkthrough.`);
+    console.error('Run without a marker to list available ones, or use --at <N|substr>.');
+    process.exit(1);
+  }
+  snapshotAtArg = `## [${markerSlug}]`;
+  target = marker;
 }
 
 const signature    = computeSignature(gameFile);
-const snapshotFile = `${gameName}-${markerSlug}.snapshot.json`;
+const saveName     = customName || `jump-${markerSlug}`;
+// Asset filename tracks the save name so a fixed slot (go-to) reuses ONE file
+// rather than littering docs/assets with one per target.
+const snapshotFile = `${gameName}-${saveName}.snapshot.json`;
 const snapshotPath = path.join(ASSETS_DIR, snapshotFile);
-const saveKey      = `lantern_customsave_${gameName}_jump-${markerSlug}`;
-const saveName     = `jump-${markerSlug}`;
+const saveKey      = `lantern_customsave_${gameName}_${saveName}`;
 
 fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-console.log(`\nReplaying ${gameName} → [${markerSlug}]: ${marker.label}`);
+console.log(`\nReplaying ${gameName} → ${target.label}`);
 console.log('(this may take a few seconds for long walkthroughs)\n');
 
 const result = spawnSync(process.execPath, [
@@ -139,7 +168,7 @@ const result = spawnSync(process.execPath, [
   gameName,
   '--seed', '1',
   '--file', walkthroughPath,
-  '--snapshot-at', `## [${markerSlug}]`,
+  '--snapshot-at', snapshotAtArg,
   '--snapshot-out', snapshotPath,
   '--quiet',
 ], {
@@ -163,8 +192,8 @@ if (!fs.existsSync(snapshotPath)) {
 const snapSize = fs.statSync(snapshotPath).size;
 console.log(`Snapshot written: docs/assets/${snapshotFile} (${Math.round(snapSize / 1024)}KB)`);
 
-// Build a short status bar label from the marker label (trim long descriptions)
-const shortLabel = marker.label.split('(')[0].split(',')[0].trim().slice(0, 50);
+// Build a short status bar label from the target label (trim long descriptions)
+const shortLabel = String(target.label).split('(')[0].split(',')[0].trim().slice(0, 50);
 const statusBarHTML =
   `<div class="status-bar-line">` +
   `<span class="status-left">${shortLabel}</span>` +
@@ -182,7 +211,7 @@ const injectSnippet =
       `timestamp:new Date().toISOString(),` +
       `gameName:'${gameName}',` +
       `gameSignature:'${signature}',` +
-      `appMoveCount:${marker.cmdsBefore},` +
+      `appMoveCount:${target.cmdsBefore},` +
       `saveFormat:'engine',` +
       `engineSnapshot:JSON.stringify(s),` +
       `engineSnapshotCompressed:false,` +
