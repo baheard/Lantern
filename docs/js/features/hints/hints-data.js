@@ -112,7 +112,14 @@ export function findCurrentTopics(hintsData, gameName) {
     for (const section of hintsData.sections) {
         const sectionLocs = Array.isArray(section.locations) ? section.locations : [];
         const locMatch = sectionLocs.some(loc => currentLoc === loc.trim().toLowerCase());
-        if (locMatch && phaseMatches(section) && milestoneMatches(section)) {
+        // A phase-scoped section pins for its WHOLE act: once the status-bar phase matches,
+        // the section is "current" regardless of which room you're in, so the pin/badge
+        // doesn't blink out in transit rooms a section's `locations` doesn't list (e.g.
+        // Anchorhead's Upstairs Hall on day two). Location-only sections (no `phase`) keep
+        // strict room matching. Question matching below stays room-based either way — hints
+        // still unlock per room; only the section-level pin follows the act.
+        const hasPhase = !!(section.phase && section.phase.trim());
+        if ((locMatch || hasPhase) && phaseMatches(section) && milestoneMatches(section)) {
             sectionIds.add(section.id);
         }
 
