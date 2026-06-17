@@ -280,9 +280,16 @@ export function initAutoMapper(gameName) {
   const checkStartingLocation = () => {
     const statusBarEl = document.getElementById('statusBar');
     // Prefer the left span (room name only) — textContent includes the chunk-delimiter span (", ")
-    // which would concatenate left+right into e.g. "Master Bedroom, day one, evening"
+    // which would concatenate left+right into e.g. "Master Bedroom, day one, evening".
+    // Re-join the right span (phase/act context, e.g. "day one") with a 3+ space gap so
+    // getStatusContext() rehydrates lastStatusContext on resume — otherwise phase-scoped
+    // hints (Anchorhead's day sections) don't badge until the first live move. See
+    // getCurrentLocation/getStatusContext: both split on the 3+ space gap.
     const leftEl = statusBarEl?.querySelector('.status-left');
-    const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
+    const rightEl = statusBarEl?.querySelector('.status-right');
+    const leftText = (leftEl ?? statusBarEl)?.textContent?.trim();
+    const rightText = rightEl?.textContent?.trim();
+    const statusText = rightText ? `${leftText}   ${rightText}` : leftText;
     if (statusText && statusText.length > 0) {
       checkLocationChange(statusText, 0);
       startCheckTimeout = null;
