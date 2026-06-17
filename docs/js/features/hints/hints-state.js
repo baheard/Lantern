@@ -110,6 +110,49 @@ export function markSectionsSeen(sectionIds, gameName) {
 }
 
 /**
+ * Return the set of question IDs ever location-matched for this game. Used to keep
+ * per-question hints unlocked once the player has visited the room that reveals them
+ * (the question-level analogue of getSeenSections; latches, never auto-relocks).
+ *
+ * @param {string} [gameName]
+ * @returns {Set<string>}
+ */
+export function getSeenQuestions(gameName) {
+    const key = getGameKey('hints_qseen', gameName);
+    const stored = getJSON(key, null);
+    return new Set(Array.isArray(stored) ? stored : []);
+}
+
+/**
+ * Persist one or more question IDs as "ever seen" (location matched at some point).
+ * Skips the write when nothing new was added — this fires on every turn via
+ * handleTopicChange, so avoid churning localStorage when the set is unchanged.
+ *
+ * @param {Iterable<string>} questionIds
+ * @param {string} [gameName]
+ */
+export function markQuestionsSeen(questionIds, gameName) {
+    const key = getGameKey('hints_qseen', gameName);
+    const existing = getSeenQuestions(gameName);
+    let changed = false;
+    for (const id of questionIds) {
+        if (!existing.has(id)) { existing.add(id); changed = true; }
+    }
+    if (changed) setJSON(key, [...existing]);
+}
+
+/**
+ * Clear the per-question seen latch (re-locks location-gated questions to the
+ * current room). Called by the "Reset revealed hints" action alongside resetAll.
+ *
+ * @param {string} [gameName]
+ */
+export function resetSeenQuestions(gameName) {
+    const key = getGameKey('hints_qseen', gameName);
+    setJSON(key, []);
+}
+
+/**
  * Cheap, stable fingerprint of a hint's text (djb2 → base36). Stored with each
  * rating so a rating auto-resets when the hint is *rewritten* — the client mirror
  * of the triage reset-on-rewrite rule. Position alone (`questionId:hintIndex`) isn't

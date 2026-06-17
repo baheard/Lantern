@@ -338,6 +338,16 @@ body.hints-resizing .hints-overlay * {
   margin: 4px 0;
 }
 
+/* Location-gated question the player hasn't visited yet — blurred + inert, same
+   treatment as a locked section (.hints-section-locked). The real text is obscured
+   until they reach a matching room. */
+.hints-question-locked {
+  pointer-events: none;
+  user-select: none;
+  filter: blur(3px);
+  opacity: 0.35;
+}
+
 .hints-question-header {
   display: flex;
   align-items: baseline;

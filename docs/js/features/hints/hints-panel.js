@@ -15,7 +15,7 @@
  */
 
 import { loadHints, findCurrentTopics, updateMilestone } from './hints-data.js';
-import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getHintRating, setHintRating } from './hints-state.js';
+import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getSeenQuestions, markQuestionsSeen, resetSeenQuestions, getHintRating, setHintRating } from './hints-state.js';
 import { confirmDialog } from '../../ui/confirm-dialog.js';
 import { submitHintRating } from '../feedback.js';
 
@@ -120,8 +120,9 @@ function handleTopicChange() {
         // Pass the current turn's output text so `textMatch` triggers can fire on
         // prose the status-bar location parser discards (e.g. "Witchville").
         updateMilestone(_currentHintsData, _currentGameName, getLatestGameText());
-        const { sectionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
+        const { sectionIds, questionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
         if (sectionIds.size > 0) markSectionsSeen(sectionIds, _currentGameName);
+        if (questionIds.size > 0) markQuestionsSeen(questionIds, _currentGameName);
     }
     if (_isVisible) renderHintsContent();
 }
@@ -394,15 +395,19 @@ function renderHintsContent() {
         return;
     }
 
-    // Mark matched sections as seen (persists across sessions)
+    // Mark matched sections + questions as seen (persists across sessions)
     if (sectionIds.size > 0) {
         markSectionsSeen(sectionIds, _currentGameName);
     }
+    if (questionIds.size > 0) {
+        markQuestionsSeen(questionIds, _currentGameName);
+    }
     const seenSections = getSeenSections(_currentGameName);
+    const seenQuestions = getSeenQuestions(_currentGameName);
 
     let html = '';
     for (const section of sections) {
-        html += renderSection(section, sectionIds.has(section.id), questionIds, seenSections);
+        html += renderSection(section, sectionIds.has(section.id), questionIds, seenSections, seenQuestions);
     }
 
     contentEl.innerHTML = html;
@@ -417,7 +422,7 @@ function renderHintsContent() {
  * @param {Set<string>} seenSections - Section IDs ever pinned for this game
  * @returns {string} HTML string
  */
-function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
+function renderSection(section, isMatched, matchedQuestionIds, seenSections, seenQuestions) {
     const isSeen = isMatched || seenSections.has(section.id) || getRevealAll();
     const lockedClass = isSeen ? '' : ' hints-section-locked';
     const inertAttr = isSeen ? '' : ' inert';
@@ -425,10 +430,20 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
         ? '<button class="material-icons hints-location-badge" data-action="open-map" title="Current location — open map">add_location</button>'
         : '';
 
+    const revealAll = getRevealAll();
     let questionsHtml = '';
     const questions = Array.isArray(section.questions) ? section.questions : [];
     for (const question of questions) {
-        questionsHtml += renderQuestion(question, matchedQuestionIds.has(question.id), section.id);
+        // Per-question location gating: a question with locations stays locked until the
+        // player has visited a matching room (latched via seenQuestions). A question with
+        // NO locations is cross-cutting (e.g. "my light keeps going out") and is always
+        // available once its section is open. Reveal-all overrides everything.
+        const qLocs = Array.isArray(question.locations) ? question.locations : [];
+        const qUnlocked = qLocs.length === 0
+            || matchedQuestionIds.has(question.id)
+            || seenQuestions.has(question.id)
+            || revealAll;
+        questionsHtml += renderQuestion(question, matchedQuestionIds.has(question.id), section.id, qUnlocked);
     }
 
     // The whole row is the toggle (full-width click target). The location pin is a nested
@@ -457,7 +472,7 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections) {
  * @param {string} sectionId - Parent section id (for rating payloads)
  * @returns {string} HTML string
  */
-function renderQuestion(question, isMatched, sectionId) {
+function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
     const hints = Array.isArray(question.hints) ? question.hints : [];
     const total = hints.length;
     const revealed = getRevealedCount(question.id, _currentGameName);
@@ -500,9 +515,14 @@ function renderQuestion(question, isMatched, sectionId) {
     const matchedClass = isMatched ? ' hints-question-matched' : '';
     // Accordion: only the single open question shows its hints
     const expandedClass = question.id === _openQuestionId ? ' expanded' : '';
+    // Location-gated and not yet visited: render the real markup but blurred + inert (same
+    // treatment as a locked section), so the question text is obscured until the player
+    // reaches a matching room. inert blocks interaction/focus through the blur.
+    const lockedClass = isUnlocked ? '' : ' hints-question-locked';
+    const inertAttr = isUnlocked ? '' : ' inert';
 
     return `
-      <div class="hints-question${matchedClass}${expandedClass}" data-question-id="${escHtml(question.id)}">
+      <div class="hints-question${matchedClass}${expandedClass}${lockedClass}" data-question-id="${escHtml(question.id)}"${inertAttr}>
         <div class="hints-question-header">
           <button class="hints-question-trigger" data-action="${triggerAction}" data-question-id="${escHtml(question.id)}" data-total="${total}"${triggerDisabled}>
             ${escHtml(question.q)}
@@ -803,6 +823,7 @@ async function handleReset() {
 
     if (confirmed) {
         resetAll(_currentGameName);
+        resetSeenQuestions(_currentGameName);
         renderHintsContent();
     }
 }
