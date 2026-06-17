@@ -192,14 +192,11 @@ if (!fs.existsSync(snapshotPath)) {
 const snapSize = fs.statSync(snapshotPath).size;
 console.log(`Snapshot written: docs/assets/${snapshotFile} (${Math.round(snapSize / 1024)}KB)`);
 
-// Build a short status bar label from the target label (trim long descriptions)
-const shortLabel = String(target.label).split('(')[0].split(',')[0].trim().slice(0, 50);
-const statusBarHTML =
-  `<div class="status-bar-line">` +
-  `<span class="status-left">${shortLabel}</span>` +
-  `<span class="chunk-delimiter">, </span>` +
-  `<span class="status-right">walkthrough jump</span>` +
-  `</div>`;
+// Leave displayHTML empty — do NOT bake a synthetic status bar. The engine restore
+// (do_autorestore at boot) repaints the REAL status bar from VM state; performRestore
+// only overwrites the DOM status bar when displayHTML.statusBar is non-empty, so an
+// empty string lets the genuine "Room, day two" status show immediately. A baked label
+// (the marker text + "walkthrough jump") otherwise lingers until the next turn.
 
 // The injection one-liner: fetches the snapshot from the running dev server and
 // writes the full app-format save entry into localStorage.
@@ -216,7 +213,7 @@ const injectSnippet =
       `engineSnapshot:JSON.stringify(s),` +
       `engineSnapshotCompressed:false,` +
       `displayHTML:{` +
-        `statusBar:${JSON.stringify(statusBarHTML)},` +
+        `statusBar:'',` +
         `upperWindow:'',` +
         `lowerWindow:''` +
       `},` +
