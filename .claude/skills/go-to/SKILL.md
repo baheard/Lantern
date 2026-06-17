@@ -63,20 +63,38 @@ node tools/jump-to.cjs <game> --at <N|substr> --name go-to
 asset `docs/assets/<game>-go-to.snapshot.json` (overwriting any previous one). It prints a
 browser-console injection one-liner — capture it for step 4.
 
-### 4. Load in the browser if a tab is available; otherwise report
-Check for a live browser via the webagent MCP (`connect_to_live_browser` → `list_tabs`):
+### 4. Land them there in the browser if a tab is available; otherwise report
+Check for a live browser via the webagent MCP (`connect_to_live_browser` → `list_tabs`).
 
-- **Live tab with the game already loaded** (or one you can load): run the injection one-liner
-  from step 3 via `mcp__web-agent-mcp__execute_console` (`force: true`). Confirm with
-  `window.__jumpInjectDone === 'go-to'`, then tell the user:
-  *"`go-to` save injected — open the Saves panel and load 'go-to'."* If the game isn't loaded in
-  any tab, load it first (Home → game), then inject.
-- **No live browser available**: don't fail. The save asset and injection one-liner are still
-  written. Report: *"`go-to` save built for <game> at <target> (docs/assets/<game>-go-to.snapshot.json).
-  No live browser tab found — start the app and I'll inject it, or paste the one-liner yourself."*
+**If a live tab is available** — don't just stage the save, actually **load the game to that
+point so the user is already where they asked to be**:
 
-Do **not** hand the user a console one-liner to paste when a tab is available — inject it
-yourself end-to-end. The paste path is the no-browser fallback only.
+1. Pick the tab. Prefer one with the target game already loaded; else pick a usable tab and load
+   the game (Home → game). Note its indicator + number + title (e.g. `🔴 6: Anchorhead`).
+2. Inject the `go-to` custom slot via `execute_console` (`force: true`) — the one-liner from
+   step 3. This makes `go-to` show up in the Saves panel as a reusable entry. Confirm with
+   `window.__jumpInjectDone === 'go-to'`.
+3. **Apply it via the boot restore path** (engine saves only load through boot `do_autorestore`,
+   not a live restore — a live `customLoad` only reattaches display state, the VM won't move):
+   copy the go-to save into the autosave slot, set the restore flag, and reload:
+   ```js
+   const raw = localStorage.getItem('lantern_customsave_<game>_go-to');
+   localStorage.setItem('lantern_autosave_<game>', raw);
+   sessionStorage.setItem('lantern_manage_saves_restore', 'go-to');
+   location.reload();
+   ```
+   (This mirrors the Saves-panel `loadSave()` flow in `manage-saves-modal.js`.)
+4. After the reload, confirm via auto-mapper (`getLastLocationName()` / `getLastStatusContext()`)
+   that the location/phase matches the target.
+5. **Report the tab that got loaded**, e.g.:
+   *"Loaded Anchorhead at day two in tab 🔴 6: Anchorhead — you're in the Master Bedroom (day two)."*
+
+**If no live browser is available**: don't fail. The save asset + injection one-liner are still
+written. Report: *"`go-to` save built for <game> at <target> (docs/assets/<game>-go-to.snapshot.json).
+No live browser tab found — start the app and I'll load you in, or paste the one-liner yourself."*
+
+Do **not** just hand the user a console one-liner when a tab is available — load them in
+end-to-end and tell them the tab. The paste path is the no-browser fallback only.
 
 ## Notes & gotchas
 
