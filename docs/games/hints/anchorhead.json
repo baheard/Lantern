@@ -3,8 +3,8 @@
   "game": "anchorhead",
   "meta": {
     "title": "Anchorhead",
-    "generatedAt": "2026-06-14",
-    "appVersion": "1.5.565",
+    "generatedAt": "2026-06-16",
+    "appVersion": "1.5.610",
     "scoreNote": "Normal play caps at 99/100; the final point is undocumented and appears unobtainable.",
     "sources": [
       {
@@ -73,7 +73,7 @@
       "title": "Day Two",
       "phase": "day two",
       "verified": true,
-      "locations": ["Dining Room", "Kitchen", "Pantry", "Cellar", "Storage", "Library", "Children's Bedroom", "Family Plot", "In the Crypt", "Path Behind the House", "Courthouse", "Courthouse Basement", "Birth Records", "Death Records", "Circulation Desk", "The Cauldron", "Hidden Court", "Twisting Lane", "Local Pub", "Wharf", "Study", "Attic", "Gallery", "Sitting Room"],
+      "locations": ["Master Bedroom", "Bathroom", "Upstairs Landing", "Foyer", "Dining Room", "Kitchen", "Pantry", "Cellar", "Storage", "Library", "Children's Bedroom", "Family Plot", "In the Crypt", "Path Behind the House", "Courthouse", "Courthouse Basement", "Birth Records", "Death Records", "Circulation Desk", "The Cauldron", "Hidden Court", "Twisting Lane", "Local Pub", "Wharf", "Study", "Attic", "Gallery", "Sitting Room"],
       "questions": [
         {
           "id": "d2-journal",
@@ -220,7 +220,7 @@
       "title": "Day Three",
       "phase": "day three",
       "verified": true,
-      "locations": ["Observatory", "Narrow Corridor", "Wine Cellar", "Windy Passage", "Edge of the Pit", "Other Side", "Great Stairs", "Bottom of Stairs", "Burial Mound", "Abandoned Slaughterhouse", "Old Stone Well", "In the Well", "Crumbled Ruin", "Churchyard", "Chapel", "Vestibule", "Steeple", "Vaulted Tunnel", "Behind the Church", "Church Cellar", "Sewer Tunnel", "Outflow Tunnel", "Narrow Beach", "#11 Mill Town Road", "Shanty Town", "Bare Foundations", "Mill Floor", "Catwalk", "Workshop", "Maintenance Access Tunnel", "Top of the Lighthouse", "Bottom of the Lighthouse"],
+      "locations": ["Master Bedroom", "Bathroom", "Upstairs Landing", "Foyer", "Observatory", "Narrow Corridor", "Wine Cellar", "Windy Passage", "Edge of the Pit", "Other Side", "Great Stairs", "Bottom of Stairs", "Burial Mound", "Abandoned Slaughterhouse", "Old Stone Well", "In the Well", "Crumbled Ruin", "Churchyard", "Chapel", "Vestibule", "Steeple", "Vaulted Tunnel", "Behind the Church", "Church Cellar", "Sewer Tunnel", "Outflow Tunnel", "Narrow Beach", "#11 Mill Town Road", "Shanty Town", "Bare Foundations", "Mill Floor", "Catwalk", "Workshop", "Maintenance Access Tunnel", "Top of the Lighthouse", "Bottom of the Lighthouse"],
       "questions": [
         {
           "id": "d3-name",
