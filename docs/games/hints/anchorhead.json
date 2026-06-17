@@ -76,24 +76,15 @@
       "locations": ["Master Bedroom", "Bathroom", "Upstairs Landing", "Foyer", "Dining Room", "Kitchen", "Pantry", "Cellar", "Storage", "Library", "Children's Bedroom", "Family Plot", "In the Crypt", "Path Behind the House", "Courthouse", "Courthouse Basement", "Birth Records", "Death Records", "Circulation Desk", "The Cauldron", "Hidden Court", "Twisting Lane", "Local Pub", "Wharf", "Study", "Attic", "Gallery", "Sitting Room"],
       "questions": [
         {
-          "id": "d2-journal",
-          "q": "The dining room cupboard seems to have something behind it. What's there?",
-          "locations": ["Dining Room"],
-          "hints": [
-            "The back of the cupboard isn't as solid as it looks.",
-            "Pull at the lining to get behind it.",
-            "Answer: OPEN CUPBOARD, PULL LINING, then READ JOURNAL. It records the combination to a safe — your three numbers will be different from anyone else's, so note them down."
-          ]
-        },
-        {
           "id": "d2-safe",
           "q": "There's something odd about the bookshelf in the library. What is it?",
-          "locations": ["Library"],
+          "locations": ["Library", "Dining Room"],
           "hints": [
             "Bookshelves in old houses don't always hold only books.",
             "Examining the shelf closely reveals a safe set into the wall behind it.",
-            "You can't open it by guessing. The combination is written down elsewhere in the house — a journal hidden behind the dining room cupboard records it.",
-            "Answer: LOOK AT BOOKSHELF to reveal the safe. TURN THE DIAL TO each of the journal's three numbers in turn, LOOK IN SAFE, then GET PUZZLE BOX AND FLUTE."
+            "You can't open it by guessing — the combination is written down somewhere else in the house.",
+            "Try the dining room. The back of that cupboard isn't as solid as it looks — there's something to find behind the lining.",
+            "Answer: In the dining room, OPEN CUPBOARD, PULL LINING, then READ JOURNAL — it records the safe's three numbers (yours will differ from anyone else's, so note them down). Back in the library, LOOK AT BOOKSHELF to reveal the safe, TURN THE DIAL TO each number in turn, LOOK IN SAFE, then GET PUZZLE BOX AND FLUTE."
           ]
         },
         {
