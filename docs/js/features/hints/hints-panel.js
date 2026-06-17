@@ -29,6 +29,8 @@ let _isVisible = false;
 let _currentHintsData = null;
 let _lastFocusedBeforeOpen = null;
 let _currentGameName = null;
+let _openSectionId = null;  // the single expanded section (accordion) — tracked in module
+                            // state so it survives the re-render fired on every move
 let _openQuestionId = null; // only one question's hints shown at a time (accordion)
 let _openReasonKey = null;  // "<questionId>:<hintIndex>" whose 👎 reason box is open (transient)
 
@@ -335,6 +337,7 @@ export function hideHints() {
     _overlay.setAttribute('aria-hidden', 'true');
     _isVisible = false;
     _openQuestionId = null;
+    _openSectionId = null;
 
     // Restore focus to trigger element
     if (_lastFocusedBeforeOpen && document.contains(_lastFocusedBeforeOpen)) {
@@ -430,6 +433,11 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections, see
         ? '<button class="material-icons hints-location-badge" data-action="open-map" title="Current location — open map">add_location</button>'
         : '';
 
+    // Restore the open/expanded state across re-renders (fired on every move) from module
+    // state — a locked section can't be the open one.
+    const isExpanded = isSeen && section.id === _openSectionId;
+    const expandedClass = isExpanded ? ' expanded' : '';
+
     const revealAll = getRevealAll();
     let questionsHtml = '';
     const questions = Array.isArray(section.questions) ? section.questions : [];
@@ -452,8 +460,8 @@ function renderSection(section, isMatched, matchedQuestionIds, seenSections, see
     // hover styling while the pin is hovered. Row is role=button + tabindex for keyboard
     // toggling (see handleContentKeydown); the pin keeps native button keyboard behaviour.
     return `
-      <div class="hints-section${lockedClass}" data-section-id="${escHtml(section.id)}"${inertAttr}>
-        <div class="hints-section-row" role="button" tabindex="0" aria-expanded="false" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
+      <div class="hints-section${lockedClass}${expandedClass}" data-section-id="${escHtml(section.id)}"${inertAttr}>
+        <div class="hints-section-row" role="button" tabindex="0" aria-expanded="${isExpanded ? 'true' : 'false'}" data-action="toggle-section" data-section-id="${escHtml(section.id)}">
           <span class="material-icons hints-section-chevron">chevron_right</span>
           <span class="hints-section-title">${escHtml(section.title)}</span>
           ${badgeHtml}
@@ -670,6 +678,9 @@ function handleContentClick(e) {
         }
         sectionEl.classList.toggle('expanded', willExpand);
         target.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+        // Persist in module state so the open section survives the next re-render (moves
+        // re-render the panel). Collapsing a section, or opening another, updates it.
+        _openSectionId = willExpand ? sectionId : null;
         return;
     }
 
