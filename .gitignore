@@ -112,3 +112,6 @@ tmpclaude-*-cwd
 !docs/**/*.jpg
 !reference/**/*.png
 !reference/**/*.jpg
+
+# Scratch dir for headless-replay snapshots/probes
+tmp/
