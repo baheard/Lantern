@@ -193,7 +193,7 @@
         },
         {
           "id": "untranslatable-writing",
-          "q": "I keep finding writing I can't read — strange scripts on the helmet and elsewhere.",
+          "q": "I keep finding writing I can't read.",
           "locations": ["Translation Room"],
           "hints": [
             "It isn't a code you crack yourself. The castle has a room built for exactly this — but it has to be working first.",
@@ -215,7 +215,7 @@
           "hints": [
             "They were made for a foot that isn't yours. Someone in the castle's history did this kind of work — resizing footwear by magic.",
             "There's an image of a gnome shoemaker resizing shoes, and beside it an instrument. As with every bell here, his tool only works where he once worked.",
-            "His old workroom is the Empty Bedroom (\"here your father stayed\"). LOOK UP SHOES IN THE NOTES if you want confirmation of what they do.",
+            "His old workroom is the Empty Bedroom (\"here your father stayed\"). Lucrezia's own notes will confirm what the shoes do, if you want it.",
             "Answer: Bring the leather tambourine (the shoemaker's, from the Bellroom) to the Empty Bedroom and HIT TAMBOURINE. A wind resizes the shoes. Now WEAR SHOES — they link your mind to the Beast and let you walk the castle's dead-spaces."
           ]
         },
@@ -244,7 +244,7 @@
             "Holding the candle up the usual way isn't working. Notice where the lettering actually sits.",
             "The writing is low on the wall, near knee height. Light striking it from the side — a raking angle — would throw the letters into relief. Your hand can't hold the candle low and steady enough.",
             "You're carrying something you can set the candle down on, at just the right height.",
-            "Answer: DROP STOOL, then PUT CANDLE ON THE STOOL. The harsh raking light at knee height makes the inscription legible: pull the cord, then wait in the room directly above to speak with Lucrezia's steward — and do it within five minutes, or he leaves."
+            "Answer: DROP STOOL, then PUT CANDLE ON THE STOOL. The harsh raking light at knee height makes the inscription legible, and it tells you what the cord beside the door is for."
           ]
         },
         {
@@ -286,7 +286,7 @@
         },
         {
           "id": "ivory-key",
-          "q": "Is there a way deeper into the crypt? I seem to be missing a key.",
+          "q": "Is there a way deeper into the crypt?",
           "locations": ["Father's Regret"],
           "hints": [
             "Crypts keep their keys close to their dead. Search the furniture, not just the floor.",

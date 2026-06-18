@@ -35,20 +35,11 @@
         {
           "id": "study-clutter",
           "q": "The study is crammed with clutter. Is any of it actually worth taking?",
-          "locations": ["Crowded Study"],
+          "locations": ["Crowded Study", "Sitting Room"],
           "hints": [
             "Most of it is scenery, but a couple of things matter. Look closely around the desk, and don't overlook the furniture that opens.",
             "Examining the desk turns up a mask half-buried in the mess; the small brass trunk nearby is closed.",
-            "Answer: EXAMINE DESK to spot the white mask, then TAKE WHITE MASK. OPEN TRUNK and TAKE COPPER KEY."
-          ]
-        },
-        {
-          "id": "copper-key",
-          "q": "I have a small copper key — what does it open?",
-          "locations": ["Crowded Study", "Sitting Room"],
-          "hints": [
-            "It's far too small for the heavy iron-locked door in the study. But the house has daintier locks than that one.",
-            "Answer: It fits the white-painted door in the Sitting Room (north of the study). UNLOCK DOOR WITH COPPER KEY there, opening the way east into the curving halls."
+            "Answer: EXAMINE DESK to spot the white mask, then TAKE WHITE MASK. OPEN TRUNK and TAKE COPPER KEY. The key fits the white-painted door in the Sitting Room (north of the study): UNLOCK DOOR WITH COPPER KEY there to open the way east into the curving halls."
           ]
         }
       ]
@@ -297,7 +288,7 @@
         },
         {
           "id": "cistern-buckler",
-          "q": "Is there a discovery to be found at the very top of the cistern?",
+          "q": "The rising tide carried me up into a strange grey room — is there anything here?",
           "locations": ["Grey Chamber"],
           "hints": [
             "When the rising tide carries you up through the roof, you arrive somewhere strange and grey — look around before you leave.",

@@ -223,7 +223,7 @@
       "questions": [
         {
           "id": "ve-token",
-          "q": "I need a token for something, and the arcade just eats them. Where does one come from?",
+          "q": "I need a token for something, and the arcade just eats them.",
           "locations": ["Park", "Video Arcade"],
           "hints": [
             "The arcade only spends tokens, never gives them. Look somewhere wetter.",
@@ -308,7 +308,7 @@
         },
         {
           "id": "tw-fuzzy",
-          "q": "I climbed to the top room but everything is an unwatchable blur and I can't move. What's wrong?",
+          "q": "I climbed to the top room but everything is an unwatchable blur and I can't move.",
           "locations": ["Fuzziness", "Round Chamber"],
           "hints": [
             "This is the same kind of blur you fixed once before, at the movies.",
@@ -327,7 +327,7 @@
         },
         {
           "id": "tw-crank",
-          "q": "I want to leave the Tower but the drawbridge is shut and the game says its mechanism is hidden. Where is it?",
+          "q": "I want to leave the Tower but the drawbridge is shut and the game says its mechanism is hidden.",
           "locations": ["Round Chamber", "Vestibule"],
           "hints": [
             "'Hidden' is literal — the controls are concealed in plain sight in the round room at the tower's heart.",

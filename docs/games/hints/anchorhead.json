@@ -77,7 +77,7 @@
       "questions": [
         {
           "id": "d2-safe",
-          "q": "There's something odd about the bookshelf in the library. What is it?",
+          "q": "The library is wall-to-wall books — is there more to it than reading material?",
           "locations": ["Library", "Dining Room"],
           "hints": [
             "Bookshelves in old houses don't always hold only books.",
@@ -85,16 +85,6 @@
             "You can't open it by guessing — the combination is written down somewhere else in the house.",
             "Try the dining room. The back of that cupboard isn't as solid as it looks — there's something to find behind the lining.",
             "Answer: In the dining room, OPEN CUPBOARD, PULL LINING, then READ JOURNAL — it records the safe's three numbers (yours will differ from anyone else's, so note them down). Back in the library, LOOK AT BOOKSHELF to reveal the safe, TURN THE DIAL TO each number in turn, LOOK IN SAFE, then GET PUZZLE BOX AND FLUTE."
-          ]
-        },
-        {
-          "id": "d2-cellarkey",
-          "q": "There's a key in the cellar, but a cobweb is in the way.",
-          "locations": ["Cellar", "Storage"],
-          "hints": [
-            "You can't get a clean grip through the web. Clear it out of the way first.",
-            "Something with a long handle from the kitchen would sweep it aside.",
-            "Answer: WIPE WEB with the broom, then GET KEY and PUT KEY ON KEYRING."
           ]
         },
         {
@@ -109,12 +99,14 @@
         },
         {
           "id": "d2-skull",
-          "q": "The family crypt is locked, and inside are many coffins. How do I proceed?",
-          "locations": ["Family Plot", "In the Crypt"],
+          "q": "The family crypt is locked. How do I get inside?",
+          "locations": ["Family Plot", "In the Crypt", "Storage"],
           "hints": [
-            "One of your keys fits the crypt. Inside, you only want one particular Verlac.",
-            "You need to know whose coffin to open — a name you can learn from pages hidden under a bed in the house.",
-            "Answer: UNLOCK CRYPT, DOWN, LOOK UP WILLIAM ON NAMEPLATE, OPEN WILLIAM'S COFFIN, GET SKULL."
+            "It's locked, and none of the keys you already carry will fit — you'll need to find another one first.",
+            "You haven't searched the house's lower rooms as closely as you might. One dingy storage space is hiding more than dust.",
+            "Behind the crates lurks a spider web; sweep it aside with something long-handled and take what it was guarding.",
+            "That gets you in. Below, you only want one particular Verlac — and you need to know whose coffin, a name recorded on pages hidden under a bed in the house.",
+            "Answer: In the Pantry, GET BROOM. In the storage room off the cellar, WIPE WEB, GET KEY, PUT KEY ON KEYRING. At the Family Plot, UNLOCK CRYPT, DOWN, LOOK UP WILLIAM ON NAMEPLATE, OPEN WILLIAM'S COFFIN, GET SKULL."
           ]
         },
         {
@@ -133,12 +125,12 @@
           "locations": ["Birth Records", "Death Records"],
           "hints": [
             "Trying names and watching which ones turn up is the puzzle, not a fault.",
-            "Answer: Nothing's wrong. Some Verlac names simply aren't on file, and the pattern of which are and which aren't is exactly what you're meant to notice. Keep looking them up."
+            "Answer: Nothing's wrong. You can only look up names you've actually learned, and some of the family's names you'll never grow familiar with — that gap is itself part of what you're meant to notice. Keep looking up the ones you know."
           ]
         },
         {
           "id": "d2-librarian",
-          "q": "The librarian won't help me. What do I need?",
+          "q": "The librarian won't help me.",
           "locations": ["Circulation Desk", "Library"],
           "hints": [
             "You need to prove you're entitled to borrow — some identification.",
