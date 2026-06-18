@@ -33,25 +33,13 @@
           ]
         },
         {
-          "id": "act1-basement",
-          "q": "I'm in the Basement. Is there anything here besides the pager?",
-          "locations": ["Basement"],
-          "hints": [
-            "Quite a lot, actually. Examine everything, and take what isn't nailed down.",
-            "There's an electrical panel on the wall — and a dark theatre is no friend of yours.",
-            "There's a loose page here — worth grabbing. Keep an eye out for others like it as you explore.",
-            "The barrels hold popcorn — and not just one handful. Take all of it.",
-            "Answer: TAKE PAGER, GET PAGE, EXAMINE PANEL, TURN ON SWITCH, EXAMINE BARRELS, then GET POPCORN four times (there are four lots)."
-          ]
-        },
-        {
           "id": "act1-clean-hook",
           "q": "The Cloakroom looks like a dead end. Is there anything to it?",
           "locations": ["Cloakroom"],
           "hints": [
             "Take a closer look at the hooks.",
             "One of them is clean. Has it been used recently?",
-            "Answer: EXAMINE HOOKS (one is cleaner than the rest), then PULL CLEAN HOOK — a secret passage opens, leading down below the theatre. (You won't need to go down there until late in the game, but remember it.)"
+            "Answer: EXAMINE HOOKS (one is cleaner than the rest), then PULL CLEAN HOOK — a secret passage opens, leading down below the theatre."
           ]
         },
         {
@@ -120,7 +108,7 @@
             "The gas comes from the telescope area. On your first visit, you can dash in and out — don't linger.",
             "Grab the one thing worth taking — the lens — and get out fast.",
             "To stay longer you'll need breathing protection. Theatres keep all sorts of props and costumes...",
-            "Answer: There's a gas mask in the Costume Room. WEAR MASK before entering. Permanently stopping the gas comes later, via the telescope itself."
+            "Answer: There's a gas mask in the Costume Room. WEAR MASK before entering."
           ]
         },
         {
@@ -150,16 +138,7 @@
             "They're just heavy, not magical. Shift them aside.",
             "With the rolls moved the passage north opens up — but don't hurry past what they were lying on top of.",
             "Steel yourself and search what's underneath; it was left there for a reason, and it's carrying something.",
-            "Answer: MOVE CARPET ROLLS to free the passage north and uncover a body. SEARCH BODY, then READ APPOINTMENT BOOK — Reinhart left his cellular phone in the theatre; find it and you can call for help. Remember where you left the poor fellow — you may want him again."
-          ]
-        },
-        {
-          "id": "hallways-bin",
-          "q": "Is there anything useful in the alley courtyard?",
-          "locations": ["Alley Courtyard"],
-          "hints": [
-            "The rubbish bin is closed. Open things.",
-            "Answer: OPEN RUBBISH BIN, GET PAGE FROM BIN, GET TICKET FROM BIN. The ticket is your admission to the show — hold onto it."
+            "Answer: MOVE CARPET ROLLS to free the passage north and uncover a body. SEARCH BODY, then READ APPOINTMENT BOOK — Reinhart left his cellular phone in the theatre; find it and you can call for help."
           ]
         }
       ]
@@ -206,15 +185,15 @@
             "The ghostly usher takes your ticket but the performance hasn't started. You can't wait it out — time in this place doesn't move on its own.",
             "If time won't pass on its own, you'll need to set it yourself — find something that keeps time.",
             "What you need is hidden close to the lobby, and reaching it is a puzzle in itself.",
-            "Answer: With the watch in the booth: PULL DIAL, then TURN DIAL four times until it reads 7:40. Now it's late enough. Return to the aisle with your ticket and DROP TICKET when the voice asks."
+            "Answer: With the watch in the booth: PULL DIAL, then TURN DIAL four times until it reads 7:40. Now it's late enough. Return to the aisle with your ticket — if you don't have one, there's an old ticket in the alley courtyard's rubbish bin — and DROP TICKET when the voice asks."
           ]
         },
         {
           "id": "show-ticket-booth",
-          "q": "Is there anything else to find in the Manager's Office?",
+          "q": "The old ticket booth is boarded up — is there a way inside?",
           "locations": ["Manager's Office"],
           "hints": [
-            "Quite a bit. Old buildings keep records of their own construction — and offices keep records in furniture.",
+            "Not through the boarded front. But a booth this small must back onto another room — and the manager's office sits right beside it.",
             "The Manager's Office desk has a drawer worth opening — there are architect's plans inside.",
             "The plans show the ticket booth lies directly south of the office — and the wall between is just plaster and lath.",
             "Answer: EXAMINE SOUTH WALL, then KICK SOUTH WALL. It gives way, opening an exit south into the booth. Inside: a loose page, and a skeleton with rags and a pocket watch."
@@ -239,17 +218,7 @@
           "hints": [
             "You can't fight a shadow. But think about what shadows can't survive.",
             "Light — sudden, bright light. Have you found anything that flashes? If not, you'll need it first.",
-            "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. Continue east, then NW to get under the stage."
-          ]
-        },
-        {
-          "id": "underground-green-pearl",
-          "q": "Is there anything worth finding under the stage?",
-          "locations": ["Under the Stage", "Dark Place"],
-          "hints": [
-            "Now that you've made it under the stage, take a careful look around — it's not as empty as it seems.",
-            "Among the odds and ends down here, one item is easy to overlook — a small, eye-like pearl.",
-            "Answer: From the dark place east of the storage cupboards, go NW to under the stage. EXAMINE ITEMS — among the coin, pencil and paper is the green eye-like pearl. GET GREEN PEARL."
+            "Answer: TAKE PHOTOGRAPH (with the camera from the Secret Gallery). The flash banishes the shadow. Continue east, then NW to get under the stage, where EXAMINE ITEMS turns up a green eye-like pearl among the odds and ends — GET GREEN PEARL."
           ]
         }
       ]
@@ -289,18 +258,7 @@
             "You can't catch it. Follow it instead — where did it go?",
             "Chimneys in this theatre connect rooms vertically — the fireplace in the guest star room is a way down.",
             "In the sealed office below, there's a coffin worth opening. The crow steals the key — and drops it further down the chimney.",
-            "Answer: Climb down again to the Boiler Room and GET KEY there. That shiny key unlocks a door deep underground later. While you're in the Boiler Room, don't leave empty-handed — there's more here worth taking."
-          ]
-        },
-        {
-          "id": "balconies-boiler",
-          "q": "What's worth taking in the Boiler Room?",
-          "locations": ["Boiler Room"],
-          "hints": [
-            "Three things, plus the key the crow dropped. Open and examine everything.",
-            "There's a chest worth opening — a bottle of glue inside.",
-            "Look in the coal bin — one lump is not like the others.",
-            "Answer: GET KEY, GET BOTTLE (glue, from the chest), GET LUMP, then CLEAN LUMP — it conceals another strange eye-like pearl, violet this time."
+            "Answer: Climb down again to the Boiler Room and GET KEY — that shiny key unlocks a door deep underground. While you're there, OPEN CHEST and GET BOTTLE (glue), and GET LUMP from the coal bin then CLEAN LUMP, which reveals a violet eye-like pearl."
           ]
         },
         {
@@ -336,10 +294,11 @@
           "q": "Something huge is growling in a pit and I can't get past it alive.",
           "locations": ["Above the Pit"],
           "hints": [
-            "You cannot fight it and you cannot sneak by. The beast wants to eat — so feed it something.",
-            "Feed it something... treated. Have you found a vial of blue liquid yet? If not, the medical cabinet upstairs is worth a search — examine the vial, and read the letter beside it.",
-            "The liquid is a poison — useless to drink, but useful to apply. So the question is what to bait it with: something a beast will devour that you've no further use for. What have you come across that's already dead, and grimly portable?",
-            "Answer: Bring the corpse and the vial to the pit. POUR LIQUID ON BODY, THROW BODY IN PIT. The beast takes the bait, and you can go D and onward."
+            "You can't fight it or slip past it — it's ravenous.",
+            "That hunger is the way through — give it something to eat.",
+            "Bait it with something already dead and grimly portable.",
+            "A plain meal would only sharpen its appetite and turn it on you — the bait has to be deadly.",
+            "Answer: Get the blue liquid — it's a poison — from the medical cabinet in the Sick Bay, and bring it plus Rienhart's corpse (the body from under the carpet rolls) to the pit. POUR LIQUID ON BODY, then THROW BODY IN PIT — now you can safely go DOWN."
           ]
         },
         {
@@ -378,6 +337,25 @@
       ]
     },
     {
+      "id": "general",
+      "title": "General Questions",
+      "verified": true,
+      "locations": ["Pit Cupboards", "Dark Place", "Under the Stage", "Underground Passage"],
+      "questions": [
+        {
+          "id": "general-darkness",
+          "q": "It's too dark to see in the rooms beneath the theatre — I can't do anything down here.",
+          "locations": ["Pit Cupboards", "Dark Place", "Under the Stage", "Underground Passage"],
+          "hints": [
+            "You won't find a lamp or torch to carry — that isn't how this building is lit.",
+            "The lower floors run on the theatre's own electricity, and the supply is switched off.",
+            "The controls are back where the whole night started — down in the basement.",
+            "Answer: In the basement (NW from the lobby, then DOWN), EXAMINE PANEL and TURN ON SWITCH. From then on the under-stage rooms and the underground are lit."
+          ]
+        }
+      ]
+    },
+    {
       "id": "endgame",
       "title": "The Endgame",
       "verified": true,
@@ -402,7 +380,7 @@
             "Look closely at the dagger — the crystal set in it can be removed. And it isn't the only crystal you've come across.",
             "Only one of the two crystals can destroy the evil, and you need to learn which. Remove the dagger's crystal and show both it and the star crystal to the caged goblin, Trent — he can tell them apart.",
             "The coming ceremony is a trap: Elizabeth intends to use the dagger. Make sure the crystal it holds when she takes it is the wrong one for her purpose.",
-            "Answer: GET CRYSTAL FROM DAGGER, then PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, drop everything except the dagger and the tablets from the Sick Bay, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you. (You'll recover the dagger and the star crystal afterwards.)"
+            "Answer: GET CRYSTAL FROM DAGGER, then PUT STAR CRYSTAL IN DAGGER, ASK TRENT ABOUT ELIZABETH, then go U, NE, NE, NE and answer YES. Elizabeth takes the dagger and vanishes, releasing you."
           ]
         },
         {
