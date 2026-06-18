@@ -613,6 +613,9 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             // Show system message in game area (if requested)
             if (options.showSystemMessage && displayName) {
                 addGameText(`<div class="system-message">Game restored - ${escapeHtml(displayName)}</div>`, false);
+                // addGameText smooth-scrolls to the appended message; snap to bottom
+                // instantly instead so the view appears already at the bottom on load.
+                scrollToBottom();
 
                 if (window._pendingRepeatAfterRestore) {
                     window._pendingRepeatAfterRestore = false;
