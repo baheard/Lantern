@@ -93,7 +93,7 @@ function replay(game, cmdsPath, seed) {
 // Split transcript into ordered turns keyed off the `[@ Location | phase: ...]` headers.
 function parseTurns(transcript) {
   const lines = transcript.split(/\r?\n/);
-  const headerRe = /^\[@ (.+?)\s+\|\s+phase:.*\]$/;
+  const headerRe = /^\[@ (.+?)(?:\s+\|\s+phase:.*)?\]$/;
   const turns = [];
   let cur = null;
   for (const line of lines) {
@@ -139,8 +139,7 @@ function main() {
   const game = args._[0];
   if (!game) { console.error('Usage: node tools/gen-room-prompts.cjs <game> [--seed N] [--style gothic]'); process.exit(2); }
   const seed = args.seed || 1;
-  const styleKey = args.style || 'gothic';
-  const preamble = STYLES[styleKey] || STYLES.gothic;
+  const styleKey = args.style || 'gothic';   // recorded in pack metadata; style text now lives in <game>/style.json
 
   const cmdsPath = findWalkthrough(game);
   console.error(`Replaying ${game} walkthrough (seed ${seed})…`);
@@ -171,15 +170,25 @@ function main() {
 
   // Compose prompts.
   const rooms = [];
+  const skipped = [];
   for (const L of locs.values()) {
     // exits stay as map/manifest metadata, but are NOT baked into the prompt: the
     // traversal graph records puzzle-movement (e.g. climbing a window = "northwest"),
     // which contradicts the prose's own compass directions. The description already
     // states real exits ("office lies to the east"), so we let the prose drive composition.
     const exits = [...L.exits.entries()].map(([dir, dest]) => `${dir} → ${dest}`);
-    const scene = L.description ? ` Scene: ${visualCore(L.description)}` : '';
-    const prompt = `${preamble}${scene}`;
-    rooms.push({ name: L.name, slug: L.slug, exits, description: L.description, prompt });
+    // Scene-only. Artist + game aesthetic are NOT baked here — they are composed
+    // downstream (gen-room-images.cjs / review-server.cjs) from _artists/artists.json
+    // (via selected-artist.json) + <game>/style.json. We keep a `scene` field and a
+    // legacy "Scene:"-prefixed `prompt` so both old and new readers find the scene.
+    const scene = L.description ? visualCore(L.description) : '';
+    // Drop phantom "locations": status-line flavor that getCurrentLocation() reports as a
+    // room name (e.g. Theatre's Boiler Room Latin curse). They have no scene and would only
+    // produce junk empty image slots. A real room without an extractable description is
+    // vanishingly rare; if one ever matters, it'll show up here as a skipped name.
+    if (!scene) { skipped.push(L.name); continue; }
+    const prompt = `Scene: ${scene}`;
+    rooms.push({ name: L.name, slug: L.slug, exits, description: L.description, scene, prompt });
   }
 
   const gameDir = path.join(REPO, 'docs/games/images', game);
@@ -202,8 +211,7 @@ function main() {
   console.error(`\nWrote ${rooms.length} room prompts:`);
   console.error(`  ${path.relative(REPO, jsonOut)}`);
   console.error(`  ${path.relative(REPO, path.join(gameDir, 'prompts.md'))}`);
-  const noDesc = rooms.filter((r) => !r.description).length;
-  if (noDesc) console.error(`  (note: ${noDesc} location(s) had no extractable description — they got style-only prompts)`);
+  if (skipped.length) console.error(`  (skipped ${skipped.length} scene-less phantom location(s): ${skipped.join(', ')})`);
   console.error(`\nNext: node tools/gen-room-images.cjs ${game}`);
 }
 
