@@ -138,30 +138,49 @@ examine doorstep
 n
 examine moth
 u
+## [before-catwalk] At Translucent Dome — about to climb out to the catwalk (daytime)
 u
+# → Catwalk, South
 w
+# → Catwalk, West
 n
+# → Catwalk, North
 e
+# → Catwalk, East
 s
+# → Catwalk, South
 d
+# → Translucent Dome (inside dome; light fire to trigger nightfall)
 examine copper triangle
 examine track
 examine wood
 put orange berry in wood
+## [before-catwalk-night] At Translucent Dome, fire lit — u goes directly to Catwalk, South; Night
 u
+# → Catwalk, South; Night  [night-variant node — same place as Catwalk, South above]
 w
+# → Catwalk, West; Night
 n
+# → Catwalk, North; Night
 examine shadow
+# (examine the shadow cast by the copper sail — required before you can walk it)
 n
+# → Ledge; Night  [walking north along the shadow]
 take black mask
 examine black mask
 don black mask
 s
+# → Catwalk, North; Night
 e
+# → Catwalk, East; Night
 s
+# → Catwalk, South; Night
 d
+# → Translucent Dome
 d
+# → Starry Dome, North
 d
+# → South Alcove
 n
 examine brass disk
 examine blue globe
