@@ -6,9 +6,18 @@
       "summary": "90s LucasArts/Sierra painted backgrounds — muted, recessive, fills the frame.",
       "style": "Hand-painted gouache background art in the style of early-1990s LucasArts and Sierra point-and-click adventure games. Full but muted, desaturated palette; soft even ambient light with a single warm lantern glow as a quiet accent; low contrast, no harsh focal point, a calm backdrop that does not draw the eye, meant as accompaniment to story text. Painterly, slightly soft, no people, no text or UI overlays. Portrait, taller than wide, 3:4.",
       "examples": [
-        { "label": "Wishbringer — Hilltop", "file": "gouache-hilltop.png" },
-        { "label": "Dreamhold — Cell", "file": "gouache-cell.png" },
-        { "label": "Anchorhead — Alley", "file": "gouache-alley.png" }
+        {
+          "label": "Wishbringer — Hilltop",
+          "file": "gouache-hilltop.png"
+        },
+        {
+          "label": "Dreamhold — Cell",
+          "file": "gouache-cell.png"
+        },
+        {
+          "label": "Anchorhead — Alley",
+          "file": "gouache-alley.png"
+        }
       ]
     },
     {
@@ -17,21 +26,46 @@
       "summary": "Low-res VGA pixel intent — but the model renders soft illustration; needs a real pixelization pass to be authentic.",
       "style": "True low-resolution pixel art, early-1990s VGA point-and-click adventure background (256 colour, visible square pixels, hand-dithered gradients, limited muted indexed palette). Soft even light with a subtle warm lantern glow; low contrast, understated backdrop that does not draw the eye, accompaniment to story text. No people, no text or UI overlays. Portrait, taller than wide, 3:4.",
       "examples": [
-        { "label": "Wishbringer — Hilltop", "file": "pixel-hilltop.png" },
-        { "label": "Dreamhold — Cell", "file": "pixel-cell.png" },
-        { "label": "Anchorhead — Alley", "file": "pixel-alley.png" }
+        {
+          "label": "Wishbringer — Hilltop",
+          "file": "pixel-hilltop.png"
+        },
+        {
+          "label": "Dreamhold — Cell",
+          "file": "pixel-cell.png"
+        },
+        {
+          "label": "Anchorhead — Alley",
+          "file": "pixel-alley.png"
+        }
       ]
     },
     {
       "id": "ink",
-      "name": "Ink & Wash",
-      "summary": "THE HOUSE ARTIST. Loose impressionist ink + watercolor on cream paper, high contrast, ragged illustration-plate edges. Recolors per game via the Style/aesthetic.",
-      "style": "Loose impressionistic hand-drawn illustration: confident visible ink linework over watercolor wash on cream paper, granular paper texture, soft ragged blotchy edges fading into the cream margin (a framed illustration-plate look). Full tonal range with rich near-black darks and real contrast, never flat or washed-out. Recessive backdrop; no people, no lettering, no UI. Portrait, taller than wide, 3:4.",
+      "name": "Aldous Quill",
+      "summary": "THE HOUSE ARTIST (ink & wash). Loose impressionist ink + watercolor on cream paper, high contrast, ragged unframed-plate edges. Recolors per game via the Style/aesthetic.",
+      "style": "Loose impressionistic hand-drawn illustration: confident visible ink linework over watercolor wash on cream paper, granular paper texture, soft ragged blotchy edges fading directly into the bare cream-paper margin so the picture sits loose on the page like an unframed illustration plate. NO hard rectangular border, no black frame, no smooth rectangular vignette or inner box — bare white paper shows at the irregular edges. Full tonal range with rich near-black darks and real contrast, never flat or washed-out. Recessive backdrop; no people, no clear lettering, no UI. Portrait, taller than wide, 3:4.",
       "examples": [
-        { "label": "Wishbringer — Hilltop", "file": "ink-hilltop.png" },
-        { "label": "Dreamhold — Cell", "file": "ink-cell.png" },
-        { "label": "Anchorhead — Alley", "file": "ink-alley.png" }
+        {
+          "label": "Wishbringer — Hilltop",
+          "file": "ink-hilltop.png"
+        },
+        {
+          "label": "Dreamhold — Cell",
+          "file": "ink-cell.png"
+        },
+        {
+          "label": "Anchorhead — Alley",
+          "file": "ink-alley.png"
+        }
       ]
+    },
+    {
+      "id": "storybook",
+      "name": "Wren Halloway",
+      "summary": "Soft picture-book illustration — gentle watercolor washes over light colored-pencil, tender rounded linework, warm fairy-tale plate. For whimsical games (Wishbringer).",
+      "style": "Soft storybook picture-book illustration: gentle watercolor washes layered with light colored-pencil and waxy crayon texture, tender rounded hand-drawn linework, the warm hand-illustrated quality of a classic children's picture book. Visible soft paper grain; gentle, slightly irregular edges that feather softly into the bare paper margin like a printed picture-book plate — NO hard rectangular border, no black frame, no smooth rectangular vignette or inner box, bare paper shows at the irregular edges. Rounded, friendly, slightly naive forms with soft warm modeling and a full but gentle tonal range — never harsh or flat. Recessive backdrop meant as accompaniment to story text; no people, no clear lettering, no UI overlays. Portrait, taller than wide, 3:4.",
+      "examples": []
     }
   ]
 }

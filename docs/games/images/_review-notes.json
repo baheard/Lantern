@@ -1,5 +1,5 @@
 {
   "game:anchorhead:outside-the-real-estate-office": "Too much trash. This one has a black outer frame (bad) a square inner frame (bad.) Other ones have the white outside, like paper, and the inside looks drawn within that paper, leaving white paper borders on the outside, but not a smooth inner border like this.",
-  "game:anchorhead:alley": "Transom window on wrong side, doorway was invented, misleading.",
-  "game:anchorhead:narrow-street": "This looks crazy, it's too wild. i think we got a random dramatic weather in the prompt that got injected. this looks much wilder than other anchorhead location shots, the roads to windy and dirt instead of cobblestones, too many stairs, what's that archway? probably no lightning, just rain.\n"
+  "game:anchorhead:narrow-street": "This looks crazy, it's too wild. i think we got a random dramatic weather in the prompt that got injected. this looks much wilder than other anchorhead location shots, the roads to windy and dirt instead of cobblestones, too many stairs, what's that archway? probably no lightning, just rain.\n",
+  "game:anchorhead:alley:alley.png": "The white border around this is a little too big/wide. The window is too high for the puzzle, it should be a little lower. otherwise, pretty good!\n"
 }
