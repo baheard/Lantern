@@ -65,6 +65,26 @@ function Open-Reviewer([string]$u) {
   }
 }
 
+# Reuse an already-open reviewer window instead of piling up new ones: the app window's
+# title is the page <title> ("Art Review"). If we find it, just focus it — the page
+# auto-reloads itself when it detects the server restarted (BOOT_ID change in its /api/jobs
+# poll), so we DON'T send an F5 keystroke. SendKeys toggles NumLock as a side effect, which
+# is what triggered the "numlock on" announcement on every -Restart.
+function Show-Reviewer([string]$u) {
+  $win = Get-Process msedge, chrome -ErrorAction SilentlyContinue |
+    Where-Object { $_.MainWindowTitle -match 'Art Review' } | Select-Object -First 1
+  if ($win) {
+    try {
+      $wsh = New-Object -ComObject WScript.Shell
+      if ($wsh.AppActivate($win.Id)) {
+        Write-Host "Focused existing reviewer window (it auto-reloads on server restart)."
+        return
+      }
+    } catch { }
+  }
+  Open-Reviewer $u
+}
+
 if ($Restart) { Stop-PortOwner $Port; Start-Sleep -Milliseconds 300 }
 
 if (-not (Test-PortListening $Port)) {
@@ -73,9 +93,15 @@ if (-not (Test-PortListening $Port)) {
   }
   Push-Location $repo
   try {
+    # Redirect server stdout/stderr to log files so a gen that flashes by in the UI
+    # can be reviewed after the fact (Claude reads tools/.artview-server.log).
+    $outLog = Join-Path $repo 'tools/.artview-server.log'
+    $errLog = Join-Path $repo 'tools/.artview-server.err.log'
     Start-Process node `
       -ArgumentList "tools/review-server.cjs", $Game, "--port", $Port, "--no-open" `
-      -WindowStyle Hidden
+      -WindowStyle Hidden `
+      -RedirectStandardOutput $outLog `
+      -RedirectStandardError $errLog
   } finally { Pop-Location }
 
   # Poll until it's accepting connections (server boot is sub-second; cap at ~5s).
@@ -88,4 +114,4 @@ if (-not (Test-PortListening $Port)) {
   Write-Host "Reusing review server already on $url"
 }
 
-Open-Reviewer $url
+Show-Reviewer $url

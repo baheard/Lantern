@@ -16,8 +16,14 @@
  *     GEMINI_API_KEY=AIza...
  * or pass --key, or set the GEMINI_API_KEY env var.
  *
- * COST: flat ~$0.039 per image regardless of resolution (per-image token billing,
- * NOT per-pixel) — "low res" is an aesthetic in the prompt, not a cost lever.
+ * COST: Gemini is flat ~$0.039 per image regardless of resolution (per-image token
+ * billing, NOT per-pixel) — "low res" is an aesthetic in the prompt, not a cost lever.
+ *
+ * CHEAP PROTOTYPING (--provider openai): gpt-image-2 at --quality low is ~$0.006/image,
+ * ~6x cheaper, for iterating on prompts before committing. Same model at --quality high
+ * (~$0.21) for finals. Needs OPENAI_API_KEY in .env. Caveats: no native 3:4 (portrait
+ * maps to 2:3 1024x1536, crop downstream); a --ref image bills at the high-fidelity
+ * input rate regardless of quality, so the cheap rate only holds ref-free.
  *
  * USAGE
  * -----
@@ -34,11 +40,17 @@
  *   --prompt <text> --out <file>  ad-hoc single-image mode
  *   --pack <file>                 prompt-pack JSON (default: docs/games/images/<game>/prompts.json)
  *   --only <slug>                 generate just one room from the pack
- *   --ref <image>                 feed this image as a style reference (consistency chaining)
+ *   --ref <image>                 feed this image as a reference (see --ref-mode)
+ *   --ref-mode <style|edit>       how --ref is used. style (default) = art-direction
+ *                                 reference, render a NEW scene from the prompt. edit =
+ *                                 surgical img2img: keep the supplied image's composition
+ *                                 and change ONLY what the prompt instructs.
  *   --aspect <ratio>              aspect ratio, default 3:4 (portrait)
  *   --force                       overwrite existing _review images (default: skip)
- *   --key <apikey>                override GEMINI_API_KEY
- *   --model <id>                  default gemini-2.5-flash-image
+ *   --key <apikey>                override GEMINI_API_KEY / OPENAI_API_KEY
+ *   --model <id>                  default gemini-2.5-flash-image (openai: gpt-image-2)
+ *   --provider <gemini|openai>    default gemini; openai = cheap gpt-image-2 prototyping
+ *   --quality <low|medium|high>   openai only, default low (~$0.006/img low, ~$0.21 high)
  */
 
 const fs = require('fs');
@@ -46,18 +58,57 @@ const path = require('path');
 
 const REPO = path.resolve(__dirname, '..');
 const DEFAULT_MODEL = 'gemini-2.5-flash-image';
+const DEFAULT_OPENAI_MODEL = 'gpt-image-2';
 
 // --- tiny .env loader (no dependency) ---------------------------------------
-function loadEnvKey() {
-  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+function loadEnvKey(varName = 'GEMINI_API_KEY') {
+  if (process.env[varName]) return process.env[varName];
   const envPath = path.join(REPO, '.env');
   if (fs.existsSync(envPath)) {
+    const re = new RegExp(`^\\s*${varName}\\s*=\\s*(.+?)\\s*$`);
     for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-      const m = line.match(/^\s*GEMINI_API_KEY\s*=\s*(.+?)\s*$/);
+      const m = line.match(re);
       if (m) return m[1].replace(/^["']|["']$/g, '');
     }
   }
   return null;
+}
+
+// --- three-layer prompt composition -----------------------------------------
+// Mirrors review-server.cjs composedPrompt(): Artist + Aesthetic + Scene.
+// The pack's room.prompt may still carry a stale baked-in style preamble; we
+// IGNORE everything before "Scene:" and recompose from the live layer files so
+// batch generation and the review tool always send the identical prompt.
+function readJSON(p, fallback) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; }
+}
+function artistStyleFor(gameDir) {
+  const selId = (readJSON(path.join(gameDir, 'selected-artist.json'), {}) || {}).id;
+  const arts = (readJSON(path.join(REPO, 'docs/games/images/_artists/artists.json'), { artists: [] }).artists) || [];
+  const a = arts.find((x) => x.id === selId) || arts[0];
+  return a ? (a.style || '') : '';
+}
+function sceneFor(room, styleScenes) {
+  if (styleScenes && styleScenes[room.slug]) return styleScenes[room.slug];   // explicit per-room override
+  if (room.scene) return room.scene;                                          // future scene-only field
+  const p = room.prompt || '';
+  const i = p.indexOf('Scene:');                                             // discard any stale style preamble
+  if (i >= 0) return p.slice(i + 'Scene:'.length).trim();
+  return room.description || '';
+}
+// App prompt = global, app-wide layer ABOVE the artist (App ▸ Artist ▸ Game ▸ Scene). Read
+// from _app/app.json so batch generation matches the reviewer's composed prompt exactly.
+function appPromptText() {
+  return (readJSON(path.join(REPO, 'docs/games/images/_app/app.json'), {}) || {}).prompt || '';
+}
+function composeRoomPrompt(room, layers) {
+  const scene = sceneFor(room, layers.scenes);
+  return [
+    appPromptText(),
+    layers.artist,
+    layers.aesthetic ? `Aesthetic: ${layers.aesthetic}` : '',
+    scene ? `Scene: ${scene}` : '',
+  ].filter(Boolean).join(' ');
 }
 
 // --- arg parsing ------------------------------------------------------------
@@ -67,7 +118,7 @@ function parseArgs(argv) {
     const t = argv[i];
     if (t.startsWith('--')) {
       const key = t.slice(2);
-      const flagsNoVal = ['force'];
+      const flagsNoVal = ['force', 'regen'];
       if (flagsNoVal.includes(key)) { a[key] = true; }
       else { a[key] = argv[++i]; }
     } else {
@@ -77,15 +128,87 @@ function parseArgs(argv) {
   return a;
 }
 
+// How a --ref image is framed for the model. STYLE = use as art-direction only and
+// render a fresh scene (consistency chaining). EDIT = surgical img2img: preserve the
+// supplied image and change ONLY what the prompt asks (the prompt IS the edit instruction).
+function refWrappedPrompt(prompt, refMode) {
+  if (refMode === 'edit') {
+    return 'Modify the supplied image. Preserve its existing composition, layout, '
+      + 'perspective, lighting, and every element not mentioned below. Apply ONLY '
+      + 'these changes:\n\n' + prompt;
+  }
+  return 'Use the supplied image ONLY as a style/art-direction reference (palette, '
+    + 'rendering, mood). Render a NEW scene described below.\n\n' + prompt;
+}
+
+// --- provider dispatch -------------------------------------------------------
+// Gemini (Nano Banana) is the default/finals provider; OpenAI (gpt-image-2) is
+// the cheap prototyping path — same call site, branch on `provider`.
+async function generateImage(opts) {
+  if (opts.provider === 'openai') return generateImageOpenAI(opts);
+  return generateImageGemini(opts);
+}
+
+// Map our Gemini aspect strings to the fixed sizes the OpenAI image API accepts.
+// OpenAI has NO native 3:4 — portrait collapses to 2:3 (1024x1536); crop downstream.
+function openAISizeForAspect(aspect) {
+  switch (aspect) {
+    case '1:1': return '1024x1024';
+    case '4:3':
+    case '3:2':
+    case '16:9': return '1536x1024';   // landscape
+    default:     return '1024x1536';   // 3:4 / 2:3 / portrait
+  }
+}
+
+// --- the actual OpenAI image call (gpt-image-2 etc.) -------------------------
+// No --ref: POST /v1/images/generations (JSON). With --ref: POST /v1/images/edits
+// (multipart) — note every reference image bills at the high-fidelity INPUT rate
+// regardless of `quality`, so the cheap low-quality rate only holds ref-free.
+async function generateImageOpenAI({ prompt, refImagePath, refMode, apiKey, model, aspect, quality }) {
+  const size = openAISizeForAspect(aspect);
+  const q = quality || 'low';
+  let res;
+  if (refImagePath) {
+    const buf = fs.readFileSync(refImagePath);
+    const ext = path.extname(refImagePath).toLowerCase();
+    const mime = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+    const form = new FormData();
+    form.append('model', model);
+    form.append('prompt', refWrappedPrompt(prompt, refMode));
+    form.append('size', size);
+    form.append('quality', q);
+    form.append('image', new Blob([buf], { type: mime }), 'ref' + ext);
+    res = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: form,
+    });
+  } else {
+    res = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, prompt, size, quality: q, n: 1 }),
+    });
+  }
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 500)}`);
+  }
+  const json = await res.json();
+  const b64 = json.data && json.data[0] && json.data[0].b64_json;
+  if (!b64) throw new Error('No image returned: ' + JSON.stringify(json).slice(0, 300));
+  return Buffer.from(b64, 'base64');
+}
+
 // --- the actual Gemini image call -------------------------------------------
-async function generateImage({ prompt, refImagePath, apiKey, model, aspect }) {
+async function generateImageGemini({ prompt, refImagePath, refMode, apiKey, model, aspect }) {
   const parts = [];
   if (refImagePath) {
     const buf = fs.readFileSync(refImagePath);
     const ext = path.extname(refImagePath).toLowerCase();
     const mime = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
     parts.push({ inlineData: { mimeType: mime, data: buf.toString('base64') } });
-    parts.push({ text: 'Use the supplied image ONLY as a style/art-direction reference (palette, rendering, mood). Render a NEW scene described below.\n\n' + prompt });
+    parts.push({ text: refWrappedPrompt(prompt, refMode) });
   } else {
     parts.push({ text: prompt });
   }
@@ -137,13 +260,20 @@ async function generateImage({ prompt, refImagePath, apiKey, model, aspect }) {
 // --- CLI --------------------------------------------------------------------
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const apiKey = args.key || loadEnvKey();
-  const model = args.model || DEFAULT_MODEL;
+  const provider = (args.provider || 'gemini').toLowerCase();
+  const quality = args.quality || 'low';   // openai only; ignored by gemini
+  const model = args.model || (provider === 'openai' ? DEFAULT_OPENAI_MODEL : DEFAULT_MODEL);
   const aspect = args.aspect || '3:4';
 
+  const keyVar = provider === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY';
+  const apiKey = args.key || loadEnvKey(keyVar);
   if (!apiKey) {
-    console.error('ERROR: no API key. Put GEMINI_API_KEY=... in .env (gitignored), or pass --key.');
-    console.error('Get a free key at https://aistudio.google.com/apikey');
+    if (provider === 'openai') {
+      console.error('ERROR: no API key. Put OPENAI_API_KEY=... in .env (gitignored), or pass --key.');
+    } else {
+      console.error('ERROR: no API key. Put GEMINI_API_KEY=... in .env (gitignored), or pass --key.');
+      console.error('Get a free key at https://aistudio.google.com/apikey');
+    }
     process.exit(2);
   }
 
@@ -152,7 +282,7 @@ async function main() {
     const out = args.out || path.join(REPO, 'docs/games/images/_adhoc.png');
     fs.mkdirSync(path.dirname(out), { recursive: true });
     process.stdout.write(`Generating → ${path.relative(REPO, out)} ... `);
-    const buf = await generateImage({ prompt: args.prompt, refImagePath: args.ref, apiKey, model, aspect });
+    const buf = await generateImage({ prompt: args.prompt, refImagePath: args.ref, refMode: args['ref-mode'], apiKey, model, aspect, provider, quality });
     fs.writeFileSync(out, buf);
     fs.writeFileSync(out.replace(/\.png$/i, '.txt'), args.prompt); // sidecar: the exact prompt that made this image
     console.log(`OK (${(buf.length / 1024).toFixed(0)} KB)`);
@@ -171,8 +301,17 @@ async function main() {
     process.exit(2);
   }
   const pack = JSON.parse(fs.readFileSync(packPath, 'utf8'));
-  const reviewDir = path.join(REPO, 'docs/games/images', game, '_review');
+  const gameDir = path.join(REPO, 'docs/games/images', game);
+  const reviewDir = path.join(gameDir, '_review');
   fs.mkdirSync(reviewDir, { recursive: true });
+
+  // Live composition layers — recomposed per-room so batch == review tool.
+  const styleJson = readJSON(path.join(gameDir, 'style.json'), {});
+  const layers = {
+    artist: artistStyleFor(gameDir),
+    aesthetic: styleJson.aesthetic || '',
+    scenes: styleJson.scenes || {},
+  };
 
   let rooms = pack.rooms || [];
   if (args.only) rooms = rooms.filter((r) => r.slug === args.only);
@@ -183,17 +322,19 @@ async function main() {
   const regen = !!args.regen;
   const steer = args.steer ? ` ${args.steer}` : '';
 
-  console.log(`Generating ${rooms.length} image(s) for ${game} → _review/  (model ${model}, ${aspect})${regen ? ' [regen]' : ''}`);
+  const qualNote = provider === 'openai' ? `, ${quality}` : '';
+  console.log(`Generating ${rooms.length} image(s) for ${game} → _review/  (${provider}: ${model}, ${aspect}${qualNote})${regen ? ' [regen]' : ''}`);
   let ok = 0, skip = 0, fail = 0;
   for (const room of rooms) {
     const out = path.join(reviewDir, `${room.slug}.png`);
     if (fs.existsSync(out) && !args.force && !regen) { console.log(`  skip  ${room.slug} (exists; --force or --regen to replace)`); skip++; continue; }
     process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug} ... `);
+    const composed = composeRoomPrompt(room, layers) + steer;
     try {
-      const buf = await generateImage({ prompt: room.prompt + steer, refImagePath: args.ref, apiKey, model, aspect });
+      const buf = await generateImage({ prompt: composed, refImagePath: args.ref, refMode: args['ref-mode'], apiKey, model, aspect, provider, quality });
       if (regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare
       fs.writeFileSync(out, buf);
-      fs.writeFileSync(out.replace(/\.png$/i, '.txt'), room.prompt + steer); // sidecar: exact prompt used
+      fs.writeFileSync(out.replace(/\.png$/i, '.txt'), composed); // sidecar: exact prompt used
       console.log(`OK (${(buf.length / 1024).toFixed(0)} KB)${regen ? ' — prev kept' : ''}`);
       ok++;
     } catch (e) {
