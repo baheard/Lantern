@@ -81,3 +81,51 @@ both contain single hyphens. rN = successive takes of that one cell.
 Decisions held: signature stays global (no per-game fork); auto-suggest overridable;
 user-selected artist subset. Generation defaults to OpenAI-low per
 [[feedback_openai_low_default_art]].
+
+## Iteration 2026-06-18 (session 2) — bridging, terminology, fixes
+
+- **"House artist" → "Game artist"** everywhere user-facing (button/badge/toast/subtitle).
+  "House artist" was vestigial from the abandoned one-artist-for-the-whole-app idea.
+  Internal CSS class / `data-house` attr names left as `house` (invisible; tight diff).
+- **Audition scenes 3 → 4.** All clamps now 4: `suggestScenes` slice, `auditionState`
+  slice, `saveAuditionCfg` slice, client scene-slot array `[0,1,2,3]`.
+- **Per-artist "Audition ▸" button** (row header) renders that artist across ALL selected
+  scenes in one click at the current genMode — `audArtistGen(artist)`. Always a fresh take
+  per scene (not fill-gaps). Confirms count + per-model cost.
+- **+ New artist** from the Artist rail topic: `POST /api/artist-create` → `createArtist()`
+  slugifies id from name, dedups, appends to global `artists.json` with empty `examples[]`.
+- **genMode dropdown reordered by cost** (low → Gemini → Nano Pro → OpenAI-high) and
+  **OpenAI-high now gets a cost confirm** (~$0.21) like Nano Pro, on every gen path.
+
+### Audition pieces bridged onto the location page (the non-obvious bit)
+Audition images now appear as candidates on the matching **location** page (scene slug ==
+location slug), tagged + artist-attributed, deletable + promotable from there. Artist
+*switching* still lives ONLY on the audition page (per user: audition = experiment across
+artists; location = refine the chosen one). Per-image artist attribution shows **only** on
+audition pieces (native candidates aren't tagged with who made them).
+
+**Load-bearing scheme: the `aud:` candidate-id prefix.** A "candidate" in this tool is a
+bare filename string used in ~8 places, and audition images live in a *different* dir
+(`_audition/`) served by a *different* endpoint (`/img/audition` vs `/img/review`). To
+surface them as candidates without a data-model rewrite, audition candidate ids carry an
+`aud:` prefix (`aud:<artist>__<scene>__<tag>-rN.png`). Touchpoints that decode it:
+- `locationsFor` — appends `aud:`-prefixed ids for the room's slug; builds `auditions`
+  map `{id:{artist,artistName}}`; `candPath()` resolves id→disk path (audition vs review).
+- `promote` / `reject` — branch on the `aud:` prefix to read/delete from `_audition/`.
+- Client `candImg(f)` / `candUrl(f)` — `aud:` → `/img/audition` (no committed fallback);
+  native → `/img/review` with `/img/committed` onerror fallback. Used by the strip, big
+  preview, and lightbox 'loc' mode.
+- Strip shows a blue `audition` corner pill (`.cand.aud`) + an `m-aud` chip "audition ·
+  <artistName>"; promoting one flips the pill to "★ in game" (byte-compare matches).
+- Prompt sidecar already written by `gen-room-images.cjs` next to `--out`, so the
+  location page's "Actual prompt" panel works for bridged pieces with no extra work.
+
+### Bug fixed: unclickable bottom-right Generate button
+`#status` (the toast) is `position:fixed; bottom:14px; right:18px; opacity:0` but had no
+`pointer-events:none` — so the invisible toast sat in the bottom-right corner eating clicks
+(text/I-beam cursor, no effect) over whatever was under it, e.g. the last audition-grid
+row's Generate button. Fix: added `pointer-events:none` to `#status`. Watch for the same
+trap on any other always-present `opacity:0` fixed overlay.
+
+Delete uses the native browser `confirm()` (a custom Enter/Space/X modal was built then
+reverted per user — "browser dialog for now is fine").

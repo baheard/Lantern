@@ -139,14 +139,33 @@ function locationsFor(gameSlug) {
   const pack = readJSON(g.pack, { rooms: [] });
   const images = (readJSON(g.manifest, { images: {} }).images) || {};
   const style = gameStyle(gameSlug);
+  // Artist-name lookup so audition pieces can show WHO made them on the location page.
+  const artists = (readJSON(artistsPath, { artists: [] }).artists) || [];
+  const artName = (id) => { const a = artists.find((x) => x.id === id); return a ? a.name : id; };
+  // All audition images for this game, parsed once: scene-slug → [{id, file, artist}].
+  // Audition candidate ids carry an "aud:" prefix so the client/promote/reject can tell
+  // them apart from native _review candidates (different dir + a tag chip).
+  const audByScene = {};
+  if (fs.existsSync(g.audition)) {
+    for (const f of fs.readdirSync(g.audition).filter((n) => /\.png$/i.test(n)).sort()) {
+      const m = f.match(/^(.+?)__(.+?)__/);   // <artist>__<scene>__<tag>-rN.png
+      if (!m) continue;
+      (audByScene[m[2]] = audByScene[m[2]] || []).push({ id: 'aud:' + f, file: f, artist: m[1] });
+    }
+  }
+  // Resolve a candidate id (native or aud:) to its on-disk path.
+  const candPath = (f) => (f.indexOf('aud:') === 0 ? path.join(g.audition, f.slice(4)) : path.join(g.review, f));
   return pack.rooms.map((r) => {
     const at = (r.prompt || '').indexOf(' Scene:');
     // Scene default = the visual-core scene the pack already scraped (text after "Scene:").
     const sceneDefault = at >= 0 ? r.prompt.slice(at + ' Scene:'.length).trim() : (r.description || '');
-    const candidates = candidatesFor(g, r.slug);
+    const audPieces = audByScene[r.slug] || [];
+    const candidates = candidatesFor(g, r.slug).concat(audPieces.map((p) => p.id));
+    const auditions = {};   // id → {artist, artistName} for the aud: candidates (location-page tag)
+    for (const p of audPieces) auditions[p.id] = { artist: p.artist, artistName: artName(p.artist) };
     const candidatePrompts = {};   // sidecar: the exact prompt that made each image
     for (const f of candidates) {
-      const tp = path.join(g.review, f.replace(/\.png$/i, '.txt'));
+      const tp = candPath(f).replace(/\.png$/i, '.txt');
       if (fs.existsSync(tp)) candidatePrompts[f] = fs.readFileSync(tp, 'utf8');
     }
     // Which candidate is the in-game image? Committed is saved as `<slug>.png` (a copy), so
@@ -158,7 +177,7 @@ function locationsFor(gameSlug) {
       if (fs.existsSync(cp)) {
         const cb = fs.readFileSync(cp);
         committedSource = candidates.find((f) => {
-          const fp = path.join(g.review, f);
+          const fp = candPath(f);
           if (!fs.existsSync(fp)) return false;
           const fb = fs.readFileSync(fp);
           return fb.length === cb.length && fb.equals(cb);
@@ -167,7 +186,7 @@ function locationsFor(gameSlug) {
     }
     return {
       slug: r.slug, name: r.name, description: r.description || '', exits: r.exits || [],
-      committed, committedSource, candidates, candidatePrompts,
+      committed, committedSource, candidates, candidatePrompts, auditions,
       sceneDefault, sceneOverride: style.scenes[r.slug] || '',
     };
   });
@@ -190,7 +209,10 @@ function nextRegenName(g, slug, tag) {
 }
 function promote(gameSlug, slug, candidate) {
   const g = gamePaths(gameSlug);
-  const src = path.join(g.review, candidate);
+  // Audition pieces (aud:<file>) live in _audition/; native candidates in _review/.
+  const src = candidate.indexOf('aud:') === 0
+    ? path.join(g.audition, candidate.slice(4))
+    : path.join(g.review, candidate);
   if (!fs.existsSync(src)) throw new Error('candidate not found');
   const destFile = `${slug}.png`;
   fs.copyFileSync(src, path.join(g.dir, destFile));
@@ -202,10 +224,14 @@ function promote(gameSlug, slug, candidate) {
   return { name, file: destFile };
 }
 function reject(gameSlug, candidate) {
-  const r = gamePaths(gameSlug).review;
+  const g = gamePaths(gameSlug);
+  // Audition pieces (aud:<file>) live in _audition/; native candidates in _review/.
+  const isAud = candidate.indexOf('aud:') === 0;
+  const dir = isAud ? g.audition : g.review;
+  const name = isAud ? candidate.slice(4) : candidate;
   // Delete the candidate image AND its prompt sidecar (no orphan .txt left behind).
-  for (const f of [candidate, candidate.replace(/\.png$/i, '.txt')]) {
-    const p = path.join(r, f);
+  for (const f of [name, name.replace(/\.png$/i, '.txt')]) {
+    const p = path.join(dir, f);
     if (fs.existsSync(p)) fs.rmSync(p);
   }
 }
@@ -297,6 +323,21 @@ function listArtists(gameSlug) {
   const selected = gameSlug ? ((readJSON(gamePaths(gameSlug).selArtist, {}) || {}).id || null) : null;
   return { selected, artists: d.artists || [] };
 }
+// Create a new artist persona in the shared artists.json. id is slugified from the name
+// (or supplied); name is required; summary/style optional. Returns the created artist.
+function createArtist({ id, name, summary, style }) {
+  if (!name || !name.trim()) throw new Error('name required');
+  const d = readJSON(artistsPath, { artists: [] });
+  d.artists = d.artists || [];
+  const slug = (id || name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!slug) throw new Error('could not derive an id from the name');
+  if (d.artists.some((a) => a.id === slug)) throw new Error('an artist with id "' + slug + '" already exists');
+  const artist = { id: slug, name: name.trim(), summary: (summary || '').trim(), style: (style || '').trim(), examples: [] };
+  d.artists.push(artist);
+  fs.mkdirSync(artistsDir, { recursive: true });
+  fs.writeFileSync(artistsPath, JSON.stringify(d, null, 2) + '\n');
+  return artist;
+}
 function selectArtist(gameSlug, id) {
   const d = readJSON(artistsPath, { artists: [] });
   if (!(d.artists || []).some((a) => a.id === id)) throw new Error('artist not found');
@@ -304,9 +345,9 @@ function selectArtist(gameSlug, id) {
   return { selected: id };
 }
 
-// --- Audition: try N candidate artists against 3 representative scenes -------
+// --- Audition: try N candidate artists against 4 representative scenes -------
 // "Develop" an artist for a game by rendering a user-selected SUBSET of artists across
-// the same 3 scenes (game's real Aesthetic + saved Scene prompts), compared side-by-side,
+// the same 4 scenes (game's real Aesthetic + saved Scene prompts), compared side-by-side,
 // then "Make house artist" commits one. Output lives in <game>/_audition/, named
 // <artistId>__<sceneSlug>__<tag>-rN.png so a cell is one (artist × scene) and rN is its take.
 
@@ -343,8 +384,8 @@ function suggestScenes(slug) {
   if (dim) pick.push(dim.slug);
   // signature = the richest remaining room (longest description), as a proxy for "the money shot".
   const rest = rooms.filter((r) => !pick.includes(r.slug)).sort((a, b) => (b.description || '').length - (a.description || '').length);
-  for (const r of rest) { if (pick.length >= 3) break; pick.push(r.slug); }
-  return pick.slice(0, 3);
+  for (const r of rest) { if (pick.length >= 4) break; pick.push(r.slug); }
+  return pick.slice(0, 4);
 }
 function listAuditionImages(slug) {
   const dir = gamePaths(slug).audition;
@@ -363,7 +404,7 @@ function auditionState(slug) {
   const cfg = readJSON(gamePaths(slug).auditionCfg, {});
   const rooms = (readJSON(gamePaths(slug).pack, { rooms: [] }).rooms) || [];
   const roomName = (s) => { const r = rooms.find((x) => x.slug === s); return r ? r.name : s; };
-  const scenes = (cfg.scenes && cfg.scenes.length ? cfg.scenes : suggestScenes(slug)).slice(0, 3);
+  const scenes = (cfg.scenes && cfg.scenes.length ? cfg.scenes : suggestScenes(slug)).slice(0, 4);
   const arts = (readJSON(artistsPath, { artists: [] }).artists) || [];
   const selArtists = cfg.artists && cfg.artists.length ? cfg.artists : arts.map((a) => a.id);
   return {
@@ -378,7 +419,7 @@ function auditionState(slug) {
 function saveAuditionCfg(slug, scenes, artists) {
   const p = gamePaths(slug).auditionCfg;
   const d = readJSON(p, {});
-  if (Array.isArray(scenes)) d.scenes = scenes.filter(Boolean).slice(0, 3);
+  if (Array.isArray(scenes)) d.scenes = scenes.filter(Boolean).slice(0, 4);
   if (Array.isArray(artists)) d.artists = artists.filter(Boolean);
   fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n');
   return { ok: true };
@@ -505,6 +546,7 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/reject') return wrap(() => { reject(body.game, body.candidate); return {}; });
       if (u.pathname === '/api/select-glyph') return wrap(() => selectGlyph(body.id));
       if (u.pathname === '/api/select-artist') return wrap(() => selectArtist(body.game, body.id));
+      if (u.pathname === '/api/artist-create') return wrap(() => ({ artist: createArtist(body) }));
       if (u.pathname === '/api/app-prompt') return wrap(() => saveAppPrompt(body.prompt));
       if (u.pathname === '/api/style') return wrap(() => saveStyle(body.game, body.aesthetic));
       if (u.pathname === '/api/artist-style') return wrap(() => saveArtistStyle(body.game, body.style));
@@ -557,6 +599,8 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .topic.active{background:#2a2440;color:#c4a35a;box-shadow:inset 3px 0 0 #c4a35a}
   #items{flex:0 0 246px;border-right:1px solid #2a2536;display:flex;flex-direction:column}
   #itemhead{padding:12px 12px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#8a8398}
+  #itemhead .newbtn{float:right;font:inherit;text-transform:none;letter-spacing:0;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid #3a3450;background:#1f1b2c;color:#c4a35a;cursor:pointer}
+  #itemhead .newbtn:hover{background:#2a2440;border-color:#c4a35a;color:#fff}
   #itemlist{flex:1;overflow-y:auto;padding:0 8px}
   .item{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
   .item:hover{background:#1a1722}
@@ -595,6 +639,11 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .mchip.m-gem{background:#1d2a44;color:#8fb4ff}
   .mchip.m-oai{background:#0f2a28;color:#6fe0d6}
   .mchip.m-pro{background:#34234a;color:#d4a8ff}
+  .mchip.m-aud{background:#2e2410;color:#e0b766}
+  /* Audition pieces bridged onto the location page — blue corner pill + dashed accent. */
+  .cand.aud{border-color:#3a4f7a}
+  .cand.aud::before{content:'audition';position:absolute;top:6px;right:6px;z-index:1;background:#4f7bd0;color:#0d0b12;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
+  .cand.aud.committed::before{content:'★ in game'}
   .glyphbox{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0b0a0f;color:#c4a35a}
   .glyphbox svg{width:55%;height:55%;opacity:.8}
   .none{color:#8c85a0;font-style:italic;padding:24px 0}
@@ -675,7 +724,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .resolvebox input{width:16px;height:16px;cursor:pointer;accent-color:#7fe0a0}
   .resolvebox input:disabled{cursor:default;opacity:.4}
   textarea.edit.resolved{opacity:.55;border-style:dashed}
-  #status{position:fixed;bottom:14px;right:18px;background:#2a2440;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s}
+  #status{position:fixed;bottom:14px;right:18px;background:#2a2440;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
   /* Persistent generation banner — driven by server-side job state, so it survives navigation/reload. */
   #gens{position:fixed;bottom:56px;right:18px;display:none;flex-direction:column;gap:6px;z-index:50;max-width:340px}
   #gens.show{display:flex}
@@ -722,6 +771,8 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .aud-cell .empty{width:170px;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;border-radius:8px;
     border:1px dashed #353047;color:#6f688a;font-size:12px;font-style:italic;margin:0 auto 6px}
   .aud-cell button{font-size:12px;padding:5px 10px}
+  .aud-cell .goloc{font-size:11px;color:#8fb0e8;text-decoration:none;margin-right:10px;cursor:pointer;vertical-align:middle}
+  .aud-cell .goloc:hover{color:#bcd2ff;text-decoration:underline}
   /* ---- Mobile / thin portrait (phones, narrow windows) ---- */
   @media (max-width:820px){
     body{flex-direction:column;height:auto;min-height:100vh;font-size:16px}
@@ -805,7 +856,7 @@ async function pollGens(){
   // Keep the current location's Regenerate button in sync without a full re-render.
   const b=$('#bRegen');
   if(b&&curLoc){ const busy=jobs.some(j=>j.status==='running'&&j.game===curGame&&j.slug===curLoc.slug);
-    b.disabled=busy; b.textContent=busy?'Generating…':'Regenerate ▸'; }
+    b.disabled=busy; b.textContent=busy?'Generating…':'Generate ▸'; }
 }
 // A note is a string (open) or {note,status,appliedTo?,resolved?}. Read text/status shape-safely.
 const noteRaw=k=>(STATE&&STATE.notes&&STATE.notes[k]);
@@ -817,18 +868,44 @@ const isGame=t=>t&&t.indexOf('g:')===0;
 const gameOf=t=>isGame(t)?t.slice(2):null;
 
 const NAVKEY='artreview_nav';
-function saveNav(){try{localStorage.setItem(NAVKEY,JSON.stringify({topic,item:curItem}));}catch(e){}}
+// Persisted navigation: last topic, the last-selected item PER topic (so switching topics
+// and coming back restores where you were), and scroll positions keyed by topic|item
+// (detail pane) and topic (item list) — so a reload doesn't dump you at the top.
+let NAV={topic:null,byTopic:{},scroll:{},listScroll:{}};
+try{const s=JSON.parse(localStorage.getItem(NAVKEY)||'{}');
+  NAV={topic:s.topic||null,byTopic:s.byTopic||{},scroll:s.scroll||{},listScroll:s.listScroll||{}};}catch(e){}
+function persistNav(){try{localStorage.setItem(NAVKEY,JSON.stringify(NAV));}catch(e){}}
+let _navT=null;
+function scheduleNavPersist(){clearTimeout(_navT);_navT=setTimeout(persistNav,300);}
+function saveNav(){NAV.topic=topic; if(curItem!=null) NAV.byTopic[topic]=curItem; persistNav();}
+function scrollKey(){return topic+'|'+curItem;}
+function detailScroller(){return document.querySelector('#detail .loc-left, #detail .aud-wrap');}
+// Restore the remembered scroll for the current topic|item and keep it updated as you scroll.
+// Called at the end of every detail render so it survives in-place re-renders (pollGens,
+// edit cancel, act) as well as navigation.
+function afterDetailRender(){
+  const el=detailScroller(); if(!el) return;
+  const k=scrollKey(), y=NAV.scroll[k];
+  if(y!=null){ el.scrollTop=y; requestAnimationFrame(()=>{ if(el.isConnected) el.scrollTop=y; }); }
+  el.onscroll=()=>{ NAV.scroll[k]=el.scrollTop; scheduleNavPersist(); };
+}
 async function loadAll(){
   STATE=await (await fetch('/api/state')).json();
   GLYPHS=await (await fetch('/api/glyphs')).json();
   buildRail();
-  let nav={}; try{nav=JSON.parse(localStorage.getItem(NAVKEY)||'{}');}catch(e){}
-  let t=nav.topic;
+  let t=NAV.topic;
   const valid=t==='placeholders'||t==='artist'||t==='audition'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
   if(!valid) t=STATE.defaultGame?'g:'+STATE.defaultGame:(STATE.games[0]?'g:'+STATE.games[0]:'placeholders');
-  selectTopic(t, nav.item);
+  selectTopic(t);   // no explicit item → selectTopic restores NAV.byTopic[t]
   pollGens(); setInterval(pollGens, 2000);   // progress banner + cross-navigation completion refresh
 }
+// Backstop: capture live scroll positions right before a reload (the debounced onscroll
+// handler usually has them already, but a fast reload could outrun the 300ms timer).
+window.addEventListener('beforeunload',()=>{
+  const el=detailScroller(); if(el) NAV.scroll[scrollKey()]=el.scrollTop;
+  const il=$('#itemlist'); if(il) NAV.listScroll[topic]=il.scrollTop;
+  persistNav();
+});
 function buildRail(){
   const games=STATE.games.map(g=>'<div class="topic" data-t="g:'+g+'">'+esc(g)+'</div>').join('');
   $('#rail').innerHTML='<div class="brand">Art Review</div>'+games+'<div class="sep"></div>'+
@@ -844,15 +921,18 @@ async function selectTopic(t, wantItem){
     $('#itemhead').textContent=curGame+' · locations';
   } else if(t==='artist'){
     ARTISTS=await (await fetch('/api/artists?game='+encodeURIComponent(curGame||''))).json();
-    $('#itemhead').textContent='Artists';
+    $('#itemhead').innerHTML='Artists <button id="bNewArt" class="newbtn" title="Create a new artist">+ New</button>';
+    const nb=$('#bNewArt'); if(nb) nb.onclick=newArtist;
   } else if(t==='audition'){
     $('#itemhead').textContent='Audition · pick a game';
   } else { $('#itemhead').textContent='Glyphs'; }
   const nk='topic:'+t; const tn=$('#tnotes'); tn.value=noteVal(nk); tn.onblur=()=>saveNote(nk,tn.value);
   renderItems();
   const list=items();
-  const target=(wantItem&&list.some(x=>x.id===wantItem))?wantItem:(list[0]&&list[0].id);
-  if(target) openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); }
+  // Prefer an explicit item, else the last-selected item remembered for THIS topic, else first.
+  const remembered=(wantItem!=null)?wantItem:NAV.byTopic[t];
+  const target=(remembered&&list.some(x=>x.id===remembered))?remembered:(list[0]&&list[0].id);
+  if(target) await openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); }
 }
 function items(){
   if(isGame(topic)) return (GAMES[curGame]||[]).map(l=>({id:l.slug,name:l.name,mark:l.committed?'●':(l.candidates.length?'○':'·'),has:!!l.committed,count:l.candidates.length}));
@@ -862,15 +942,18 @@ function items(){
   return (ARTISTS.artists||[]).map(a=>({id:a.id,name:a.name,mark:a.id===ARTISTS.selected?'●':'·',has:a.id===ARTISTS.selected}));
 }
 function renderItems(){
-  $('#itemlist').innerHTML=items().map(it=>'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
+  const il=$('#itemlist');
+  il.innerHTML=items().map(it=>'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
     '<span class="dot '+(it.has?'has':'')+'">'+it.mark+(it.count?' '+it.count:'')+'</span></div>').join('')||'<p class="none" style="padding:12px">none</p>';
   document.querySelectorAll('.item').forEach(d=>d.onclick=()=>openItem(d.dataset.id));
+  const ly=NAV.listScroll[topic]; if(ly!=null) il.scrollTop=ly;
+  il.onscroll=()=>{ NAV.listScroll[topic]=il.scrollTop; scheduleNavPersist(); };
 }
-function openItem(id){ curItem=id; renderItems(); saveNav();
-  if(isGame(topic)) return detailLocation((GAMES[curGame]||[]).find(l=>l.slug===id));
-  if(topic==='placeholders') return detailGlyph((GLYPHS.glyphs||[]).find(g=>g.id===id));
-  if(topic==='audition') return detailAudition(id);
-  return detailArtist((ARTISTS.artists||[]).find(a=>a.id===id));
+async function openItem(id){ curItem=id; renderItems(); saveNav();
+  if(isGame(topic)) await detailLocation((GAMES[curGame]||[]).find(l=>l.slug===id));
+  else if(topic==='placeholders') detailGlyph((GLYPHS.glyphs||[]).find(g=>g.id===id));
+  else if(topic==='audition') await detailAudition(id);
+  else detailArtist((ARTISTS.artists||[]).find(a=>a.id===id));
 }
 function noteSection(key){return '<div class="sec"><label class="ed">Notes / feedback</label><textarea class="edit" id="inote" placeholder="What you think — usually means: regen. (Claude reads these to tune the artist.)">'+esc(noteVal(key))+'</textarea></div>';}
 function wireNote(key){const n=$('#inote');if(n)n.onblur=()=>saveNote(key,n.value);}
@@ -883,8 +966,10 @@ function detailLocation(l){
   const gi=GAMEINFO[curGame]||{artist:{},aesthetic:''};
   const art=(gi.artist&&gi.artist.name)||'(none)';
   const cands=l.candidates.map(f=>{const isC=l.committedSource===f;
-    return '<div class="cand'+(f===sel?' sel':'')+(isC?' committed':'')+'" data-f="'+f+'"><img src="/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'" onerror="this.src=\\'/img/committed?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'\\'">'+
-      '<div class="cap"><span>'+mchip(f)+esc(f)+'</span></div></div>';}).join('');
+    const aud=(l.auditions||{})[f];
+    const chip=aud?'<span class="mchip m-aud" title="Audition piece — '+esc(aud.artistName)+'">audition · '+esc(aud.artistName)+'</span>':mchip(f);
+    return '<div class="cand'+(f===sel?' sel':'')+(isC?' committed':'')+(aud?' aud':'')+'" data-f="'+esc(f)+'">'+candImg(f)+
+      '<div class="cap"><span>'+chip+esc(aud?f.slice(4):f)+'</span></div></div>';}).join('');
   // Scope-tagged field helper: tag chip + label + a read-only value box.
   const field=(scope,tag,label,val,cls)=>'<div class="sec scope-'+scope+'"><label class="ro"><span class="tag">'+tag+'</span>'+esc(label)+'</label>'+
     '<div class="val '+(cls||'')+'">'+esc(val)+'</div></div>';
@@ -893,19 +978,19 @@ function detailLocation(l){
   const left='<h1>'+esc(l.name)+'</h1><div class="sub">'+(l.exits.length?l.exits.join('  ·  '):'no recorded exits')+'</div>'+
     '<div class="btns"><button class="primary" id="bProm" '+(sel?'':'disabled')+'>Promote → in game</button>'+
       '<button class="danger" id="bRej" '+(sel?'':'disabled')+'>Delete selected</button>'+
-      '<select id="genMode" class="genmode" title="Which generator Regenerate uses">'+
+      '<select id="genMode" class="genmode" title="Which generator Generate uses">'+
         '<option value="openai-low">OpenAI · low — cheap proto (~$0.006)</option>'+
-        '<option value="openai-high">OpenAI · high (~$0.21)</option>'+
         '<option value="gemini">Gemini · finals (~$0.04)</option>'+
         '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>'+
+        '<option value="openai-high">OpenAI · high (~$0.21)</option>'+
       '</select>'+
-      '<span class="segmode" id="regenSeg" title="How the selected image\\'s note feeds Regenerate">'+
+      '<span class="segmode" id="regenSeg" title="How the selected image\\'s note feeds Generate">'+
         '<button data-rm="clean" title="Composed prompt only — ignores the note">Clean</button>'+
         '<button data-rm="notes" title="Composed prompt + the note as an Adjustments line (cheap text re-roll)">+Notes</button>'+
         '<button data-rm="edit" title="Img2img: feed the selected image back in, note = edit instruction (preserves composition)">Edit img</button>'+
       '</span>'+
-      '<button id="bRegen">Regenerate ▸</button></div>'+
-    '<div class="cands">'+(cands||'<span class="none">No candidates yet — Regenerate to create one.</span>')+'</div>'+
+      '<button id="bRegen">Generate ▸</button></div>'+
+    '<div class="cands">'+(cands||'<span class="none">No candidates yet — Generate to create one.</span>')+'</div>'+
     // Actual prompt that made the selected image — TOP, right under the candidates.
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected image</label><div class="val" id="actual">(none)</div></div>'+
     // Layers are shown in REVERSE hierarchy (closest-to-this-room first): In-game prose → Scene
@@ -935,7 +1020,12 @@ function detailLocation(l){
   document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>selectCand(c.dataset.f));
   document.querySelectorAll('#detail .zoom').forEach(b=>b.onclick=(e)=>{e.stopPropagation();openLB(b.dataset.zoom);});
   $('#bProm').onclick=()=>act('/api/promote',{game:curGame,slug:l.slug,candidate:sel},'Promoted '+sel);
-  $('#bRej').onclick=()=>act('/api/reject',{game:curGame,candidate:sel},'Deleted '+sel);
+  $('#bRej').onclick=()=>{
+    if(!sel) return;
+    const label=sel.indexOf('aud:')===0?sel.slice(4)+' (audition piece)':sel;
+    if(!confirm('Delete this image?\\n\\n'+label)) return;
+    act('/api/reject',{game:curGame,candidate:sel},'Deleted '+label);
+  };
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }
   const seg=$('#regenSeg');
   if(seg){ seg.querySelectorAll('button').forEach(b=>{
@@ -953,6 +1043,7 @@ function detailLocation(l){
     toast(es.value.trim()?'Scene saved':'Scene cleared');
   };
   updateComposed(); updateSelUI();
+  afterDetailRender();
 }
 // ---- Edit Artist signature (global) / Game style (per-game) inline ----
 // Swaps the read-only value box for a textarea + Save/Cancel. Save persists, updates
@@ -1043,6 +1134,7 @@ async function doRegen(l){
   }
   // Nano Banana Pro is ~3x the cost of finals — confirm before spending.
   if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image (vs ~$0.04 Gemini finals / ~$0.006 OpenAI low). Generate one?')) return;
+  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image (vs ~$0.006 OpenAI low / ~$0.04 Gemini finals). Generate one?')) return;
   const provider=genMode.startsWith('openai')?'openai':'gemini';
   const quality=genMode==='openai-high'?'high':'low';
   const model=genMode==='gemini-pro'?'gemini-3-pro-image-preview':null;
@@ -1058,6 +1150,20 @@ async function doRegen(l){
 }
 // Small colored chip naming the generator that made a candidate, parsed from the
 // filename tag (<slug>-gem-rN / -oai-low-rN / …). Legacy untagged files show nothing.
+// Build an <img> for a candidate id. Audition pieces (aud:<file>) come from /img/audition;
+// native candidates from /img/review with a committed-copy fallback. attrs = extra attributes.
+function candImg(f,attrs){
+  attrs=attrs||'';
+  if(f&&f.indexOf('aud:')===0){ const file=f.slice(4);
+    return '<img '+attrs+' src="/img/audition?game='+curGame+'&f='+encodeURIComponent(file)+'&v='+ver+'">'; }
+  return '<img '+attrs+' src="/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'" '+
+    'onerror="this.onerror=null;this.src=\\'/img/committed?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'\\'">';
+}
+// URL only (no <img> wrapper) for a candidate id — used by the big preview + lightbox.
+function candUrl(f){
+  if(f&&f.indexOf('aud:')===0) return '/img/audition?game='+curGame+'&f='+encodeURIComponent(f.slice(4))+'&v='+ver;
+  return '/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
+}
 function mchip(f){
   const m=f.match(/-(gem-pro|gem|oai-(?:low|med|high))-r\\d+\\.png$/i); if(!m) return '';
   const t=m[1].toLowerCase();
@@ -1086,8 +1192,7 @@ function updateSelUI(){
   const box=$('#bigprev');
   if(box){
     if(sel){ box.classList.remove('empty');
-      box.innerHTML='<img alt="'+esc(sel)+'" src="/img/review?game='+curGame+'&f='+encodeURIComponent(sel)+'&v='+ver+'" '+
-        'onerror="this.onerror=null;this.src=\\'/img/committed?game='+curGame+'&f='+encodeURIComponent(sel)+'&v='+ver+'\\'">';
+      box.innerHTML=candImg(sel,'alt="'+esc(sel)+'"');
       const im=box.querySelector('img'); if(im) bindZoom(im, sel); }
     else { box.classList.add('empty'); box.innerHTML='<span>no image selected</span>'; }
   }
@@ -1112,6 +1217,21 @@ function detailGlyph(g){
   $('#bUse').onclick=()=>act('/api/select-glyph',{id:g.id},'Using '+g.id);
   wireNote('glyph:'+g.id);
 }
+// Create a new artist from the Artist page: prompt for name, summary, and signature,
+// POST to the server, then refresh the list and open the new persona.
+async function newArtist(){
+  const name=prompt('New artist name:'); if(name===null) return;
+  if(!name.trim()){ toast('Name is required.'); return; }
+  const summary=prompt('One-line summary (optional):','')||'';
+  const style=prompt('Style signature — the prompt text that defines this artist (optional, editable later):','')||'';
+  try{
+    const r=await (await postJSON('/api/artist-create',{name,summary,style})).json();
+    if(!r.ok){ toast('Error: '+(r.error||'create failed')); return; }
+    ARTISTS=await (await fetch('/api/artists?game='+encodeURIComponent(curGame||''))).json();
+    toast('Artist created: '+r.artist.name);
+    renderItems(); openItem(r.artist.id);
+  }catch(e){ toast('Error: '+e.message); }
+}
 function detailArtist(a){
   if(!a){$('#detail').innerHTML='<p class="none">No artist.</p>';return;}
   curArtist=a;
@@ -1126,13 +1246,15 @@ function detailArtist(a){
   const left='<h1>'+esc(a.name)+(isSel?' <span class="badge" style="font-size:12px;padding:2px 6px">'+esc(gname)+' artist</span>':'')+'</h1>'+
     '<div class="sub">'+esc(a.summary||'')+'</div>'+
     '<div class="cands">'+(cands||'<span class="none">No examples.</span>')+'</div>'+
-    '<div class="sec"><label class="ro">Style signature</label><div class="val">'+esc(a.style||'')+'</div></div>'+noteSection('artist:'+a.id);
+    '<div class="sec" data-eartfield="'+esc(a.id)+'"><label class="ro">Style signature <button class="editbtn" data-editartstyle="'+esc(a.id)+'">✎ Edit</button></label><div class="val" data-artstyle="'+esc(a.id)+'">'+esc(a.style||'')+'</div></div>'+noteSection('artist:'+a.id);
   const right='<div class="bigprev empty" id="bigprev"><span>no image selected</span></div>';
   $('#detail').innerHTML='<div class="loc-wrap"><div class="loc-left">'+left+'</div><div class="loc-right">'+right+'</div></div>';
   document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>{artSel=c.dataset.f;updateArtistSel();});
   document.querySelectorAll('#detail .zoom').forEach(b=>b.onclick=(e)=>{e.stopPropagation();openArtistLB(b.dataset.zoom);});
+  const esb=$('#detail').querySelector('[data-editartstyle]'); if(esb) esb.onclick=()=>artistEditStyle(a.id);
   wireNote('artist:'+a.id);
   updateArtistSel();
+  afterDetailRender();
 }
 function updateArtistSel(){
   document.querySelectorAll('#detail .cand').forEach(c=>c.classList.toggle('sel',c.dataset.f===artSel));
@@ -1142,12 +1264,34 @@ function updateArtistSel(){
     const im=box.querySelector('img'); if(im) im.onclick=()=>openArtistLB(artSel); }
   else { box.classList.add('empty'); box.innerHTML='<span>no image selected</span>'; }
 }
+// Inline-edit the displayed artist's Style signature on the Artist topic page (✎ Edit).
+// Edits by id (any artist, not just the game's selected one), global save like the
+// audition grid. Mirrors audEditArtist() but re-renders via detailArtist().
+function artistEditStyle(id){
+  const box=document.querySelector('#detail [data-artstyle="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]'); if(!box) return;
+  const a=curArtist; if(!a||a.id!==id) return;
+  const btn=document.querySelector('#detail [data-editartstyle]'); if(btn) btn.style.display='none';
+  const ta=document.createElement('textarea'); ta.className='edit'; ta.value=a.style||''; ta.style.minHeight='160px';
+  const acts=document.createElement('div'); acts.className='editacts';
+  const save=document.createElement('button'); save.className='primary'; save.textContent='Save';
+  const cancel=document.createElement('button'); cancel.textContent='Cancel';
+  acts.append(save,cancel);
+  box.replaceWith(ta); ta.after(acts); ta.focus();
+  save.onclick=async()=>{
+    const r=await (await postJSON('/api/artist-style-by-id',{id,style:ta.value})).json();
+    if(!r.ok){ toast('Error: '+(r.error||'save failed')); return; }
+    a.style=ta.value;
+    if(ARTISTS&&ARTISTS.artists){const ent=ARTISTS.artists.find(x=>x.id===id);if(ent)ent.style=ta.value;}
+    toast('Style saved (all games)'); detailArtist(a);
+  };
+  cancel.onclick=()=>detailArtist(a);
+}
 // ---- Audition: artists × 3 scenes for one game ----------------------------
 const GENMODE_OPTS=
   '<option value="openai-low">OpenAI · low — cheap proto (~$0.006)</option>'+
-  '<option value="openai-high">OpenAI · high (~$0.21)</option>'+
   '<option value="gemini">Gemini · finals (~$0.04)</option>'+
-  '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>';
+  '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>'+
+  '<option value="openai-high">OpenAI · high (~$0.21)</option>';
 function genParams(){
   return {provider:genMode.startsWith('openai')?'openai':'gemini',
     quality:genMode==='openai-high'?'high':'low',
@@ -1166,7 +1310,7 @@ function renderAudition(){
   const A=AUD; if(!A){$('#detail').innerHTML='<p class="none">No game.</p>';return;}
   const selArts=A.artists.filter(a=>a.selected);
   const cols=A.scenes.filter(s=>s&&s.slug);
-  const slots=[0,1,2].map(i=>{
+  const slots=[0,1,2,3].map(i=>{
     const cur=A.scenes[i]?A.scenes[i].slug:'';
     const opts=A.allScenes.map(s=>'<option value="'+esc(s.slug)+'"'+(s.slug===cur?' selected':'')+'>'+esc(s.name)+'</option>').join('');
     return '<div class="slot"><label>Scene '+(i+1)+'</label><select data-scene-slot="'+i+'"><option value="">— none —</option>'+opts+'</select></div>';
@@ -1179,18 +1323,20 @@ function renderAudition(){
     const rh='<th class="aud-rowhead'+(house?' house':'')+'"><div class="aname">'+esc(a.name)+'</div><div class="asum">'+esc(a.summary)+'</div>'+
       '<div class="aud-style" data-astyle="'+esc(a.id)+'">'+esc(a.style||'(no signature)')+'</div>'+
       '<button class="editbtn" data-editart="'+esc(a.id)+'">✎ Edit signature</button><br>'+
-      (house?'<span class="badge">★ house</span>':'<button class="housebtn" data-house="'+esc(a.id)+'">Make house artist</button>')+'</th>';
+      '<button class="housebtn" data-aud-art="'+esc(a.id)+'">Audition ▸</button> '+
+      (house?'<span class="badge">★ game artist</span>':'<button class="housebtn" data-house="'+esc(a.id)+'">Make game artist</button>')+'</th>';
     const cells=cols.map(s=>{
       const arr=A.images[a.id+'__'+s.slug]||[]; const f=arr.length?arr[arr.length-1].file:null;
       if(f) audLBList.push(f);
       const img=f?'<img class="thumb" data-zoomaud="'+esc(f)+'" src="/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'">':'<div class="empty">not generated</div>';
-      return '<td class="aud-cell">'+img+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">'+(f?'Regenerate':'Generate')+'</button></td>';
+      const goloc='<a class="goloc" data-goloc="'+esc(s.slug)+'" title="Open this scene\\'s location review page">→ location</a>';
+      return '<td class="aud-cell">'+img+goloc+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">Generate</button></td>';
     }).join('');
     return '<tr>'+rh+cells+'</tr>';
   }).join('');
   const grid=(cols.length&&selArts.length)?'<table class="aud-grid"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table>':'<p class="none">Pick at least one scene and one artist above.</p>';
   $('#detail').innerHTML='<div class="aud-wrap"><h1>Audition · '+esc(curGame)+'</h1>'+
-    '<div class="sub">Render the selected artists against the same 3 scenes (this game\\'s Aesthetic + saved Scene prompts), compare, then make one the house artist.</div>'+
+    '<div class="sub">Render the selected artists against the same 4 scenes (this game\\'s Aesthetic + saved Scene prompts), compare, then make one the game artist. Click an artist\\'s <b>Audition ▸</b> to render that artist across all scenes at the selected model.</div>'+
     '<div class="aud-scenes">'+slots+'</div><div class="aud-artists">'+checks+'</div>'+
     '<div class="aud-controls"><select id="genMode" class="genmode" title="Which generator to use">'+GENMODE_OPTS+'</select>'+
       '<button class="primary" id="bGenAll">Generate all missing ▸</button></div>'+grid+'</div>';
@@ -1198,10 +1344,13 @@ function renderAudition(){
   document.querySelectorAll('[data-scene-slot]').forEach(s=>s.onchange=audSaveCfg);
   document.querySelectorAll('[data-art]').forEach(c=>c.onchange=audSaveCfg);
   document.querySelectorAll('[data-house]').forEach(b=>b.onclick=()=>audMakeHouse(b.dataset.house));
+  document.querySelectorAll('[data-aud-art]').forEach(b=>b.onclick=()=>audArtistGen(b.dataset.audArt));
   document.querySelectorAll('[data-editart]').forEach(b=>b.onclick=()=>audEditArtist(b.dataset.editart));
   document.querySelectorAll('[data-gen-art]').forEach(b=>b.onclick=()=>audCellGen(b.dataset.genArt,b.dataset.genScene));
+  document.querySelectorAll('[data-goloc]').forEach(b=>b.onclick=()=>selectTopic('g:'+curGame,b.dataset.goloc));
   document.querySelectorAll('[data-zoomaud]').forEach(im=>im.onclick=()=>openAudLB(im.dataset.zoomaud));
   $('#bGenAll').onclick=audGenAll;
+  afterDetailRender();
 }
 // Inline-edit an artist's signature from its grid row (✎ Edit) — global save, like the
 // location page's Artist field. Swaps the read-only style box for a textarea + Save/Cancel.
@@ -1224,15 +1373,30 @@ function audEditArtist(id){
 }
 async function audMakeHouse(id){
   const r=await (await postJSON('/api/select-artist',{game:curGame,id})).json();
-  if(r.ok){ AUD.houseArtist=id; toast('House artist for '+curGame+' → '+id); renderAudition(); }
+  if(r.ok){ AUD.houseArtist=id; toast('Game artist for '+curGame+' → '+id); renderAudition(); }
   else toast('Error: '+(r.error||'failed'));
 }
 function audCellGen(artist,scene){
   if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image. Generate one?')) return;
+  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image. Generate one?')) return;
   const {provider,quality,model}=genParams();
   postJSON('/api/audition-gen',{game:curGame,scene,artist,provider,quality,model})
     .then(r=>r.json()).then(r=>{ if(r&&!r.ok&&r.error) toast('Error: '+r.error); }).catch(e=>toast('Error: '+e.message));
   toast('Generating '+artist+' × '+scene+'… (tracked bottom-right)');
+  setTimeout(pollGens,500);
+}
+// Audition one artist: render them across ALL selected scenes at the current model,
+// in one click. Always generates a fresh take per scene (it's an audition, not a fill-gaps).
+function audArtistGen(artist){
+  const cols=AUD.scenes.filter(s=>s&&s.slug);
+  if(!cols.length){ toast('Pick at least one scene first.'); return; }
+  const name=(AUD.artists.find(a=>a.id===artist)||{}).name||artist;
+  if(!confirm('Audition '+name+' across '+cols.length+' scene(s) via '+genMode+'?')) return;
+  if(genMode==='gemini-pro' && !confirm('That is Nano Banana Pro at ~$0.13 each (~$'+(cols.length*0.13).toFixed(2)+' total). Proceed?')) return;
+  if(genMode==='openai-high' && !confirm('That is OpenAI · high at ~$0.21 each (~$'+(cols.length*0.21).toFixed(2)+' total). Proceed?')) return;
+  const {provider,quality,model}=genParams();
+  cols.forEach(s=>postJSON('/api/audition-gen',{game:curGame,scene:s.slug,artist,provider,quality,model}).then(r=>r.json()).then(r=>{if(r&&!r.ok&&r.error)toast('Error: '+r.error);}).catch(e=>toast('Error: '+e.message)));
+  toast('Auditioning '+name+' across '+cols.length+' scene(s)… (tracked bottom-right)');
   setTimeout(pollGens,500);
 }
 function audGenAll(){
@@ -1242,6 +1406,7 @@ function audGenAll(){
   if(!missing.length){ toast('Nothing missing — every cell has an image.'); return; }
   if(!confirm('Generate '+missing.length+' missing image(s) via '+genMode+'?')) return;
   if(genMode==='gemini-pro' && !confirm('That is Nano Banana Pro at ~$0.13 each (~$'+(missing.length*0.13).toFixed(2)+' total). Proceed?')) return;
+  if(genMode==='openai-high' && !confirm('That is OpenAI · high at ~$0.21 each (~$'+(missing.length*0.21).toFixed(2)+' total). Proceed?')) return;
   const {provider,quality,model}=genParams();
   missing.forEach(([artist,scene])=>postJSON('/api/audition-gen',{game:curGame,scene,artist,provider,quality,model}).then(r=>r.json()).then(r=>{if(r&&!r.ok&&r.error)toast('Error: '+r.error);}).catch(e=>toast('Error: '+e.message)));
   toast('Generating '+missing.length+' image(s)… (tracked bottom-right)');
@@ -1275,9 +1440,10 @@ function renderLB(){const list=lbList();if(!list.length){hideLB();return;}
     lbimg.onerror=null; lbimg.src='/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
     lbcap.textContent=f+'  ('+(lbIndex+1)+'/'+list.length+')';
   } else {
-    lbimg.src='/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
-    lbimg.onerror=function(){this.onerror=null;this.src='/img/committed?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;};
-    lbcap.textContent=f+'  ('+(lbIndex+1)+'/'+list.length+')';
+    if(f&&f.indexOf('aud:')===0){ lbimg.onerror=null; lbimg.src=candUrl(f); }
+    else { lbimg.src='/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
+      lbimg.onerror=function(){this.onerror=null;this.src='/img/committed?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;}; }
+    lbcap.textContent=(f&&f.indexOf('aud:')===0?f.slice(4):f)+'  ('+(lbIndex+1)+'/'+list.length+')';
     sel=f; updateSelUI();   // keep the main view in sync with what's shown full screen
   }
 }
