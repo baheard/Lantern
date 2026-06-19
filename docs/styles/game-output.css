@@ -470,6 +470,29 @@ body.tap-to-examine-enabled .game-text {
   color: var(--text-primary);
   background: var(--border-subtle);
 }
+/* "Leave feedback" button — same chrome as collapse; shown only when a real
+   image is present (the panel carries .has-art), not for the placeholder glyph. */
+.location-art-feedback {
+  flex: 0 0 auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.location-art-panel.has-art .location-art-feedback { display: inline-flex; }
+.location-art-feedback:hover {
+  color: var(--text-primary);
+  background: var(--border-subtle);
+}
+.location-art-feedback .material-icons { font-size: 15px; }
 
 /* Edge tab to RE-OPEN a collapsed panel — wide only. Present whenever the game
    has art so it can slide in/out; hidden (off-screen, inert) until collapsed. */

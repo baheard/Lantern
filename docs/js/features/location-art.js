@@ -13,7 +13,7 @@
 
 import { getGameSetting } from '../utils/game-settings.js';
 import { state } from '../core/state.js';
-import { ensureArtOverlay, openArtOverlay, closeArtOverlay } from './art-overlay.js';
+import { ensureArtOverlay, openArtOverlay, closeArtOverlay, openArtFeedbackFor } from './art-overlay.js';
 
 // games/images/<game>/manifest.json keyed by the exact locationName the
 // auto-mapper records. Loaded once per game and cached (404 cached as null).
@@ -115,7 +115,9 @@ function createStatusIcon() {
   icon.alt = '';
   icon.title = 'Hover or press and hold to preview location art';
   // Desktop: preview while hovering. Touch: preview while the finger is held down.
-  const show = () => { if (icon.src) openArtOverlay(icon.src, _currentLocationName || ''); };
+  const show = () => {
+    if (icon.src) openArtOverlay(icon.src, _currentLocationName || '', { location: _currentLocationName || '' });
+  };
   icon.addEventListener('mouseenter', show);
   icon.addEventListener('mouseleave', closeArtOverlay);
   icon.addEventListener('touchstart', (e) => { e.preventDefault(); show(); }, { passive: false });
@@ -144,6 +146,10 @@ function createSidePanel() {
       </div>
       <div class="location-art-footer">
         <span id="locationArtCaption" class="location-art-caption"></span>
+        <button id="locationArtFeedback" class="location-art-feedback" type="button"
+                aria-label="Leave feedback" title="Leave feedback">
+          <span class="material-icons">chat_bubble_outline</span>
+        </button>
         <button id="locationArtCollapse" class="location-art-collapse" type="button"
                 aria-label="Hide location art" title="Hide location art">›</button>
       </div>
@@ -151,9 +157,17 @@ function createSidePanel() {
   `;
   gameOutput.insertAdjacentElement('afterend', panel);
   // The panel image is display-only — not interactive. Only the header thumbnail
-  // (top-right status icon) opens the full-screen preview.
+  // (top-right status icon) opens the full-screen preview. The footer feedback
+  // button is the always-visible "Leave feedback" affordance (the lightbox bubble
+  // is unreachable in the desktop hover-preview path, which closes on mouseleave).
   setupResize(panel.querySelector('#locationArtResize'));
   panel.querySelector('#locationArtCollapse').addEventListener('click', () => setPanelCollapsed(true));
+  panel.querySelector('#locationArtFeedback').addEventListener('click', () => {
+    const img = document.getElementById('locationArtPanelImg');
+    if (img && img.getAttribute('src')) {
+      openArtFeedbackFor({ src: img.src, location: _currentLocationName || '' });
+    }
+  });
   createPanelToggle();
 }
 

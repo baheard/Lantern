@@ -1,108 +1,144 @@
 ---
-title: Hints Feedback System (👍/👎 per hint)
-tags: hints, feedback, github, triage, design, telemetry
+title: Feedback System (hints + art + general) — text-only model
+tags: hints, art, feedback, github, triage, review-notes, design
 created: 2026-06-14
-updated: 2026-06-14
-aliases: hint-rating, hint-feedback, thumbs-up-down, hint-dashboard
+updated: 2026-06-19
+aliases: hint-feedback, art-feedback, feedback-pipeline, leave-feedback, review-notes, consolidate
 ---
 
-# Hints Feedback System
+# Feedback System
 
-Per-hint 👍/👎 rating, added 2026-06-14. Lets us learn which hints land and which
-don't, and surface bad hints as actionable issues. Builds on [[hints-system-design]].
+How player feedback gets from a button tap to a fix. Covers three feedback families
+(general, hints, art), the two operations that process them, and the shared
+consolidate-then-close procedure both operations use. Supersedes the old per-hint
+👍/👎 rating model (removed v1.5.618 — see "What changed" below).
 
-## The pipeline reuses the existing feedback path — deliberately
+## The rails (unchanged): browser → Google Form → GitHub issue
 
 The app is a static site (no server-side logic), so the browser **cannot** talk to GitHub
-directly: a PAT would be a public credential leak, and a token-holding endpoint would violate
-the no-server rule. The existing feedback flow already solved this: `feedback.js` does a silent
-`no-cors` POST to a **Google Form**, and an external automation turns each form response into a
-GitHub issue labelled `feedback`. The `/triage-feedback` command
-(`.claude/commands/triage-feedback.md`) then classifies those issues.
+directly (a PAT would be a public credential leak). `feedback.js` does a silent `no-cors` POST
+to a **Google Form**; an external automation files each response as a `feedback`-labelled GitHub
+issue on `baheard/Lantern`. Every feedback family rides these same rails — no new infra per
+family. The device/console/recent-output context rides along for free.
 
-Hint ratings ride the **same rails**: `submitHintRating()` in `feedback.js` just calls
-`submitFeedback()` with a structured, machine-parseable body. No new infra, no new form, and the
-device/console/recent-output context is attached for free (genuinely useful for "this hint is
-wrong because the game changed").
+Three submit functions in `feedback.js`, all calling `submitFeedback()` with a structured body:
 
-## Payload format (the contract triage parses)
+- **General** — `submitFeedback(text, game)`. No header; freeform.
+- **Hint** — `submitHintFeedback({...})` → `[HINT]` header. Text-only, **no rating**, unlocked
+  (a player can comment on the same hint as many times as they like).
+- **Art** — `submitArtFeedback({...})` → `[ART]` header. Carries the exact image filename **and a
+  content hash** (`hashImage()` = SHA-256 of the displayed bytes, first 12 hex) so a note can be
+  flagged stale if the committed picture was regenerated since.
 
-The form body begins with a tagged header line:
+### Payload formats (the contract the skills parse)
 
 ```
-[HINT 👎] game=wishbringer · section=cellar · q=open-safe · hint=2/3 · hintsVersion=1.5.562
-"<the exact hint text that was rated>"
+[HINT] game=<g> · section=<s> · q=<q> · hint=<n>/<total> · hintsVersion=<v>
+"<the exact hint text being commented on>"
 
-Reason: <user text, or (none)>     ← only for 👎
+Comment: <player text>
 ```
 
-`[HINT 👍]` for positives (no Reason line). Keys are `key=value` separated by ` · `. The
-identity of a rated hint is **game · section · q · hintIndex** — see id-stability note below.
+```
+[ART] game=<g> · location=<loc> · image=<file> · hash=<short> · appVersion=<v>
 
-## Aggregation model: one dashboard issue per GAME (not per hint)
+Comment: <player text>
+```
 
-Decided with the user 2026-06-14. Per-(game,hint) issues would sprawl into dozens of
-single-vote issues — useless for spotting patterns. Instead, `/triage-feedback` folds all
-`[HINT …]` feedback issues into **one `hint-feedback`-labelled issue per game**:
-
-- **Issue body** = a tally table (recomputed each triage run): `section | q | hint | 👍 | 👎 | last reason`.
-- **Comments** = the raw append-only stream (each submission, with reason + version + device).
-- **Both 👍 and 👎** go into the same table — you want the full picture of what works.
-- **Immediately-actionable fast path** — gated on a real comment. A 👎 with **no comment**
-  (`Reason: (none)`) is never fast-pathed; it only tallies. A *commented*, specific, credible 👎
-  (filler/rule-14 tail, wrong command, factual error, stale combo, spoiler) is fixed on the spot —
-  triage verifies it (probe via `tools/play.cjs` for mechanics claims), surfaces it to the user
-  with a proposed fix, edits the hints JSON on approval (preserving ids, bumping `meta.appVersion`),
-  and comments the resolution on the dashboard. A resolved-by-fix 👎 does **not** count toward
-  auto-promote. Vague-or-uncommented 👎 feed the tally. This is why N=4 doesn't gate good fixes.
-- **No re-vote spam**: the panel locks a hint's thumbs after one vote (rated → static "Thanks"
-  state, no buttons; `resetAll` clears only `revealed`, not `hints_ratings`). So one device = at
-  most one submission per hint — there's no uncheck/recheck toggle. Triage still dedups defensively
-  on `game·q·hint·rating·reason·device` for the cleared-site-data / multi-device edge case.
-- **Auto-promote**: when a single hint crosses N 👎 (currently 4, tune skill-side), triage spins
-  it into its own `hint-feedback` + `bug` issue, linked from the dashboard row. The threshold
-  lives in the command, so it's cheap to change without touching the app.
-
-**Why this divides cleanly:** the client stays dumb (post one row); ALL intelligence — find-or-
-create dashboard, recompute table, append comment, threshold-promote — lives in the command. You
-can restructure the issue layout anytime without an app release.
-
-**Idempotency:** triage folds a raw feedback issue in, then deletes it. Deletion *is* the
-watermark — once folded, the raw issue is gone, so re-running triage can't double-count.
-
-**Classification:** hint ratings are neither plain bug nor enhancement — the dedicated
-`hint-feedback` label keeps them out of the normal triage stream. A 👎 whose reason says the hint
-is *wrong/broken* (factual error, stale combo) earns a secondary `bug`; a 👎 that's just
-"unhelpful/too vague" stays pure `hint-feedback`. Don't fold all 👎 into `bug` — the
-unhelpful-vs-incorrect distinction is the whole point of learning.
-
-## Hint id stability (the gotcha)
-
-Per-hint aggregation is only as good as the hint key. A hint is identified by
-`game · section · question.id · hintIndex`. Question/section `id`s are already stable across
-regenerations (see [[hints-system-design]] "Question `id` stability").
-
-**Reset-on-rewrite is authoritative via text comparison, NOT the version stamp.** The payload
-quotes the exact hint text that was rated, and `/triage-feedback` runs in the repo — so it reads
-the current hints JSON and, per row, compares the quoted text against the live hint at that
-`q.id`+index. Differs → rewritten; missing → deleted; either way triage **archives the old
-counts and starts fresh** rather than carrying them forward. This is precise (only the changed
-hint resets; siblings keep their counts). The `hintsVersion` stamp (`meta.appVersion` →
-`meta.generatedAt`) is kept only as an audit breadcrumb in comments — it's whole-file, so too
-coarse to use as the reset key (any regen would nuke everything; a hand-edit bumps nothing).
-
-## Local rating state
-
-`getHintRating`/`setHintRating` in `hints-state.js` persist the user's own vote under game key
-`hints_ratings` → `{ "<questionId>:<hintIndex>": "up"|"down" }`. Purpose: show the vote as
-"registered" (highlight the chosen thumb, disable re-voting) and prevent duplicate submissions.
-Local-only, like reveal state — **not** in the Drive sync whitelist (ephemeral, not save data).
+Keys are `key=value` separated by ` · `. Identity: a hint is `game · section · q · hintIndex`
+(see id-stability below); an image is `game · location · file` keyed exactly, with `hash` as the
+staleness check.
 
 ## UX
 
-Each *revealed* hint line grows a small thumb row. 👍 submits immediately. 👎 opens an inline
-optional reason box (`Send` / `Cancel`); the vote is recorded only on `Send` (reason optional).
-Reason-box open state is transient module state (`_openReasonKey`), never persisted, so a
-re-render reads the textarea value before rebuilding.
-</content>
-</invoke>
+Both surfaces use **one shared modal** (`feedback-modal.js` / `#feedbackModalOverlay`). It takes
+an optional `{subject, placeholder, onSubmit}` — `onSubmit` swaps in the structured hint/art
+payload; omitted → the default general-feedback POST. The modal is its own element, so it isn't
+disturbed by the art lightbox's hover-close.
+
+- **Hints**: each *revealed* hint line grows a single `chat_bubble_outline` "Leave feedback"
+  bubble (`renderFeedbackBtn` in `hints-panel.js`). No lock, re-openable.
+- **Art**: the shared art lightbox (`art-overlay.js`, `#nodeArtOverlay`) has a bubble pinned to
+  the picture's top-right corner. It hashes the displayed image on submit. Game = current game;
+  location/file come from the `meta` passed to `openArtOverlay(src, caption, meta)`.
+
+## The two operations
+
+| Operation | Scope | Touches GitHub? | What it does |
+|---|---|---|---|
+| **`/triage-feedback`** | app-wide inbox | yes (heavy) | drains ALL raw `feedback` issues |
+| **`/review-notes`** | all games, content notes | yes (one list call) | survey + work through unresolved notes |
+
+They are complementary: **triage processes what just came in**; **review-notes surveys everything
+still unresolved**. Both pull `[ART]`/`[HINT]` issues and run the same consolidate-then-close
+procedure (below) — safe to run either, just not simultaneously.
+
+### `/triage-feedback` — the full inbox processor
+
+For each open `feedback` issue:
+- **garbage** (test/empty) → delete
+- **bug / enhancement** → label it **and remove the `feedback` label** ← *the inbox-hygiene fix*
+- **`[HINT]` / `[ART]`** → run the consolidate-then-close procedure
+- keeps its **on-the-spot fast-path fixes** for clearly-actionable items
+- **`--consolidate`** mode → run ONLY the `[ART]`/`[HINT]` consolidate-then-close step (skip
+  general classification, fixes, groom). This is the inner step `/review-notes` invokes.
+- **`--groom`** mode → also close the `on-hold` / `wont-fix` backlog.
+
+**The inbox-hygiene fix (the whole reason old issues stopped re-surfacing):** `feedback` means
+"not yet triaged." The moment an issue is classified, the `feedback` label is **removed** (or, for
+hint/art, the issue is **closed**). Triage therefore only ever sees genuinely-new raw feedback —
+classified-but-unfixed bugs no longer reappear every run. Backlog grooming (`on-hold`/`wont-fix` →
+close) is a separate, deliberate `--groom` pass, not part of every run.
+
+### `/review-notes` — the local working surface
+
+Replaces the old `art-notes` skill, widened to art **and** hints. Steps:
+1. Invoke `/triage-feedback --consolidate` (one `gh issue list`, ~1–3s) to pull any new
+   `[ART]`/`[HINT]` feedback into the notes files and close those issues.
+2. Survey **all unresolved** items across all games from the two local notes files:
+   - **Art** → `docs/games/images/_review-notes.json` — surfaced into artview by location, with a
+     `[stale — picture changed]` flag when the note's `hash` ≠ the current committed image's hash.
+   - **Hints** → `docs/games/hints/_review-notes.json` — listed in the conversation; fix one by
+     one in the hints JSON (route content fixes through `generate-hints` philosophy).
+3. You fix them; it marks resolved / grooms.
+
+## The shared consolidate-then-close procedure (single source of truth)
+
+Both operations use this; it lives here so it can't drift. Given an open `[ART]`/`[HINT]` issue:
+
+1. **Parse** the header into the identity keys + the `Comment:` text.
+2. **Write into the notes file** (these files ARE the system of record — they're committed to git):
+   - **Art** → `docs/games/images/_review-notes.json`, key `game:<g>:<slug>:<file>` (file-specific,
+     so a later regen doesn't blur which picture the note was about). Resolve `<slug>` from the
+     game's manifest/`prompts.json` by `location`/`file`. Tag the note text `[player]` so authored
+     direction and incoming feedback stay distinguishable. Store the `hash` on the entry for the
+     staleness check.
+   - **Hint** → `docs/games/hints/_review-notes.json`, key `game:<g>:<section>:<q>:<hintIndex>`,
+     with the quoted hint text + the `[player]` comment.
+   - Entry shape mirrors the existing art convention:
+     `{ note, status:"open", source:"player", hash?, hintText? }`.
+3. **Close the GitHub issue** (`gh issue close <n>`). **Closing IS the watermark** — `--state open`
+   never returns it again, so re-runs can't double-process, and the two operations can't race
+   (whichever runs first closes it; the other never sees it). If the notes file is ever lost, that
+   feedback is gone — accepted tradeoff; someone re-files it.
+
+**Idempotency = closing.** (The old model deleted the raw issue; we close instead, so history
+survives and a re-report can reopen.)
+
+## Hint id stability (the gotcha — unchanged)
+
+A hint is identified by `game · section · q.id · hintIndex`. Question/section ids are stable
+across regenerations (see [[hints-system-design]]). The `[HINT]` payload quotes the **exact hint
+text** commented on, so when a note is processed the skill can compare the quoted text against the
+live hint at that `q.id`+index: differs → rewritten, missing → deleted; either way the note is
+stale (note it, don't act blindly). Same principle the art `hash` provides for images.
+
+## What changed (v1.5.618) — removed the 👍/👎 rating model
+
+Dropping ratings collapsed a lot. **Removed:** `submitHintRating`, the `hints_ratings` localStorage
+store + `getHintRating`/`setHintRating`/`hintFingerprint` (hints-state.js), the per-hint vote lock,
+the per-game `hint-feedback` GitHub *dashboard* issue with its tally table, the N-👎 auto-promote
+threshold, and vote-dedup. **Why:** the user wanted a single neutral "Leave feedback" channel, not
+a verdict; text feedback is richer and the dashboards/tallies only existed to aggregate votes.
+The `[HINT]`/`[ART]` headers are still structured identically, so a future GitHub rollup or hints
+UI is trivial to add — but none exists now; feedback flows issue → notes file → fix.

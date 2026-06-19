@@ -15,9 +15,10 @@
  */
 
 import { loadHints, findCurrentTopics, updateMilestone } from './hints-data.js';
-import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getSeenQuestions, markQuestionsSeen, resetSeenQuestions, getHintRating, setHintRating } from './hints-state.js';
+import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getSeenQuestions, markQuestionsSeen, resetSeenQuestions } from './hints-state.js';
 import { confirmDialog } from '../../ui/confirm-dialog.js';
-import { submitHintRating } from '../feedback.js';
+import { submitHintFeedback } from '../feedback.js';
+import { openFeedbackModal } from '../../ui/feedback-modal.js';
 
 // ============================================================================
 // MODULE STATE
@@ -32,7 +33,6 @@ let _currentGameName = null;
 let _openSectionId = null;  // the single expanded section (accordion) — tracked in module
                             // state so it survives the re-render fired on every move
 let _openQuestionId = null; // only one question's hints shown at a time (accordion)
-let _openReasonKey = null;  // "<questionId>:<hintIndex>" whose 👎 reason box is open (transient)
 
 /**
  * Read the current turn's game output text from the DOM, for milestone `textMatch`
@@ -222,7 +222,7 @@ function createHintsUI() {
     const contentEl = document.getElementById('hintsContent');
     contentEl.addEventListener('click', handleContentClick);
     // The section row is a role=button div (not a native button), so wire Enter/Space to
-    // toggle it. Nested native buttons (pin, reveal, rate) keep their own keyboard handling.
+    // toggle it. Nested native buttons (pin, reveal, feedback) keep their own keyboard handling.
     contentEl.addEventListener('keydown', handleContentKeydown);
 
     setupResizeHandle();
@@ -487,14 +487,14 @@ function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
     const allRevealed = total > 0 && revealed >= total;
 
     // Revealed hints — plain text; final hint (answer) tinted amber. Each revealed
-    // hint grows a 👍/👎 rating row (see renderRatingBar).
+    // hint grows a "Leave feedback" bubble (see renderFeedbackBtn).
     let hintsHtml = '';
     for (let i = 0; i < revealed; i++) {
         const isAnswer = i === total - 1;
         hintsHtml += `
           <div class="hints-hint-item ${isAnswer ? 'hints-hint-answer' : ''}">
             <span class="hints-hint-text">${escHtml(hints[i])}</span>
-            ${renderRatingBar(question.id, sectionId, i, total, hints[i])}
+            ${renderFeedbackBtn(question.id, sectionId, i, total)}
           </div>`;
     }
 
@@ -548,50 +548,23 @@ function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
 }
 
 /**
- * Render the 👍/👎 rating row for a single revealed hint.
- * - Already rated → static "rated" state (chosen thumb highlighted, no re-vote).
- * - 👎 reason box open for this hint → render the optional-reason form instead.
- * - Otherwise → the two thumb buttons.
+ * Render the "Leave feedback" bubble for a single revealed hint. Text-only and
+ * unlocked — clicking opens the shared feedback modal; the player can leave as
+ * many comments as they like (no rating, no per-hint lock). See
+ * .tome/hints-feedback-system.md.
  *
  * @param {string} questionId
  * @param {string} sectionId
  * @param {number} hintIndex - 0-based
  * @param {number} total
- * @param {string} hintText - current text of this hint (for rewrite-aware lock)
  * @returns {string}
  */
-function renderRatingBar(questionId, sectionId, hintIndex, total, hintText) {
-    const rating = getHintRating(questionId, hintIndex, _currentGameName, hintText);
-    const key = `${questionId}:${hintIndex}`;
-
-    if (rating) {
-        const icon = rating === 'up' ? 'thumb_up' : 'thumb_down';
-        return `
-          <div class="hints-rate hints-rate-done">
-            <span class="material-icons hints-rate-icon hints-rate-${rating}">${icon}</span>
-            <span class="hints-rate-thanks">Thanks for the feedback</span>
-          </div>`;
-    }
-
-    if (_openReasonKey === key) {
-        return `
-          <div class="hints-rate-reason" data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}">
-            <textarea class="hints-rate-reason-input" id="hintsReason-${escHtml(key)}" rows="2" placeholder="What's wrong with this hint? (optional)"></textarea>
-            <div class="hints-rate-reason-actions">
-              <button class="hints-rate-reason-cancel" data-action="cancel-reason">Cancel</button>
-              <button class="hints-rate-reason-send" data-action="send-reason" data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}">Send feedback</button>
-            </div>
-          </div>`;
-    }
-
+function renderFeedbackBtn(questionId, sectionId, hintIndex, total) {
     const dataAttrs = `data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}"`;
     return `
-      <div class="hints-rate">
-        <button class="hints-rate-btn" data-action="rate-up" ${dataAttrs} aria-label="This hint helped" title="This hint helped">
-          <span class="material-icons">thumb_up</span>
-        </button>
-        <button class="hints-rate-btn" data-action="rate-down" ${dataAttrs} aria-label="This hint wasn't helpful" title="This hint wasn't helpful">
-          <span class="material-icons">thumb_down</span>
+      <div class="hints-feedback">
+        <button class="hints-feedback-btn" data-action="hint-feedback" ${dataAttrs} aria-label="Leave feedback" title="Leave feedback">
+          <span class="material-icons">chat_bubble_outline</span>
         </button>
       </div>`;
 }
@@ -603,7 +576,7 @@ function renderRatingBar(questionId, sectionId, hintIndex, total, hintText) {
 function handleContentKeydown(e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     // Only the role=button section row needs synthetic activation; native buttons
-    // (pin/reveal/rate) handle Enter/Space themselves, so ignore those targets.
+    // (pin/reveal/feedback) handle Enter/Space themselves, so ignore those targets.
     const row = e.target.closest('.hints-section-row');
     if (!row || e.target !== row) return;
     e.preventDefault();
@@ -621,45 +594,10 @@ function handleContentClick(e) {
         return;
     }
 
-    if (action === 'rate-up') {
-        const { questionId, sectionId, hintIndex, total } = readRatingDataset(target);
+    if (action === 'hint-feedback') {
+        const { questionId, sectionId, hintIndex, total } = readFeedbackDataset(target);
         if (!questionId) return;
-        sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'up' });
-        setHintRating(questionId, hintIndex, 'up', _currentGameName, getHintText(questionId, hintIndex));
-        if (_openReasonKey === `${questionId}:${hintIndex}`) _openReasonKey = null;
-        rerenderQuestion(questionId);
-        return;
-    }
-
-    if (action === 'rate-down') {
-        const { questionId, hintIndex } = readRatingDataset(target);
-        if (!questionId) return;
-        // Open the optional-reason box; nothing is submitted until "Send feedback".
-        _openReasonKey = `${questionId}:${hintIndex}`;
-        rerenderQuestion(questionId);
-        // Focus the textarea after re-render
-        const ta = _overlay.querySelector(`#hintsReason-${cssEscape(`${questionId}:${hintIndex}`)}`);
-        ta?.focus();
-        return;
-    }
-
-    if (action === 'send-reason') {
-        const { questionId, sectionId, hintIndex, total } = readRatingDataset(target);
-        if (!questionId) return;
-        const ta = _overlay.querySelector(`#hintsReason-${cssEscape(`${questionId}:${hintIndex}`)}`);
-        const reason = ta ? ta.value : '';
-        sendHintRating({ questionId, sectionId, hintIndex, total, rating: 'down', reason });
-        setHintRating(questionId, hintIndex, 'down', _currentGameName, getHintText(questionId, hintIndex));
-        _openReasonKey = null;
-        rerenderQuestion(questionId);
-        return;
-    }
-
-    if (action === 'cancel-reason') {
-        const box = target.closest('.hints-rate-reason');
-        const questionId = box?.dataset.questionId;
-        _openReasonKey = null;
-        if (questionId) rerenderQuestion(questionId);
+        openHintFeedback({ questionId, sectionId, hintIndex, total });
         return;
     }
 
@@ -749,12 +687,11 @@ function rerenderQuestion(questionId) {
 }
 
 /**
- * Read the rating data attributes off a clicked element (set on both the thumb
- * buttons and the reason-box Send button).
+ * Read the feedback data attributes off a clicked bubble button.
  * @param {HTMLElement} el
  * @returns {{questionId: string, sectionId: string, hintIndex: number, total: number}}
  */
-function readRatingDataset(el) {
+function readFeedbackDataset(el) {
     return {
         questionId: el.dataset.questionId,
         sectionId: el.dataset.sectionId || '',
@@ -764,26 +701,32 @@ function readRatingDataset(el) {
 }
 
 /**
- * Look up a hint's text and submit a rating to the feedback pipeline.
- * Fire-and-forget: the no-cors POST is opaque, so we don't await UI on it.
- * @param {{questionId: string, sectionId: string, hintIndex: number, total: number, rating: 'up'|'down', reason?: string}} p
+ * Open the shared feedback modal for a specific hint, wiring its Submit to the
+ * structured hint-feedback payload. Unlocked: re-openable any number of times.
+ * @param {{questionId: string, sectionId: string, hintIndex: number, total: number}} p
  */
-function sendHintRating({ questionId, sectionId, hintIndex, total, rating, reason }) {
+function openHintFeedback({ questionId, sectionId, hintIndex, total }) {
     const hintText = getHintText(questionId, hintIndex);
+    const section = findQuestionSection(questionId);
+    const question = section?.questions.find(q => q.id === questionId);
+    const qLabel = question?.q || questionId;
     const hintsVersion = _currentHintsData?.meta?.appVersion
         || _currentHintsData?.meta?.generatedAt
         || '';
 
-    submitHintRating({
-        gameName: _currentGameName,
-        sectionId,
-        questionId,
-        hintIndex,
-        total,
-        hintText,
-        hintsVersion,
-        rating,
-        reason,
+    openFeedbackModal({
+        subject: `Hint · ${qLabel} (${hintIndex + 1}/${total})`,
+        placeholder: "What's wrong (or right) with this hint?",
+        onSubmit: (comment) => submitHintFeedback({
+            gameName: _currentGameName,
+            sectionId,
+            questionId,
+            hintIndex,
+            total,
+            hintText,
+            hintsVersion,
+            comment,
+        }),
     });
 }
 
@@ -792,17 +735,6 @@ function getHintText(questionId, hintIndex) {
     const section = findQuestionSection(questionId);
     const question = section?.questions.find(q => q.id === questionId);
     return Array.isArray(question?.hints) ? (question.hints[hintIndex] || '') : '';
-}
-
-/**
- * Escape a string for use inside a CSS id selector (the "questionId:index" keys
- * contain a colon, which is a CSS combinator). Prefer CSS.escape when available.
- * @param {string} s
- * @returns {string}
- */
-function cssEscape(s) {
-    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(s);
-    return s.replace(/([^\w-])/g, '\\$1');
 }
 
 /** Find the section containing a given questionId */

@@ -153,68 +153,6 @@ export function resetSeenQuestions(gameName) {
 }
 
 /**
- * Cheap, stable fingerprint of a hint's text (djb2 → base36). Stored with each
- * rating so a rating auto-resets when the hint is *rewritten* — the client mirror
- * of the triage reset-on-rewrite rule. Position alone (`questionId:hintIndex`) isn't
- * enough: a rewritten hint keeps its index, so the old vote would stick to new text.
- *
- * @param {string} text
- * @returns {string}
- */
-function hintFingerprint(text) {
-    const s = String(text == null ? '' : text);
-    let h = 5381;
-    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
-    return (h >>> 0).toString(36);
-}
-
-/**
- * Get the user's own rating for a specific revealed hint, if any.
- * Keyed by "<questionId>:<hintIndex>" within the per-game `hints_ratings` store.
- * Returns null if the stored rating was for *different* hint text (the hint was
- * rewritten) — so the user can re-rate the new version. Pre-fingerprint entries
- * (legacy plain-string format) are likewise treated as stale → re-ratable.
- * Local-only (like reveal state) — never Drive-synced. See [[hints-feedback-system]].
- *
- * @param {string} questionId
- * @param {number} hintIndex - 0-based index of the hint within the question
- * @param {string} [gameName]
- * @param {string} [hintText] - current text of the hint (for rewrite detection)
- * @returns {'up'|'down'|null}
- */
-export function getHintRating(questionId, hintIndex, gameName, hintText) {
-    const key = getGameKey('hints_ratings', gameName);
-    const stored = getJSON(key, null);
-    if (!stored || typeof stored !== 'object') return null;
-    const entry = stored[`${questionId}:${hintIndex}`];
-    // New format: { r: 'up'|'down', h: fingerprint }. Match the fingerprint or it's stale.
-    if (entry && typeof entry === 'object' && (entry.r === 'up' || entry.r === 'down')) {
-        return entry.h === hintFingerprint(hintText) ? entry.r : null;
-    }
-    return null; // legacy string format / unknown → stale, allow re-rate
-}
-
-/**
- * Persist the user's rating for a specific hint (prevents re-voting / duplicate
- * sends until the hint text changes). Stores a fingerprint of the rated text so a
- * later rewrite auto-resets the lock.
- *
- * @param {string} questionId
- * @param {number} hintIndex
- * @param {'up'|'down'} rating
- * @param {string} [gameName]
- * @param {string} [hintText] - the exact hint text being rated
- */
-export function setHintRating(questionId, hintIndex, rating, gameName, hintText) {
-    if (rating !== 'up' && rating !== 'down') return;
-    const key = getGameKey('hints_ratings', gameName);
-    const stored = getJSON(key, null);
-    const map = stored && typeof stored === 'object' ? stored : {};
-    map[`${questionId}:${hintIndex}`] = { r: rating, h: hintFingerprint(hintText) };
-    setJSON(key, map);
-}
-
-/**
  * Return the milestone (act) index the player is currently in for this game.
  *
  * Milestones model act boundaries (e.g. Festeron → Witchville) for games whose

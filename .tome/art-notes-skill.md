@@ -8,9 +8,15 @@ aliases: [art notes, /art-notes, unresolved art notes, review notes sweep]
 
 # /art-notes skill — cross-game unresolved-notes analysis sweep
 
-`/art-notes` (`.claude/skills/art-notes/`) sweeps **every** game's UNRESOLVED notes in
-`docs/games/images/_review-notes.json` and writes a per-note **analysis** (problem · owning
-layer · recommended action). The analysis pass itself changes nothing.
+> **Renamed/superseded by `/review-notes`** (`.claude/skills/review-notes/`, v1.5.618). The
+> art-notes skill was deleted. `/review-notes` does the same analysis-first sweep but widened to
+> THREE sources — saved artview notes + player `[ART]` feedback + player `[HINT]` feedback — and
+> pulls fresh feedback from GitHub itself. The resolution-coupled-to-action rule below still holds.
+> See [[hints-feedback-system]] for the full feedback pipeline.
+
+`/review-notes` sweeps **every** game's UNRESOLVED notes in `docs/games/images/_review-notes.json`
+(art) and `docs/games/hints/_review-notes.json` (hints) and writes a per-note **analysis** (problem
+· owning layer · recommended action). The analysis pass itself changes nothing.
 
 **Resolution is coupled to ACTION, not to analysis.** The sweep never auto-flags from merely
 looking. But once a fix is applied for a note (after approval, or via the location-art handoff),

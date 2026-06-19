@@ -101,37 +101,81 @@ export async function submitFeedback(feedbackText, gameName = 'None') {
 }
 
 /**
- * Submit a 👍/👎 rating for a single hint. Rides the same Google Form as
+ * Submit free-text feedback about a single hint. Rides the same Google Form as
  * submitFeedback() — an external automation files these as `feedback`-labelled
- * GitHub issues, which `/triage-feedback` folds into one per-game `hint-feedback`
- * dashboard issue. The structured header line is the contract triage parses.
- * See .tome/hints-feedback-system.md.
+ * GitHub issues, which `/triage-feedback --consolidate` (and `/review-notes`)
+ * fold into `docs/games/hints/_review-notes.json` and then close. The structured
+ * header line is the contract those skills parse. See .tome/hints-feedback-system.md.
+ *
+ * Text-only (no 👍/👎 rating) and not locked — the player can leave as many
+ * comments on a hint as they like.
  *
  * @param {Object} p
  * @param {string} p.gameName
  * @param {string} p.sectionId
  * @param {string} p.questionId
- * @param {number} p.hintIndex     - 0-based index of the rated hint
+ * @param {number} p.hintIndex     - 0-based index of the commented hint
  * @param {number} p.total         - total hints in the question
- * @param {string} p.hintText      - the exact hint text that was rated
+ * @param {string} p.hintText      - the exact hint text being commented on
  * @param {string} [p.hintsVersion]- meta.appVersion (or generatedAt) of the hints file
- * @param {'up'|'down'} p.rating
- * @param {string} [p.reason]      - optional free-text, only meaningful for 👎
+ * @param {string} p.comment       - the player's free-text comment
  * @returns {Promise<void>}
  */
-export async function submitHintRating({
+export async function submitHintFeedback({
   gameName, sectionId, questionId, hintIndex, total,
-  hintText, hintsVersion, rating, reason,
+  hintText, hintsVersion, comment,
 }) {
-  const thumb = rating === 'up' ? '\u{1F44D}' : '\u{1F44E}';
   const lines = [
-    `[HINT ${thumb}] game=${gameName} · section=${sectionId} · q=${questionId} `
+    `[HINT] game=${gameName} · section=${sectionId} · q=${questionId} `
       + `· hint=${hintIndex + 1}/${total} · hintsVersion=${hintsVersion || 'unknown'}`,
     `"${hintText}"`,
+    '',
+    `Comment: ${comment && comment.trim() ? comment.trim() : '(none)'}`,
   ];
-  if (rating === 'down') {
-    const r = reason && reason.trim() ? reason.trim() : '(none)';
-    lines.push('', `Reason: ${r}`);
+  await submitFeedback(lines.join('\n'), gameName || 'None');
+}
+
+/**
+ * Compute a short content fingerprint of an image so feedback can be matched to
+ * the *exact* picture it was about — a regen overwrites the same path, so the
+ * filename alone can't tell `/review-notes` whether the committed art still
+ * matches what the player saw. SHA-256 of the bytes, first 12 hex chars.
+ *
+ * @param {string} url - the displayed image URL
+ * @returns {Promise<string>} short hex hash, or '' if it couldn't be computed
+ */
+export async function hashImage(url) {
+  try {
+    const buf = await (await fetch(url)).arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return [...new Uint8Array(digest)].slice(0, 6)
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return '';
   }
+}
+
+/**
+ * Submit free-text feedback about a single location image. Rides the same Google
+ * Form rails; `/triage-feedback --consolidate` and `/review-notes` fold these
+ * `[ART]` issues into `docs/games/images/_review-notes.json` (as `[player]`-tagged
+ * notes), then close them. The image hash lets the skill flag the note stale if
+ * the committed picture has since been regenerated.
+ *
+ * @param {Object} p
+ * @param {string} p.gameName
+ * @param {string} p.location  - location name as shown in-app
+ * @param {string} p.file      - committed image filename (e.g. "alley.png")
+ * @param {string} [p.hash]    - short content hash of the displayed image
+ * @param {string} p.comment   - the player's free-text comment
+ * @returns {Promise<void>}
+ */
+export async function submitArtFeedback({ gameName, location, file, hash, comment }) {
+  const lines = [
+    `[ART] game=${gameName} · location=${location} · image=${file || 'unknown'} `
+      + `· hash=${hash || 'unknown'} · appVersion=${APP_CONFIG.version}`,
+    '',
+    `Comment: ${comment && comment.trim() ? comment.trim() : '(none)'}`,
+  ];
   await submitFeedback(lines.join('\n'), gameName || 'None');
 }

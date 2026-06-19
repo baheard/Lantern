@@ -377,6 +377,19 @@
   width: min(480px, 90vw);
 }
 
+/* Subject line — names the hint/image being commented on. Hidden for general feedback. */
+.feedback-modal-subject {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent, #93c5fd);
+  background: rgba(59, 130, 246, 0.12);
+  border-left: 3px solid rgba(59, 130, 246, 0.6);
+  border-radius: 4px;
+}
+.feedback-modal-subject.hidden { display: none; }
+
 .feedback-modal-auto-fields {
   display: flex;
   flex-direction: column;

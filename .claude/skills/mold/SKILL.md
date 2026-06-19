@@ -112,6 +112,6 @@ sound/motion (it's a still).
 - Dev-only data (`style.json`, `prompts.json`) — do NOT bump the app version.
 - Don't touch `prompts.json` here (that's phase 1's artifact); mold writes only `style.json` scenes{}.
 - Sibling skills: `generate-location-prompts` (facts, phase 1), the render skill (phase 3),
-  `build-scenes` (wrapper = facts + mold author in one call), `/art-notes` (reviews rendered
+  `build-scenes` (wrapper = facts + mold author in one call), `/review-notes` (reviews rendered
   *images*; mold-review audits the scene *text*). `location-art` still owns audition / promote /
   open-reviewer.

@@ -1,6 +1,6 @@
 ---
 name: render-rooms
-description: Batch-render the location art for a Lantern game (or a named subset of rooms) — the same thing as clicking "Generate" on a series of rooms in artview. By this phase the prompts are already built (App/Artist/Aesthetic/Scene-override all composed), so there is nothing to decide — it just composes and calls the image model. Triggered when the user says "/render-rooms <game>", "render all images for <game>", "generate the art for <game>", "render <room> [and <room>]", or "render the missing rooms". Phase 3 of the art pipeline (after generate-location-prompts → mold).
+description: Make and commit the location art for a Lantern game. Batch-renders rooms (or a named subset) — the same as clicking "Generate" in artview, since by this phase the prompts are already built — and PROMOTES chosen candidates into the committed game image (the app's lookup). Triggered when the user says "/render-rooms <game>", "render all images for <game>", "generate the art for <game>", "render <room> [and <room>]", "render the missing rooms", "promote <room> for <game>", or "commit the art for <game>". Phase 3 of the art pipeline (after generate-location-prompts → mold).
 ---
 
 # render-rooms skill
@@ -34,9 +34,26 @@ generate-location-prompts → mold → [render-rooms]
    it back to `mold`, not here).
 5. Report ok/skip/fail counts and point the user at artview (`/artview <game>`) to review/promote.
 
+## Action: Promote (commit a render as the game's image)
+
+Rendering lands candidates in `_review/`. **Promote** is what makes a candidate *the* image the
+app shows for a room: it copies the chosen file to the committed `<game>/<slug>.png` and updates
+`manifest.json` (keyed by the exact `locationName`, the app's lookup key). Usually you eyeball
+candidates in artview first, then promote the winners.
+
+- Whole rooms / a subset: `node tools/promote-room-images.cjs <game> <slug> [<slug>...]`
+- Reject (drop a candidate from staging): `node tools/promote-room-images.cjs <game> --reject <slug>...`
+- Or use the reviewer's **Promote** button per image (`/api/promote`), which does the same copy +
+  manifest update.
+
+Promote only commits an existing `_review/` candidate — it never generates. If a room has no
+candidate yet, render it first (above).
+
 ## Notes
-- Renders land in `_review/` (staging); promoting the winners into the game is `location-art`'s
-  Promote action (or the reviewer's Promote button). This skill only generates.
+- This skill owns the committed room **images**: generate candidates into `_review/`, then promote
+  the winners. (Promote moved here from the retired `location-art` skill.)
+- If a room looks wrong, the fix belongs upstream: scene/geometry → `mold`; palette/mood →
+  Aesthetic; medium/edges → Artist. Re-render, then re-promote.
 - Dev-only output — do NOT bump the app version.
 - If a room looks wrong, the fix belongs upstream: scene/geometry → `mold`; palette/mood →
   Aesthetic; medium/edges → Artist. Re-render after. Don't hand-tweak prompts here.

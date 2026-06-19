@@ -5,8 +5,15 @@ description: Generate, review, and refine per-location art for a Lantern game (t
 
 # location-art skill
 
-Owns the **whole location-art pipeline** for a Lantern game: mine prompts → craft scene
-text → generate images → review → route review notes back into the layers → promote.
+> **⚠️ Being retired.** The pipeline split into focused skills — use those instead:
+> facts → **`generate-location-prompts`**, scene overrides → **`mold`**, images + promote →
+> **`render-rooms`**, reviewer → **`artview`**, one-call build → **`build-scenes`**. Artist
+> auditioning was dropped. The **only** thing still living here is the per-game **Review notes**
+> route-and-apply action, which folds into **`/review-notes`** during the notes consolidation — at
+> which point this skill goes away entirely. Don't add new work here.
+
+Historically owned the whole pipeline: mine prompts → craft scene text → generate images →
+review → route review notes back into the layers → promote.
 
 The *why* (design rationale, hard-won lessons) lives in the tome:
 `.tome/art-direction-model.md` and `.tome/location-art-system.md`. **Read
@@ -36,11 +43,13 @@ If invoked bare (`/location-art` with no game / no clear action), DON'T guess. L
 games under `docs/games/images/` (dirs not starting with `_`) and ask **which game** and
 **which action**:
 
-1. **Generate / regenerate** images (new room art or re-roll existing)
-2. **Review notes** — read reviewer feedback and route it to the right layer
-3. **Craft / edit a scene** (write or fix a `scenes[slug]` override)
-4. **Open the reviewer** (just launch the review UI)
-5. **Promote** approved images into the game
+1. **Review notes** — read reviewer feedback and route it to the right layer (the one action
+   still owned here; see below)
+
+Everything else has moved — redirect rather than doing it here:
+- Generate / regenerate images, and Promote → **`render-rooms`**
+- Craft / edit a scene override → **`mold`** (or `build-scenes` for a whole game)
+- Open the reviewer → **`artview`**
 
 ## Action: Generate / regenerate
 
@@ -172,7 +181,7 @@ When writing a `scenes[slug]` override:
    - **The mechanical test:** in the harness, `take <noun>` — *"firmly attached" / "can't take
      that"* ⇒ KEEP; if it pockets ⇒ DROP. No vibe call needed. (Caveat: judge the INITIAL state —
      items that only become takeable after a puzzle, like the dagger, are fixtures at first view.)
-   This same coverage logic runs proactively in the `/art-notes` sweep (it flags fixed canon
+   This same coverage logic runs proactively in the `/review-notes` sweep (it flags fixed canon
    objects absent from a committed render even when no human note exists).
 
 ## Action: Open the reviewer
@@ -183,31 +192,6 @@ the standalone `/artview` command does. Add `-Restart` to switch games. The revi
 you A/B candidates, see the composed + actual prompt, leave notes, and Promote/Regenerate.
 
 Build a static contact sheet instead: `node tools/gen-room-review.cjs <game>`.
-
-## Action: Audition artists for a game
-
-Use this to **pick (or develop) which artist a whole game should use** before committing
-every room to one. In the reviewer's **Audition** rail topic (pick a game in the middle
-pane): choose a user-selected SUBSET of artists and 3 scenes (auto-suggested as one
-exterior + one dim interior + one signature room — all overridable), then "Generate all
-missing" renders `subset × scenes` through the normal compose path (App ▸ Artist ▸ Aesthetic
-▸ Scene) so the takes are production-faithful. Compare the grid side-by-side, then
-**Make house artist** writes `<game>/selected-artist.json`.
-
-- Config persists in `<game>/audition.json` (`{scenes:[≤3], artists:[]}`; empty ⇒ all
-  artists / auto-suggested scenes). Renders land in `<game>/_audition/` named
-  `<artistId>__<sceneSlug>__<tag>-rN.png` (+ `.txt` sidecar).
-- Signatures stay GLOBAL — auditioning is for choosing/developing a roster, not forking an
-  artist per game. Per-game difference belongs in the Aesthetic layer.
-- Defaults to OpenAI-low (cheap); switch the genMode dropdown to Gemini/Nano-Pro for finals.
-- Full design + endpoints: `.tome/artist-audition-design.md`.
-
-## Action: Promote
-
-Move approved images from `_review/` into the committed `<game>/` folder and update
-`manifest.json` (keyed by exact `locationName`, the app's lookup key):
-`node tools/promote-room-images.cjs <game> <slug> [<slug>...]`
-Reject (drop from staging): `node tools/promote-room-images.cjs <game> --reject <slug>...`
 
 ## Notes
 - These are dev-only tooling/data changes — do NOT bump the app version for them (a
