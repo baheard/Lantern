@@ -532,6 +532,31 @@ function sandboxReject(slug, file) {
   }
   return {};
 }
+// Copy an existing image (a location candidate/committed, an audition piece, or another
+// sandbox render) INTO _sandbox as a new sbx-rN, with a sidecar built from the current layer
+// fields — so "Sandbox!" lands you on that picture, selected, ready to tweak. The .txt prompt
+// is the source's own recorded prompt when present (its true provenance), else the composed.
+function sandboxAdopt(slug, srcKind, srcFile, fields, meta) {
+  const g = gamePaths(slug);
+  fs.mkdirSync(g.sandbox, { recursive: true });
+  const base = path.basename((srcFile || '').replace(/^aud:/, ''));
+  if (!base) throw new Error('no source image');
+  const cands = srcKind === 'audition' ? [path.join(g.audition, base)]
+    : srcKind === 'sandbox' ? [path.join(g.sandbox, base)]
+    : [path.join(g.review, base), path.join(g.dir, base)];   // review → committed fallback
+  const srcPath = cands.find((p) => fs.existsSync(p));
+  if (!srcPath) throw new Error('source image not found');
+  let max = 0;
+  for (const f of fs.readdirSync(g.sandbox)) { const m = f.match(/^sbx-r(\d+)\.png$/i); if (m) max = Math.max(max, parseInt(m[1], 10)); }
+  const outName = `sbx-r${max + 1}.png`;
+  const out = path.join(g.sandbox, outName);
+  fs.copyFileSync(srcPath, out);
+  const stp = srcPath.replace(/\.png$/i, '.txt');
+  const prompt = fs.existsSync(stp) ? fs.readFileSync(stp, 'utf8') : composeInline(fields);
+  fs.writeFileSync(out.replace(/\.png$/i, '.txt'), prompt);
+  fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ ...(meta || {}), ...(fields || {}), prompt }, null, 2));
+  return { file: outName };
+}
 function sandboxGen(slug, fields, meta, provider, quality, model) {
   return new Promise((resolve, _reject) => {
     const g = gamePaths(slug);
@@ -672,6 +697,7 @@ const server = http.createServer(async (req, res) => {
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
       }
       if (u.pathname === '/api/sandbox-reject') return wrap(() => sandboxReject(body.game, body.file));
+      if (u.pathname === '/api/sandbox-adopt') return wrap(() => sandboxAdopt(body.game, body.srcKind, body.srcFile, body.fields, body.meta));
       if (u.pathname === '/api/sandbox-gen') {
         try { const r = await sandboxGen(body.game, body.fields, body.meta, body.provider, body.quality, body.model); return sendJSON(res, 200, { ok: true, ...r }); }
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
@@ -1166,9 +1192,12 @@ function detailLocation(l){
   $('#bRegen').onclick=()=>doRegen(l);
   $('#bSandbox').onclick=()=>{
     const gi=GAMEINFO[curGame]||{artist:{},aesthetic:'',app:''};
+    // Carry the currently selected picture in (if any): aud:-pieces come from _audition, the
+    // rest are _review candidates / committed.
+    const adopt=sel?{srcKind:(sel.indexOf('aud:')===0?'audition':'review'), srcFile:sel}:null;
     SANDBOX_PREFILL={game:curGame, app:gi.app||'', aesthetic:gi.aesthetic||'',
       artist:(gi.artist&&gi.artist.style)||'', artistId:(gi.artist&&gi.artist.id)||null,
-      artistName:(gi.artist&&gi.artist.name)||'(custom)', locSlug:l.slug, locName:l.name, scene:sceneTextForLoc(l)};
+      artistName:(gi.artist&&gi.artist.name)||'(custom)', locSlug:l.slug, locName:l.name, scene:sceneTextForLoc(l), adopt};
     selectTopic('sandbox', curGame);
   };
   // Scene: live-update Composed on every keystroke, persist on blur.
@@ -1470,6 +1499,17 @@ async function detailSandbox(game){
     if(p.artistId!==undefined){ SBXW.artistId=p.artistId; SBXW.artistName=p.artistName||rosterName(p.artistId); }
     if(p.locSlug){ const l=(GAMES[game]||[]).find(x=>x.slug===p.locSlug); SBXW.locSlug=p.locSlug; SBXW.locName=(l&&l.name)||p.locName||''; if(p.scene==null) SBXW.scene=sceneTextForLoc(l); }
     if(p.scene!=null) SBXW.scene=p.scene;
+    // Carry the source picture in: copy it into _sandbox with a sidecar from the resolved
+    // layers, then select it. Fields are now fully resolved above, so the sidecar is faithful.
+    if(p.adopt && p.adopt.srcFile){
+      try{
+        const r=await (await postJSON('/api/sandbox-adopt',{game, srcKind:p.adopt.srcKind, srcFile:p.adopt.srcFile,
+          fields:{app:SBXW.app,artist:SBXW.artist,aesthetic:SBXW.aesthetic,scene:SBXW.scene},
+          meta:{artistId:SBXW.artistId,artistName:SBXW.artistName,edited:sbxIsEdited(),locSlug:SBXW.locSlug,locName:SBXW.locName}})).json();
+        if(r.ok){ SBX=await (await fetch('/api/sandbox?game='+encodeURIComponent(game))).json(); SBXW.sel=r.file; }
+        else toast('Sandbox: '+(r.error||'could not copy image'));
+      }catch(e){ toast('Sandbox: '+e.message); }
+    }
   }
   renderSandbox();
 }
@@ -1499,10 +1539,12 @@ function renderSandbox(){
       '<button id="bSbxOver"'+(SBXW.artistId?'':' disabled')+' title="Write the Artist text back onto the selected artist (global)">'+esc(overLbl)+'</button></div>'+
     '<div class="cands">'+(cands||'<span class="none">No sandbox renders yet — Generate to create one.</span>')+'</div>'+
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected render</label><div class="val" id="sbxActual">(none)</div></div>'+
-    sbxField('app','App · all games','sbxApp',SBXW.app)+
-    sbxField('artist','Artist · '+esc(SBXW.artistName||'custom')+(sbxIsEdited()?' (edited)':''),'sbxArtist',SBXW.artist)+
-    sbxField('global','Game style (Aesthetic) · '+esc(game),'sbxAesthetic',SBXW.aesthetic)+
-    sbxField('scene','Scene'+(SBXW.locName?(' · '+esc(SBXW.locName)):''),'sbxScene',SBXW.scene)+
+    // Reverse-hierarchy order matching the location page (closest-to-room first, App last);
+    // scope classes give each label the SAME colour as on the location page.
+    sbxField('scene','Scene'+(SBXW.locName?(' · '+esc(SBXW.locName)):''),'Scene · this location','sbxScene',SBXW.scene)+
+    sbxField('global','Game · '+esc(game),'Style · this game','sbxAesthetic',SBXW.aesthetic)+
+    sbxField('global','Artist · '+esc(SBXW.artistName||'custom')+(sbxIsEdited()?' (edited)':''),'Signature · all games','sbxArtist',SBXW.artist)+
+    sbxField('app','App · all games','App instructions · highest layer','sbxApp',SBXW.app)+
     '<div class="sec scope-derived"><label class="ro"><span class="tag">Derived</span>Composed prompt → what Generate sends</label><div class="val" id="sbxComposed"></div></div>';
   const right='<div class="bigprev empty" id="sbxBig"><span>no render selected</span></div>';
   $('#detail').innerHTML='<div class="loc-wrap"><div class="loc-left sbx-left">'+left+'</div><div class="loc-right">'+right+'</div></div>';
@@ -1519,8 +1561,8 @@ function renderSandbox(){
   sbxUpdateComposed(); sbxUpdateSel();
   afterDetailRender();
 }
-function sbxField(scope,label,id,val){
-  return '<div class="sec scope-'+scope+' scope-editable"><label class="ed"><span class="tag">'+label.split(' · ')[0]+'</span>'+label+'</label>'+
+function sbxField(scope,tag,label,id,val){
+  return '<div class="sec scope-'+scope+'"><label class="ed"><span class="tag">'+tag+'</span>'+label+'</label>'+
     '<textarea class="edit" id="'+id+'">'+esc(val||'')+'</textarea></div>';
 }
 function sbxUpdateComposed(){ const c=$('#sbxComposed'); if(c) c.textContent=breakPrompt(composeSandbox()); }
@@ -1638,8 +1680,12 @@ function renderAudition(){
   document.querySelectorAll('[data-goloc]').forEach(b=>b.onclick=()=>selectTopic('g:'+curGame,b.dataset.goloc));
   document.querySelectorAll('[data-sbxart]').forEach(b=>b.onclick=()=>{
     const a=(AUD.artists||[]).find(x=>x.id===b.dataset.sbxart);
+    const key=b.dataset.sbxart+'__'+b.dataset.sbxscene;
+    const arr=(AUD.images||{})[key]||[]; const nf=arr.length?arr[arr.length-1].file:null;
+    const bor=!nf?((AUD.borrowed||{})[key]||null):null;
+    const adopt=nf?{srcKind:'audition',srcFile:nf}:(bor?{srcKind:bor.source,srcFile:bor.file}:null);
     SANDBOX_PREFILL={game:curGame, artistId:b.dataset.sbxart, artist:(a&&a.style)||'',
-      artistName:(a&&a.name)||rosterName(b.dataset.sbxart), locSlug:b.dataset.sbxscene};
+      artistName:(a&&a.name)||rosterName(b.dataset.sbxart), locSlug:b.dataset.sbxscene, adopt};
     selectTopic('sandbox', curGame);
   });
   document.querySelectorAll('[data-zoomaud]').forEach(im=>im.onclick=()=>openAudLB(im.dataset.zoomaud));

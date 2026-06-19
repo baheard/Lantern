@@ -46,11 +46,27 @@ Clicking a render **restores every field** it was made with.
   field label `Artist · <name> (edited)` and stamped into each render's sidecar so the chip
   is truthful about whether that image used the committed style or a tweak.
 
+## Refinements (2026-06-19)
+- **Field order + label colours mirror the location page.** Layers render in reverse hierarchy
+  (closest-to-room first, **App last**): Scene → Game → Artist → App. Each label uses the same
+  `scope-*` class as the location page so the tag colours match (Scene purple `scope-scene`,
+  Game/Artist blue `scope-global`, App pink `scope-app`). **Gotcha:** do NOT also add
+  `scope-editable` to the field — its `.tag` rule is defined last in the CSS and would override
+  every tag to gold. All four textareas keep the normal editable (`class="edit"`) styling.
+- **"Sandbox!" carries the selected picture in** (`/api/sandbox-adopt` → `sandboxAdopt()`):
+  copies the source PNG into `_sandbox/` as a new `sbx-rN`, writes a `.json` sidecar from the
+  resolved layer fields and a `.txt` = the source's own recorded prompt (its true provenance,
+  not the recomposed one), then selects it. The adopt runs **inside `detailSandbox`** after the
+  prefill resolves all four fields — so both entry points (location page + audition cells) share
+  one path. `SANDBOX_PREFILL.adopt = {srcKind, srcFile}`; srcKind resolves: `audition`→_audition,
+  `sandbox`→_sandbox, else `review`→_review with a committed (`<game>/`) fallback.
+
 ## Endpoints / state
 - `GET /api/sandbox?game=` → `{slug, images:[{file, ...sidecar, prompt}]}` (newest last).
 - `GET /img/sandbox?game=&f=`.
 - `POST /api/sandbox-gen {game, fields, meta, provider, quality, model}`.
 - `POST /api/sandbox-reject {game, file}` (removes png+txt+json).
+- `POST /api/sandbox-adopt {game, srcKind, srcFile, fields, meta}` → copies an existing image in.
 - Client working state = `SBXW` (one live object, `_game`-keyed; rebuilt on game switch).
   The Sandbox topic's left item-list is the **games** (like Audition); the game dropdown in
   the workbench just calls `openItem(game)`.
