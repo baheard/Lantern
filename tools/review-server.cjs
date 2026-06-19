@@ -59,7 +59,8 @@ function gamePaths(slug) {
   const dir = path.join(IMAGES_ROOT, slug);
   return { dir, review: path.join(dir, '_review'), pack: path.join(dir, 'prompts.json'),
     manifest: path.join(dir, 'manifest.json'), selArtist: path.join(dir, 'selected-artist.json'),
-    audition: path.join(dir, '_audition'), auditionCfg: path.join(dir, 'audition.json') };
+    audition: path.join(dir, '_audition'), auditionCfg: path.join(dir, 'audition.json'),
+    sandbox: path.join(dir, '_sandbox') };
 }
 // Capitalize first letter (mirrors the client's cap() so server-composed audition
 // prompts match the reviewer's Composed prompt exactly).
@@ -463,6 +464,76 @@ function auditionGen(slug, sceneSlug, artistId, provider, quality, model) {
     });
   });
 }
+// --- Sandbox: free-play prompt tweaking, no commit ---------------------------
+// A scratch workbench where ALL four layers (App/Artist/Aesthetic/Scene) are editable and
+// renders pile up in <game>/_sandbox/ WITHOUT touching artists.json or the location review.
+// Each render carries a JSON sidecar holding the exact field values that produced it, so
+// clicking a render in the UI repopulates every editable field. Commit (if wanted) is the
+// existing createArtist / saveArtistStyleById path. Mirrors the audition gen plumbing.
+function composeInline(f) {
+  f = f || {};
+  return [f.app || '', f.artist || '', f.aesthetic ? ('Aesthetic: ' + cap(f.aesthetic)) : '',
+    f.scene ? ('Scene: ' + f.scene) : ''].filter(Boolean).join(' ');
+}
+const sbxRev = (f) => { const m = f.match(/^sbx-r(\d+)\.png$/i); return m ? parseInt(m[1], 10) : 0; };
+function sandboxState(slug) {
+  const dir = gamePaths(slug).sandbox;
+  const images = [];
+  if (fs.existsSync(dir)) {
+    for (const f of fs.readdirSync(dir).filter((n) => /^sbx-r\d+\.png$/i.test(n)).sort((a, b) => sbxRev(a) - sbxRev(b))) {
+      const meta = readJSON(path.join(dir, f.replace(/\.png$/i, '.json')), {});
+      const tp = path.join(dir, f.replace(/\.png$/i, '.txt'));
+      images.push({ file: f, prompt: fs.existsSync(tp) ? fs.readFileSync(tp, 'utf8') : (meta.prompt || ''), ...meta });
+    }
+  }
+  return { slug, images };
+}
+function sandboxReject(slug, file) {
+  const dir = gamePaths(slug).sandbox;
+  const base = path.basename(file);
+  if (!/^sbx-r\d+\.png$/i.test(base)) throw new Error('bad sandbox file');
+  for (const f of [base, base.replace(/\.png$/i, '.txt'), base.replace(/\.png$/i, '.json')]) {
+    const p = path.join(dir, f);
+    if (fs.existsSync(p)) fs.rmSync(p);
+  }
+  return {};
+}
+function sandboxGen(slug, fields, meta, provider, quality, model) {
+  return new Promise((resolve, _reject) => {
+    const g = gamePaths(slug);
+    fs.mkdirSync(g.sandbox, { recursive: true });
+    const prompt = composeInline(fields);
+    let max = 0;
+    for (const f of fs.readdirSync(g.sandbox)) { const m = f.match(/^sbx-r(\d+)\.png$/i); if (m) max = Math.max(max, parseInt(m[1], 10)); }
+    const outName = `sbx-r${max + 1}.png`;
+    const out = path.join(g.sandbox, outName);
+    const isPro = provider !== 'openai' && model === 'gemini-3-pro-image-preview';
+    const prov = provider === 'openai' ? `openai/${quality || 'low'}` : (isPro ? 'gemini-pro' : 'gemini');
+    const jobId = String(++jobSeq);
+    JOBS.set(jobId, { game: slug, slug: outName, kind: 'sandbox', mode: prov, file: outName, status: 'running', startedAt: Date.now() });
+    const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt, '--out', out];
+    if (provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', quality || 'low');
+    else if (model) cliArgs.push('--model', model);
+    logLine(`SANDBOX ${slug}  via ${prov}  → ${outName}`);
+    const t0 = Date.now();
+    execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
+      const dt = ((Date.now() - t0) / 1000).toFixed(1);
+      const job = JOBS.get(jobId);
+      if (err || !fs.existsSync(out)) {
+        const msg = (stderr || stdout || (err && err.message) || 'unknown error').slice(0, 500);
+        logLine(`SANDBOX FAIL ${slug} (${dt}s): ${msg}`);
+        if (job) { job.status = 'error'; job.error = msg; job.finishedAt = Date.now(); }
+        return _reject(new Error(msg));
+      }
+      // Structured sidecar — lets a click on this render restore EVERY editable field.
+      try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ ...(meta || {}), ...(fields || {}), prompt }, null, 2)); } catch {}
+      logLine(`SANDBOX OK   ${slug} (${dt}s) ${outName}`);
+      if (job) { job.status = 'done'; job.finishedAt = Date.now(); }
+      resolve({ file: outName });
+    });
+  });
+}
+
 // A note value is either a plain string (legacy / open) or an object
 // {note, status:"open"|"resolved"|"wontfix", appliedTo?, resolved?}. The AI flags notes
 // it has acted on (so they don't resurface); the reviewer greys them out. Retrieval never
@@ -534,7 +605,9 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/glyphs') return sendJSON(res, 200, listGlyphs());
     if (u.pathname === '/api/artists') return sendJSON(res, 200, listArtists(q.get('game')));
     if (u.pathname === '/api/audition') return sendJSON(res, 200, auditionState(q.get('game')));
+    if (u.pathname === '/api/sandbox') return sendJSON(res, 200, sandboxState(q.get('game')));
     if (u.pathname === '/img/audition') return sendImg(res, path.join(gamePaths(q.get('game') || '').audition, path.basename(q.get('f') || '')));
+    if (u.pathname === '/img/sandbox') return sendImg(res, path.join(gamePaths(q.get('game') || '').sandbox, path.basename(q.get('f') || '')));
     if (u.pathname === '/img/review') return sendImg(res, path.join(gamePaths(q.get('game') || '').review, path.basename(q.get('f') || '')));
     if (u.pathname === '/img/committed') return sendImg(res, path.join(gamePaths(q.get('game') || '').dir, path.basename(q.get('f') || '')));
     if (u.pathname === '/img/artist') return sendImg(res, path.join(artistsDir, path.basename(q.get('f') || '')));
@@ -562,6 +635,11 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/audition-config') return wrap(() => saveAuditionCfg(body.game, body.scenes, body.artists));
       if (u.pathname === '/api/audition-gen') {
         try { const r = await auditionGen(body.game, body.scene, body.artist, body.provider, body.quality, body.model); return sendJSON(res, 200, { ok: true, ...r }); }
+        catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
+      }
+      if (u.pathname === '/api/sandbox-reject') return wrap(() => sandboxReject(body.game, body.file));
+      if (u.pathname === '/api/sandbox-gen') {
+        try { const r = await sandboxGen(body.game, body.fields, body.meta, body.provider, body.quality, body.model); return sendJSON(res, 200, { ok: true, ...r }); }
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
       }
     }
@@ -773,6 +851,12 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .aud-cell button{font-size:12px;padding:5px 10px}
   .aud-cell .goloc{font-size:11px;color:#8fb0e8;text-decoration:none;margin-right:10px;cursor:pointer;vertical-align:middle}
   .aud-cell .goloc:hover{color:#bcd2ff;text-decoration:underline}
+  /* ---- Sandbox workbench (reuses .loc-wrap/.loc-left/.cands/.sec/.val/.bigprev) ---- */
+  .sbx-controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 14px}
+  .sbx-controls .sbxsel{display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8398}
+  .sbx-controls select{font:inherit;text-transform:none;letter-spacing:0;padding:6px 8px;border-radius:7px;border:1px solid #3a3450;background:#1f1b2c;color:#e8e4ee;min-width:150px}
+  .sbx-left textarea.edit{min-height:84px}
+  #bSandbox,#bSbxNew,#bSbxOver{font-size:12px}
   /* ---- Mobile / thin portrait (phones, narrow windows) ---- */
   @media (max-width:820px){
     body{flex-direction:column;height:auto;min-height:100vh;font-size:16px}
@@ -847,6 +931,8 @@ async function pollGens(){
       toast('✓ '+j.slug+' ready ('+j.file+')');
       if(j.kind==='audition'){
         if(topic==='audition' && curItem===j.game){ ver++; reloadAudition(); }
+      } else if(j.kind==='sandbox'){
+        if(topic==='sandbox' && curItem===j.game){ ver++; SBXW.sel=j.file; reloadSandbox(); }
       } else if(curGame===j.game){ ver++; loadGame(curGame).then(()=>{ if(isGame(topic)){ renderItems(); if(curItem===j.slug) openItem(curItem); } }); }
     } else if(prev==='running' && j.status==='error'){
       toast('✗ '+j.slug+' failed: '+(j.error||'see log'));
@@ -857,6 +943,9 @@ async function pollGens(){
   const b=$('#bRegen');
   if(b&&curLoc){ const busy=jobs.some(j=>j.status==='running'&&j.game===curGame&&j.slug===curLoc.slug);
     b.disabled=busy; b.textContent=busy?'Generating…':'Generate ▸'; }
+  const sb=$('#bSbxGen');
+  if(sb){ const busy=jobs.some(j=>j.status==='running'&&j.kind==='sandbox'&&j.game===curGame);
+    sb.disabled=busy; sb.textContent=busy?'Generating…':'Generate ▸'; }
 }
 // A note is a string (open) or {note,status,appliedTo?,resolved?}. Read text/status shape-safely.
 const noteRaw=k=>(STATE&&STATE.notes&&STATE.notes[k]);
@@ -879,7 +968,7 @@ let _navT=null;
 function scheduleNavPersist(){clearTimeout(_navT);_navT=setTimeout(persistNav,300);}
 function saveNav(){NAV.topic=topic; if(curItem!=null) NAV.byTopic[topic]=curItem; persistNav();}
 function scrollKey(){return topic+'|'+curItem;}
-function detailScroller(){return document.querySelector('#detail .loc-left, #detail .aud-wrap');}
+function detailScroller(){return document.querySelector('#detail .loc-left, #detail .aud-wrap, #detail .sbx-left');}
 // Restore the remembered scroll for the current topic|item and keep it updated as you scroll.
 // Called at the end of every detail render so it survives in-place re-renders (pollGens,
 // edit cancel, act) as well as navigation.
@@ -894,7 +983,7 @@ async function loadAll(){
   GLYPHS=await (await fetch('/api/glyphs')).json();
   buildRail();
   let t=NAV.topic;
-  const valid=t==='placeholders'||t==='artist'||t==='audition'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
+  const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
   if(!valid) t=STATE.defaultGame?'g:'+STATE.defaultGame:(STATE.games[0]?'g:'+STATE.games[0]:'placeholders');
   selectTopic(t);   // no explicit item → selectTopic restores NAV.byTopic[t]
   pollGens(); setInterval(pollGens, 2000);   // progress banner + cross-navigation completion refresh
@@ -909,7 +998,7 @@ window.addEventListener('beforeunload',()=>{
 function buildRail(){
   const games=STATE.games.map(g=>'<div class="topic" data-t="g:'+g+'">'+esc(g)+'</div>').join('');
   $('#rail').innerHTML='<div class="brand">Art Review</div>'+games+'<div class="sep"></div>'+
-    '<div class="topic" data-t="audition">Audition</div><div class="topic" data-t="placeholders">Placeholders</div><div class="topic" data-t="artist">Artist</div>';
+    '<div class="topic" data-t="audition">Audition</div><div class="topic" data-t="sandbox">Sandbox</div><div class="topic" data-t="placeholders">Placeholders</div><div class="topic" data-t="artist">Artist</div>';
   document.querySelectorAll('.topic').forEach(d=>d.onclick=()=>selectTopic(d.dataset.t));
 }
 async function selectTopic(t, wantItem){
@@ -925,6 +1014,8 @@ async function selectTopic(t, wantItem){
     const nb=$('#bNewArt'); if(nb) nb.onclick=newArtist;
   } else if(t==='audition'){
     $('#itemhead').textContent='Audition · pick a game';
+  } else if(t==='sandbox'){
+    $('#itemhead').textContent='Sandbox · pick a game';
   } else { $('#itemhead').textContent='Glyphs'; }
   const nk='topic:'+t; const tn=$('#tnotes'); tn.value=noteVal(nk); tn.onblur=()=>saveNote(nk,tn.value);
   renderItems();
@@ -937,8 +1028,8 @@ async function selectTopic(t, wantItem){
 function items(){
   if(isGame(topic)) return (GAMES[curGame]||[]).map(l=>({id:l.slug,name:l.name,mark:l.committed?'●':(l.candidates.length?'○':'·'),has:!!l.committed,count:l.candidates.length}));
   if(topic==='placeholders') return (GLYPHS.glyphs||[]).map(g=>({id:g.id,name:g.id,mark:g.id===GLYPHS.selected?'●':'·',has:g.id===GLYPHS.selected}));
-  // Audition is per-game → the item list is the games (pick one to audition for).
-  if(topic==='audition') return (STATE.games||[]).map(g=>({id:g,name:g,mark:'·',has:false}));
+  // Audition / Sandbox are per-game → the item list is the games (pick one to work on).
+  if(topic==='audition'||topic==='sandbox') return (STATE.games||[]).map(g=>({id:g,name:g,mark:'·',has:false}));
   return (ARTISTS.artists||[]).map(a=>({id:a.id,name:a.name,mark:a.id===ARTISTS.selected?'●':'·',has:a.id===ARTISTS.selected}));
 }
 function renderItems(){
@@ -953,6 +1044,7 @@ async function openItem(id){ curItem=id; renderItems(); saveNav();
   if(isGame(topic)) await detailLocation((GAMES[curGame]||[]).find(l=>l.slug===id));
   else if(topic==='placeholders') detailGlyph((GLYPHS.glyphs||[]).find(g=>g.id===id));
   else if(topic==='audition') await detailAudition(id);
+  else if(topic==='sandbox') await detailSandbox(id);
   else detailArtist((ARTISTS.artists||[]).find(a=>a.id===id));
 }
 function noteSection(key){return '<div class="sec"><label class="ed">Notes / feedback</label><textarea class="edit" id="inote" placeholder="What you think — usually means: regen. (Claude reads these to tune the artist.)">'+esc(noteVal(key))+'</textarea></div>';}
@@ -989,7 +1081,8 @@ function detailLocation(l){
         '<button data-rm="notes" title="Composed prompt + the note as an Adjustments line (cheap text re-roll)">+Notes</button>'+
         '<button data-rm="edit" title="Img2img: feed the selected image back in, note = edit instruction (preserves composition)">Edit img</button>'+
       '</span>'+
-      '<button id="bRegen">Generate ▸</button></div>'+
+      '<button id="bRegen">Generate ▸</button>'+
+      '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\\'s layers to play freely">⚗ Sandbox!</button></div>'+
     '<div class="cands">'+(cands||'<span class="none">No candidates yet — Generate to create one.</span>')+'</div>'+
     // Actual prompt that made the selected image — TOP, right under the candidates.
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected image</label><div class="val" id="actual">(none)</div></div>'+
@@ -1033,6 +1126,13 @@ function detailLocation(l){
     b.onclick=()=>{regenMode=b.dataset.rm;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.rm===regenMode));}; }); }
   document.querySelectorAll('#detail .editbtn').forEach(b=>b.onclick=()=>beginEdit(b.dataset.edit));
   $('#bRegen').onclick=()=>doRegen(l);
+  $('#bSandbox').onclick=()=>{
+    const gi=GAMEINFO[curGame]||{artist:{},aesthetic:'',app:''};
+    SANDBOX_PREFILL={game:curGame, app:gi.app||'', aesthetic:gi.aesthetic||'',
+      artist:(gi.artist&&gi.artist.style)||'', artistId:(gi.artist&&gi.artist.id)||null,
+      artistName:(gi.artist&&gi.artist.name)||'(custom)', locSlug:l.slug, locName:l.name, scene:sceneTextForLoc(l)};
+    selectTopic('sandbox', curGame);
+  };
   // Scene: live-update Composed on every keystroke, persist on blur.
   const es=$('#eScene');
   const sceneOrig=l.sceneOverride||'';   // guard: only persist a REAL edit
@@ -1299,6 +1399,146 @@ function genParams(){
 }
 async function reloadAudition(){ AUD=await (await fetch('/api/audition?game='+encodeURIComponent(curGame))).json(); renderAudition(); }
 async function detailAudition(slug){ curGame=slug; await reloadAudition(); }
+// ---- Sandbox: free-play workbench (every layer editable, nothing committed) ----
+let SBX=null, SBXW=null, SANDBOX_PREFILL=null;
+function rosterStyle(id){ const a=(ARTISTS&&ARTISTS.artists||[]).find(x=>x.id===id); return a?(a.style||''):''; }
+function rosterName(id){ const a=(ARTISTS&&ARTISTS.artists||[]).find(x=>x.id===id); return a?a.name:(id||'(custom)'); }
+function sbxIsEdited(){ return !!SBXW.artistId && (SBXW.artist||'')!==rosterStyle(SBXW.artistId); }
+function sceneTextForLoc(l){ return (l&&((l.sceneOverride&&l.sceneOverride.trim())||l.description||l.sceneDefault))||''; }
+function defaultSBXW(game,gi){
+  return {_game:game, app:gi.app||'', artist:(gi.artist&&gi.artist.style)||'', aesthetic:gi.aesthetic||'',
+    scene:'', artistId:(gi.artist&&gi.artist.id)||null, artistName:(gi.artist&&gi.artist.name)||'(custom)',
+    locSlug:'', locName:'', sel:null};
+}
+function composeSandbox(){ const w=SBXW; return [w.app||'', w.artist||'', w.aesthetic?('Aesthetic: '+cap(w.aesthetic)):'', w.scene?('Scene: '+w.scene):''].filter(Boolean).join(' '); }
+function sbxUrl(f){ return '/img/sandbox?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver; }
+async function reloadSandbox(){ SBX=await (await fetch('/api/sandbox?game='+encodeURIComponent(curGame))).json(); renderSandbox(); }
+async function detailSandbox(game){
+  curGame=game;
+  if(!GAMES[game]) await loadGame(game);
+  ARTISTS=await (await fetch('/api/artists?game='+encodeURIComponent(game))).json();
+  SBX=await (await fetch('/api/sandbox?game='+encodeURIComponent(game))).json();
+  const gi=GAMEINFO[game]||{artist:{},aesthetic:'',app:''};
+  if(!SBXW || SBXW._game!==game) SBXW=defaultSBXW(game,gi);
+  // A pending "Sandbox!" prefill (from clicking an image elsewhere) wins, fresh from defaults.
+  if(SANDBOX_PREFILL && SANDBOX_PREFILL.game===game){
+    const p=SANDBOX_PREFILL; SANDBOX_PREFILL=null; SBXW=defaultSBXW(game,gi);
+    if(p.app!=null) SBXW.app=p.app;
+    if(p.aesthetic!=null) SBXW.aesthetic=p.aesthetic;
+    if(p.artist!=null) SBXW.artist=p.artist;
+    if(p.artistId!==undefined){ SBXW.artistId=p.artistId; SBXW.artistName=p.artistName||rosterName(p.artistId); }
+    if(p.locSlug){ const l=(GAMES[game]||[]).find(x=>x.slug===p.locSlug); SBXW.locSlug=p.locSlug; SBXW.locName=(l&&l.name)||p.locName||''; if(p.scene==null) SBXW.scene=sceneTextForLoc(l); }
+    if(p.scene!=null) SBXW.scene=p.scene;
+  }
+  renderSandbox();
+}
+function renderSandbox(){
+  if(!SBXW){ $('#detail').innerHTML='<p class="none">No game.</p>'; return; }
+  const game=curGame;
+  const gameOpts=(STATE.games||[]).map(g=>'<option value="'+esc(g)+'"'+(g===game?' selected':'')+'>'+esc(g)+'</option>').join('');
+  const locOpts='<option value="">— pick a location —</option>'+(GAMES[game]||[]).map(l=>'<option value="'+esc(l.slug)+'"'+(l.slug===SBXW.locSlug?' selected':'')+'>'+esc(l.name)+'</option>').join('');
+  const artOpts='<option value="">— custom (unsaved) —</option>'+((ARTISTS&&ARTISTS.artists)||[]).map(a=>'<option value="'+esc(a.id)+'"'+(a.id===SBXW.artistId?' selected':'')+'>'+esc(a.name)+'</option>').join('');
+  const cands=(SBX&&SBX.images||[]).map(im=>{
+    const lbl=(im.artistName||'custom')+(im.edited?' · edited':'');
+    const chip='<span class="mchip m-aud" title="'+esc(lbl+(im.locName?(' — '+im.locName):''))+'">'+esc(lbl)+'</span>';
+    return '<div class="cand'+(im.file===SBXW.sel?' sel':'')+'" data-f="'+esc(im.file)+'"><img src="'+sbxUrl(im.file)+'">'+
+      '<div class="cap"><span>'+chip+esc(im.file)+'</span></div></div>';
+  }).join('');
+  const overLbl=SBXW.artistId?('Overwrite '+SBXW.artistName):'Overwrite artist';
+  const left='<h1>Sandbox · '+esc(game)+'</h1>'+
+    '<div class="sub">Free-play — load a location &amp; artist, tweak any layer, Generate. Renders persist per game; nothing touches the roster until you commit.</div>'+
+    '<div class="sbx-controls">'+
+      '<label class="sbxsel">Game<select id="sbxGame">'+gameOpts+'</select></label>'+
+      '<label class="sbxsel">Location<select id="sbxLoc">'+locOpts+'</select></label>'+
+      '<label class="sbxsel">Artist<select id="sbxArtistSel">'+artOpts+'</select></label>'+
+    '</div>'+
+    '<div class="btns"><select id="genMode" class="genmode" title="Which generator Generate uses">'+GENMODE_OPTS+'</select>'+
+      '<button id="bSbxGen">Generate ▸</button>'+
+      '<button id="bSbxNew" title="Copy the Artist text into a brand-new roster artist">＋ Save as new artist</button>'+
+      '<button id="bSbxOver"'+(SBXW.artistId?'':' disabled')+' title="Write the Artist text back onto the selected artist (global)">'+esc(overLbl)+'</button></div>'+
+    '<div class="cands">'+(cands||'<span class="none">No sandbox renders yet — Generate to create one.</span>')+'</div>'+
+    '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected render</label><div class="val" id="sbxActual">(none)</div></div>'+
+    sbxField('app','App · all games','sbxApp',SBXW.app)+
+    sbxField('artist','Artist · '+esc(SBXW.artistName||'custom')+(sbxIsEdited()?' (edited)':''),'sbxArtist',SBXW.artist)+
+    sbxField('global','Game style (Aesthetic) · '+esc(game),'sbxAesthetic',SBXW.aesthetic)+
+    sbxField('scene','Scene'+(SBXW.locName?(' · '+esc(SBXW.locName)):''),'sbxScene',SBXW.scene)+
+    '<div class="sec scope-derived"><label class="ro"><span class="tag">Derived</span>Composed prompt → what Generate sends</label><div class="val" id="sbxComposed"></div></div>';
+  const right='<div class="bigprev empty" id="sbxBig"><span>no render selected</span></div>';
+  $('#detail').innerHTML='<div class="loc-wrap"><div class="loc-left sbx-left">'+left+'</div><div class="loc-right">'+right+'</div></div>';
+  $('#sbxGame').onchange=e=>openItem(e.target.value);
+  $('#sbxLoc').onchange=e=>sbxPickLoc(e.target.value);
+  $('#sbxArtistSel').onchange=e=>sbxPickArtist(e.target.value);
+  const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }
+  document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>sbxSelect(c.dataset.f));
+  $('#bSbxGen').onclick=sbxGen;
+  $('#bSbxNew').onclick=sbxSaveNew;
+  $('#bSbxOver').onclick=sbxOverwrite;
+  const map={sbxApp:'app',sbxArtist:'artist',sbxAesthetic:'aesthetic',sbxScene:'scene'};
+  Object.keys(map).forEach(id=>{ const t=$('#'+id); if(t) t.oninput=()=>{ SBXW[map[id]]=t.value; sbxUpdateComposed(); }; });
+  sbxUpdateComposed(); sbxUpdateSel();
+  afterDetailRender();
+}
+function sbxField(scope,label,id,val){
+  return '<div class="sec scope-'+scope+' scope-editable"><label class="ed"><span class="tag">'+label.split(' · ')[0]+'</span>'+label+'</label>'+
+    '<textarea class="edit" id="'+id+'">'+esc(val||'')+'</textarea></div>';
+}
+function sbxUpdateComposed(){ const c=$('#sbxComposed'); if(c) c.textContent=breakPrompt(composeSandbox()); }
+function sbxUpdateSel(){
+  const box=$('#sbxBig');
+  if(box){ if(SBXW.sel){ box.classList.remove('empty'); box.innerHTML='<img alt="" src="'+sbxUrl(SBXW.sel)+'">'; }
+    else { box.classList.add('empty'); box.innerHTML='<span>no render selected</span>'; } }
+  const im=(SBX&&SBX.images||[]).find(x=>x.file===SBXW.sel);
+  const av=$('#sbxActual'); if(av) av.textContent=im?(im.prompt?breakPrompt(im.prompt):'(no recorded prompt)'):'(none)';
+}
+function sbxSelect(file){
+  const im=(SBX&&SBX.images||[]).find(x=>x.file===file); if(!im) return;
+  SBXW.sel=file;
+  SBXW.app=im.app||''; SBXW.artist=im.artist||''; SBXW.aesthetic=im.aesthetic||''; SBXW.scene=im.scene||'';
+  if(im.artistId!==undefined){ SBXW.artistId=im.artistId; SBXW.artistName=im.artistName||rosterName(im.artistId); }
+  SBXW.locSlug=im.locSlug||''; SBXW.locName=im.locName||'';
+  renderSandbox();
+}
+function sbxPickLoc(slug){
+  const l=(GAMES[curGame]||[]).find(x=>x.slug===slug);
+  SBXW.locSlug=slug||''; SBXW.locName=(l&&l.name)||''; SBXW.scene=sceneTextForLoc(l);
+  renderSandbox();
+}
+function sbxPickArtist(id){
+  if(!id){ SBXW.artistId=null; SBXW.artistName='(custom)'; renderSandbox(); return; }
+  SBXW.artistId=id; SBXW.artistName=rosterName(id); SBXW.artist=rosterStyle(id);
+  renderSandbox();
+}
+function sbxGen(){
+  const fields={app:SBXW.app, artist:SBXW.artist, aesthetic:SBXW.aesthetic, scene:SBXW.scene};
+  const meta={artistId:SBXW.artistId, artistName:SBXW.artistName, edited:sbxIsEdited(), locSlug:SBXW.locSlug, locName:SBXW.locName};
+  if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image. Generate one?')) return;
+  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image. Generate one?')) return;
+  const {provider,quality,model}=genParams();
+  const b=$('#bSbxGen'); if(b){b.disabled=true;b.textContent='Generating…';}
+  postJSON('/api/sandbox-gen',{game:curGame,fields,meta,provider,quality,model})
+    .then(r=>r.json()).then(r=>{ if(r&&!r.ok&&r.error) toast('Error: '+r.error); })
+    .catch(e=>toast('Error: '+e.message));
+  toast('Generating sandbox render… (tracked bottom-right — safe to navigate away)');
+  setTimeout(pollGens,500);
+}
+async function sbxSaveNew(){
+  const suggested=(SBXW.artistName&&SBXW.artistName!=='(custom)')?SBXW.artistName+' variant':'';
+  const name=prompt('Name for the new artist (its id is slugified from this):',suggested);
+  if(!name) return;
+  const r=await (await postJSON('/api/artist-create',{name,style:SBXW.artist})).json();
+  if(!r.ok){ toast('Error: '+(r.error||'create failed')); return; }
+  ARTISTS=await (await fetch('/api/artists?game='+encodeURIComponent(curGame))).json();
+  SBXW.artistId=r.artist.id; SBXW.artistName=r.artist.name;
+  toast('Created artist '+r.artist.name+' (all games)'); renderSandbox();
+}
+async function sbxOverwrite(){
+  if(!SBXW.artistId){ toast('No artist selected — use Save as new artist.'); return; }
+  if(!confirm('Overwrite "'+SBXW.artistName+'" signature globally? Affects every game using this artist.')) return;
+  const r=await (await postJSON('/api/artist-style-by-id',{id:SBXW.artistId,style:SBXW.artist})).json();
+  if(!r.ok){ toast('Error: '+(r.error||'save failed')); return; }
+  if(ARTISTS&&ARTISTS.artists){const ent=ARTISTS.artists.find(x=>x.id===SBXW.artistId);if(ent)ent.style=SBXW.artist;}
+  toast('Overwrote '+SBXW.artistName+' (all games)'); renderSandbox();
+}
 // Persist the current scene/artist selection, then reload (scene swaps change the columns).
 async function audSaveCfg(){
   const scenes=[...document.querySelectorAll('[data-scene-slot]')].map(s=>s.value).filter(Boolean);
@@ -1330,7 +1570,8 @@ function renderAudition(){
       if(f) audLBList.push(f);
       const img=f?'<img class="thumb" data-zoomaud="'+esc(f)+'" src="/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'">':'<div class="empty">not generated</div>';
       const goloc='<a class="goloc" data-goloc="'+esc(s.slug)+'" title="Open this scene\\'s location review page">→ location</a>';
-      return '<td class="aud-cell">'+img+goloc+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">Generate</button></td>';
+      const sbx='<a class="goloc" data-sbxart="'+esc(a.id)+'" data-sbxscene="'+esc(s.slug)+'" title="Play with this artist + scene in the Sandbox">⚗ sandbox</a>';
+      return '<td class="aud-cell">'+img+goloc+sbx+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">Generate</button></td>';
     }).join('');
     return '<tr>'+rh+cells+'</tr>';
   }).join('');
@@ -1348,6 +1589,12 @@ function renderAudition(){
   document.querySelectorAll('[data-editart]').forEach(b=>b.onclick=()=>audEditArtist(b.dataset.editart));
   document.querySelectorAll('[data-gen-art]').forEach(b=>b.onclick=()=>audCellGen(b.dataset.genArt,b.dataset.genScene));
   document.querySelectorAll('[data-goloc]').forEach(b=>b.onclick=()=>selectTopic('g:'+curGame,b.dataset.goloc));
+  document.querySelectorAll('[data-sbxart]').forEach(b=>b.onclick=()=>{
+    const a=(AUD.artists||[]).find(x=>x.id===b.dataset.sbxart);
+    SANDBOX_PREFILL={game:curGame, artistId:b.dataset.sbxart, artist:(a&&a.style)||'',
+      artistName:(a&&a.name)||rosterName(b.dataset.sbxart), locSlug:b.dataset.sbxscene};
+    selectTopic('sandbox', curGame);
+  });
   document.querySelectorAll('[data-zoomaud]').forEach(im=>im.onclick=()=>openAudLB(im.dataset.zoomaud));
   $('#bGenAll').onclick=audGenAll;
   afterDetailRender();
