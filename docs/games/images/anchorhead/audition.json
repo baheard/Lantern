@@ -2,12 +2,13 @@
   "scenes": [
     "outside-the-real-estate-office",
     "library",
-    "foyer"
+    "outside-the-house"
   ],
   "artists": [
     "gouache",
     "pixel",
     "ink",
-    "storybook"
+    "storybook",
+    "comic-book-style"
   ]
 }

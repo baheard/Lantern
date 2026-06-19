@@ -7,8 +7,9 @@ node_modules/
 .env.*.local
 config.json
 
-# Location-art staging (review images + ad-hoc); approved images ARE committed
+# Location-art staging (review images, auditions + ad-hoc); approved images ARE committed
 docs/games/images/**/_review/
+docs/games/images/**/_audition/
 docs/games/images/_adhoc.png
 
 # Ephemeral /go-to dev-skill save snapshots — regenerated & overwritten each invocation
