@@ -117,13 +117,14 @@ Both operations use this; it lives here so it can't drift. Given an open `[ART]`
      with the quoted hint text + the `[player]` comment.
    - Entry shape mirrors the existing art convention:
      `{ note, status:"open", source:"player", hash?, hintText? }`.
-   - **Key collision (art):** an image often already has an *authored* note (you typed it in
+   - **Key collision (art/hint):** a target often already has an *authored* note (you typed it in
      artview), possibly `resolved`. Do NOT clobber it. Append the player comment to a
      `playerFeedback: [ { comment, hash, status:"open", submitted, issue } ]` array on the existing
-     entry — the authored `note`/`status` stay untouched. `/review-notes` treats an entry as
-     UNRESOLVED if its own `status` is open **OR** it has any `playerFeedback` item with
-     `status:"open"` (so new player feedback resurfaces an already-resolved render). Validated by
-     the v1.5.618 pipeline test (junk `[ART]` #159 → appended to the resolved `alley` note).
+     entry, keep the authored `note` text, preserve the prior `appliedTo`/`resolved`/`detail` as
+     history — **and flip the entry's `status` back to `"open"`**. New player feedback *reopens* a
+     resolved target: it must read as unresolved in the reviewer UI (which greys out by `status`)
+     and to `/review-notes`, not stay resolved-with-a-flag. Validated by the v1.5.618 pipeline test
+     (junk `[ART]` #159 → appended to the `alley` note).
 3. **Close the GitHub issue** (`gh issue close <n>`). **Closing IS the watermark** — `--state open`
    never returns it again, so re-runs can't double-process, and the two operations can't race
    (whichever runs first closes it; the other never sees it). If the notes file is ever lost, that
