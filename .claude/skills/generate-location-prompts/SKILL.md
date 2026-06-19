@@ -83,12 +83,19 @@ It writes:
 2. **Don't bump the app version.** This is dev-only tooling/data (no service-worker change) —
    bumping `CACHE_VERSION` would force a pointless re-download for users. (Same rule as
    `location-art`.)
-3. **Hand off to `location-art`.** The pack is scene-only; turning it into images
-   (composing Artist ▸ Aesthetic ▸ Scene, generating into `_review/`, reviewing, promoting) is
-   the `location-art` skill's job. Tell the user the pack is ready and that the next step is
-   `/location-art <game>` → Generate.
+3. **Hand off to `mold` (phase 2).** The pack is scene-only FACTS. The next step is `mold`, which
+   molds each room's facts into a finished Scene override in `<game>/style.json` so artview opens
+   render-ready; then `render-rooms` (phase 3) makes the pictures. Tell the user the facts are ready
+   and the next step is `/mold <game>` (or `/build-scenes <game>` to have done facts+mold in one go).
 
 ## Notes
+- **The scrape now cleans + probes (2026-06-19).** `visualCore` strips parser chrome (`[score]`,
+  `What now?`) and the parser's "You can also see … here." takeable listing (with a `…from here`
+  vista guard); and the replay captures the walkthrough's own `examine`/`x`/`look at` outputs,
+  folding salient FIXTURE detail into the room scene (e.g. the Witch's-Lair statue's four
+  eye-sockets) while skipping objects the walkthrough later TAKES (removables stay out of a fixed
+  backdrop). This is the deterministic baseline; the *considered* molding (curation, exit
+  reconciliation, framing, canonical-state) is `mold`'s judgment job. See `.tome/art-direction-model.md`.
 - The pack is **scene-only by design** — do not edit `prompts.json` to bake in palette/mood/
   artist style. Per-room literal fixes, per-game aesthetic, and global artist style all live in
   the three-layer files `location-art` owns (`<game>/style.json`, `_artists/artists.json`). See

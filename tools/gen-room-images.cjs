@@ -314,7 +314,12 @@ async function main() {
   };
 
   let rooms = pack.rooms || [];
-  if (args.only) rooms = rooms.filter((r) => r.slug === args.only);
+  // --only accepts one slug OR a comma-separated subset ("a,b,c") so a render skill can
+  // batch an arbitrary set of rooms in a single call.
+  if (args.only) {
+    const want = new Set(String(args.only).split(',').map((s) => s.trim()).filter(Boolean));
+    rooms = rooms.filter((r) => want.has(r.slug));
+  }
   if (!rooms.length) { console.error('No matching rooms in pack.'); process.exit(2); }
 
   // --regen: re-roll an existing image but PRESERVE the prior take as <slug>.prev.png

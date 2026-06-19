@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lantern favicon preview</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23000'/%3E%3C/svg%3E">
+<style>
+  :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin: 0; padding: 2.5rem; background: #1c1c20; color: #e8e8ea; }
+  h1 { font-size: 1.1rem; margin: 0 0 0.25rem; }
+  p.note { color: #9a9aa2; font-size: 0.85rem; margin: 0 0 2rem; max-width: 64ch; }
+  .concept { margin-bottom: 2.25rem; }
+  .concept > h2 { font-size: 0.95rem; margin: 0 0 0.75rem; display:flex; align-items:center; gap:0.75rem; }
+  .panels { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .panel { border-radius: 12px; padding: 1.1rem 1.4rem; }
+  .panel.dark  { background: #000;     }
+  .panel.light { background: #f4f2ee;  }
+  .panel.amber { background: #1c1813;  }
+  .panel h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; opacity: 0.55; margin: 0 0 0.9rem; display:flex; align-items:center; gap:0.6rem; }
+  .panel.light h3, .panel.light figcaption { color:#23211c; }
+  .row { display: flex; align-items: flex-end; gap: 1.3rem; }
+  figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+  figcaption { font-size: 0.65rem; opacity: 0.55; }
+  svg { display: block; }
+  .chrome { display:inline-flex; align-items:center; gap:0.5rem; margin-top:0.9rem;
+            padding:0.35rem 0.75rem 0.35rem 0.45rem; border-radius:7px;
+            background:rgba(125,125,135,0.18); font-size:0.78rem; }
+  button.setfav { font: inherit; font-size:0.72rem; cursor:pointer;
+            background:#34343c; color:#e8e8ea; border:1px solid #50505a;
+            border-radius:6px; padding:0.25rem 0.6rem; }
+  button.setfav:hover { background:#42424c; }
+  button.setfav.active { background:#2e7d32; border-color:#2e7d32; color:#fff; }
+</style>
+</head>
+<body>
+  <h1>Favicon preview — bold concepts at real sizes</h1>
+  <p class="note">Concepts 1, 3, 4, 5, 6, each on black / light / amber. The 16px column is the favicon test. Click "set as favicon" to push a mark into this tab's icon (white-on-black rounded square) and compare live.</p>
+
+  <div id="root"></div>
+
+<script>
+const SIZES = [16, 32, 48, 64, 128];
+
+// SVGs drawn on a 64x64 grid. 'BG' placeholder = panel background (for negative-space cutouts).
+const concepts = [
+  {
+    title: '1 — › prompt cursor',
+    draw: fg => `<path d="M20 20 L34 32 L20 44" fill="none" stroke="${fg}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="40" y="38" width="14" height="6" rx="3" fill="${fg}"/>`
+  },
+  {
+    title: '3 — solid lantern',
+    draw: fg => `<path d="M28 12 h8 v4 h-8 z" fill="${fg}"/>
+      <path d="M22 20 h20 l4 26 a16 16 0 0 1 -28 0 z" fill="${fg}"/>
+      <path d="M20 46 h24 v6 h-24 z" fill="${fg}"/>
+      <ellipse cx="32" cy="34" rx="4" ry="7" fill="BG"/>`
+  },
+  {
+    title: '4 — lantern + flame',
+    draw: fg => `<path d="M22 18 h20 v4 h-20 z" fill="${fg}"/>
+      <path d="M24 24 h16 v20 a8 8 0 0 1 -16 0 z" fill="${fg}"/>
+      <path d="M21 48 h22 v5 h-22 z" fill="${fg}"/>
+      <path d="M32 28 c-3 4 -3 8 0 11 c3 -3 3 -7 0 -11 z" fill="#ffb74d"/>`
+  },
+  {
+    title: '5 — flame only',
+    draw: fg => `<path d="M32 14 C20 30 24 50 32 50 C40 50 44 30 32 14 Z" fill="#ffb74d"/>
+      <path d="M32 30 C28 38 29 45 32 45 C35 45 36 38 32 30 Z" fill="BG"/>`
+  },
+  {
+    title: '6 — lantern in circle glow',
+    draw: () => `<circle cx="32" cy="34" r="20" fill="#3a2c12"/>
+      <path d="M27 14 h10 v3 h-10 z" fill="#ffd28a"/>
+      <path d="M25 20 h14 l3 18 a10 10 0 0 1 -20 0 z" fill="#ffd28a"/>
+      <path d="M23 40 h18 v4 h-18 z" fill="#ffd28a"/>`
+  }
+];
+
+const panels = [
+  { cls: 'dark',  label: 'on black', fg: '#fff',     bg: '#000'     },
+  { cls: 'light', label: 'on light', fg: '#23211c',  bg: '#f4f2ee'  },
+  { cls: 'amber', label: 'amber',    fg: '#f2b760',  bg: '#1c1813'  },
+];
+
+// fg = foreground color, bg = background fill (use 'none' for transparent — no rect drawn).
+function faviconDataUri(concept, fg, bg) {
+  const body = concept.draw(fg).replaceAll('BG', bg === 'none' ? '#0000' : bg);
+  const rect = bg === 'none' ? '' : `<rect width="64" height="64" rx="12" fill="${bg}"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${rect}${body}</svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
+function setFavicon(concept, fg, bg, btn) {
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+  link.type = 'image/svg+xml';
+  link.href = faviconDataUri(concept, fg, bg);
+  document.title = 'Lantern — ' + concept.title;
+  document.querySelectorAll('button.setfav').forEach(b => { b.classList.remove('active'); b.textContent = b.dataset.label; });
+  btn.classList.add('active');
+  btn.textContent = '✓ in tab ↑';
+}
+
+// per-panel set targets, plus a transparent option
+const targets = [
+  { cls: 'dark',  label: 'on black', fg: '#fff',     bg: '#000'     },
+  { cls: 'light', label: 'on light', fg: '#23211c',  bg: '#f4f2ee'  },
+  { cls: 'amber', label: 'amber',    fg: '#f2b760',  bg: '#1c1813'  },
+  { cls: 'trans', label: 'transparent', fg: '#fff',  bg: 'none'     },
+];
+
+const root = document.getElementById('root');
+for (const c of concepts) {
+  const section = document.createElement('div');
+  section.className = 'concept';
+  let html = `<h2>${c.title}</h2><div class="panels">`;
+  for (const p of targets.filter(t => t.cls !== 'trans')) {
+    const body = c.draw(p.fg).replaceAll('BG', p.bg);
+    const figs = SIZES.map(s =>
+      `<figure><svg width="${s}" height="${s}" viewBox="0 0 64 64">${body}</svg><figcaption>${s}</figcaption></figure>`
+    ).join('');
+    const chrome = `<div class="chrome"><svg width="16" height="16" viewBox="0 0 64 64">${body}</svg> Lantern</div>`;
+    html += `<div class="panel ${p.cls}"><h3>${p.label} <button class="setfav" data-t="${p.cls}">set</button></h3><div class="row">${figs}</div>${chrome}</div>`;
+  }
+  html += `</div>`;
+  section.innerHTML = html;
+  section.querySelectorAll('button.setfav').forEach(btn => {
+    const t = targets.find(x => x.cls === btn.dataset.t);
+    btn.dataset.label = 'set';
+    btn.addEventListener('click', e => setFavicon(c, t.fg, t.bg, e.currentTarget));
+  });
+  root.appendChild(section);
+}
+</script>
+</body>
+</html>

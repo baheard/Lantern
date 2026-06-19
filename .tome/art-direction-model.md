@@ -2,7 +2,7 @@
 title: art-direction-model
 tags: [location-art, prompts, art-direction, gemini, anchorhead, dreamhold]
 created: 2026-06-16
-updated: 2026-06-18
+updated: 2026-06-19
 aliases: [artist persona, style layers, art prompt structure, app layer]
 ---
 
@@ -174,3 +174,60 @@ alley kept growing a door because the Scene *described* "a tall solid plank fenc
 alley" — which visually IS a gate/door — while also saying "no door". The fix was changing the
 description (→ "a continuous, flat, featureless wall of close-set boards"), not the phrasing. So
 when something unwanted recurs, look for the contradiction in the Scene's own content.
+
+## Enrich from `examine`, but never DROP a base-description fact (2026-06-19)
+Two-sided lesson from the Theatre Witch's-Lair statue.
+- **Good:** the richest visual facts live in `EXAMINE <object>`, not the room summary. The statue's
+  *four eye-sockets in a diamond* exist ONLY in `examine statue` output (replay via
+  `tools/play.cjs … --cmds "examine statue"`); mining that gave the render real fidelity. Scene
+  crafting SHOULD examine the salient props, not just read the room description.
+- **Bad:** elaborating from `examine` silently **dropped the jewelled dagger** that was right in
+  the base room description ("The statue is holding a jewelled dagger") — a puzzle-salient object.
+  Enriching from a deeper source must ADD to the base facts, never replace them.
+- **The fix = a canon-coverage pass** (now in `location-art` scene recipe step 6 + proactive in the
+  `/art-notes` sweep): before finalizing a Scene, diff the concrete nouns in canon (base desc +
+  examines) against the Scene text; each must be KEPT or deliberately DROPPED.
+
+### The KEEP/DROP axis is PERSISTENCE, not puzzle-salience (refined 2026-06-19, user call)
+The art is a **fixed mood backdrop of the room as first encountered — never a live mirror of world
+state**, so it must show only what stays put regardless of player action.
+- **KEEP = fixtures.** Architecture, sculpture, anything *firmly attached / not takeable at the
+  establishing view*: walls, windows, cauldron, the statue — and the statue's jewelled dagger
+  (`take dagger` → *"firmly attached to the statue"*; only frees after the pearl ceremony, so it's
+  a fixture at first view).
+- **DROP = removables, even if puzzle-critical.** Anything pocketable from the establishing view (the
+  same lair's *loose page*, a key, a gettable gem) — once `GET`-ed it's gone but the static image
+  still shows it = incongruity. The player reads the room text for takeable detail. Also drop
+  transient/randomized flavor and parser/score chrome.
+- **Mechanical test:** `take <noun>` in the harness — *"firmly attached"/"can't take that"* ⇒ KEEP,
+  pockets ⇒ DROP. Judge the INITIAL state (puzzle-gated takeables like the dagger are fixtures at
+  first view). This *replaces* the earlier "puzzle-salient ⇒ KEEP" rule, which wrongly argued to
+  paint the loose page.
+
+## The pipeline is THREE phases, split by decision type (2026-06-19)
+The art pipeline separates *facts → molded text → pictures*, each its own skill, because building a
+prompt and spending money on a render are different decisions:
+1. **Facts — `generate-location-prompts`** (`gen-room-prompts.cjs`, mechanical). Replays the
+   walkthrough → `prompts.json`. Now also strips chrome + the "You can also see…here." takeable
+   listing, and CAPTURES the walkthrough's own `examine` outputs, folding fixture detail in while
+   skipping things the walkthrough TAKES. Deterministic baseline only.
+2. **Mold — `mold` skill** (judgment, phase 2). Turns facts into a finished Scene OVERRIDE per room
+   in `<game>/style.json` → `scenes[slug]` — the editable Scene box in artview — so artview opens
+   render-ready. Two modes off one checklist: **author** (write overrides) and **review [`--fix`]**
+   (audit existing overrides against the rules). `build-scenes` wraps phases 1+2 as one "do that".
+3. **Render — `render-rooms` skill** (phase 3). Batch "Generate" over all rooms / a `--only a,b,c`
+   subset; nothing to decide because the prompts are already molded. `gen-room-images.cjs --only`
+   now accepts a comma-list.
+`location-art` keeps audition / promote / open-reviewer. `/art-notes` reviews rendered *images* +
+human notes; `mold review` audits the scene *text* — two review surfaces, different artifacts.
+
+### The molding checklist (12 factors — canonical copy in `.claude/skills/mold/SKILL.md`)
+Fidelity: (1) examine-enrich fixtures, (2) persistence — fixtures in / takeables out, (3) strip
+transient+chrome, (4) fence internal contradictions ("plank fence"=door). Spatial: (5) **exit↔
+destination reconciliation** — don't paint "countryside to the NW" when `nw → Town Junction`;
+sanity-check (the exit graph sometimes logs puzzle-movement, e.g. a climbed window as "nw"), (6)
+puzzle geometry & reachability, (7) shared-landmark consistency across rooms. State: (8) **canonical
+state** — paint the FIRST normal-exploration state, never post-puzzle, (9) light/time/occupancy.
+Composition: (10) **grounded vantage, don't enumerate every exit** (the junction-art note; exits are
+mere THRESHOLDS), (11) **scale cues** (cramped vs vast), (12) layer discipline — Scene = literal
+facts only, mood→Aesthetic, medium→Artist. Newly surfaced this round: 5, 8, 10, 11.

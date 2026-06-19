@@ -48,6 +48,19 @@ const DIR_LABEL = {
 // Reduce a room description to its visual core for a prompt: drop dialogue and
 // character-action / interiority sentences, flatten whitespace, cap length.
 function visualCore(desc) {
+  // Strip PARSER CHROME and AUTO-LISTED TAKEABLES first — text the game prints inside room
+  // prose that must never enter a STATIC backdrop image. The art is a fixed establishing view,
+  // not a live state mirror, so removable/takeable items and parser noise are dropped (see the
+  // persistence rule in .tome/art-direction-model.md). Three classes:
+  //   "[Your score has just gone up...]"   bracketed status notes
+  //   "You can also see <items> here."      the parser's listing of loose/takeable objects
+  //                                         (the "(?!\bfrom\b)" guard spares a real "...from here" vista)
+  //   "What now?" / "What do you want to do?"  the input prompt
+  // Fixtures named in PROSE (e.g. "the statue is holding a jewelled dagger") are NOT touched.
+  desc = desc
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\byou can (?:also )?see\b(?:(?!\bfrom\b)[^.?!])*?\bhere\b\s*[.?!]?/gi, ' ')
+    .replace(/\bwhat (?:now|next|do you want to do)\b\s*\??/gi, ' ');
   // On first entry the game prints STATIC scenery first, then DYNAMIC events/dialogue.
   // Keep paragraphs in order up to (not including) the first dialogue/NPC-event paragraph.
   const STOP = /["“”]|\b(?:he|she|Michael)\s+(?:says|goes|hurries|kisses|stretches|yawns|nods|turns|walks|stands|sits|whispers|mutters)\b|\bAnd with that\b/i;
@@ -134,6 +147,59 @@ function extractDescription(turn) {
   return out.join('\n').replace(/\n{2,}/g, '\n\n').trim() || null;
 }
 
+// Pull the parser RESPONSE to a non-movement command (e.g. EXAMINE) out of a turn:
+// everything between the echoed command and the trailing `>` prompt. The command echoes
+// (Glk echo + CLI header) are dropped; chrome is left for visualCore to strip.
+function extractResponse(turn) {
+  const cmd = (turn.command || '').trim().toLowerCase();
+  const out = [];
+  for (const raw of turn.body) {
+    const t = raw.trim();
+    if (t === '>') break;                    // post-response prompt → end of this turn
+    if (!t) { out.push(''); continue; }
+    if (t.toLowerCase() === cmd) continue;   // drop the echoed command (appears up to twice)
+    out.push(t);
+  }
+  return out.join('\n').replace(/\n{2,}/g, '\n\n').trim() || null;
+}
+
+// Command classifiers + object-head extraction, used to fold EXAMINE detail into a room's
+// scene while keeping TAKEABLE objects out (the persistence rule: see .tome/art-direction-model.md).
+const EXAMINE_RE = /^(?:examine|x|look at)\s+(.+)/i;
+const TAKE_RE = /^(?:get|take|grab|pick up)\s+(.+)/i;
+const OBJ_STOP = new Set(['the','a','an','my','your','his','her','some','that','this']);
+const EXAMINE_SKIP = new Set(['me','self','myself','around','room','it','them','here']);
+// Reduce a verb's object phrase to its head noun (last significant word), cut at a preposition
+// so "get earth crystal FROM dagger" → "crystal" and "examine statue" → "statue".
+function objectHead(rest) {
+  let s = (rest || '').toLowerCase().replace(/[.?!,]+$/g, '').trim();
+  s = s.split(/\b(?:from|with|on|onto|in|into|under|behind|at|using|to)\b/)[0].trim();
+  const w = s.split(/\s+/).filter((x) => x && !OBJ_STOP.has(x));
+  return w[w.length - 1] || '';
+}
+const splitSentences = (s) => (s || '').split(/(?<=[.?!])\s+/).map((x) => x.trim()).filter(Boolean);
+const normSent = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
+// Fold captured EXAMINE detail into the base scene: skip examines of objects the walkthrough
+// takes (removable → not in a fixed backdrop), strip chrome via visualCore, dedup at the
+// sentence level against what's already there, and cap the merged scene.
+function mergeExamines(baseScene, examines, takenHeads) {
+  if (!examines || !examines.length) return baseScene;
+  const seen = new Set(splitSentences(baseScene).map(normSent));
+  const adds = [];
+  for (const e of examines) {
+    if (!e.obj || takenHeads.has(e.obj)) continue;   // takeable → leave to the room text
+    for (const s of splitSentences(visualCore(e.resp))) {
+      const k = normSent(s);
+      if (!k || seen.has(k)) continue;
+      seen.add(k); adds.push(s);
+    }
+  }
+  if (!adds.length) return baseScene;
+  let scene = [baseScene, ...adds].join(' ').replace(/\s+/g, ' ').trim();
+  if (scene.length > 1100) { const cut = scene.slice(0, 1100); scene = cut.slice(0, cut.lastIndexOf('. ') + 1) || cut; }
+  return scene.trim();
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const game = args._[0];
@@ -147,11 +213,14 @@ function main() {
   const turns = parseTurns(transcript);
 
   // Build per-location data: first-seen description + exit edges from movement.
-  const locs = new Map(); // name -> { name, slug, description, exits: Map<dir,dest> }
+  const locs = new Map(); // name -> { name, slug, description, exits: Map<dir,dest>, examines: [] }
   function ensure(name) {
-    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, exits: new Map() });
+    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, exits: new Map(), examines: [] });
     return locs.get(name);
   }
+  // Objects the walkthrough TAKES anywhere = removable; their EXAMINE detail is kept out of the
+  // (fixed-establishing-view) scene. Collected across the whole replay, applied at compose time.
+  const takenHeads = new Set();
   for (let i = 0; i < turns.length; i++) {
     const t = turns[i];
     const L = ensure(t.location);
@@ -159,8 +228,18 @@ function main() {
       const d = extractDescription(t);
       if (d) L.description = d;
     }
+    const fullCmd = (t.command || '').trim();
+    let mm;
+    if ((mm = fullCmd.match(TAKE_RE))) { const h = objectHead(mm[1]); if (h) takenHeads.add(h); }
+    if ((mm = fullCmd.match(EXAMINE_RE))) {
+      const obj = objectHead(mm[1]);
+      if (obj && !EXAMINE_SKIP.has(obj)) {
+        const resp = extractResponse(t);
+        if (resp) L.examines.push({ obj, resp });
+      }
+    }
     // Exit edge: a movement command that changed location.
-    const cmd = (t.command || '').toLowerCase().split(/\s+/)[0];
+    const cmd = fullCmd.toLowerCase().split(/\s+/)[0];
     const next = turns[i + 1];
     if (next && next.location !== t.location && MOVES.has(cmd)) {
       const dir = DIR_LABEL[cmd] || cmd;
@@ -181,7 +260,9 @@ function main() {
     // downstream (gen-room-images.cjs / review-server.cjs) from _artists/artists.json
     // (via selected-artist.json) + <game>/style.json. We keep a `scene` field and a
     // legacy "Scene:"-prefixed `prompt` so both old and new readers find the scene.
-    const scene = L.description ? visualCore(L.description) : '';
+    // Base scene = first-entry description; then fold in EXAMINE detail the walkthrough
+    // already revealed (e.g. the Witch's-Lair statue's four eye-sockets), minus takeables.
+    const scene = L.description ? mergeExamines(visualCore(L.description), L.examines, takenHeads) : '';
     // Drop phantom "locations": status-line flavor that getCurrentLocation() reports as a
     // room name (e.g. Theatre's Boiler Room Latin curse). They have no scene and would only
     // produce junk empty image slots. A real room without an extractable description is

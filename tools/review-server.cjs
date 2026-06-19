@@ -1534,9 +1534,9 @@ function renderSandbox(){
       '<label class="sbxsel">Artist<select id="sbxArtistSel">'+artOpts+'</select></label>'+
     '</div>'+
     '<div class="btns"><select id="genMode" class="genmode" title="Which generator Generate uses">'+GENMODE_OPTS+'</select>'+
-      '<button id="bSbxGen">Generate ▸</button>'+
       '<button id="bSbxNew" title="Copy the Artist text into a brand-new roster artist">＋ Save as new artist</button>'+
-      '<button id="bSbxOver"'+(SBXW.artistId?'':' disabled')+' title="Write the Artist text back onto the selected artist (global)">'+esc(overLbl)+'</button></div>'+
+      '<button id="bSbxOver"'+(SBXW.artistId?'':' disabled')+' title="Write the Artist text back onto the selected artist (global)">'+esc(overLbl)+'</button>'+
+      '<button id="bSbxGen">Generate ▸</button></div>'+
     '<div class="cands">'+(cands||'<span class="none">No sandbox renders yet — Generate to create one.</span>')+'</div>'+
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected render</label><div class="val" id="sbxActual">(none)</div></div>'+
     // Reverse-hierarchy order matching the location page (closest-to-room first, App last);
@@ -1605,6 +1605,7 @@ function sbxGen(){
   setTimeout(pollGens,500);
 }
 async function sbxSaveNew(){
+  if(!confirm('Save the current Artist text as a NEW roster artist? It becomes available to every game.')) return;
   const suggested=(SBXW.artistName&&SBXW.artistName!=='(custom)')?SBXW.artistName+' variant':'';
   const name=prompt('Name for the new artist (its id is slugified from this):',suggested);
   if(!name) return;

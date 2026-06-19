@@ -1,5 +1,37 @@
 {
-  "game:anchorhead:outside-the-real-estate-office": "Too much trash. This one has a black outer frame (bad) a square inner frame (bad.) Other ones have the white outside, like paper, and the inside looks drawn within that paper, leaving white paper borders on the outside, but not a smooth inner border like this.",
-  "game:anchorhead:narrow-street": "This looks crazy, it's too wild. i think we got a random dramatic weather in the prompt that got injected. this looks much wilder than other anchorhead location shots, the roads to windy and dirt instead of cobblestones, too many stairs, what's that archway? probably no lightning, just rain.\n",
-  "game:anchorhead:alley:alley.png": "The white border around this is a little too big/wide. The window is too high for the puzzle, it should be a little lower. otherwise, pretty good!\n"
+  "game:anchorhead:outside-the-real-estate-office": {
+    "note": "Too much trash. This one has a black outer frame (bad) a square inner frame (bad.) Other ones have the white outside, like paper, and the inside looks drawn within that paper, leaving white paper borders on the outside, but not a smooth inner border like this.",
+    "status": "resolved",
+    "appliedTo": "render",
+    "resolved": "2026-06-19",
+    "detail": "Scene already correct; promoted clean oai-low-r1 (ragged paper edge, no inner frame, less trash) over the black-framed take."
+  },
+  "game:anchorhead:narrow-street": {
+    "note": "This looks crazy, it's too wild. i think we got a random dramatic weather in the prompt that got injected. this looks much wilder than other anchorhead location shots, the roads to windy and dirt instead of cobblestones, too many stairs, what's that archway? probably no lightning, just rain.\n",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-19",
+    "detail": "Scene override already stripped lightning/dirt/archway; committed render was stale. Regenerated oai-low-r2 (cobblestone, rain, no archway) and promoted."
+  },
+  "game:anchorhead:alley:alley.png": {
+    "note": "The white border around this is a little too big/wide. The window is too high for the puzzle, it should be a little lower. otherwise, pretty good!\n",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-19",
+    "detail": "Window-too-high fixed earlier in scene override (north wall, reachable above cans); border-width half is won-t-fix (see tome art-direction-model)."
+  },
+  "game:theatre:witchs-lair:aud:comic-book-style__witchs-lair__oai-low-r1.png": {
+    "note": "The canonical text clearly says the statue is holding a jewelled dagger. why did the skill miss this point?\n",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-19",
+    "detail": "Scene dropped the jewelled dagger(s). Examine-statue canon: four arms each gripping a jewelled dagger + four eye-sockets in a diamond. Scene override corrected; regenerated oai-low-r2 shows daggers."
+  },
+  "game:anchorhead:junction:aud:comic-book-style__junction__oai-low-r1.png": {
+    "note": "This looks unnatural, the left side opening to the country with no buildings looks strange, the middle building looks thin. it seems like it wants to follow the instructions so carefully but we don't need to show all the exits. maybe prioritize grounded layouts unless specifically indicated otherwise?\n",
+    "status": "resolved",
+    "appliedTo": "rule",
+    "resolved": "2026-06-19",
+    "detail": "Encoded systemically as mold checklist factor 10 (grounded vantage; do not enumerate every exit; exits are mere THRESHOLDS). Future molds prefer one plausible camera over cramming all exits."
+  }
 }

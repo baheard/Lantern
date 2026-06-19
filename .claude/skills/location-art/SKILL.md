@@ -118,6 +118,11 @@ Reviewer feedback is saved (via the review UI's Notes box) to
 
 ## Action: Craft / edit a scene (the recipe)
 
+> **Batch authoring now lives in the `mold` skill** (phase 2): `/mold <game>` populates every
+> room's Scene override from facts using the 12-factor checklist, and `mold <game> review` audits
+> them. Use the recipe below for a quick ONE-room hand-edit in artview; for a whole game, prefer
+> `mold` (or `/build-scenes <game>` to do facts + mold together).
+
 **Claude constrains; nanobanana renders.** Nearly every reject so far was the model
 *juicing on its own* — inventing a doorway, an archway, dramatic lightning, heaping on
 trash. The Scene layer's job is the OPPOSITE of embellishment: pin down literal facts and
@@ -127,6 +132,15 @@ When writing a `scenes[slug]` override:
 1. **Read the in-game prose** (the reviewer shows it as "In-game description"; it's
    `prompts.json` → `description`). Pull only concrete visible facts: materials, layout,
    sightlines, the one or two objects that matter, the light source.
+   - **Mine the DEEPER canon too — `examine` the salient objects.** The room description is a
+     summary; the richest visual facts live in `EXAMINE <object>`. Replay to the room and examine
+     the key props (`node tools/play.cjs <game> --file <walkthrough> --quiet`, then add
+     `--cmds "examine statue"`). This is how the Theatre Witch's-Lair statue got its *four
+     eye-sockets in a diamond* — they ONLY appear on `examine statue`, never in the room text.
+   - **⚠️ Enrich, don't REPLACE.** Pulling examine-detail must ADD to the base description, never
+     silently drop a fact already in it. The same Witch's-Lair pass that gained the sockets
+     *lost the jewelled dagger* — a sculptural fixture of the statue (firmly attached until a
+     puzzle frees it) named right in the room text. Merge both sources; subtract no fixture.
 2. **State geometry explicitly** — which wall a feature is on, what the space dead-ends at,
    relative directions a puzzle/map depends on. Cross-check adjacent rooms (e.g. Anchorhead
    alley window = file-room window; same window, must be on the climbable wall).
@@ -139,6 +153,27 @@ When writing a `scenes[slug]` override:
    coughing, and randomized weather (Anchorhead's sheet-lightning line is randomized flavor,
    not permanent scene). Keep these OUT.
 5. Keep it tight and literal — purple adjectives are the Aesthetic's job, not the Scene's.
+6. **Canon-coverage pass (do this before you finalize ANY scene).** Re-read the base description
+   plus every `examine` you pulled, and list the **concrete nouns** in them. For each, confirm it's
+   either *represented in the Scene* OR *deliberately dropped*. The deciding axis is **persistence
+   at the establishing view**, NOT puzzle-salience — the art is a fixed mood backdrop of the room
+   as first encountered, never a live mirror of world state, so it must show only what stays put no
+   matter what the player does.
+   - **KEEP — fixtures.** Architecture, sculpture, and anything *firmly attached / not takeable*
+     in the initial state: walls, windows, the cauldron, the statue — and the statue's jewelled
+     dagger (try `take dagger` → *"firmly attached to the statue"*; it only frees after a puzzle,
+     so at the establishing view it's a sculptural fixture). This is the fact that got missed.
+   - **DROP — removables, even if puzzle-critical.** Anything pocketable from the establishing
+     view (a *loose page* lying in the same lair, a key on a table, a gettable gem) — because once
+     `GET`-ed it's gone but the static image still shows it, an incongruity. The player reads the
+     room text for takeable detail; the art shouldn't enumerate loot. Also drop transient/randomized
+     flavor (weather lines, NPC movement, dialogue) and parser/score chrome (`[Your score…]`,
+     `What now?`).
+   - **The mechanical test:** in the harness, `take <noun>` — *"firmly attached" / "can't take
+     that"* ⇒ KEEP; if it pockets ⇒ DROP. No vibe call needed. (Caveat: judge the INITIAL state —
+     items that only become takeable after a puzzle, like the dagger, are fixtures at first view.)
+   This same coverage logic runs proactively in the `/art-notes` sweep (it flags fixed canon
+   objects absent from a committed render even when no human note exists).
 
 ## Action: Open the reviewer
 
