@@ -230,8 +230,8 @@ function reject(gameSlug, candidate) {
   const isAud = candidate.indexOf('aud:') === 0;
   const dir = isAud ? g.audition : g.review;
   const name = isAud ? candidate.slice(4) : candidate;
-  // Delete the candidate image AND its prompt sidecar (no orphan .txt left behind).
-  for (const f of [name, name.replace(/\.png$/i, '.txt')]) {
+  // Delete the candidate image AND its sidecars (prompt .txt + artist-tag .json — no orphans).
+  for (const f of [name, name.replace(/\.png$/i, '.txt'), name.replace(/\.png$/i, '.json')]) {
     const p = path.join(dir, f);
     if (fs.existsSync(p)) fs.rmSync(p);
   }
@@ -257,7 +257,7 @@ function jobsList() {
   }
   return out;
 }
-function regen(gameSlug, slug, prompt, provider, quality, model, ref, refMode) {
+function regen(gameSlug, slug, prompt, provider, quality, model, ref, refMode, artistId, artistName) {
   return new Promise((resolve, _reject) => {
     const g = gamePaths(gameSlug);
     fs.mkdirSync(g.review, { recursive: true });
@@ -300,6 +300,8 @@ function regen(gameSlug, slug, prompt, provider, quality, model, ref, refMode) {
           if (job) { job.status = 'error'; job.error = msg; job.finishedAt = Date.now(); }
           return _reject(new Error(msg));
         }
+        // Artist tag — lets the Audition grid borrow this location image for (artist × scene).
+        if (artistId) { try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId, artistName: artistName || artistId, locSlug: slug }, null, 2)); } catch {} }
         logLine(`REGEN  OK   ${gameSlug}/${slug} (${dt}s) ${outName}`);
         if (job) { job.status = 'done'; job.finishedAt = Date.now(); }
         resolve({ file: outName });
@@ -401,6 +403,31 @@ function listAuditionImages(slug) {
   }
   return out;
 }
+// Scan ALL artist-tagged images outside _audition (sandbox renders + tagged _review
+// candidates) and group by "artistId__locSlug", keeping the LATEST by file mtime. Lets the
+// audition grid borrow an image already made for that artist+location elsewhere. Untagged
+// legacy images (no .json sidecar) are simply skipped — nothing to match them on.
+function scanTaggedImages(slug) {
+  const g = gamePaths(slug);
+  const best = {};   // key → { file, source, prompt, mtime }
+  const consider = (key, file, source, prompt, mtime) => {
+    if (!best[key] || mtime > best[key].mtime) best[key] = { file, source, prompt, mtime };
+  };
+  const scan = (dir, source) => {
+    if (!fs.existsSync(dir)) return;
+    for (const f of fs.readdirSync(dir).filter((n) => /\.png$/i.test(n))) {
+      const meta = readJSON(path.join(dir, f.replace(/\.png$/i, '.json')), null);
+      if (!meta || !meta.artistId || !meta.locSlug) continue;
+      let mtime = 0; try { mtime = fs.statSync(path.join(dir, f)).mtimeMs; } catch {}
+      const tp = path.join(dir, f.replace(/\.png$/i, '.txt'));
+      const prompt = fs.existsSync(tp) ? fs.readFileSync(tp, 'utf8') : (meta.prompt || '');
+      consider(meta.artistId + '__' + meta.locSlug, f, source, prompt, mtime);
+    }
+  };
+  scan(g.sandbox, 'sandbox');
+  scan(g.review, 'review');
+  return best;
+}
 function auditionState(slug) {
   const cfg = readJSON(gamePaths(slug).auditionCfg, {});
   const rooms = (readJSON(gamePaths(slug).pack, { rooms: [] }).rooms) || [];
@@ -408,13 +435,20 @@ function auditionState(slug) {
   const scenes = (cfg.scenes && cfg.scenes.length ? cfg.scenes : suggestScenes(slug)).slice(0, 4);
   const arts = (readJSON(artistsPath, { artists: [] }).artists) || [];
   const selArtists = cfg.artists && cfg.artists.length ? cfg.artists : arts.map((a) => a.id);
+  const native = listAuditionImages(slug);
+  // Borrowed = a tagged image made elsewhere for this artist+location, ONLY for cells with no
+  // native audition image (native always wins). Keyed the same "artistId__sceneSlug" as native.
+  const tagged = scanTaggedImages(slug);
+  const borrowed = {};
+  for (const key of Object.keys(tagged)) { if (!native[key]) borrowed[key] = tagged[key]; }
   return {
     slug,
     scenes: scenes.map((s) => ({ slug: s, name: roomName(s) })),
     allScenes: rooms.map((r) => ({ slug: r.slug, name: r.name })),
     artists: arts.map((a) => ({ id: a.id, name: a.name, summary: a.summary || '', style: a.style || '', selected: selArtists.includes(a.id) })),
     houseArtist: (readJSON(gamePaths(slug).selArtist, {}) || {}).id || null,
-    images: listAuditionImages(slug),
+    images: native,
+    borrowed,
   };
 }
 function saveAuditionCfg(slug, scenes, artists) {
@@ -629,7 +663,7 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/note') return wrap(() => saveNote(body.key, body.text));
       if (u.pathname === '/api/note-status') return wrap(() => setNoteStatus(body.key, body.status, body.appliedTo));
       if (u.pathname === '/api/regen') {
-        try { const r = await regen(body.game, body.slug, body.prompt, body.provider, body.quality, body.model, body.ref, body.refMode); return sendJSON(res, 200, { ok: true, ...r }); }
+        try { const r = await regen(body.game, body.slug, body.prompt, body.provider, body.quality, body.model, body.ref, body.refMode, body.artistId, body.artistName); return sendJSON(res, 200, { ok: true, ...r }); }
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
       }
       if (u.pathname === '/api/audition-config') return wrap(() => saveAuditionCfg(body.game, body.scenes, body.artists));
@@ -851,6 +885,10 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .aud-cell button{font-size:12px;padding:5px 10px}
   .aud-cell .goloc{font-size:11px;color:#8fb0e8;text-decoration:none;margin-right:10px;cursor:pointer;vertical-align:middle}
   .aud-cell .goloc:hover{color:#bcd2ff;text-decoration:underline}
+  /* Borrowed image (a tagged render from sandbox/review shown in an empty audition cell). */
+  .aud-cell .borrowwrap{position:relative;width:170px;margin:0 auto 6px}
+  .aud-cell .borrow-badge{position:absolute;top:6px;left:6px;z-index:1;background:#7a5cc0;color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:5px}
+  .aud-cell .thumb.borrowed{margin:0;opacity:.92;outline:1px dashed #7a5cc0;outline-offset:-1px}
   /* ---- Sandbox workbench (reuses .loc-wrap/.loc-left/.cands/.sec/.val/.bigprev) ---- */
   .sbx-controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 14px}
   .sbx-controls .sbxsel{display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8398}
@@ -1242,7 +1280,9 @@ async function doRegen(l){
   // Fire-and-forget: the SERVER tracks the job and the poller below renders progress + refreshes
   // on completion — so it keeps working (and the new image still lands) even if you navigate away
   // or reload. We don't await the response for UI; we only surface a network/launch error.
-  postJSON('/api/regen',{game:curGame,slug:l.slug,prompt,provider,quality,model,ref,refMode})
+  const gi=GAMEINFO[curGame]||{artist:{}};
+  postJSON('/api/regen',{game:curGame,slug:l.slug,prompt,provider,quality,model,ref,refMode,
+    artistId:(gi.artist&&gi.artist.id)||null, artistName:(gi.artist&&gi.artist.name)||null})
     .then(r=>r.json()).then(r=>{ if(r&&!r.ok&&r.error) toast('Error: '+r.error); })
     .catch(e=>toast('Error: '+e.message));
   toast('Generating '+l.slug+(regenMode!=='clean'?(' ['+regenMode+']'):'')+'… (tracked bottom-right — safe to navigate away)');
@@ -1397,6 +1437,7 @@ function genParams(){
     quality:genMode==='openai-high'?'high':'low',
     model:genMode==='gemini-pro'?'gemini-3-pro-image-preview':null};
 }
+function audCellUrl(source,file){ const k=source==='sandbox'?'sandbox':'review'; return '/img/'+k+'?game='+curGame+'&f='+encodeURIComponent(file)+'&v='+ver; }
 async function reloadAudition(){ AUD=await (await fetch('/api/audition?game='+encodeURIComponent(curGame))).json(); renderAudition(); }
 async function detailAudition(slug){ curGame=slug; await reloadAudition(); }
 // ---- Sandbox: free-play workbench (every layer editable, nothing committed) ----
@@ -1568,7 +1609,13 @@ function renderAudition(){
     const cells=cols.map(s=>{
       const arr=A.images[a.id+'__'+s.slug]||[]; const f=arr.length?arr[arr.length-1].file:null;
       if(f) audLBList.push(f);
-      const img=f?'<img class="thumb" data-zoomaud="'+esc(f)+'" src="/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'">':'<div class="empty">not generated</div>';
+      const bor=!f?((A.borrowed||{})[a.id+'__'+s.slug]||null):null;   // only when no native audition take
+      let img;
+      if(f){ img='<img class="thumb" data-zoomaud="'+esc(f)+'" src="/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'">'; }
+      else if(bor){ const u=audCellUrl(bor.source,bor.file);
+        img='<div class="borrowwrap"><span class="borrow-badge">'+esc(bor.source)+'</span>'+
+          '<img class="thumb borrowed" data-zoomurl="'+esc(u)+'" data-zoomcap="'+esc(bor.source+' · '+bor.file)+'" src="'+u+'"></div>'; }
+      else { img='<div class="empty">not generated</div>'; }
       const goloc='<a class="goloc" data-goloc="'+esc(s.slug)+'" title="Open this scene\\'s location review page">→ location</a>';
       const sbx='<a class="goloc" data-sbxart="'+esc(a.id)+'" data-sbxscene="'+esc(s.slug)+'" title="Play with this artist + scene in the Sandbox">⚗ sandbox</a>';
       return '<td class="aud-cell">'+img+goloc+sbx+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">Generate</button></td>';
@@ -1596,6 +1643,7 @@ function renderAudition(){
     selectTopic('sandbox', curGame);
   });
   document.querySelectorAll('[data-zoomaud]').forEach(im=>im.onclick=()=>openAudLB(im.dataset.zoomaud));
+  document.querySelectorAll('[data-zoomurl]').forEach(im=>im.onclick=()=>openOneLB(im.dataset.zoomurl,im.dataset.zoomcap));
   $('#bGenAll').onclick=audGenAll;
   afterDetailRender();
 }
@@ -1677,7 +1725,9 @@ const lbList=()=>{
   if(lbMode==='aud') return audLBList;
   const l=(GAMES[curGame]||[]).find(x=>x.slug===curItem);return l?l.candidates:[];
 };
-function renderLB(){const list=lbList();if(!list.length){hideLB();return;}
+function renderLB(){
+  if(lbMode==='one'){ lbimg.onerror=null; lbimg.src=(lbOne&&lbOne.url)||''; lbcap.textContent=(lbOne&&lbOne.cap)||''; return; }
+  const list=lbList();if(!list.length){hideLB();return;}
   const f=list[lbIndex];
   if(lbMode==='artist'){
     lbimg.onerror=null; lbimg.src='/img/artist?f='+encodeURIComponent(f);
@@ -1694,6 +1744,10 @@ function renderLB(){const list=lbList();if(!list.length){hideLB();return;}
     sel=f; updateSelUI();   // keep the main view in sync with what's shown full screen
   }
 }
+// Single arbitrary-URL lightbox (borrowed audition images live in sandbox/review dirs, not
+// the audition list — so they get a one-off view with no prev/next stepping).
+let lbOne=null;
+function openOneLB(url,cap){lbMode='one';lbOne={url,cap};renderLB();lb.classList.add('show');lbOpen=true;}
 function openLB(f){lbMode='loc';const list=lbList();let i=list.indexOf(f);lbIndex=i<0?0:i;renderLB();lb.classList.add('show');lbOpen=true;}
 function openArtistLB(f){lbMode='artist';const list=lbList();let i=list.indexOf(f);lbIndex=i<0?0:i;renderLB();lb.classList.add('show');lbOpen=true;}
 function hideLB(){lb.classList.remove('show');lbOpen=false;}

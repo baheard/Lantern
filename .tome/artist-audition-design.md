@@ -2,6 +2,7 @@
 title: artist-audition-design
 tags: [location-art, art-direction, artview, audition, portfolio, roster]
 created: 2026-06-18
+updated: 2026-06-19
 aliases: [artist development, audition flow, per-game artist selection, portfolio]
 ---
 
@@ -9,6 +10,27 @@ aliases: [artist development, audition flow, per-game artist selection, portfoli
 
 Design agreed 2026-06-18 (user brainstorm). Builds on the three-layer model in
 [[art-direction-model]] (`App ▸ Artist ▸ Aesthetic(per-game) ▸ Scene(per-room)`).
+
+## Borrowed images: audition cells reuse art made elsewhere (2026-06-19)
+An empty audition cell (artist × scene) now falls back to showing a **tagged image already
+made for that artist+location elsewhere** — so work done in the Sandbox or on a location page
+shows up in the grid without re-rendering. Native audition image **always wins**; only empty
+cells borrow. Latest-by-file-mtime across sources. Borrowed thumbs get a `sandbox`/`location`
+badge + dashed outline and open in a one-off lightbox (`lbMode:'one'`, since they live outside
+the audition list/dir).
+
+**Foundation: tag the artist on EVERY generated image.** Each gen path records which artist
+made the image so cross-source matching is reliable, not guessed:
+- **Audition** — artist is already in the filename (`<artistId>__<scene>__…`).
+- **Sandbox** — `_sandbox/*.json` sidecar carries `artistId`+`locSlug` (see [[art-sandbox]]).
+- **Location `_review/` regen** — `regen()` now writes `<img>.json` `{artistId, artistName,
+  locSlug}` (the game's selected artist at gen time, passed from the client).
+Server `scanTaggedImages(slug)` reads the sandbox+review sidecars, groups by
+`artistId__locSlug`, keeps the latest mtime; `auditionState` exposes it as `borrowed` (minus
+keys that already have a native audition take). **Gotcha:** images generated *before* this
+change have no sidecar → unmatchable. We deliberately do NOT try to infer artist from history
+(a `_review` candidate never recorded its artist). `_review`/committed images stay untagged
+unless regenerated.
 
 ## Decisions (locked)
 - **Artist signature stays GLOBAL.** Editing an artist's `style` in `artists.json`
