@@ -2,15 +2,20 @@
 title: art-direction-model
 tags: [location-art, prompts, art-direction, gemini, anchorhead, dreamhold]
 created: 2026-06-16
-updated: 2026-06-16
-aliases: [artist persona, style layers, art prompt structure]
+updated: 2026-06-18
+aliases: [artist persona, style layers, art prompt structure, app layer]
 ---
 
-# Art-direction model: Artist / Aesthetic / Scene
+# Art-direction model: App / Artist / Aesthetic / Scene
 
-Location-art prompts compose **three independent layers**. Keeping them separate is
-what lets one art identity span every game without per-game restyling.
+Location-art prompts compose **four independent layers** (App added 2026-06-18; was three).
+Keeping them separate is what lets one art identity span every game without per-game restyling.
 
+0. **App** (global, above Artist — same for every game AND every artist). Universal hard
+   constraints that hold no matter who the artist is: `Portrait 3:4`, recessive backdrop /
+   accompaniment to story text, `no people / text / lettering / UI`, and the THRESHOLDS rule
+   (exits are mere openings, never depict the room beyond). Lives in
+   `docs/games/images/_app/app.json` (`{ "prompt": "…" }`). Prepended to every composed prompt.
 1. **Artist** (universal — same for every game). Medium + technique + how they render:
    line, wash, paper texture, edge treatment, tonal range, composition habits,
    "recessive backdrop", portrait 3:4. **Never** names mood, palette, weather, or subject.
@@ -20,7 +25,7 @@ what lets one art identity span every game without per-game restyling.
 3. **Scene** (per room). Literal contents from the walkthrough-scraped room text.
    **Faithful and unwavering** — only what the prose says; nothing invented.
 
-Composed prompt = `Artist + " Aesthetic: …" + " Scene: …"`.
+Composed prompt = `App + " " + Artist + " Aesthetic: …" + " Scene: …"`.
 
 ## The chosen artist: **Aldous Quill** (validated 2026-06-16, Anchorhead + Dreamhold)
 The house artist is named **Aldous Quill** (id stays `ink` in `artists.json` so nothing
@@ -88,9 +93,9 @@ When writing/editing a `scenes[slug]` override:
    that matter, the light source.
 2. **State geometry explicitly** — which wall a feature is on, what the space dead-ends
    at, relative directions a puzzle/map depends on (see Spatial fidelity below).
-3. **Add explicit negatives** for whatever the model tends to invent: `"no other doors,
-   no ground-level doorway"`, `"cobblestone NOT dirt"`, `"no archway"`, `"no lightning"`.
-   Negatives are doing the real work — they're the guardrails.
+3. **Constrain what the model tends to invent** — pin the literal facts and rule out the
+   usual hallucinations (`"cobblestone NOT dirt"`, `"no archway"`). Phrase it however reads
+   naturally; recurring junk is usually a contradiction in the Scene's own content (see below).
 4. **Strip transient/randomized flavor**: NPC movement ("Michael follows you"), dialogue,
    coughing, and *randomized weather* (e.g. Anchorhead's sheet-lightning line is randomized
    flavor in the room text, not the permanent scene) — keep these OUT of the Scene.
@@ -138,41 +143,34 @@ Lessons:
   Michael is the protagonist's **husband (adult)**, not a child; he's incidental to the
   *room*, so he stays out and the bed just reads "bedclothes rumpled." A room that only
   makes sense *with* its occupant would be the exception.
-- **Proposed 4th layer — App (global, above Artist).** `"no people, no text, no UI"` is
-  currently baked into each artist's `style` string (e.g. Aldous Quill/`ink`). The user
-  wants these universal constraints lifted into an **App layer** that prepends to EVERY
-  composed prompt regardless of artist, so they aren't duplicated per-artist (and a new
-  artist can't forget them). Composed would become
-  `App + Artist + "Aesthetic: …" + "Scene: …"`. NOT yet built — flagged for later. The
-  cheap interim alternative is just to keep the phrase in every artist string.
+- **App layer — BUILT (2026-06-18).** The proposed 4th layer is live: `docs/games/images/_app/app.json`,
+  read by both `review-server.cjs` (`appPrompt()`) and `gen-room-images.cjs` (`appPromptText()`),
+  prepended to every composed prompt. Editable in the reviewer (`/api/app-prompt`, global across games).
+  On 2026-06-18 the constraints that were duplicated **verbatim across all four artists** were
+  promoted into it: `Portrait 3:4`, recessive backdrop / accompaniment to story text, and
+  `no people / text / lettering / UI`. Each artist `style` was trimmed to only its own medium
+  (palette, light, contrast, edge treatment) — net composed prompt is unchanged, just deduplicated.
+  - **Promote only what's common to ALL artists.** Left per-artist on purpose: the
+    "no hard border / bare-paper margin" rule (only ink + storybook, the paper media) and the
+    contrast/tonal treatment — gouache/pixel are *low-contrast*, ink/storybook are *full-range*;
+    these **conflict**, so they can't live in App. Rule: a constraint goes to App only if it's
+    universal AND non-conflicting across every artist.
 
-## Negatives can SUMMON the noun — prefer positive phrasing (2026-06-17)
-The Anchorhead alley kept growing a door at the dead-end on random regens, despite the
-Scene saying "no other doors, no ground-level doorway." Two causes, both classic image-model
-behavior (nanobanana / Gemini-flash-image):
-- **Negation is weak in image models.** The tokens `door`/`doorway` are still in the prompt;
-  the model attends to the noun and often drops the "no" ("don't think of a pink elephant").
-  Repeating "door" in the negatives was partly *causing* the doors.
-- **A dead-end "tall solid wooden fence" reads as a giant gate/door** — vertical planks,
-  rectangular, blocking the passage. The composition primes "door"; on a stochastic roll the
-  door-prior wins. That's why it was intermittent, not constant.
+## Editing artist styles in the reviewer (Artist topic page) — 2026-06-18
+The Artist topic page (`detailArtist`) Style-signature box is now inline-editable via a
+`✎ Edit` button (`artistEditStyle(id)` → `/api/artist-style-by-id`). Edits **by id**, so any
+artist can be tuned there, not just the game's currently-selected one — important for a freshly
+**created** artist (e.g. "Comic book style") that isn't anyone's house artist yet. Saves are
+GLOBAL (writes back to the shared `_artists/artists.json`, affects every game using that artist).
+Mirrors the existing audition-grid `audEditArtist()` and the location-page `beginEdit('artist')`
+(which only edits the *selected* artist via `/api/artist-style`).
 
-Fix that worked: **flip negative → positive.** Describe surfaces as unbroken instead of
-naming the forbidden object, and recast the fence so it doesn't read as a gate:
-- fence → "a tall barrier of weathered vertical wooden planks — a continuous, flat,
-  featureless wall of close-set boards spanning the full width of the alley"
-- walls → "the brick side walls are solid and unbroken"
-- openings → "the only opening anywhere in the scene is that single high transom window"
-
-CAUTION (caught in review): the first attempt wrote the fence as "...no hinges, no handle,
-no frame" — that's the SAME trap one layer down. "hinges/handle/frame" name door hardware
-and re-summon the door. Don't enumerate the parts something *lacks*; describe the surface as
-"featureless / continuous / flat / unbroken". The positive adjective is the whole technique —
-the moment you reach for "no <part>", you're back to naming the thing.
-
-Rule of thumb: if the model keeps rendering an unwanted object, **stop naming it in a
-negative** — describe what IS there (blank/unbroken/continuous) and remove the noun. Reserve
-explicit negatives for things whose *token* isn't also the subject (e.g. "no lightning" works
-because the scene isn't otherwise about lightning). This refines the earlier "negatives do the
-real work" note: negatives work for absent flavor, but backfire when they name the very thing
-the composition is already biased toward.
+## When something unwanted keeps rendering, it's a contradiction — not the word "no" (2026-06-18)
+Don't give the scene-writer prompt-craft guidance about negative-vs-positive phrasing — our
+models (Gemini 2.5/3 Image, GPT-image-2) follow instructions well, so it's just noise. (An
+earlier note here claimed "negation summons the noun, flip everything positive" — a
+CLIP-diffusion-era artifact, wrong for these models; deleted.) The real lesson: the Anchorhead
+alley kept growing a door because the Scene *described* "a tall solid plank fence spanning the
+alley" — which visually IS a gate/door — while also saying "no door". The fix was changing the
+description (→ "a continuous, flat, featureless wall of close-set boards"), not the phrasing. So
+when something unwanted recurs, look for the contradiction in the Scene's own content.

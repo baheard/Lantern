@@ -130,15 +130,11 @@ When writing a `scenes[slug]` override:
 2. **State geometry explicitly** — which wall a feature is on, what the space dead-ends at,
    relative directions a puzzle/map depends on. Cross-check adjacent rooms (e.g. Anchorhead
    alley window = file-room window; same window, must be on the climbable wall).
-3. **Add explicit negatives** for whatever the model tends to invent: `"cobblestone NOT
-   dirt"`, `"no archway"`, `"no lightning"`. Negatives do real work for *absent flavor* —
-   BUT in image models a negative that names the very object the composition is biased toward
-   can backfire and *summon* it (the model attends to the noun, drops the "no"). If the model
-   keeps rendering an unwanted thing (e.g. a door at a dead-end fence), stop naming it: flip to
-   **positive** description — say what IS there ("solid unbroken brick", "a continuous, flat,
-   featureless wall of close-set planks", "the only opening is the one window"). And don't
-   sneak the noun back in via its parts — "no hinges/handle/frame" re-summons the door just as
-   "no door" does; use "featureless" instead. See `.tome/art-direction-model.md`.
+3. **Constrain what the model tends to invent** — pin the literal facts and rule out the usual
+   hallucinations (`"cobblestone NOT dirt"`, `"no archway"`). Phrase it however reads naturally.
+   If something unwanted keeps recurring it's usually a contradiction in the Scene's own
+   description (e.g. a "tall solid plank fence" that visually IS a door) — fix that. See
+   `.tome/art-direction-model.md`.
 4. **Strip transient / randomized flavor**: NPC movement ("Michael follows you"), dialogue,
    coughing, and randomized weather (Anchorhead's sheet-lightning line is randomized flavor,
    not permanent scene). Keep these OUT.
