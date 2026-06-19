@@ -29,9 +29,11 @@ exact same time.)
 ## Step 1 — Collect the unresolved set (all games, both files)
 
 Read both `_review-notes.json` files. An entry is **unresolved** when its value is a plain string,
-or `status` is missing/`"open"`. Skip `status:"resolved"` and `status:"wontfix"`. Note each
-entry's `source` (`"player"` = came from feedback; absent = your own artview note) and, for art,
-its `hash`.
+its `status` is missing/`"open"`, **or** it carries a `playerFeedback` array with any item
+`status:"open"` (new player feedback on an otherwise-`resolved` render must resurface). Skip
+entries that are `resolved`/`wontfix` AND have no open `playerFeedback`. Note each entry's `source`
+(`"player"` = came from feedback; absent = your own artview note), its `playerFeedback` items, and
+for art its `hash`.
 
 Report the count up front, e.g. "6 unresolved: 4 art (2 player) across 2 games, 2 hint (player)."
 
