@@ -18,7 +18,7 @@
     ],
     "generatedBy": "generate-hints skill",
     "generatedAt": "2026-06-14",
-    "appVersion": "1.5.563"
+    "appVersion": "1.5.630"
   },
   "sections": [
     {
@@ -47,7 +47,7 @@
           "id": "reading-references",
           "q": "There are books and records scattered around the castle. Are they worth reading?",
           "hints": [
-            "They aren't just scenery — this castle will answer questions, if you know how to ask.",
+            "These aren't just scenery — the castle's books and records can be queried for answers, if you know the right command.",
             "Different reference works cover different ground: the castle's history, the souls bound to it, and an enchantress's private notes.",
             "Answer: Use LOOK UP <topic> IN <book> — e.g. LOOK UP LUCREZIA IN THE RECORDS. Most of the hard puzzles are clued by one of these lookups, so when you're stuck, ask the books about whatever's puzzling you."
           ]

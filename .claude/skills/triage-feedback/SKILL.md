@@ -110,6 +110,13 @@ why old issues stop re-surfacing every run).
 8. Print a one-line summary: X consolidated (hint/art), X deleted (Y duplicates), X bug, X
    enhancement, X skipped.
 
+8a. **Offer to review notes (default & `--groom` modes; skip under `--consolidate`).** If Step 2
+   consolidated any `[HINT]`/`[ART]` notes (or there are pre-existing unresolved notes), offer to
+   run `/review-notes` now to work through the freshly-folded content notes one by one. Ask once
+   (e.g. "N notes consolidated — want me to run /review-notes to work through them?"); on yes,
+   invoke the `review-notes` skill. Don't offer if nothing was consolidated and you have no reason
+   to think notes are pending.
+
 9. **`--groom` only** — backlog grooming (deliberate, not every run). List the open
    bug/enhancement backlog; for anything you've decided not to pursue, apply `on-hold` or
    `wont-fix` and **close** it (`gh issue close <n>` — closed ≠ deleted; reopenable, and the

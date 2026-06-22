@@ -4,7 +4,7 @@
   "meta": {
     "title": "Anchorhead",
     "generatedAt": "2026-06-16",
-    "appVersion": "1.5.610",
+    "appVersion": "1.5.630",
     "scoreNote": "Normal play caps at 99/100; the final point is undocumented and appears unobtainable.",
     "sources": [
       {
@@ -33,7 +33,7 @@
           "locations": ["Outside the Real Estate Office", "Alley", "Office"],
           "hints": [
             "There's no key to the front door and it won't budge. Stop trying the front.",
-            "Try the alley around the side of the building — and look up, not just around.",
+            "Try the alley around the side of the building.",
             "There's a high transom window you could reach if you had something to stand on. Something's lying in the alley to climb.",
             "Answer: From Outside the Real Estate Office, go SE into the alley. PUSH CAN AGAINST WALL, CLIMB CAN, UP through the transom, then WEST into the office."
           ]
@@ -176,15 +176,6 @@
             "The key is still in the lock — just on the other side of the door. You can get it without opening up.",
             "Slide something flat under the door to catch what falls, then poke the key out of the keyhole.",
             "Answer: PUSH NEWSPAPER UNDER DOOR, PUT LETTER OPENER IN KEYHOLE (the key drops onto the paper), GET NEWSPAPER, GET BRASS KEY."
-          ]
-        },
-        {
-          "id": "d2-paintings",
-          "q": "The family portraits seem to watch me as I move. Is that important?",
-          "locations": ["Gallery", "Sitting Room"],
-          "hints": [
-            "The house is built to unsettle you. Not every chill hides a mechanism.",
-            "Answer: Pure atmosphere — the paintings do nothing you can act on. Look them over for the family's faces and names if you like, but there's no puzzle here. The presence or absence of a question is no guide to what matters."
           ]
         },
         {

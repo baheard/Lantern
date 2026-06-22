@@ -23,7 +23,7 @@
     ],
     "generatedBy": "generate-hints skill",
     "generatedAt": "2026-06-14",
-    "appVersion": "1.5.567"
+    "appVersion": "1.5.630"
   },
   "milestones": [
     { "id": "festeron",  "start": true, "enterLocations": ["Post Office"] },
@@ -41,12 +41,12 @@
       "questions": [
         {
           "id": "fest-errand",
-          "q": "My boss handed me a package to deliver. Where does it go, and is there a rush?",
+          "q": "My boss handed me an envelope to deliver. Where does it go, and is there a rush?",
           "locations": ["Post Office", "Hilltop"],
           "hints": [
             "There is a rush. No puzzle is blocking you yet — you're a clerk and this is simply a delivery — but the place you're delivering to closes at nightfall, and you do not want to be out on the streets after dark.",
             "It isn't anywhere in the village itself. Leave town heading west, toward the sea — the address is up on the cliffs, not down among the houses.",
-            "From the western edge of the village, follow the winding cliffside path and keep heading up; the little fairy-tale shop sits near the top. Pick up any loose objects you pass on the way.",
+            "From the western edge of the village, follow the winding cliffside path and keep heading up; a little shop sits near the top.",
             "Answer: The sealed envelope goes to Ye Olde Magick Shoppe — west out of the village and up the winding cliff path to the top. OPEN THE MAGICK SHOPPE DOOR, go in, and GIVE ENVELOPE TO WOMAN (she'll ask you to read it to her). Everything else in the game flows from making this delivery."
           ]
         },

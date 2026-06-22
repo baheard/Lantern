@@ -13,7 +13,7 @@
     ],
     "generatedBy": "generate-hints skill",
     "generatedAt": "2026-06-12",
-    "appVersion": "1.5.552"
+    "appVersion": "1.5.630"
   },
   "sections": [
     {
@@ -27,7 +27,6 @@
           "q": "I can't leave the theatre — something won't let me go south.",
           "locations": ["Theatre Lobby"],
           "hints": [
-            "Why did you come back into this building in the first place?",
             "You're not leaving without your pager. It's still where you left it — down in the basement.",
             "Answer: From the lobby go NW to the Manager's Office, DOWN through the open trapdoor, TAKE PAGER, then UP, SE, and S to leave."
           ]

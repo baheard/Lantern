@@ -34,5 +34,10 @@
     "resolved": "2026-06-19",
     "detail": "Encoded systemically as mold checklist factor 10 (grounded vantage; do not enumerate every exit; exits are mere THRESHOLDS). Future molds prefer one plausible camera over cramming all exits."
   },
-  "game:theatre:witchs-lair:aud:gouache__witchs-lair__oai-low-r1.png": "I think only one hand carries a dagger? I remember being unclear on this when I played it, please probe."
+  "game:theatre:witchs-lair:aud:gouache__witchs-lair__oai-low-r1.png": {
+    "note": "I think only one hand carries a dagger? I remember being unclear on this when I played it, please probe.",
+    "status": "wontfix",
+    "resolved": "2026-06-22",
+    "detail": "Already settled by the resolved comic-book sibling note for the same witchs-lair: examine-statue canon is FOUR arms each gripping a jewelled dagger (four eye-sockets in a diamond), and the location Scene override was corrected. This is just an audition piece — no action needed."
+  }
 }

@@ -67,6 +67,9 @@ blindly. Judge content fixes through the `generate-hints` philosophy (it's the r
 One tight entry per unresolved note:
 
 - **Note** — game · room-or-hint (· file if specific), the note text, and `[player]`/stale flags.
+- **Current text** — for hints, quote the **full live ladder** (the question + every rung), not just
+  the one rung the note targets — the user can't rule on a trim/cut without seeing what's around it.
+  For art, this is the image itself (Read it / reference the file); skip the prose quote.
 - **What I checked** — image / prompt / canon (art), or live hint vs quoted (hints).
 - **Diagnosis** — what's really wrong and *where the failure is*: rendered image, composed prompt
   (missing/wrong Scene fact), Aesthetic, Artist signature, the hint text itself, or "fine — note

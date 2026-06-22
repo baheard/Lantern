@@ -1,44 +1,62 @@
 {
   "game:theatre:act1-the-pager:act1-cant-leave:1": {
     "note": "[player] This feels dumb. When you try to go south it says 'you're not leaving without your pager.' This is a hint in search of a puzzle. We should avoid dumb hints, err towards NOT providing a hint — less hints, less clues, less text.",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "Why did you come back into this building in the first place?",
-    "issue": 163
+    "issue": 163,
+    "detail": "Dropped the Socratic rung 1 — the game already states the pager is in the basement, so the puzzle is trivial (rule 19 / rule 14). Ladder now: basement nudge → answer."
   },
   "game:bronze:getting-around:reading-references:1": {
     "note": "[player] Not a puzzle!!",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "They aren't just scenery — this castle will answer questions, if you know how to ask.",
-    "issue": 162
+    "issue": 162,
+    "detail": "Kept the entry — it's a mechanic primer teaching the LOOK UP <topic> IN <book> verb that most hard Bronze puzzles depend on (not a fake puzzle). Softened rung 1 to read as a plain queryable-books tip rather than a riddle hook."
   },
   "game:anchorhead:day-one:d1-office:2": {
     "note": "[player] Don't need this '— and look up, not just around.' Should be trimming harder.",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "Try the alley around the side of the building — and look up, not just around.",
-    "issue": 157
+    "issue": 157,
+    "detail": "Cut the '— and look up, not just around.' clause (rule-14 over-delivery: it leaked rung 3's transom-window reveal). Rung now: 'Try the alley around the side of the building.'"
   },
   "game:anchorhead:day-two:d2-paintings:2": {
     "note": "[player] I like pure atmosphere, but I don't understand the last line at all ('The presence or absence...') — you can prob cut that. The hint basically says it all anyway.",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "Answer: Pure atmosphere — the paintings do nothing you can act on. Look them over for the family's faces and names if you like, but there's no puzzle here. The presence or absence of a question is no guide to what matters.",
-    "issue": 156
+    "issue": 156,
+    "detail": "Deleted the whole d2-paintings entry (not just the trailing line). An 'is this important? → no, pure atmosphere' question serves no stuck player and only enlarges the spoiler surface. Hardened generate-hints rule 16 with this as the canonical Bad example: red herrings must protect or entertain, never be an earnest 'it's nothing' deflation."
   },
   "game:wishbringer:festeron:fest-errand:3": {
     "note": "[player] 'Fairy-tale shop' is weird — it's just a magick shop or some other kind of shop, right? The 'pick up any loose objects' is a totally unrelated factoid and should have been caught in review as needless.",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "From the western edge of the village, follow the winding cliffside path and keep heading up; the little fairy-tale shop sits near the top. Pick up any loose objects you pass on the way.",
-    "issue": 154
+    "issue": 154,
+    "detail": "Cut the 'Pick up any loose objects' sentence (rule-14 tail, duplicates fest-gather) and reworded 'the little fairy-tale shop' → 'a little shop' (the name waits for the answer rung)."
   },
   "game:wishbringer:festeron:fest-errand:1": {
     "note": "[player] The boss handed a letter to deliver, right? Not a package?",
-    "status": "open",
+    "status": "resolved",
+    "appliedTo": "hint",
+    "resolved": "2026-06-22",
     "source": "player",
     "hintText": "There is a rush. No puzzle is blocking you yet — you're a clerk and this is simply a delivery — but the place you're delivering to closes at nightfall, and you do not want to be out on the streets after dark.",
-    "issue": 153
+    "issue": 153,
+    "detail": "Factual fix: question said 'package' but the answer rung and in-game item are an envelope. Changed the question to 'an envelope to deliver.'"
   }
 }
