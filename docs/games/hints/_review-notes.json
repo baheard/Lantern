@@ -1,0 +1,44 @@
+{
+  "game:theatre:act1-the-pager:act1-cant-leave:1": {
+    "note": "[player] This feels dumb. When you try to go south it says 'you're not leaving without your pager.' This is a hint in search of a puzzle. We should avoid dumb hints, err towards NOT providing a hint — less hints, less clues, less text.",
+    "status": "open",
+    "source": "player",
+    "hintText": "Why did you come back into this building in the first place?",
+    "issue": 163
+  },
+  "game:bronze:getting-around:reading-references:1": {
+    "note": "[player] Not a puzzle!!",
+    "status": "open",
+    "source": "player",
+    "hintText": "They aren't just scenery — this castle will answer questions, if you know how to ask.",
+    "issue": 162
+  },
+  "game:anchorhead:day-one:d1-office:2": {
+    "note": "[player] Don't need this '— and look up, not just around.' Should be trimming harder.",
+    "status": "open",
+    "source": "player",
+    "hintText": "Try the alley around the side of the building — and look up, not just around.",
+    "issue": 157
+  },
+  "game:anchorhead:day-two:d2-paintings:2": {
+    "note": "[player] I like pure atmosphere, but I don't understand the last line at all ('The presence or absence...') — you can prob cut that. The hint basically says it all anyway.",
+    "status": "open",
+    "source": "player",
+    "hintText": "Answer: Pure atmosphere — the paintings do nothing you can act on. Look them over for the family's faces and names if you like, but there's no puzzle here. The presence or absence of a question is no guide to what matters.",
+    "issue": 156
+  },
+  "game:wishbringer:festeron:fest-errand:3": {
+    "note": "[player] 'Fairy-tale shop' is weird — it's just a magick shop or some other kind of shop, right? The 'pick up any loose objects' is a totally unrelated factoid and should have been caught in review as needless.",
+    "status": "open",
+    "source": "player",
+    "hintText": "From the western edge of the village, follow the winding cliffside path and keep heading up; the little fairy-tale shop sits near the top. Pick up any loose objects you pass on the way.",
+    "issue": 154
+  },
+  "game:wishbringer:festeron:fest-errand:1": {
+    "note": "[player] The boss handed a letter to deliver, right? Not a package?",
+    "status": "open",
+    "source": "player",
+    "hintText": "There is a rush. No puzzle is blocking you yet — you're a clerk and this is simply a delivery — but the place you're delivering to closes at nightfall, and you do not want to be out on the streets after dark.",
+    "issue": 153
+  }
+}
