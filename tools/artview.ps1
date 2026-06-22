@@ -59,7 +59,17 @@ function Find-AppBrowser {
 function Open-Reviewer([string]$u) {
   $browser = Find-AppBrowser
   if ($browser) {
-    Start-Process $browser -ArgumentList "--app=$u", "--window-size=1180,860"
+    # Launch with CDP enabled so tooling (web-agent / Claude) can attach to the reviewer.
+    # A dedicated --user-data-dir forces a SEPARATE browser process — otherwise the flag is
+    # ignored when it just joins your already-running main browser. Port 9223 avoids clashing
+    # with a main browser on the usual 9222. Attach via http://localhost:9223.
+    $profileDir = Join-Path $env:TEMP 'lantern-artview-cdp'
+    Start-Process $browser -ArgumentList @(
+      "--app=$u",
+      "--window-size=1180,860",
+      "--remote-debugging-port=9223",
+      "--user-data-dir=`"$profileDir`""
+    )
   } else {
     Start-Process $u   # default browser (opens a normal tab)
   }

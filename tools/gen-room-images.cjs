@@ -105,7 +105,7 @@ function composeRoomPrompt(room, layers) {
   const scene = sceneFor(room, layers.scenes);
   return [
     appPromptText(),
-    layers.artist,
+    layers.artist ? `Artist: ${layers.artist}` : '',
     layers.aesthetic ? `Aesthetic: ${layers.aesthetic}` : '',
     scene ? `Scene: ${scene}` : '',
   ].filter(Boolean).join(' ');

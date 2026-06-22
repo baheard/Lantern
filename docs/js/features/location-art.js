@@ -3,17 +3,20 @@
  *
  * Two consumers share this module:
  *  - the map node sheet (map-sheet.js) shows the image for the tapped node;
- *  - the content area shows a thumbnail of the CURRENT location (this module),
- *    updated as the player moves (the auto-mapper's `locationChanged` event).
+ *  - the content area drops a per-room eye marker into the transcript as the player
+ *    moves (driven by the auto-mapper's `locationChanged` event), next to the room
+ *    name. It's hidden whenever the side panel is on screen (the panel already shows
+ *    the image), so it's effectively the narrow-screen / collapsed-panel affordance.
+ *    The eye is a glyph, not a thumbnail — the full-res image only loads when peeked.
  *
  * Both are gated by a single per-game setting (`locationArt`), which falls back
- * to an app-wide default (set from the welcome screen, OFF by default). Tapping
- * either image opens the shared full-screen lightbox.
+ * to an app-wide default (set from the welcome screen, OFF by default). Hovering
+ * or press-and-holding an eye opens the shared full-screen lightbox.
  */
 
 import { getGameSetting } from '../utils/game-settings.js';
 import { state } from '../core/state.js';
-import { ensureArtOverlay, openArtOverlay, closeArtOverlay, openArtFeedbackFor } from './art-overlay.js';
+import { ensureArtOverlay, openArtOverlay, closeArtOverlay, openArtFeedbackFor, isArtOverlayPinned } from './art-overlay.js';
 
 // games/images/<game>/manifest.json keyed by the exact locationName the
 // auto-mapper records. Loaded once per game and cached (404 cached as null).
@@ -64,6 +67,11 @@ export async function getLocationImageUrl(locationName) {
 
 let _currentLocationName = null;
 
+// Inline eye glyph — no text content (so narration/chunking never reads it), stroke
+// follows currentColor. Used by both the status-bar affordance and the per-room
+// inline markers.
+const EYE_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+
 const PANEL_WIDTH_KEY = 'lantern_art_panel_w'; // user-chosen width in px
 const PANEL_COLLAPSE_KEY = 'lantern_art_panel_collapsed'; // user hid the side panel
 const PANEL_MIN = 260;
@@ -88,7 +96,6 @@ async function loadPlaceholderGlyph() {
 
 export function initLocationArt() {
   ensureArtOverlay();
-  createStatusIcon();
   createSidePanel();
   applyStoredPanelWidth();
   window.addEventListener('locationChanged', (e) => {
@@ -102,28 +109,74 @@ function container() {
   return gameOutput && gameOutput.parentElement;
 }
 
-// Small in-flow thumbnail to the left of the status bar (also the mobile affordance,
-// since the side panel is wide-screen only). Pushes the status text over (it's a
-// flex sibling of the window stack), never overlaps it.
-function createStatusIcon() {
-  if (document.getElementById('locationArtStatusIcon')) return;
-  const header = document.getElementById('gameHeader');
-  if (!header) return;
-  const icon = document.createElement('img');
-  icon.id = 'locationArtStatusIcon';
-  icon.className = 'location-art-status-icon hidden';
-  icon.alt = '';
-  icon.title = 'Hover or press and hold to preview location art';
-  // Desktop: preview while hovering. Touch: preview while the finger is held down.
-  const show = () => {
-    if (icon.src) openArtOverlay(icon.src, _currentLocationName || '', { location: _currentLocationName || '' });
+// Wire an eye element to preview the location image, keyed to a lazily-resolved
+// URL + caption:
+//   - PC hover: transient preview that shows on mouseenter, hides on mouseleave
+//     (unless it's been pinned by a click).
+//   - Click / phone tap: TOGGLES a pinned preview — first click/tap opens it and
+//     keeps it up, a second closes it. `touchstart` is preventDefault'd so the tap
+//     doesn't also fire a synthetic hover/click.
+function attachPeek(el, getUrl, getCaption) {
+  // Is the overlay currently up AND showing this element's image? (getAttribute
+  // keeps the relative URL we set, unlike img.src which resolves to absolute.)
+  const isShowingThis = () => {
+    const overlay = document.getElementById('nodeArtOverlay');
+    if (!overlay || overlay.classList.contains('hidden')) return false;
+    const img = document.getElementById('nodeArtOverlayImg');
+    return !!(img && img.getAttribute('src') === getUrl());
   };
-  icon.addEventListener('mouseenter', show);
-  icon.addEventListener('mouseleave', closeArtOverlay);
-  icon.addEventListener('touchstart', (e) => { e.preventDefault(); show(); }, { passive: false });
-  icon.addEventListener('touchend', closeArtOverlay);
-  icon.addEventListener('touchcancel', closeArtOverlay);
-  header.insertBefore(icon, header.firstChild);
+  const open = (pinned) => {
+    const url = getUrl();
+    if (url) openArtOverlay(url, getCaption(), { location: getCaption(), pinned });
+  };
+  // Click / tap toggles a PINNED preview (stays up until dismissed). State lives in
+  // the overlay (isArtOverlayPinned), so dismissing by clicking the backdrop/image
+  // can't leave us out of sync.
+  const toggle = () => {
+    if (isArtOverlayPinned() && isShowingThis()) closeArtOverlay();
+    else open(true);
+  };
+  // PC hover: transient preview, but never disturb a pinned one.
+  el.addEventListener('mouseenter', () => { if (!isArtOverlayPinned()) open(false); });
+  el.addEventListener('mouseleave', () => { if (!isArtOverlayPinned()) closeArtOverlay(); });
+  el.addEventListener('click', (e) => { e.preventDefault(); toggle(); });
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); toggle(); }, { passive: false });
+}
+
+// Drop a per-room eye marker into the transcript, just to the RIGHT of the location
+// name at the top of the current room's text block. Narrow screens only (CSS-gated) —
+// wide screens have the side panel. The renderer emits each line as its own <div>, so
+// the room name is the first content line; we append the eye into that line's div so
+// it trails the name. The eye carries no text content, so narration chunking (which
+// re-serializes the block's innerHTML) never reads it. Bound to a fixed URL/name so
+// scrolling back peeks the right room even after the player has moved on.
+function placeInlineEye(url, locationName) {
+  const block = state.currentGameTextElement;
+  if (!block) return;
+  if (block.dataset.locationEye === '1') return; // already marked this block
+  block.dataset.locationEye = '1';
+  const eye = document.createElement('button');
+  eye.type = 'button';
+  eye.className = 'location-art-inline-eye';
+  eye.setAttribute('aria-label', `Preview art for ${locationName || 'this location'}`);
+  // No title attr — hovering already shows the image; a tooltip would just block it.
+  eye.innerHTML = EYE_SVG;
+  attachPeek(eye, () => url, () => locationName || '');
+  // Append the eye after the ROOM-HEADER line — the content line whose text is the
+  // location name. On a normal room entry that's the first content line, but on the
+  // intro/first screen the game's title banner ("ANCHORHEAD", author, release info)
+  // precedes the room name, so we match by name rather than by position. Fall back to
+  // the first content line, then the block itself, if nothing matches.
+  const norm = (t) => (t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const want = norm(locationName);
+  const content = Array.from(block.children).filter(
+    (el) => el.tagName === 'DIV' && !el.classList.contains('blank-line-spacer') && el.textContent.trim()
+  );
+  const nameLine =
+    (want && content.find((el) => norm(el.textContent) === want)) ||
+    (want && content.find((el) => norm(el.textContent).startsWith(want))) ||
+    content[0];
+  (nameLine || block).appendChild(eye);
 }
 
 // Persistent image panel beside the story (one image — the current location).
@@ -247,8 +300,8 @@ function createPanelToggle() {
 }
 
 // --- per-location update -----------------------------------------------------
-// Drives the status icon AND the side panel, and reserves the panel column for the
-// session once the game is known to have art.
+// Drives the side panel and the per-room inline eye markers, and reserves the panel
+// column for the session once the game is known to have art.
 async function updateForLocation(locationName) {
   _currentLocationName = locationName;
   const enabled = isLocationArtEnabled();
@@ -265,7 +318,6 @@ async function updateForLocation(locationName) {
   const file = hasArtGame ? manifest.images[locationName] : null;
   const url = file ? `games/images/${gameName}/${file}` : null;
 
-  const icon = document.getElementById('locationArtStatusIcon');
   const panel = document.getElementById('locationArtPanel');
   const img = document.getElementById('locationArtPanelImg');
   const placeholder = document.getElementById('locationArtPlaceholder');
@@ -276,17 +328,14 @@ async function updateForLocation(locationName) {
   if (caption) caption.textContent = hasArtGame ? (locationName || '') : '';
 
   if (url) {
-    if (icon) {
-      icon.onerror = () => { icon.classList.add('hidden'); icon.removeAttribute('src'); };
-      icon.src = url; icon.alt = locationName; icon.classList.remove('hidden');
-    }
     if (panel && img) {
       img.onerror = () => { panel.classList.remove('has-art'); img.removeAttribute('src'); };
       img.src = url; img.alt = locationName; panel.classList.add('has-art');
     }
     if (placeholder) placeholder.classList.remove('show');
+    // Per-room marker in the transcript (CSS hides it whenever the side panel is up).
+    placeInlineEye(url, locationName);
   } else {
-    if (icon) { icon.classList.add('hidden'); icon.removeAttribute('src'); }
     if (panel && img) { panel.classList.remove('has-art'); img.removeAttribute('src'); }
     // Game has art but THIS room doesn't — show the faint lantern glyph so the
     // reserved column reads as intentional rather than broken/empty.

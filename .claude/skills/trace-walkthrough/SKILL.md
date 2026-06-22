@@ -72,6 +72,21 @@ Write `docs/games/walkthroughs/<game>.cmds.txt`: one parser command per line.
 - **Expand compressed notation**: `Se.` → `se`; `Push can against wall.` → `push can against wall`; strip annotations like `(2p)` / `... comment`. (`#`-prefixed lines and blanks are ignored by the harness — use them for your own section markers.)
 - **Include forced opening answers**: games that open with a prompt need it as the first command — e.g. Bronze's "Have you played interactive fiction before?" → first line `yes`. (Char-mode "press any key" intros are auto-dismissed by the harness; don't add keys for those.)
 - **Meta-commands are fine**: many games support `GO TO <place>` navigation (Bronze) — keep them.
+- **KEEP the source's observation verbs — don't prune them as flavor.** When the authoritative
+  walkthrough includes `EXAMINE <x>`, `LOOK`, `LOOK AT <x>`, and especially **`LOOK UP` / `LOOK
+  DOWN`**, carry them into the cmds list. A human walkthrough author examined the *interesting*
+  things, and these commands are the **primary feedstock for the art pipeline**: a room's
+  defining architecture is often revealed only by a secondary verb, not its default `LOOK`
+  (Theatre Lobby's default text says "a staircase leads up"; only `LOOK UP` reveals it's a
+  **two-story atrium ringed by a wraparound landing** — the fact every lobby image needs).
+  `generate-location-prompts` folds these examine/look outputs into the scene facts, so cutting
+  them silently strips visual signal we already had. **Rule: keep observation verbs unless they
+  break `--strict`** (they consume a turn, so on a timing-sensitive sequence — patrols, a
+  pager/bomb countdown — one can desync the replay; `--strict` will flag it, and only then do you
+  drop or relocate it). They're cheap, they make the list more faithful to the source, and they
+  feed the renderer. (Terse "speedrun" walkthroughs that never `LOOK UP` leave a residual gap the
+  art pipeline can't recover from text alone — note it for `mold`; per-room observation *probing*
+  in the builder is the heavier fallback, not built yet.)
 - **Branching endgames**: pick one **linear trunk** (usually the shortest completion), stop the cmds at or just past the final progress gate, and note the branches in the report. Don't try to encode every branch.
 - **Map sections to the notes file with SLUG ANCHORS — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## [slug]"` from a probe point)*: group the list into acts/puzzles with marker lines of the exact form `## [slug] Human label`, **front to back**. The `slug` is lowercase-kebab (`[a-z0-9-]+`), unique in the file, and is placed **immediately after the `##`** in square brackets — it is the **canonical, drift-proof link** to the matching `## [slug]` (or `### [slug]`) heading in `<game>.notes.md`. Because the slug is bracketed, `--snapshot-at "## [slug]"` resolves unambiguously (the closing `]` means one slug is never a prefix of another). Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. Day/act banner comments (`# ==== DAY 2 ====`) are fine for orientation but are **not** anchors — only `## [slug]` lines are. See `anchorhead.cmds.txt` for the canonical pattern. **Validate the mapping after writing both files** (Step 5):
   ```bash

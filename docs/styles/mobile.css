@@ -357,7 +357,14 @@
     white-space: normal !important;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    padding: 16px 8px;
+    padding: 4px 8px;
+  }
+
+  /* Multiline grids (Bronze's compass, etc.) carry 20px top/bottom padding tuned for
+     centered quote boxes. On mobile that dead space stacks with #upperWindow padding and
+     makes the status area far taller than the 3-row compass needs (issue #161). Trim it. */
+  .grid-status.multiline {
+    padding: 2px 0;
   }
 
   /* Lower window: no separate scroll, scrolls with parent */

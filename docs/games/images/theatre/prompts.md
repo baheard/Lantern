@@ -8,7 +8,7 @@ Style: **gothic** · 60 locations · from `docs\games\walkthroughs\theatre.cmds.
 **Exits:** southeast → Outside The Theatre · north → Manager's Office
 
 ```
-Scene: This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. now? The anonymous faces smile back at you.
+Scene: This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. now? The anonymous faces smile back at you. These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now. Actually, this room is two stories high. You can see a landing going around the walls. The staircase goes to this landing. The southern wall above the theatre doors in shrouded in darkness.
 ```
 
 ## Manager's Office  `managers-office`
@@ -21,7 +21,7 @@ Scene: Judging from the desk and lots of papers everywhere, this must have been 
 ## Basement  `basement`
 
 ```
-Scene: You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels. There is an open trapdoor in the ceiling. It was through here that you left your pager. An old electrical panel is mounted on the wall. Sitting on one of the boxes is your trusty pager, right where you left it. now? The electrical panel is mounted on the wall. On it you can see a switch. The switch is off.
+Scene: You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels. There is an open trapdoor in the ceiling. It was through here that you left your pager. An old electrical panel is mounted on the wall. Sitting on one of the boxes is your trusty pager, right where you left it. The electrical panel is mounted on the wall. On it you can see a switch. The switch is off.
 ```
 
 ## Outside The Theatre  `outside-the-theatre`
@@ -88,7 +88,7 @@ Scene: Dust coats the crossbeams, and covers the thinly plastered floor here. Lo
 ## Attic Observatory  `attic-observatory`
 
 ```
-Scene: You conclude that this must be some kind of observatory, after all, what else could it be? However, why is it that instead of the usual dome, the roof just has a strangely patterned window? Also, instead of the normal studs and crossbeams, the exposed wooden beams of the walls are set at bizarre angles. It gives you the impression that you are inside a large multi-sided mathematical shape. An opening leads south. Completing the scene is a large strangely shaped telescope.
+Scene: You conclude that this must be some kind of observatory, after all, what else could it be? However, why is it that instead of the usual dome, the roof just has a strangely patterned window? Also, instead of the normal studs and crossbeams, the exposed wooden beams of the walls are set at bizarre angles. It gives you the impression that you are inside a large multi-sided mathematical shape. An opening leads south. Completing the scene is a large strangely shaped telescope. As you gaze through the telescope, the patterned lens seems to cancel out the patterned window, as well as the greenish gas giving you a clear view of the night sky. You suddenly realise that the sun hasn't set yet but you can clearly make out all the various stars. Wait a second... the stars are moving! They are moving aside, to let something else come up from beyond them. An intensely alien presence awaits, tearing at the very fabric of the physical universe, waiting for something to happen to let it in. A cold chill runs down your spine as you realise that the presence has turned its attention to you.
 ```
 
 ## Narrow Hallway  `narrow-hallway`
@@ -134,7 +134,7 @@ Scene: This landing circles around the upper level of the lobby allowing you to 
 ## Southern Landing  `southern-landing`
 
 ```
-Scene: The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest. Against the southern wall you can see some closed heavy curtains.
+Scene: The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest. Against the southern wall you can see some closed heavy curtains. Below you is the theatre lobby. Actually you see that the light shining through the window has made a spotlight on the lobby floor below.
 ```
 
 ## Eastern Theatre Aisle  `eastern-theatre-aisle`
@@ -361,14 +361,14 @@ Scene: You are much deeper in the mine shaft here. The area has been widened out
 ## Western End of Sewer  `western-end-of-sewer`
 
 ```
-Scene: You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre. This end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck.
+Scene: You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre. This end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck. You give a little jump of fright as suddenly your pager emits a series of high pitched beeps.
 ```
 
 ## Centre of Sewer  `centre-of-sewer`
 **Exits:** west → Metal Platform · south → Eastern End of Sewer
 
 ```
-Scene: You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform. You give a little jump of fright as suddenly your pager emits a series of high pitched beeps.
+Scene: You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform.
 ```
 
 ## Eastern End of Sewer  `eastern-end-of-sewer`

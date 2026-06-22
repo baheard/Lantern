@@ -166,6 +166,11 @@ function extractResponse(turn) {
 // Command classifiers + object-head extraction, used to fold EXAMINE detail into a room's
 // scene while keeping TAKEABLE objects out (the persistence rule: see .tome/art-direction-model.md).
 const EXAMINE_RE = /^(?:examine|x|look at)\s+(.+)/i;
+// Directional/prepositional LOOK (no object) — folds in volume/vista reveals a room's default
+// description hides: LOOK UP exposing a two-story atrium + wraparound landing, LOOK DOWN naming
+// what's below a balcony, etc. The direction word doubles as a synthetic object-head (never a
+// TAKE head, so mergeExamines always keeps it). 'look around' is excluded — it's a plain re-LOOK.
+const LOOK_DIR_RE = /^look\s+(up|down|behind|under|through|out|inside|in)\b/i;
 const TAKE_RE = /^(?:get|take|grab|pick up)\s+(.+)/i;
 const OBJ_STOP = new Set(['the','a','an','my','your','his','her','some','that','this']);
 const EXAMINE_SKIP = new Set(['me','self','myself','around','room','it','them','here']);
@@ -237,6 +242,9 @@ function main() {
         const resp = extractResponse(t);
         if (resp) L.examines.push({ obj, resp });
       }
+    } else if ((mm = fullCmd.match(LOOK_DIR_RE))) {
+      const resp = extractResponse(t);
+      if (resp) L.examines.push({ obj: 'look-' + mm[1].toLowerCase(), resp });
     }
     // Exit edge: a movement command that changed location.
     const cmd = fullCmd.toLowerCase().split(/\s+/)[0];

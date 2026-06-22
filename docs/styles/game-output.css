@@ -273,22 +273,38 @@ body.tap-to-examine-enabled .game-text {
   flex-direction: column;
 }
 
-/* In-flow location-art thumbnail icon, left of the status bar. Vertically centered
-   on the header (= the status line for games with no upper window). Tap → lightbox. */
-.location-art-status-icon {
-  flex: 0 0 auto;
-  align-self: center;
-  width: 38px;
-  height: 38px;
-  margin: 0 8px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid rgba(196, 163, 90, 0.6);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  background: #0b0a0f;
+/* Per-room inline eye marker in the transcript, just to the right of the location
+   name (appended into the room-name line). Hover (PC) / tap (phone) to peek the full
+   image (loaded on demand). Shown by default; hidden whenever the side panel is on
+   screen (see the panel's media query below), since the panel already shows the image. */
+.location-art-inline-eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: top;          /* eye sits at the top of the room-name line */
+  width: 22px;
+  height: 22px;
+  margin: 0 0 2px 16px;         /* 16px gap from the location name */
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(196, 163, 90, 0.6);   /* gentle */
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
 }
-.location-art-status-icon.hidden { display: none; }
+.location-art-inline-eye > svg { width: 16px; height: 16px; }
+.location-art-inline-eye:hover,
+.location-art-inline-eye:active {
+  color: rgba(231, 199, 122, 1);    /* brighten on hover / tap */
+}
+/* When the side panel is actually visible (wide screen, game has art, not collapsed)
+   the inline eyes are redundant — hide them. Mirrors the panel's own visibility rule. */
+@media (min-width: 1000px) {
+  .container.art-has-art:not(.art-panel-collapsed):has(.game-output:not(.hidden)) .location-art-inline-eye {
+    display: none;
+  }
+}
 
 /* No separator border/shadow on the header — it showed as a stray gray strip at
    the top (esp. when the grid windows were empty/blank). The status-bar and
@@ -749,7 +765,14 @@ body.force-mobile #upperWindow {
   white-space: normal !important;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  padding: 16px 8px;
+  padding: 4px 8px;
+}
+
+/* Multiline grids (Bronze's compass, etc.) carry 20px top/bottom padding tuned for
+   centered quote boxes. On mobile that dead space stacks with #upperWindow padding and
+   makes the status area far taller than the 3-row compass needs (issue #161). Trim it. */
+body.force-mobile .grid-status.multiline {
+  padding: 2px 0;
 }
 
 body.force-mobile #lowerWindow {

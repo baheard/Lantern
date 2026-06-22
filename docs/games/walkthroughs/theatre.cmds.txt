@@ -9,6 +9,8 @@
 #
 # Verify: node tools/play.cjs theatre --file docs/games/walkthroughs/theatre.cmds.txt --strict
 examine posters
+examine staircase
+look up
 nw
 d
 get pager

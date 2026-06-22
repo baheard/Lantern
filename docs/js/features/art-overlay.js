@@ -15,6 +15,13 @@ let _wired = false;
 // Meta of the image currently shown — { src, location, file } — so the
 // "Leave feedback" bubble can key its payload to the exact picture.
 let _current = { src: '', location: '', file: '' };
+// Whether the overlay is "pinned" (opened by a click/tap and meant to stay up
+// until dismissed) vs a transient hover preview. Centralized here so EVERY close
+// path resets it — otherwise a per-caller flag goes stale when the overlay is
+// dismissed by clicking the backdrop/image and hover stops working afterwards.
+let _pinned = false;
+
+export function isArtOverlayPinned() { return _pinned; }
 
 export function ensureArtOverlay() {
   if (!document.getElementById('nodeArtOverlay')) {
@@ -39,11 +46,12 @@ export function ensureArtOverlay() {
     `;
     document.body.appendChild(overlay);
   }
-  // No close button (hover-driven). Click the image or press Esc to dismiss the
-  // click-opened cases (panel / node sheet); the hover case closes on mouseleave.
+  // No close button. When pinned (click/tap-opened), a click ANYWHERE on the overlay
+  // — backdrop or image — dismisses it (the feedback button stops propagation so it
+  // doesn't). Transient hover previews close on mouseleave instead. Esc always closes.
   if (!_wired) {
     const overlay = document.getElementById('nodeArtOverlay');
-    document.getElementById('nodeArtOverlayImg').addEventListener('click', closeArtOverlay);
+    overlay.addEventListener('click', closeArtOverlay);
     document.getElementById('nodeArtFeedbackBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       openArtFeedback();
@@ -73,6 +81,10 @@ export function openArtOverlay(src, caption = '', meta = {}) {
     location: meta.location || caption || '',
     file: meta.file || (src.split('?')[0].split('/').pop() || ''),
   };
+  // Pinned: the overlay becomes click-dismissable (CSS gives it pointer-events).
+  // Transient (hover) previews stay pointer-events:none so they never grab the cursor.
+  _pinned = !!meta.pinned;
+  overlay.classList.toggle('pinned', _pinned);
   overlay.classList.remove('hidden');
 }
 
@@ -105,5 +117,6 @@ export function openArtFeedbackFor({ src, location = '', file = '' }) {
 
 export function closeArtOverlay() {
   const overlay = document.getElementById('nodeArtOverlay');
-  if (overlay) overlay.classList.add('hidden');
+  if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('pinned'); }
+  _pinned = false;
 }

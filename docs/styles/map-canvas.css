@@ -1213,37 +1213,62 @@ body.map-resizing .map-canvas-overlay * {
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;              /* preview shouldn't grab the cursor / block the page */
+  pointer-events: none;              /* hover preview shouldn't grab the cursor / block the page */
+  opacity: 1;
+  transition: opacity var(--anim-quick) ease;   /* quick fade in/out */
 }
-.node-art-overlay.hidden { display: none; }
-/* Frame stacks caption above the image (caption sits outside the picture). */
+/* Pinned (click/tap-opened): capture clicks so tapping anywhere — backdrop or
+   image — dismisses it, and darken the page behind for a better look. */
+.node-art-overlay.pinned {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+}
+/* Hidden = faded out (not display:none), so the opacity transition can run.
+   pointer-events:none keeps it click-through while invisible. */
+.node-art-overlay.hidden { opacity: 0; pointer-events: none; }
+/* Frame holds the image with the caption overlaid in its top-left corner.
+   Interactive ONLY when pinned — during a transient hover preview it must stay
+   pointer-events:none, or the (large) image would sit under the cursor, steal the
+   hover off the eye, and flicker the preview in and out. */
 .node-art-frame {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: auto;
+  pointer-events: none;
+  max-width: 97vw;
 }
+.node-art-overlay.pinned .node-art-frame { pointer-events: auto; }
+.node-art-overlay:not(.pinned) .node-art-feedback-btn { pointer-events: none; }
 .node-art-overlay-img {
   display: block;
-  max-width: 48vw;
-  max-height: 66vh;
+  max-width: 97vw;
+  max-height: 94vh;     /* fill the viewport — width or height, whichever is greater */
+  width: auto;
+  height: auto;
   border-radius: 12px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
 }
-/* Location name ABOVE the picture, in its own pill so it's legible on any backdrop. */
+/* Location name OVERLAID on the picture's top-left, in its own pill so it's legible
+   on any backdrop — overlaid (not stacked above) so the image can use full height. */
 .node-art-caption {
-  align-self: flex-start;
-  margin-bottom: 10px;
-  padding: 8px 16px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 8px 14px;
   border-radius: 8px;
   text-align: left;
-  color: #f3eefb;
+  /* Neutral light-gray text on a see-through dark panel — stays legible over warm
+     or cool art without the amber clashing. Both at 90% so the panel blends slightly
+     into the picture. */
+  color: color-mix(in srgb, var(--text-primary) 90%, transparent);
   font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-  background: rgba(20, 16, 28, 0.85);
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
@@ -1264,15 +1289,16 @@ body.map-resizing .map-canvas-overlay * {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  color: #f3eefb;
-  background: rgba(20, 16, 28, 0.78);
+  /* Matches the caption panel: neutral light-gray on a see-through dark fill. */
+  color: color-mix(in srgb, var(--text-primary) 90%, transparent);
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
   transition: background 0.15s, color 0.15s;
 }
 .node-art-feedback-btn:hover {
-  background: rgba(59, 130, 246, 0.55);
-  color: #fff;
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  color: var(--text-primary);                  /* brighten on hover */
 }
 .node-art-feedback-btn .material-icons { font-size: 20px; }
 

@@ -365,7 +365,7 @@ function composedFor(slug, artistId, sceneSlug) {
   const at = (room.prompt || '').indexOf('Scene:');
   const sceneDefault = at >= 0 ? room.prompt.slice(at + 'Scene:'.length).trim() : (room.description || '');
   const sc = (style.scenes[sceneSlug] && style.scenes[sceneSlug].trim()) || room.description || sceneDefault || '';
-  return [appPrompt(), a ? (a.style || '') : '', style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '',
+  return [appPrompt(), a && a.style ? ('Artist: ' + a.style) : '', style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '',
     sc ? ('Scene: ' + sc) : ''].filter(Boolean).join(' ');
 }
 // Heuristic scene classifier so we can auto-suggest a stress-test trio: one exterior
@@ -506,7 +506,7 @@ function auditionGen(slug, sceneSlug, artistId, provider, quality, model) {
 // existing createArtist / saveArtistStyleById path. Mirrors the audition gen plumbing.
 function composeInline(f) {
   f = f || {};
-  return [f.app || '', f.artist || '', f.aesthetic ? ('Aesthetic: ' + cap(f.aesthetic)) : '',
+  return [f.app || '', f.artist ? ('Artist: ' + f.artist) : '', f.aesthetic ? ('Aesthetic: ' + cap(f.aesthetic)) : '',
     f.scene ? ('Scene: ' + f.scene) : ''].filter(Boolean).join(' ');
 }
 const sbxRev = (f) => { const m = f.match(/^sbx-r(\d+)\.png$/i); return m ? parseInt(m[1], 10) : 0; };
@@ -1275,7 +1275,7 @@ function composedPrompt(){
   const aes=gi.aesthetic||'';
   const sc=(l.sceneOverride&&l.sceneOverride.trim())||l.description||l.sceneDefault||'';
   // SENT order = hierarchy order: App ▸ Artist ▸ Game ▸ Scene (display order is reversed).
-  return [app, art, aes?('Aesthetic: '+cap(aes)):'', sc?('Scene: '+sc):''].filter(Boolean).join(' ');
+  return [app, art?('Artist: '+art):'', aes?('Aesthetic: '+cap(aes)):'', sc?('Scene: '+sc):''].filter(Boolean).join(' ');
 }
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 // DISPLAY ONLY: split a composed prompt into Artist / Aesthetic / Scene paragraphs at the
@@ -1283,7 +1283,7 @@ const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 // What's SENT to the generator is unchanged — this only formats the on-screen text.
 // NOTE: this lives inside the PAGE template literal, so a literal backslash-n must be written
 // as a double backslash escape, or it becomes a real newline and breaks the client JS.
-function breakPrompt(t){ return (t||'').replace(/\\s*(Aesthetic:|Scene:)/g,'\\n\\n$1'); }
+function breakPrompt(t){ return (t||'').replace(/\\s*(Artist:|Aesthetic:|Scene:)/g,'\\n\\n$1'); }
 function updateComposed(){ const c=$('#composed'); if(c) c.textContent=breakPrompt(composedPrompt()); }
 async function doRegen(l){
   // Build the prompt + (optional) image reference from the selected mode:
@@ -1480,7 +1480,7 @@ function defaultSBXW(game,gi){
     scene:'', artistId:(gi.artist&&gi.artist.id)||null, artistName:(gi.artist&&gi.artist.name)||'(custom)',
     locSlug:'', locName:'', sel:null};
 }
-function composeSandbox(){ const w=SBXW; return [w.app||'', w.artist||'', w.aesthetic?('Aesthetic: '+cap(w.aesthetic)):'', w.scene?('Scene: '+w.scene):''].filter(Boolean).join(' '); }
+function composeSandbox(){ const w=SBXW; return [w.app||'', w.artist?('Artist: '+w.artist):'', w.aesthetic?('Aesthetic: '+cap(w.aesthetic)):'', w.scene?('Scene: '+w.scene):''].filter(Boolean).join(' '); }
 function sbxUrl(f){ return '/img/sandbox?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver; }
 async function reloadSandbox(){ SBX=await (await fetch('/api/sandbox?game='+encodeURIComponent(curGame))).json(); renderSandbox(); }
 async function detailSandbox(game){
@@ -1536,6 +1536,7 @@ function renderSandbox(){
     '<div class="btns"><select id="genMode" class="genmode" title="Which generator Generate uses">'+GENMODE_OPTS+'</select>'+
       '<button id="bSbxNew" title="Copy the Artist text into a brand-new roster artist">＋ Save as new artist</button>'+
       '<button id="bSbxOver"'+(SBXW.artistId?'':' disabled')+' title="Write the Artist text back onto the selected artist (global)">'+esc(overLbl)+'</button>'+
+      '<button class="danger" id="bSbxDel"'+(SBXW.sel?'':' disabled')+' title="Delete the selected sandbox render (Delete key)">Delete selected</button>'+
       '<button id="bSbxGen">Generate ▸</button></div>'+
     '<div class="cands">'+(cands||'<span class="none">No sandbox renders yet — Generate to create one.</span>')+'</div>'+
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected render</label><div class="val" id="sbxActual">(none)</div></div>'+
@@ -1554,6 +1555,7 @@ function renderSandbox(){
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }
   document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>sbxSelect(c.dataset.f));
   $('#bSbxGen').onclick=sbxGen;
+  $('#bSbxDel').onclick=()=>sbxReject();
   $('#bSbxNew').onclick=sbxSaveNew;
   $('#bSbxOver').onclick=sbxOverwrite;
   const map={sbxApp:'app',sbxArtist:'artist',sbxAesthetic:'aesthetic',sbxScene:'scene'};
@@ -1572,6 +1574,14 @@ function sbxUpdateSel(){
     else { box.classList.add('empty'); box.innerHTML='<span>no render selected</span>'; } }
   const im=(SBX&&SBX.images||[]).find(x=>x.file===SBXW.sel);
   const av=$('#sbxActual'); if(av) av.textContent=im?(im.prompt?breakPrompt(im.prompt):'(no recorded prompt)'):'(none)';
+}
+async function sbxReject(file){
+  const f=file||SBXW.sel; if(!f) return;
+  if(!confirm('Delete this sandbox render?\\n\\n'+f)) return;
+  await postJSON('/api/sandbox-reject',{game:curGame,file:f});
+  if(SBXW.sel===f) SBXW.sel=null;
+  await reloadSandbox();
+  toast('Deleted '+f);
 }
 function sbxSelect(file){
   const im=(SBX&&SBX.images||[]).find(x=>x.file===file); if(!im) return;
@@ -1811,9 +1821,26 @@ document.addEventListener('keydown',e=>{
     if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();lbStep(1);return;}
     return;
   }
+  if(/^(TEXTAREA|INPUT)$/.test((document.activeElement||{}).tagName||''))return;
+  if(topic==='sandbox'){
+    if((e.key==='Delete'||e.key==='Backspace')&&SBXW&&SBXW.sel){ e.preventDefault(); sbxReject(); return; }
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key)>=0){
+      const ims=(SBX&&SBX.images)||[]; if(!ims.length) return;
+      e.preventDefault();
+      const vert=(e.key==='ArrowUp'||e.key==='ArrowDown');
+      // For up/down, jump a full row: count how many cards share the first row's top.
+      const cells=Array.from(document.querySelectorAll('#detail .cand'));
+      let cols=1;
+      if(vert&&cells.length){ const top0=cells[0].offsetTop; cols=cells.filter(c=>c.offsetTop===top0).length||1; }
+      const step=((e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1)*(vert?cols:1);
+      let i=ims.findIndex(x=>x.file===(SBXW&&SBXW.sel)); if(i<0)i=(step>0?-1:0);
+      i=((i+step)%ims.length+ims.length)%ims.length;
+      sbxSelect(ims[i].file);
+    }
+    return;
+  }
   if(!isGame(topic))return;
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key)<0)return;
-  if(/^(TEXTAREA|INPUT)$/.test((document.activeElement||{}).tagName||''))return;
   const l=(GAMES[curGame]||[]).find(x=>x.slug===curItem);
   if(!l||!l.candidates.length)return;
   e.preventDefault();

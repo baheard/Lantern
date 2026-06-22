@@ -36,6 +36,9 @@
   --highlight-speaking: rgba(196, 163, 90, 0.25);
   --highlight-active: rgba(139, 157, 195, 0.2);
 
+  /* Animation timing */
+  --anim-quick: 0.14s;            /* quick fades/transitions (e.g. art lightbox) */
+
   /* Monospace font for game text formatting */
   --font-mono: "Iosevka", monospace;
 
