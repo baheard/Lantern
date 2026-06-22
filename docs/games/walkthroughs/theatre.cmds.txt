@@ -76,6 +76,7 @@ s
 se
 drop all except lens and pager
 u
+examine portrait
 feel painting
 open door
 n

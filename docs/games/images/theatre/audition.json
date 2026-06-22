@@ -1,0 +1,29 @@
+{
+  "scenes": [
+    "theatre-lobby",
+    "attic-observatory",
+    "theatre-roof",
+    "witchs-lair"
+  ],
+  "artists": [
+    "illustration-plate",
+    "broadsheet",
+    "drypoint",
+    "expedition-log",
+    "lantern-slide",
+    "casein-board",
+    "plein-air",
+    "picture-book",
+    "comic-panel",
+    "pulp-press",
+    "spirit-copy",
+    "risograph",
+    "sumi-rubbing",
+    "pastel-nocturne",
+    "travel-lithograph",
+    "old-gouache",
+    "old-pixel",
+    "old-ink"
+  ],
+  "finalists": []
+}
