@@ -601,6 +601,28 @@ function renderGridWindow(content, window) {
       }
     });
   });
+
+  // Preserve SHORT interior gaps (single/double spaces between words). A centered
+  // prose quote (e.g. Anchorhead's "...the spell of the eastern" epigraph) puts its
+  // inter-word spaces at columns that happen to be blank in every OTHER (shorter,
+  // centered) line — so they read as "globally empty" and, without this, get dropped
+  // entirely, mashing words into "spelloftheeastern" (issue #160). Mark any blank run
+  // of length <= GAP_KEEP that is flanked by occupied columns on BOTH sides as
+  // occupied, so its space characters are emitted and hold a 1ch track. Large interior
+  // gaps (the compass separator) and leading/trailing centering padding are NOT flanked
+  // on both sides at short length, so they still collapse on narrow screens.
+  const GAP_KEEP = 2;
+  for (let i = 0; i < gridCols; i++) {
+    if (occupied[i]) continue;
+    let j = i;
+    while (j < gridCols && !occupied[j]) j++;
+    const flanked = i > 0 && occupied[i - 1] && j < gridCols && occupied[j];
+    if (flanked && (j - i) <= GAP_KEEP) {
+      for (let k = i; k < j; k++) occupied[k] = true;
+    }
+    i = j - 1;
+  }
+
   // Run-length encode into repeat() segments (keeps one track per column so the
   // spans' grid-column indices still map exactly).
   let gridTemplate = '';

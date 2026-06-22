@@ -101,6 +101,26 @@ it through the new renderer, after which the autosave stores new-format HTML and
 are correct. Self-heals after one status change; no migration needed. Note Bronze's
 status only redraws on area change / rooms-searched change, not every `look`/move.
 
+## Gap-collapse drops meaningful inter-word spaces in centered prose (issue #160)
+
+The "emit no text for globally-empty columns" trick assumes a blank-everywhere column
+is non-content (the compass separator, centering padding). That's false for a **centered
+prose quote**: Anchorhead's epigraph (`* THE FIRST DAY *` … `I was far from home, and the
+spell of the eastern` … `-- H.P. Lovecraft`) has its inter-word spaces, near the right
+end of the long line, land on columns that are blank in every OTHER (shorter, centered)
+line. Those single spaces read as globally empty → got dropped → words mashed into
+`spelloftheeastern`.
+
+Fix (`renderGridWindow`, right after the occupancy forEach, before the RLE template):
+mark any blank run of length `<= GAP_KEEP` (=2) that is **flanked by occupied columns on
+both sides** as occupied. Short flanked gaps = inter-word/sentence spaces → kept (emitted
+as text, hold a 1ch track). Large interior gaps (compass separator) and leading/trailing
+centering padding are NOT short-and-both-sides-flanked → still collapse. Validated: the
+long epigraph line round-trips with all spaces; leading padding still drops (renders from
+`I`, not spaces). Side effect: 2-col compass-internal gaps (`W  .  E`) now hold their
+width instead of compressing — a readability win, font-scale (Layer 2) still prevents
+horizontal scroll.
+
 ## Don't reflow quotes either
 
 Other games put quote boxes / titles in a multiline upper window. They now render as a

@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   // App identity
   name: 'Lantern',
   displayName: 'Lantern',
-  version: '1.5.634',
+  version: '1.5.635',
 
   // Storage prefixes (used in localStorage keys)
   storagePrefix: 'lantern',
