@@ -327,16 +327,40 @@ async function main() {
   const regen = !!args.regen;
   const steer = args.steer ? ` ${args.steer}` : '';
 
+  // An anchored state-variant (Gap B) renders as an img2img RELIGHT off its base room's image:
+  // feed the base image as an edit ref + a lean state-change instruction, so the geometry holds
+  // and only the lighting/atmosphere changes (the validated shared-volume approach). Looks for the
+  // committed image first, then the _review staging copy; null if the base isn't rendered yet.
+  const anchorImageFor = (slug) => {
+    const committed = path.join(gameDir, `${slug}.png`);
+    if (fs.existsSync(committed)) return committed;
+    const staged = path.join(reviewDir, `${slug}.png`);
+    return fs.existsSync(staged) ? staged : null;
+  };
+  // Render anchors before the variants that depend on them, so a single full batch "just works".
+  rooms = rooms.slice().sort((a, b) => (a.anchorRoom ? 1 : 0) - (b.anchorRoom ? 1 : 0));
+
   const qualNote = provider === 'openai' ? `, ${quality}` : '';
   console.log(`Generating ${rooms.length} image(s) for ${game} → _review/  (${provider}: ${model}, ${aspect}${qualNote})${regen ? ' [regen]' : ''}`);
   let ok = 0, skip = 0, fail = 0;
   for (const room of rooms) {
     const out = path.join(reviewDir, `${room.slug}.png`);
     if (fs.existsSync(out) && !args.force && !regen) { console.log(`  skip  ${room.slug} (exists; --force or --regen to replace)`); skip++; continue; }
-    process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug} ... `);
-    const composed = composeRoomPrompt(room, layers) + steer;
+    // Default render: prompt-only (or whatever --ref the user passed explicitly).
+    let composed = composeRoomPrompt(room, layers) + steer;
+    let refImagePath = args.ref, refMode = args['ref-mode'];
+    // Gap B relight: an anchored variant with no explicit --ref edits its base image instead.
+    if (room.anchorRoom && !args.ref) {
+      const anchorImg = anchorImageFor(room.anchorRoom);
+      if (!anchorImg) { console.log(`  skip  ${room.slug} (anchor "${room.anchorRoom}" not rendered yet — render it first, then re-run)`); skip++; continue; }
+      refImagePath = anchorImg;
+      refMode = 'edit';
+      const relight = (layers.scenes && layers.scenes[room.slug]) || room.stateDelta || sceneFor(room, layers.scenes);
+      composed = (`Relight of the supplied scene${room.stateLabel ? ` to its "${room.stateLabel}" state` : ''}: ${relight}`).trim() + steer;
+    }
+    process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug}${refMode === 'edit' && room.anchorRoom ? ` (relight ← ${room.anchorRoom})` : ''} ... `);
     try {
-      const buf = await generateImage({ prompt: composed, refImagePath: args.ref, refMode: args['ref-mode'], apiKey, model, aspect, provider, quality });
+      const buf = await generateImage({ prompt: composed, refImagePath, refMode, apiKey, model, aspect, provider, quality });
       if (regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare
       fs.writeFileSync(out, buf);
       fs.writeFileSync(out.replace(/\.png$/i, '.txt'), composed); // sidecar: exact prompt used

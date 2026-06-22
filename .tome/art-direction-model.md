@@ -1,8 +1,8 @@
 ---
 title: art-direction-model
-tags: [location-art, prompts, art-direction, gemini, anchorhead, dreamhold]
+tags: [location-art, prompts, art-direction, gemini, anchorhead, dreamhold, theatre]
 created: 2026-06-16
-updated: 2026-06-19
+updated: 2026-06-22
 aliases: [artist persona, style layers, art prompt structure, app layer]
 ---
 
@@ -220,6 +220,140 @@ prompt and spending money on a render are different decisions:
    now accepts a comma-list.
 `location-art` keeps audition / promote / open-reviewer. `/art-notes` reviews rendered *images* +
 human notes; `mold review` audits the scene *text* — two review surfaces, different artifacts.
+
+## Examine-miss hardening + cross-room landmarks + multi-level geometry (2026-06-22)
+Worked out fixing the Theatre Lobby over several rejected passes (single-storey → wraparound →
+imperial split; couch/skylight hallucinations; an invented portrait). Three durable changes, each
+routed to the layer that owns the problem:
+
+- **Walkthroughs examine for PUZZLE reasons, not visual ones**, so a room's visually load-bearing
+  fixtures are routinely never examined — and the trimmed `.cmds.txt` drops even the observation
+  verbs (`LOOK UP`, `EXAMINE STAIRCASE`) the source walkthrough *did* have. Two-part rule, both live:
+  (1) `trace-walkthrough` now KEEPS source observation verbs unless they break `--strict`; (2)
+  `gen-room-prompts.cjs` folds bare directional `LOOK UP/DOWN` (not just `examine`/`look at <obj>`).
+  The Lobby being a two-storey atrium with a wraparound landing exists ONLY in `LOOK UP`.
+- **Examine misses are fixed by degrade-safe + make-visible, NOT "examine everything."**
+  - *Tier 1 (graceful) — App layer:* "render ONLY what the scene names (invent no furniture/figures/
+    architecture); a named-but-undescribed surface — painting/poster/mural/sign/lettering — renders
+    INDISTINCT, never invented specifics." A miss now degrades to vague, never *wrong*. This killed
+    the couch + skylight and the random-girl posters in one global edit (`_app/app.json`).
+  - *Tier 2 (visible) — `gen-room-prompts.cjs`:* per-room `unprobed: [...]` flags (fixture-lexicon
+    nouns named but never examined) + a top-level `landmarks: {noun:{room,detail}}` glossary (every
+    examined fixture, game-wide). mold works the `unprobed` list; un-probed → indistinct by default.
+  - *Tier 3 (auto-examine sweep) deliberately NOT built* — once Tier 1 makes misses harmless, the
+    per-room VM-fork + noun-extraction + per-game null-response filtering isn't worth it.
+- **Cross-room landmarks: the data must travel.** A fixture is examined where it's *owned* (the
+  portrait on the Staircase Landing), but is *seen* from elsewhere (the Lobby establishing shot
+  looks up at it). Per-room facts never give the Lobby the portrait — it doesn't name one. The
+  `landmarks` glossary solves it without needing adjacency (the exit graph is unreliable anyway):
+  mold pulls `landmarks.portrait.detail` for any room that sees it. Validated end-to-end — the Lobby
+  now renders the actual full-length gentleman, not an invented figure.
+- **Multi-level geometry = assemble from the connected rooms (mold factor 10b).** A room's 3-D volume
+  is described by its `up`/`down` neighbors, not itself: the Lobby is flat in its own text; the
+  *Landing* says it "circles around the upper level… see down into it," and the landing "splits east
+  and west." Rule: build the whole vertical volume from the neighbor rooms, then keep it
+  self-consistent — **if a feature is visible, whatever reaches it must be too** (gallery visible ⇒
+  the imperial split that climbs to it must be visible). State the level count ("two storeys, one
+  gallery, no higher tiers") so the model neither flattens nor stacks. Pick a vantage that puts
+  unwanted features *behind the camera* rather than fighting to exclude them in-frame.
+
+## Shared-volume consistency = anchor + img2img, NOT prose (spike-validated 2026-06-22)
+Many games author ONE space sliced into compass "stations" + state-variants: Dreamhold's Dark
+Dome (East/N/W/S/Center, then Lit/Starry/Translucent = same dome re-lit), the Cistern + its
+glass catwalk (~13 stacked stations), the outer mountain Catwalk (N/S/E/W + Night/Unearthly).
+The sightlines are NOT hidden — each room's own prose names them (Cistern Bottom enumerates the
+whole vertical stack: floor→glass platform→catwalk→ceiling). So the problem is NOT "make data
+travel." It's **geometric consistency across N renders of one volume**, which text-to-image
+CANNOT hold: render the 5 Dark Dome facings independently and you get 5 different domes
+(proportions/floor/illumination drift; the east doorway swings from monstrous foreground arch
+to tiny distant door; the central pyramid — named only in Center's prose — vanishes from all 4
+edge views).
+
+**Spike result (gpt-image-2 low, 9 renders, ~$0.15):** render one approved anchor (Dark Dome
+Center), then generate the four facings with `gen-room-images.cjs --ref <anchor> --ref-mode
+edit`. img2img-edit produced unmistakably THE SAME dome every time, AND carried the pyramid the
+per-room prose dropped, AND tamed the threshold over-domination — two fidelity wins for free
+from the reference. `edit_north` even re-staged correctly (ladder to foreground, floor hole
+opened per its prose) while keeping dome/walls/pyramid identical. So edit-mode = the middle path
+between "one shared image" and "N independent renders": **one anchor + controlled per-station
+deltas.**
+
+Caveats (both real):
+- **Edit-mode preserves the anchor's VANTAGE; it does not truly rotate the camera.** Fine — even
+  desirable — for a symmetric round dome (5 near-identical views read as one room). UNTESTED and
+  likely problematic for an ASYMMETRIC volume (the Cistern: glass platform on the east wall,
+  catwalk overhead, cracks in named arcs) where you WANT the viewpoint to swing — edit-mode may
+  over-preserve the anchor and refuse to re-orient. That cistern test is what actually decides
+  whether the design generalizes; the dome is the gentle case.
+- **Two-pass ordering:** consistency needs a human-approved anchor first, so a volume renders
+  anchor → approve → siblings, not one batch. Every `--ref` image bills at the high-fidelity
+  input rate, so siblings cost more than the $0.006 ref-free floor.
+
+Design implication: a `volume`/`sightlineGroup` primitive = {member slugs, designated anchor
+room, render policy}, consumed by the render layer (wire `--ref` anchoring into batch) and ideally
+sharing the auto-mapper's existing "these stations are one space" grouping (see the catwalk-south
+merge work). The `landmarks` glossary does NOT scale here — it keys nouns globally, so generic
+recurring nouns (dome/ladder/catwalk) collide across unrelated volumes; grouping must be
+group-scoped, not a flat global map. Also: Dreamhold's pack is PRE-hardening (baked pixel
+preamble, `landmarks:[]`, several transient-state rooms with empty/garbage scene text) — a clean
+regen is a prerequisite before any volume work there.
+
+## Scrape-coverage gaps: in-place state transitions get silently dropped (2026-06-22)
+Regenerating Dreamhold's pack clean (the stale pack predated chrome-stripping) fixed the garbage
+(bracketed `[score]`/`[undone]` notes stripped, `landmarks` populated) — but exposed a worse,
+SILENT problem: 13 REAL rooms skipped as "scene-less phantoms" (Lit Dome, Starry Dome ×5, Cistern
+Rising, Night/Unearthly catwalks, Curtained Room on-chair). 95→82 rooms. Root cause is NOT
+stripping — it's that `extractDescription` needs a printed room-heading line + prose, and these
+rooms are entered by a STATE CHANGE IN PLACE, not movement:
+- **Gap A — no base description but rich examines.** Moving into Starry Dome East prints the
+  heading then `>` with no description (Dreamhold prints name-only for the dark dome), yet
+  `examine galley` etc. carry gorgeous visual content. But `scene = L.description ?
+  mergeExamines(...) : ''` only folds examines when a base description exists, so a
+  description-less room discards its examines too and is skipped. Fix: build the scene FROM the
+  examines when description is null.
+- **Gap B — in-place transition prints only action text.** `put sphere in wire` → "Lit Dome,
+  Center" but the body is just "the dome is flooded with light"; `wait` → "Cistern, Rising" body
+  is "the black tide rises…". The name flips (status/getCurrentLocation) but no description ever
+  prints. Fix: when a location name first appears via a NON-movement command (or `wait`), capture
+  that turn's response as a STATE DELTA linked to the base room (Dark Dome→Lit/Starry,
+  Catwalk→Night); scene = base scene + delta. These are precisely the img2img-from-anchor volume
+  case — same room, relit.
+
+Implication: a clean regen ALONE is a coverage regression — never blindly overwrite a pack with a
+lower room count. A **capture-review step** is warranted: after regen, surface every skipped/thin
+room LOUDLY (not one buried stderr line) with its reason + triggering response, classified
+auto-recoverable (A/B) / genuine-phantom (status-line flavor like Theatre's Boiler-Room Latin
+curse, correctly dropped) / needs-human. The silent `skipped[]` → stderr is the bug to kill.
+
+### RESOLVED 2026-06-22 — Gap A + Gap B + loud coverage report all shipped in `gen-room-prompts.cjs`
+Dreamhold went 82→95 in pack, 0 needs-human, 0 phantom. What was built (and the non-obvious bits):
+- **Gap A** — `scene = L.description ? merge(...) : merge('', examines, taken)`. A description-less
+  room now rebuilds its scene from captured examines/LOOK-dir responses. Tag `recoveredFrom:'examines'`
+  so mold scrutinizes them — these can be LORE-HEAVY (Starry Dome constellations carry myth narration,
+  not just visuals); `visualCore` won't strip that (it's not dialogue), so mold must.
+- **Gap B** — two-pass compose: prose-bearing rooms first (also indexed by `roomStem(name)`), then a
+  deferred pass resolves each prose-less state-variant to a base room sharing its stem and sets
+  `scene = base.scene + transitionDelta`, `anchorRoom`, `stateLabel`, `stateDelta`. `roomStem` strips
+  `"; Night/Unearthly"`, `", Rising"`, and the leading dome adjective (`Lit/Dark/Starry Dome`→`Dome`).
+  Anchor preference: a true base (own stem) > a description-sourced sibling (so Lit Dome→Dark Dome, not
+  the examine-recovered Starry Dome; Shadow Path Unearthly→its Night sibling since no unqualified base
+  exists). A variant with no base but strong self-contained delta (Cistern, Rising — the flooding
+  prose) builds scene from the delta alone.
+- **The delta lives in PRE-heading narration**, captured by `extractTransition` (echoed-cmd → up to
+  the room-name heading or `>`). Gotcha that bit us: `extractDescription` was latching onto a
+  standalone `[…score…]` status note printed AFTER the heading, which `visualCore` strips to empty
+  AND blocked transition capture — so the delta vanished. Fix: `extractDescription` skips standalone
+  `^\[…\]$` lines and returns null if only chrome remains, letting the transition branch fire.
+- **Render side** (`gen-room-images.cjs`): a room with `anchorRoom` and no explicit `--ref` renders
+  as an img2img **relight** — edits the anchor's committed (`<slug>.png`) or staged (`_review/<slug>.png`)
+  image in `--ref-mode edit`, sending only the LEAN `stateDelta` (not the whole base scene) as the
+  change. Batch sorts anchored rooms LAST so a single full run renders bases first; missing anchor →
+  graceful skip with "render it first". This is the spike-validated shared-volume approach wired in.
+- **Coverage report** replaces the silent `skipped[]`: buckets ok / recovered (A) / state-recov (B) /
+  thin / needs-human / phantom, each listed with a scene preview + reason. The needsHuman-vs-phantom
+  split uses an `exitTargets` set — a prose-less node referenced as someone's exit is REAL (never
+  written off as expected phantom). The 2 genuine graph-orphans (Lit Dome Center, Cistern Rising)
+  were the only ones Gap B caught by stem, not graph.
 
 ### The molding checklist (12 factors — canonical copy in `.claude/skills/mold/SKILL.md`)
 Fidelity: (1) examine-enrich fixtures, (2) persistence — fixtures in / takeables out, (3) strip
