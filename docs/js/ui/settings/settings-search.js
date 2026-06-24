@@ -18,6 +18,7 @@
 
 const HIDDEN = 'search-hidden';   // display:none (settings.css)
 const HIT = 'search-hit';         // subtle highlight on a directly-matched row
+const HIT_MARK = 'search-mark';   // <mark> wrapping a matched term in the text
 const ACTIVE = 'settings-search-active';
 
 /** A row is eligible only if it isn't context-hidden (welcome-only/game-only items set
@@ -41,6 +42,56 @@ function headerText(section) {
   return h ? h.textContent : '';
 }
 
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Remove all live-highlight <mark>s, restoring the original text nodes. */
+function unmark(root) {
+  root.querySelectorAll('mark.' + HIT_MARK).forEach(m => {
+    m.replaceWith(document.createTextNode(m.textContent));
+  });
+  root.normalize(); // merge the split text nodes back together
+}
+
+/** Wrap every occurrence of any search term in <mark> within root's text — but skip
+ *  icon ligatures (.material-icons text is literally "save"/"mic"/etc.) and existing marks. */
+function highlight(root, terms) {
+  const re = new RegExp('(' + terms.map(escapeRegExp).join('|') + ')', 'gi');
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      for (let p = node.parentElement; p && p !== root; p = p.parentElement) {
+        if (p.tagName === 'MARK') return NodeFilter.FILTER_REJECT;
+        if (p.classList && p.classList.contains('material-icons')) return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  const textNodes = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) textNodes.push(n);
+
+  textNodes.forEach(node => {
+    const text = node.nodeValue;
+    re.lastIndex = 0;
+    if (!re.test(text)) return;
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const mark = document.createElement('mark');
+      mark.className = HIT_MARK;
+      mark.textContent = m[0];
+      frag.appendChild(mark);
+      last = m.index + m[0].length;
+      if (m.index === re.lastIndex) re.lastIndex++; // guard against zero-length matches
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.replaceWith(frag);
+  });
+}
+
 export function initSettingsSearch() {
   const input = document.getElementById('settingsSearch');
   const content = document.querySelector('.settings-content');
@@ -53,6 +104,7 @@ export function initSettingsSearch() {
 
   function clearSearch() {
     content.classList.remove(ACTIVE);
+    unmark(content);
     content.querySelectorAll('.' + HIDDEN).forEach(el => el.classList.remove(HIDDEN));
     content.querySelectorAll('.' + HIT).forEach(el => el.classList.remove(HIT));
     // Restore default: every collapsible section collapsed.
@@ -64,10 +116,12 @@ export function initSettingsSearch() {
     const q = query.trim();
     if (!q) { clearSearch(); return; }
 
+    const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
     const matches = makeMatcher(q);
     content.classList.add(ACTIVE);
 
-    // Reset prior pass.
+    // Reset prior pass (unmark FIRST so textContent matching sees clean text nodes).
+    unmark(content);
     content.querySelectorAll('.' + HIDDEN).forEach(el => el.classList.remove(HIDDEN));
     content.querySelectorAll('.' + HIT).forEach(el => el.classList.remove(HIT));
 
@@ -117,6 +171,9 @@ export function initSettingsSearch() {
     // 4. Empty state.
     const anyVisible = containers.some(s => !s.classList.contains(HIDDEN));
     if (noResults) noResults.hidden = anyVisible;
+
+    // 5. Live-highlight the matched terms in the (now-filtered) text.
+    highlight(content, terms);
   }
 
   input.addEventListener('input', () => applySearch(input.value));
