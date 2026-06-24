@@ -120,9 +120,8 @@
   margin: 0 32px 6px 0;
   font-size: 1.3rem;
   color: #fbbf24;
-  /* soft darker-orange glow */
-  text-shadow: 0 0 10px rgba(217, 119, 6, 0.55),
-               0 0 22px rgba(217, 119, 6, 0.3);
+  /* faint darker-orange glow */
+  text-shadow: 0 0 8px rgba(180, 83, 9, 0.4);
 }
 
 .help-dialog-lede {
@@ -143,7 +142,7 @@
 }
 
 .help-feature-list > li strong {
-  color: var(--text-primary);
+  color: var(--link-color);
 }
 
 .help-feature-list > li > span {
@@ -167,7 +166,7 @@
 }
 
 .help-feature-list ul li strong {
-  color: var(--text-primary);
+  color: var(--link-color);
 }
 
 .welcome-logo {
