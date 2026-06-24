@@ -752,7 +752,7 @@
 }
 
 .game-meta::after {
-  content: attr(data-title) "\A" "Difficulty: " attr(data-difficulty) "\A" "Length: " attr(data-length) "\A" "Author: " attr(data-author) "\A" "Year: " attr(data-year);
+  content: "Game: " attr(data-title) "\A" "Difficulty: " attr(data-difficulty) "\A" "Length: " attr(data-length) "\A" "Author: " attr(data-author) "\A" "Year: " attr(data-year);
   white-space: pre;
   position: absolute;
   bottom: calc(100%);
