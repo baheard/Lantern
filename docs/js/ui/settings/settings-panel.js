@@ -387,7 +387,7 @@ export function initSettings() {
     welcomeSettingsBtn.addEventListener('click', openSettings);
   }
 
-  // Help button (welcome screen) - "What is Modern Illumination?"
+  // Help button (welcome screen) - "What is Illumination?"
   const welcomeHelpBtn = document.getElementById('welcomeHelpBtn');
   const helpDialog = document.getElementById('helpDialog');
   const helpDialogClose = document.getElementById('helpDialogClose');

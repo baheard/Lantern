@@ -65,7 +65,7 @@
   font-size: 24px;
 }
 
-/* "What is Modern Illumination?" help dialog */
+/* "What is Illumination?" help dialog */
 .help-dialog {
   margin: auto;
   border: 1px solid var(--border-subtle);
@@ -112,9 +112,15 @@
 }
 
 .help-dialog h2 {
-  margin: 0 32px 16px 0;
+  margin: 0 32px 6px 0;
   font-size: 1.3rem;
   color: #fbbf24;
+}
+
+.help-dialog-lede {
+  margin: 0 0 16px 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .help-feature-list {
