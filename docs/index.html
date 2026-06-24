@@ -103,7 +103,15 @@
       <button id="closeSettingsBtn" class="close-settings-btn">✕</button>
     </div>
 
+    <div class="settings-search-wrap">
+      <span class="material-icons settings-search-icon">search</span>
+      <input type="search" id="settingsSearch" class="settings-search-input"
+             placeholder="Search settings &amp; help…" aria-label="Search settings and help"
+             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+
     <div class="settings-content">
+      <p class="settings-no-results" id="settingsNoResults" hidden>No settings or help found.</p>
 
       <!-- Voice & Input Section -->
       <div class="settings-section collapsible collapsed" id="voiceInputSection">

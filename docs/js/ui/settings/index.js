@@ -11,6 +11,7 @@ import { initPronunciationUI } from './pronunciation-ui.js';
 import { initSttSubstitutionsUI } from './stt-substitutions-ui.js';
 import { initDataManagementUI } from './data-management-ui.js';
 import { initGDriveUI } from './gdrive-ui.js';
+import { initSettingsSearch } from './settings-search.js';
 import { initSyncPreview } from '../sync-preview-modal.js';
 
 // Settings Panel
@@ -63,5 +64,6 @@ export function initAllSettings() {
   initSttSubstitutionsUI();
   initDataManagementUI();
   initGDriveUI();
+  initSettingsSearch();
   initSyncPreview();
 }

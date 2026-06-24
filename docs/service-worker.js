@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.649';
+const CACHE_VERSION = 'v1.5.650';
 const CACHE_NAMES = {
   core: `lantern-core-${CACHE_VERSION}`,
   games: `lantern-games-${CACHE_VERSION}`,
@@ -85,6 +85,7 @@ const CORE_ASSETS = [
   './js/ui/settings/index.js',
   './js/ui/settings/pronunciation-ui.js',
   './js/ui/settings/settings-panel.js',
+  './js/ui/settings/settings-search.js',
   './js/ui/settings/voice-selection.js',
   './js/utils/audio-feedback.js',
   './js/utils/game-settings.js',

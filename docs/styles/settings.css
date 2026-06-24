@@ -132,6 +132,60 @@
   transform: scale(0.95);
 }
 
+/* Settings search (#103) — filters settings + help by keyword */
+.settings-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 20px 8px 20px;
+  padding: 0 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.settings-search-icon {
+  color: var(--text-secondary, #999);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.settings-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 16px; /* >=16px so iOS Safari doesn't zoom on focus */
+  padding: 10px 0;
+}
+
+.settings-search-input::placeholder {
+  color: var(--text-secondary, #999);
+}
+
+.settings-search-wrap:focus-within {
+  border-color: var(--border-accent, #4CAF50);
+}
+
+/* Hidden by the search filter (overrides the toggle/collapse layout) */
+.search-hidden {
+  display: none !important;
+}
+
+/* Subtle highlight on a directly-matched row */
+.settings-search-active .search-hit {
+  border-left: 2px solid var(--accent-primary, #4CAF50);
+  padding-left: 8px;
+}
+
+.settings-no-results {
+  margin: 8px 4px;
+  color: var(--text-secondary, #999);
+  font-style: italic;
+}
+
 .settings-content {
   flex: 1;
   overflow-y: auto;
