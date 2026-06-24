@@ -68,25 +68,20 @@
 /* "What is Modern Illumination?" help dialog */
 .help-dialog {
   margin: auto;
-  border: 1px solid var(--accent-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 0;
   max-width: 480px;
   width: calc(100% - 32px);
   max-height: calc(100dvh - 48px);
-  /* subtle blue wash over the surface */
-  background:
-    linear-gradient(160deg, rgba(58, 100, 190, 0.12) 0%, rgba(58, 100, 190, 0) 55%),
-    var(--bg-surface);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5),
-              0 0 24px rgba(58, 100, 190, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
 .help-dialog::backdrop {
-  /* dark with a faint blue cast */
-  background: rgba(12, 20, 40, 0.62);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .help-dialog-inner {
@@ -142,7 +137,7 @@
 }
 
 .help-feature-list > li strong {
-  color: var(--text-link-blue);
+  color: var(--text-primary);
 }
 
 .help-feature-list > li > span {
@@ -166,7 +161,7 @@
 }
 
 .help-feature-list ul li strong {
-  color: var(--text-link-blue);
+  color: var(--text-primary);
 }
 
 .welcome-logo {
@@ -334,7 +329,7 @@
 }
 
 .if-database-section a {
-  color: var(--text-link-blue);
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
