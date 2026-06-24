@@ -130,6 +130,14 @@ const INTERIM_WAIT_DIRECTION_MS = 500;
 const EXTENDABLE_DIRECTIONS = ['north', 'south', 'east', 'west', 'n', 's', 'e', 'w'];
 
 /**
+ * Instant commands that are commonly the START of a longer phrase and so need
+ * the extended delay before the bare form fires (e.g. "look" -> "look at the
+ * painting", "look in the chest"). Without this, the bare command commits after
+ * INTERIM_WAIT_MS and truncates the continuation. See issue #165.
+ */
+const EXTENDABLE_COMMANDS = ['look', 'l'];
+
+/**
  * Update the last heard text in voice panel
  * @param {string} text - Text that was heard
  * @param {boolean} isNavCommand - Whether this was a navigation command
@@ -511,6 +519,7 @@ export function initVoiceRecognition(processVoiceKeywords) {
         // Determine delay: use longer delay for extendable directions (south -> southwest, etc.)
         // Also applies to "go north/south/east/west" which can extend to "go northwest" etc.
         const isExtendableDirection = EXTENDABLE_DIRECTIONS.includes(interimLower) ||
+            EXTENDABLE_COMMANDS.includes(interimLower) ||
             /^go\s+(?:north|south|east|west|n|s|e|w)$/i.test(interimLower);
         const delay = isExtendableDirection ? INTERIM_WAIT_DIRECTION_MS : INTERIM_WAIT_MS;
 

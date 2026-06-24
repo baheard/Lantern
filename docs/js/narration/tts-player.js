@@ -504,6 +504,23 @@ export async function stopNarration(preserveHighlight = false) {
 }
 
 /**
+ * Stop an in-progress app-message readout (the "app voice" — confirmations,
+ * status, "Your feedback: … Send it?", etc.).
+ *
+ * Without this, a command spoken/typed mid-readout just queues behind the
+ * still-playing utterance, so the message "reads the rest of itself" before the
+ * response is heard (issue #166). Guarded on appVoicePromise so it only fires
+ * when an app message is actually playing — app messages and the main narration
+ * are mutually exclusive, so this never clobbers game-text narration.
+ */
+export function stopAppMessage() {
+  if (!state.appVoicePromise) return;
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();  // fires utterance.onerror/onend, which clears appVoicePromise
+  }
+}
+
+/**
  * Speak feedback using app voice (for confirmations)
  * @param {string} text - Text to speak
  * @returns {Promise<void>} Promise that resolves when speech is done

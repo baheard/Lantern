@@ -5,10 +5,13 @@ const path = require('path');
 
 const DOCS = path.join(__dirname, '..', 'docs');
 
-// Placeholder lantern (lantern-a), white-on-black rounded square, for the big PWA app icons.
+// Lantern (lantern-a), amber-on-black rounded square, for the big PWA app icons.
+// Amber #fbbf24 matches the app's --color-game-system accent. The lantern body is
+// visually bottom-heavy, so the group is nudged up (translate y 8 -> 2) to optically
+// centre it rather than sit a touch low. See issue #164.
 const lanternSquare = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
   <rect width="160" height="160" rx="28" fill="#000"/>
-  <g transform="translate(20,8)" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(20,2)" fill="none" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M45 32 Q60 14 75 32" />
     <path d="M42 46 L50 33 L70 33 L78 46 Z" />
     <path d="M53 46 L67 46 L65 54 L55 54 Z" />

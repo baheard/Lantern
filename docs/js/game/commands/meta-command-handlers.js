@@ -22,11 +22,10 @@ function normalizeInput(input) {
 }
 
 // State tracking for interactive meta-commands
-let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', 'save-confirm', 'feedback', 'feedback-confirm', or null
+let awaitingMetaInput = null; // 'save', 'restore', 'delete', 'game-save', 'game-restore', 'repair', 'save-confirm', 'feedback', or null
 let gameDialogCallback = null; // Callback for in-game save/restore dialogs
 let gameDialogRef = null; // File reference for in-game dialogs
 let pendingSaveTarget = null; // Save name pending confirmation when overwriting by slot
-let pendingFeedbackText = null; // Feedback text pending read-back confirmation
 
 /**
  * Handle SAVE command
@@ -242,21 +241,6 @@ export async function handleMetaResponse(input) {
     case 'feedback':
       return await handleFeedbackResponse(input.trim());
 
-    case 'feedback-confirm': {
-      const feedbackText = pendingFeedbackText;
-      pendingFeedbackText = null;
-      const yes = ['yes', 'y', 'send', 'confirm', 'ok'].includes(normalizedInput.toLowerCase());
-      if (!yes) {
-        respondAsGame('<div class="system-message"><i>Cancelled.</i></div>');
-        return true;
-      }
-      const { submitFeedback } = await import('../../features/feedback.js');
-      const gameName = state.currentGameName || 'None';
-      await submitFeedback(feedbackText, gameName);
-      respondAsGame('<div class="system-message">Thanks for your feedback!</div>');
-      return true;
-    }
-
     default:
       return false;
   }
@@ -443,18 +427,24 @@ async function handleRepairResponse(input) {
 }
 
 /**
- * Handle feedback text — read it back via TTS and ask for confirmation before submitting.
+ * Handle feedback text — submit it directly and thank the user (no yes/cancel
+ * confirmation). Reached two ways: "feedback <text>" inline, or after the bare
+ * "feedback" listening prompt. Cancelling is only possible at the listening
+ * prompt (handled by the empty/cancel branch of handleMetaResponse).
  */
 async function handleFeedbackResponse(notes) {
-  pendingFeedbackText = notes;
-  awaitingMetaInput = 'feedback-confirm';
+  const feedbackText = (notes || '').trim();
+  if (!feedbackText) {
+    // Nothing to send (shouldn't happen via either entry point, but be safe).
+    respondAsGame('<div class="system-message"><i>Cancelled.</i></div>');
+    return true;
+  }
 
-  respondAsGame(`<div class="system-message">Your feedback: "<b>${notes}</b>"<br>Send it? (yes / cancel)</div>`);
-  enterSystemEntryMode('yes or cancel');
+  const { submitFeedback } = await import('../../features/feedback.js');
+  const gameName = state.currentGameName || 'None';
+  await submitFeedback(feedbackText, gameName);
 
-  const { speakAppMessage } = await import('../../narration/tts-player.js');
-  speakAppMessage(`Your feedback: ${notes}. Send it?`);
-
+  respondAsGame('<div class="system-message">Thanks for your feedback!</div>');
   return true;
 }
 

@@ -55,9 +55,14 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   transcript = transcript.replace(/^marc\b/i, 'mark');
   transcript = transcript.replace(/\bschauer\b/gi, 'shower');
   transcript = transcript.replace(/\bgronk\b/gi, 'grunk');
+  // "demi john" -> "demijohn" — recognition splits the Curses object into two words (#167)
+  transcript = transcript.replace(/\bdemi\s+john\b/gi, 'demijohn');
 
   // Fix "paul" -> "pull" when it's the first word (common verb misrecognition)
   transcript = transcript.replace(/^paul\b/i, 'pull');
+  // "text [x]" -> "take [x]" — recognition hears "text" for the verb "take" (#172).
+  // First-word only, so a real noun ("read text") is left alone.
+  transcript = transcript.replace(/^text\b/i, 'take');
 
   // Fix "if" alone -> "east" (speech recognition misrecognition of direction)
   transcript = transcript.replace(/^if\.?$/i, 'east');

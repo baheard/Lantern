@@ -386,6 +386,14 @@ export async function sendCommandDirect(cmd, isVoiceCommand = null, confidence =
     return;
   }
 
+  // Interrupt any in-progress app-message readout (e.g. "Your feedback: … Send
+  // it?") so the command acts immediately instead of waiting for the readout to
+  // finish (#166). No-op when no app message is playing.
+  if (state.appVoicePromise) {
+    const { stopAppMessage } = await import('../../narration/tts-player.js');
+    stopAppMessage();
+  }
+
   // Mark that a command is being processed
   state.pendingCommandProcessed = true;
   state.pausedForSound = false;

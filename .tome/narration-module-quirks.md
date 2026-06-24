@@ -2,8 +2,8 @@
 title: Narration Module Quirks
 tags: [narration, tts, cycles, architecture]
 created: 2026-04-27
-updated: 2026-04-27
-aliases: [tts-player, speakTextChunked, skipToEnd, MediaSession, navigation cycle]
+updated: 2026-06-23
+aliases: [tts-player, speakTextChunked, skipToEnd, MediaSession, navigation cycle, appVoicePromise, speakAppMessage, app voice]
 ---
 
 # Narration Module Quirks
@@ -38,3 +38,14 @@ navigation.js
 ```
 
 The dynamic imports in `tts-player.js` are all legitimate cycle-breaks — don't convert them to static without verifying the cycle is actually gone.
+
+## The "app voice" is a separate channel from the main narration — it does NOT set `isNarrating`
+
+`speakAppMessage(text)` (confirmations, status, "Your feedback: … Send it?") speaks via its own `state.appVoicePromise` utterance. It deliberately does **not** touch `state.isNarrating` — that flag means *main game-text narration* (`speakTextChunked`).
+
+Consequences to remember:
+- The "during narration, block game commands" gate in `voice-commands.js` keys off `state.isNarrating`, so it does **not** fire during an app-message readout. Commands flow straight through.
+- But `speechSynthesis.speak()` **queues** — it never cancels. So a command spoken/typed mid-readout doesn't interrupt; its response utterance just plays *after* the message finishes. This was issue **#166**.
+- Fix (v1.5.636): `stopAppMessage()` in tts-player (cancels speechSynthesis, guarded on `appVoicePromise` so it never clobbers main narration), called from `sendCommandDirect()` whenever `state.appVoicePromise` is set. So any command now interrupts an app-message readout (still relevant for save-confirm, status, the "Listening for feedback…" prompt, etc.).
+- Same v1.5.636 session: the **feedback yes/cancel confirmation was removed entirely** — "feedback <text>" (inline) and the bare-"feedback" listening prompt now submit directly and just say "Thanks for your feedback!". Cancel is only possible at the listening prompt. So `awaitingMetaInput === 'feedback-confirm'` and `pendingFeedbackText` no longer exist; `handleFeedbackResponse()` submits immediately.
+- Echo gotcha for future work: the recognition echo-suppression (`isEchoOfSpokenText`) is also gated on `state.isNarrating`, so it does **not** suppress echoes of the *app voice* either.
