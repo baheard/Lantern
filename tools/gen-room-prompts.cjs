@@ -23,8 +23,9 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, execFile } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
 
@@ -60,7 +61,7 @@ function visualCore(desc) {
   desc = desc
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\byou can (?:also )?see\b(?:(?!\bfrom\b)[^.?!])*?\bhere\b\s*[.?!]?/gi, ' ')
-    .replace(/\bwhat (?:now|next|do you want to do)\b\s*\??/gi, ' ');
+    .replace(/\bwhat (?:now|next|do you want to do)\b(?:\s+now)?\s*\??/gi, ' ');
   // On first entry the game prints STATIC scenery first, then DYNAMIC events/dialogue.
   // Keep paragraphs in order up to (not including) the first dialogue/NPC-event paragraph.
   const STOP = /["“”]|\b(?:he|she|Michael)\s+(?:says|goes|hurries|kisses|stretches|yawns|nods|turns|walks|stands|sits|whispers|mutters)\b|\bAnd with that\b/i;
@@ -264,7 +265,423 @@ function mergeExamines(baseScene, examines, takenHeads) {
   return scene.trim();
 }
 
-function main() {
+// ---------------------------------------------------------------------------
+// Branch-probe phase: find rooms the spine walkthrough never visits.
+// ---------------------------------------------------------------------------
+
+// Async wrapper for execFile. Always resolves (never rejects) — probe failures are non-fatal.
+function execAsync(args, opts) {
+  return new Promise((resolve) => {
+    execFile('node', args, { encoding: 'utf8', ...opts }, (_err, stdout) => resolve(stdout || ''));
+  });
+}
+
+// Parse the last location from a probe run's --status output.
+// Returns { location, description } or null when the probe stayed at parentRoom or hit a known room.
+// The probe output includes a scrollback re-emission before the actual result; scanning from the
+// end finds the real result header, which is always AFTER the scrollback (appended by the probe cmd).
+const PROBE_HEADER_RE = /^\[@ (.+?)(?:\s+\|.*?)?\]$/;
+function parseProbeResult(output, parentRoom, knownNames) {
+  const lines = output.split(/\r?\n/);
+  let lastLoc = null, lastLocIdx = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const m = lines[i].match(PROBE_HEADER_RE);
+    if (m) { lastLoc = m[1].trim(); lastLocIdx = i; break; }
+  }
+  if (!lastLoc || lastLoc === parentRoom || knownNames.has(lastLoc)) return null;
+  const fakeTurn = { location: lastLoc, body: lines.slice(lastLocIdx + 1), command: '' };
+  for (const l of fakeTurn.body) { if (l.trim()) { fakeTurn.command = l.trim(); break; } }
+  return { location: lastLoc, description: extractDescription(fakeTurn) };
+}
+
+// Build incremental snapshots for each spine room's first-visit parseTurns index.
+// Processes rooms in first-visit order, reusing each snapshot as the starting point for the
+// next — total commands replayed ≈ walkthrough length (amortised), not O(rooms × walkthrough).
+// Returns Map<roomName, snapshotFilePath>. All files are temp; caller cleans them up.
+async function buildSnapshotsIncremental(game, seed, cmdsPath, firstVisitIdx) {
+  const fileText = fs.readFileSync(cmdsPath, 'utf8');
+  const cmdLines = fileText.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length && !l.startsWith('#'));
+  const tmpDir = os.tmpdir();
+  const snapshots = new Map();
+  let prevSnap = null;
+  let prevIdx = 0;  // parseTurns index of prevSnap (0 = fresh game, 0 commands executed)
+
+  // Sort by parseTurns index for incremental advancement.
+  const sorted = [...firstVisitIdx.entries()].sort((a, b) => a[1] - b[1]);
+  for (const [name, T] of sorted) {
+    if (T === 0) continue;  // intro state has no commands to snapshot yet
+    if (prevSnap && T === prevIdx) { snapshots.set(name, prevSnap); continue; }
+    // parseTurns[T] = state after cmdLines[T-1]. Advancing from parseTurns[prevIdx] requires
+    // executing cmdLines[prevIdx .. T-1] = cmdLines.slice(prevIdx, T).
+    const segment = cmdLines.slice(prevIdx, T);
+    if (!segment.length) { if (prevSnap) snapshots.set(name, prevSnap); continue; }
+    const snapPath = path.join(tmpDir, `lantern-br-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`);
+    const args = [path.join(REPO, 'tools/play.cjs'), game, '--seed', String(seed), '--snapshot-out', snapPath];
+    if (prevSnap) args.push('--snapshot-in', prevSnap);
+    args.push('--cmds', segment.join(' ; '));
+    await execAsync(args, { maxBuffer: 32 * 1024 * 1024, cwd: REPO, timeout: 60000 });
+    if (fs.existsSync(snapPath)) {
+      snapshots.set(name, snapPath); prevSnap = snapPath; prevIdx = T;
+    } else {
+      process.stderr.write(`[probe] snapshot write failed for "${name}" at T=${T}\n`);
+    }
+  }
+  return snapshots;
+}
+
+// Probe all 12 directions from a snapshot. Returns found[] = { dir, location, description }.
+// knownNames is checked (not mutated here) so callers de-dup before registering.
+const PROBE_DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'u', 'd', 'in', 'out'];
+async function probeFromSnap(game, seed, snapPath, knownNames, parentRoom) {
+  const results = await Promise.all(PROBE_DIRS.map((dir) =>
+    execAsync([
+      path.join(REPO, 'tools/play.cjs'), game,
+      '--snapshot-in', snapPath, '--cmds', dir,
+      '--status', '--seed', String(seed),
+    ], { maxBuffer: 16 * 1024 * 1024, cwd: REPO, timeout: 15000 })
+    .then((out) => ({ dir, out }))
+  ));
+  const found = [];
+  for (const { dir, out } of results) {
+    const r = parseProbeResult(out, parentRoom, knownNames);
+    if (r) found.push({ dir, location: r.location, description: r.description });
+  }
+  return found;
+}
+
+// Chronological BFS exploration — discover every room reachable from ANY point in the walkthrough,
+// capturing each in the EARLIEST (most pre-puzzle) state we can reach it. Replaces the old
+// game-start BFS + spine branch-probe with a single pass.
+//
+// Seeds a priority queue with:
+//   • the game-start snapshot (parseTurns[0], timestamp 0), and
+//   • every spine room's first-visit snapshot (timestamp = that room's firstVisitIdx).
+// Each newly reached room gets a BFS-path snapshot (navigate one direction from a parent); it
+// inherits the parent's timestamp. The queue is always processed in ASCENDING timestamp order, so
+// when two paths can reach the same room, the earliest (most pristine) one wins. A room is
+// explored-FROM exactly once, and captured from the lowest-timestamp snapshot that reaches it.
+//
+// Why both seed kinds: the game-start seed reaches only freely-accessible rooms; puzzle-locked
+// areas open only after the walkthrough performs the unlocking steps, so each spine room deep in
+// such an area contributes its own (already-unlocked) seed. Concrete win: the theatre aisles are
+// captured chandelier-UP because the attic seed (taken on first entry, before the winch is turned)
+// reaches them earlier than the post-winch spine seeds do.
+//
+// Limitation (room-level dedup, not edge-level): if a puzzle opens a NEW exit from an
+// already-explored room, the room behind that exit is not re-discovered through it. Such rooms are
+// still found if any OTHER reaching room contributes a later seed — they just land post-puzzle.
+//
+// Mutates `locs`: adds discovered rooms (bfsDiscovered) and refreshes spine descriptions
+// (bfsRefreshed) to their earliest reachable state. Returns { discovered, refreshed } for the report.
+async function exploreChronological(game, seed, cmdsPath, locs, seedIdxOverride) {
+  const cmdsText = fs.readFileSync(cmdsPath, 'utf8');
+  if (cmdsText.split(/\r?\n/).some((l) => l.trim().startsWith('@char'))) {
+    process.stderr.write('[explore] @char lines — skipping chronological BFS.\n');
+    return { discovered: [], refreshed: [] };
+  }
+
+  const tmpSnapPaths = new Set();
+  const discovered = [];
+  const refreshed = [];
+
+  // Seed 1 — game-start snapshot (no commands → parseTurns[0]).
+  const introSnap = path.join(os.tmpdir(), `lantern-ex0-${Date.now()}.json`);
+  tmpSnapPaths.add(introSnap);
+  const introOut = await execAsync([
+    path.join(REPO, 'tools/play.cjs'), game,
+    '--snapshot-out', introSnap, '--status', '--seed', String(seed),
+  ], { maxBuffer: 32 * 1024 * 1024, cwd: REPO, timeout: 30000 });
+  if (!fs.existsSync(introSnap)) {
+    process.stderr.write('[explore] Intro snapshot failed — skipping.\n');
+    return { discovered: [], refreshed: [] };
+  }
+  let startRoom = null;
+  const introLines = introOut.split(/\r?\n/);
+  for (let i = introLines.length - 1; i >= 0; i--) {
+    const m = introLines[i].match(PROBE_HEADER_RE);
+    if (m) { startRoom = m[1].trim(); break; }
+  }
+  if (!startRoom) {
+    process.stderr.write('[explore] Cannot determine starting room — skipping.\n');
+    return { discovered: [], refreshed: [] };
+  }
+
+  // bestTs source — always the real per-room first-visit (the walkthrough's own capture point),
+  // independent of which seeding scheme we use for exploration below.
+  const firstVisitIdx = new Map();
+  for (const L of locs.values()) { if (L.firstVisitIdx !== null) firstVisitIdx.set(L.name, L.firstVisitIdx); }
+
+  // Seed 2 — the SEED set for exploration. Default: every spine room's first-visit snapshot.
+  // `seedIdxOverride` (e.g. aggressive action-boundary seeding) swaps in a smaller set to cut cost.
+  const seedIdx = seedIdxOverride || firstVisitIdx;
+  process.stderr.write(`\n[explore] Building ${seedIdx.size} seed snapshots${seedIdxOverride ? ' (aggressive action-boundary)' : ''}…\n`);
+  let spineSnaps;
+  try {
+    spineSnaps = await buildSnapshotsIncremental(game, seed, cmdsPath, seedIdx);
+    for (const p of spineSnaps.values()) tmpSnapPaths.add(p);
+  } catch (e) {
+    process.stderr.write(`[explore] Spine snapshot error: ${e.message} — game-start seed only.\n`);
+    spineSnaps = new Map();
+  }
+
+  // bestTs[room] = lowest timestamp at which we have CAPTURED a description for that room (earliest
+  // wins → most pristine prose). Spine rooms start at their own firstVisitIdx (the walkthrough
+  // already captured them then). This is the DESCRIPTION gate, independent of exploration below.
+  const bestTs = new Map();
+  for (const [name, T] of firstVisitIdx) bestTs.set(name, T);
+
+  // Exploration is keyed by `room@ts`, NOT by room. A room's reachable EXITS change over the course
+  // of the game (a puzzle opens a door), so the same room must be re-explored at each distinct
+  // timestamp that reaches it — exploring only once at the lowest ts would miss an exit that opens
+  // later, and exploring only at the latest ts would capture post-puzzle prose. The hard case: the
+  // theatre aisles are reachable in a MIDDLE window — after a blocking thug clears the way into the
+  // (always-open) auditorium, but before the attic winch lowers the chandelier — found only by threading through the
+  // connecting rooms at exactly that mid-walkthrough timestamp. `room@ts` dedup makes each
+  // (room, game-state) pair explored once; ts values come only from seeds, so the set is finite.
+  const explored = new Set();   // `${room}@${ts}` we have probed outward from
+  const queued = new Set();     // `${room}@${ts}` already enqueued (avoid duplicate snapshot builds)
+  const key = (room, ts) => `${room}@${ts}`;
+
+  // Safety valve: bound total outward probes so a pathological game can't run away (~12 probes per
+  // exploration). Logged loudly if hit.
+  const MAX_EXPLORATIONS = 4000;
+  let exploreCount = 0, cappedNote = false;
+
+  const queue = [{ snapPath: introSnap, roomName: startRoom, ts: 0 }];
+  queued.add(key(startRoom, 0));
+  for (const [name, T] of seedIdx) {
+    if (spineSnaps.has(name)) { queue.push({ snapPath: spineSnaps.get(name), roomName: name, ts: T }); queued.add(key(name, T)); }
+  }
+  process.stderr.write(`[explore] From "${startRoom}" + ${queue.length - 1} spine seeds — chronological BFS (room@ts)…\n`);
+
+  const BATCH = 6;
+  while (queue.length > 0) {
+    queue.sort((a, b) => a.ts - b.ts);            // earliest game-state first
+    const batch = [];
+    while (batch.length < BATCH && queue.length) {
+      const item = queue.shift();
+      const k = key(item.roomName, item.ts);
+      if (explored.has(k)) continue;              // already probed this room at this exact game-state
+      explored.add(k);
+      batch.push(item);
+    }
+    if (!batch.length) continue;
+    if (exploreCount >= MAX_EXPLORATIONS) {
+      if (!cappedNote) { process.stderr.write(`[explore] ⚠ hit MAX_EXPLORATIONS (${MAX_EXPLORATIONS}); stopping early — some late-opening rooms may be missed.\n`); cappedNote = true; }
+      break;
+    }
+    exploreCount += batch.length;
+
+    // Probe every batched snapshot's 12 directions. Empty filter → return all landings except the
+    // parent room. Capture (description) and traversal (continue BFS) are decided independently.
+    const raw = [];
+    await Promise.all(batch.map(async ({ snapPath, roomName, ts }) => {
+      const found = await probeFromSnap(game, seed, snapPath, new Set(), roomName);
+      for (const d of found) raw.push({ ...d, fromRoom: roomName, fromSnap: snapPath, ts });
+    }));
+
+    // Traversal set: every landing we haven't yet explored OR queued at its ts → build a snapshot
+    // and continue the BFS through it (even through already-known rooms — that is what lets a
+    // mid-walkthrough path thread THROUGH explored rooms to reach a still-pristine room beyond).
+    // Dedup to one candidate per `room@ts` within this batch.
+    const byKey = new Map();
+    for (const d of raw) {
+      const k = key(d.location, d.ts);
+      if (explored.has(k) || queued.has(k)) continue;
+      if (!byKey.has(k)) byKey.set(k, d);
+    }
+    const toProcess = [...byKey.values()];
+    for (const d of toProcess) queued.add(key(d.location, d.ts));
+
+    // Build a BFS-path snapshot for each (inherits parent ts) so we can continue through it.
+    await Promise.all(toProcess.map(async (d) => {
+      const newSnap = path.join(os.tmpdir(), `lantern-ex-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`);
+      tmpSnapPaths.add(newSnap);
+      await execAsync([
+        path.join(REPO, 'tools/play.cjs'), game,
+        '--snapshot-in', d.fromSnap, '--cmds', d.dir,
+        '--snapshot-out', newSnap, '--seed', String(seed),
+      ], { maxBuffer: 32 * 1024 * 1024, cwd: REPO, timeout: 30000 });
+      d.newSnap = fs.existsSync(newSnap) ? newSnap : null;
+    }));
+
+    for (const d of toProcess) {
+      const { location, description, fromRoom, dir, ts, newSnap } = d;
+      // DESCRIPTION capture — earliest ts wins, independent of whether we traverse onward.
+      const prevBest = bestTs.has(location) ? bestTs.get(location) : Infinity;
+      if (ts < prevBest) {
+        bestTs.set(location, ts);
+        const existing = locs.get(location);
+        if (!existing) {
+          // Brand-new room — the walkthrough never entered it.
+          locs.set(location, {
+            name: location, slug: slugify(location),
+            description, transition: null, exits: new Map(), examines: [],
+            firstVisitIdx: null,
+            bfsDiscovered: true, discoveredFrom: fromRoom, discoveryDir: dir, discoveryTs: ts,
+          });
+          discovered.push(locs.get(location));
+          process.stderr.write(`[explore] FOUND: "${location}" from "${fromRoom}" via ${dir} (turn ${ts})\n`);
+        } else if (existing.firstVisitIdx !== null) {
+          // Spine room reached earlier than the walkthrough did → refresh to its pristine state.
+          if (description && existing.description && description !== existing.description) {
+            existing.description = description;
+            existing.bfsRefreshed = true;
+            existing.bfsFrom = fromRoom;
+            refreshed.push({ name: location, from: fromRoom, via: dir, ts });
+            process.stderr.write(`[explore] REFRESHED: "${location}" (from "${fromRoom}" via ${dir}, turn ${ts})\n`);
+          }
+        } else if (description) {
+          // Previously-discovered branch room reached even earlier → silently improve its capture.
+          existing.description = description;
+          existing.discoveryTs = ts;
+        }
+      }
+      // TRAVERSAL — continue the BFS through this room at this ts (snapshot already built above).
+      if (newSnap) queue.push({ snapPath: newSnap, roomName: location, ts });
+    }
+  }
+  process.stderr.write(`[explore] ${exploreCount} room-states explored.\n`);
+
+  for (const p of tmpSnapPaths) { try { fs.unlinkSync(p); } catch { /* ignore */ } }
+  process.stderr.write(`[explore] Complete: ${discovered.length} discovered, ${refreshed.length} refreshed.\n`);
+  return { discovered, refreshed };
+}
+
+// ---------------------------------------------------------------------------
+// Exit-probe phase: capture each spine room's EXIT FORM + visibility — what an exit
+// physically IS (door / stairs / climbable wall / transom window) and what shows through
+// it. The room description routinely undersells this, and the exit GRAPH omits examine/
+// puzzle-gated exits entirely (the alley's transom window + loose-board fence), so the
+// model invents form (phantom stairs at the pit). For each spine room, from its first-entry
+// snapshot (canonical, pre-mutation):
+//   • examine each exit-lexicon noun in the prose      → form
+//   • go through <noun>                                 → confirm hidden exits + reciprocal
+//   • look up / look down                               → vertical form/visibility
+//   • graph-exit reciprocals from known destinations    → cross-room form (free, no probe)
+// Stored on L.exitFacts / L.lookFacts → folded into prompts.json for the mold. Spine-only in
+// v1 (rooms with a first-visit index); explored/state-variant rooms are a follow-up.
+const EXIT_LEXICON = ['door', 'doorway', 'gate', 'window', 'archway', 'arch', 'passage', 'passageway',
+  'corridor', 'hallway', 'staircase', 'stairway', 'stairs', 'steps', 'tunnel', 'trapdoor', 'hatch',
+  'ladder', 'hole', 'opening', 'fence', 'slope', 'gap', 'grate', 'crack', 'crevice', 'threshold',
+  'ramp', 'chute', 'shaft', 'aperture', 'mouth',
+  // feature-nouns you descend into / pass through that carry exit form (the pit's "rough walls
+  // make an easy climb"; a chasm/recess/alcove the room is built around)
+  'pit', 'chasm', 'pool', 'alcove', 'recess', 'niche', 'crater', 'cavity'];
+function exitHits(text) {
+  const t = (text || '').toLowerCase();
+  return [...new Set(EXIT_LEXICON.filter((w) => new RegExp('\\b' + w + 's?\\b').test(t)))];
+}
+// A probe response sentence carrying no form signal (parser-fail / generic dead-end) — dropped
+// per-sentence so a useful clause survives alongside a dead one ("nothing special below you. You
+// can hear something large moving" keeps the second sentence).
+const DEAD_SENT_RE = /^(you can'?t see any such thing|you can'?t go that way|you (can )?see nothing special|i only understood|that'?s not (a verb|something)|nothing (happens|special)\b)/i;
+function cleanResp(s) {
+  return splitSentences(s || '').filter((x) => x && !DEAD_SENT_RE.test(x.trim())).join(' ').replace(/\s+/g, ' ').trim();
+}
+const capWords = (s, n) => (s && s.length > n ? (s.slice(0, s.lastIndexOf(' ', n)) || s.slice(0, n)) + '…' : (s || ''));
+// Pull the final turn's location + response body out of a single-command probe run (--status).
+// Mirrors parseProbeResult's end-scan past the restore scrollback; returns the response BODY too
+// (for examine/look) and the location (so a traversal probe can detect a real move).
+function probeTurn(output) {
+  const lines = (output || '').split(/\r?\n/);
+  let idx = -1, loc = null;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const m = lines[i].match(PROBE_HEADER_RE);
+    if (m) { loc = m[1].trim(); idx = i; break; }
+  }
+  if (idx < 0) return { loc: null, resp: '' };
+  const after = lines.slice(idx + 1);
+  let k = 0;
+  while (k < after.length && !after[k].trim()) k++;  // skip blanks before the command echo
+  k++;                                               // skip the game's command echo line
+  const body = [];
+  for (; k < after.length; k++) {
+    const tr = after[k].trim();
+    if (/^>/.test(tr) || /^(What now\?|What do you want|Would you like)/i.test(tr)) break;
+    if (tr) body.push(tr);
+  }
+  return { loc, resp: body.join(' ').replace(/\s+/g, ' ').trim() };
+}
+
+async function exitProbe(game, seed, cmdsPath, locs) {
+  const firstVisitIdx = new Map();
+  for (const L of locs.values()) if (L.description && L.firstVisitIdx != null && L.firstVisitIdx > 0) firstVisitIdx.set(L.name, L.firstVisitIdx);
+  if (!firstVisitIdx.size) return 0;
+  process.stderr.write(`\n[exit] Probing exit form for ${firstVisitIdx.size} spine rooms…\n`);
+  let snaps; const tmp = new Set();
+  try {
+    snaps = await buildSnapshotsIncremental(game, seed, cmdsPath, firstVisitIdx);
+    for (const p of snaps.values()) tmp.add(p);
+  } catch (e) { process.stderr.write('[exit] snapshot build failed — skipping exit-probe.\n'); return 0; }
+  const PLAY = path.join(REPO, 'tools/play.cjs');
+  const run = (snap, cmd) => execAsync([PLAY, game, '--seed', String(seed), '--snapshot-in', snap, '--status', '--cmds', cmd],
+    { maxBuffer: 16 * 1024 * 1024, cwd: REPO, timeout: 15000 });
+  const rooms = [...locs.values()].filter((L) => snaps.has(L.name));
+  const BATCH = 5;
+  let probed = 0;
+  for (let b = 0; b < rooms.length; b += BATCH) {
+    await Promise.all(rooms.slice(b, b + BATCH).map(async (L) => {
+      const snap = snaps.get(L.name);
+      const nouns = exitHits(L.description);
+      // Fire every probe for this room first, THEN clean — so we can detect per-turn ambient flavor.
+      const [upOut, downOut] = await Promise.all([run(snap, 'look up'), run(snap, 'look down')]);
+      const upRaw = probeTurn(upOut).resp, downRaw = probeTurn(downOut).resp;
+      const nounRaw = await Promise.all(nouns.map(async (noun) => {
+        const [exOut, goOut] = await Promise.all([run(snap, 'examine ' + noun), run(snap, 'go through ' + noun)]);
+        return { noun, ex: probeTurn(exOut), go: probeTurn(goOut) };
+      }));
+      // Per-turn ambient flavor (a beast's random roar, weather mutter) LEAKS across different
+      // verbs — it shows up in look AND examine alike. Legit content that merely repeats across
+      // synonym targets stays under ONE verb ("examine pit" and "examine pool" both saying "for a
+      // closer look go down"). So strip a sentence only if it spans ≥2 distinct verbs (factor 3);
+      // a moved traversal's response is the DESTINATION's text, excluded from this room's ambient.
+      const tagged = [{ v: 'lu', r: upRaw }, { v: 'ld', r: downRaw },
+        ...nounRaw.flatMap((n) => [{ v: 'ex', r: n.ex.resp }, { v: 'go', r: (n.go.loc && n.go.loc !== L.name) ? '' : n.go.resp }])];
+      const verbsOf = new Map();
+      for (const { v, r } of tagged) for (const s of new Set(splitSentences(r).map((x) => x.trim()).filter(Boolean))) {
+        if (!verbsOf.has(s)) verbsOf.set(s, new Set());
+        verbsOf.get(s).add(v);
+      }
+      const ambient = new Set([...verbsOf].filter(([, vs]) => vs.size >= 2).map(([s]) => s));
+      const clean = (s) => splitSentences(s || '').map((x) => x.trim()).filter((x) => x && !ambient.has(x) && !DEAD_SENT_RE.test(x)).join(' ').replace(/\s+/g, ' ').trim();
+      const look = {};
+      const up = clean(upRaw), down = clean(downRaw);
+      if (up) look.up = capWords(up, 200);
+      if (down) look.down = capWords(down, 200);
+      const facts = [];
+      const seenTraverseDest = new Set();
+      for (const { noun, ex, go } of nounRaw) {
+        const f = { ref: noun, kind: 'noun' };
+        const exResp = clean(ex.resp);
+        if (exResp) f.examine = capWords(exResp, 220);
+        if (go.loc && go.loc !== L.name) f.traverse = { verb: 'go through ' + noun, destination: go.loc, reciprocal: capWords(clean(go.resp), 220) };
+        // Synonym nouns (pit/pool, door/doorway) often resolve to the SAME exit — keep only the
+        // first noun that traverses to a given destination (lexicon order; it carries the fact).
+        if (f.traverse) { if (seenTraverseDest.has(f.traverse.destination)) continue; seenTraverseDest.add(f.traverse.destination); }
+        if (f.examine || f.traverse) facts.push(f);
+      }
+      // graph-exit reciprocals — no probe; the destination's own description IS the reciprocal view
+      for (const [dir, dest] of L.exits.entries()) {
+        const D = locs.get(dest);
+        const recip = D && D.description ? splitSentences(visualCore(D.description))[0] : null;
+        const f = { ref: dir, kind: 'dir', destination: dest };
+        if (recip) f.reciprocal = capWords(recip, 200);
+        facts.push(f);
+      }
+      if (facts.length) L.exitFacts = facts;
+      if (Object.keys(look).length) L.lookFacts = look;
+      probed++;
+    }));
+  }
+  for (const p of tmp) { try { fs.unlinkSync(p); } catch { /* ignore */ } }
+  process.stderr.write(`[exit] Exit facts captured for ${probed} rooms.\n`);
+  return probed;
+}
+
+// ---------------------------------------------------------------------------
+
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   const game = args._[0];
   if (!game) { console.error('Usage: node tools/gen-room-prompts.cjs <game> [--seed N] [--style gothic]'); process.exit(2); }
@@ -277,9 +694,9 @@ function main() {
   const turns = parseTurns(transcript);
 
   // Build per-location data: first-seen description + exit edges from movement.
-  const locs = new Map(); // name -> { name, slug, description, exits: Map<dir,dest>, examines: [] }
+  const locs = new Map(); // name -> { name, slug, description, exits: Map<dir,dest>, examines: [], firstVisitIdx }
   function ensure(name) {
-    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, transition: null, exits: new Map(), examines: [] });
+    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, transition: null, exits: new Map(), examines: [], firstVisitIdx: null });
     return locs.get(name);
   }
   // Objects the walkthrough TAKES anywhere = removable; their EXAMINE detail is kept out of the
@@ -288,6 +705,7 @@ function main() {
   for (let i = 0; i < turns.length; i++) {
     const t = turns[i];
     const L = ensure(t.location);
+    if (L.firstVisitIdx === null) L.firstVisitIdx = i;   // record turn index of first visit
     if (!L.description) {
       const d = extractDescription(t);
       if (d) L.description = d;
@@ -322,18 +740,53 @@ function main() {
     }
   }
 
+  // Chronological exploration: discover every reachable room (spine, optional, puzzle-locked) and
+  // capture each in the earliest pre-puzzle state we can reach it. Subsumes the old game-start BFS
+  // and spine branch-probe in one priority-ordered pass.
+  // --aggressive-seeds (experimental): instead of one seed per room (first-visit), seed only the
+  // first room entered AFTER each state-changing action, treating ALL inventory verbs — including
+  // get/take — as inert. Fewer distinct seed timestamps → less room@ts overlap → faster, but risks
+  // dropping a seed in a pristine window whose ONLY opening action is an inventory verb. (Theatre is
+  // safe: its gate is a `wait` for a thug to clear, not a `get`.) Measures the cost/coverage trade-off.
+  let seedIdxOverride = null;
+  if (args['aggressive-seeds']) {
+    const INSPECT = new Set(['look', 'l', 'examine', 'x', 'search', 'read']);
+    const IGNORE = new Set(['get', 'take', 'drop', 'put', 'wear', 'remove', 'show', 'give', 'pick', 'eat', 'drink']);
+    seedIdxOverride = new Map();
+    let armed = false;
+    for (let i = 1; i < turns.length; i++) {
+      const verb = (turns[i].command || '').toLowerCase().split(/\s+/)[0];
+      if (MOVES.has(verb)) { if (armed) { if (!seedIdxOverride.has(turns[i].location)) seedIdxOverride.set(turns[i].location, i); armed = false; } }
+      else if (INSPECT.has(verb)) { /* inert */ }
+      else if (!IGNORE.has(verb)) armed = true;
+    }
+    console.error(`[aggressive] ${seedIdxOverride.size} action-boundary seeds (vs ${[...locs.values()].filter((L) => L.firstVisitIdx !== null).length} per-room)`);
+  }
+
+  // Chronological exploration: discover every reachable room (spine, optional, puzzle-locked) and
+  // capture each in the earliest pre-puzzle state we can reach it. Subsumes the old game-start BFS
+  // and spine branch-probe in one priority-ordered pass.
+  const { discovered, refreshed } = args['no-probe']
+    ? { discovered: [], refreshed: [] }
+    : await exploreChronological(game, seed, cmdsPath, locs, seedIdxOverride);
+
+  // Exit-form facts: probe each spine room's exits + look-dirs so the mold gets exit FORM from
+  // facts instead of inventing it (post-THRESHOLDS). Reuses the same first-entry snapshots.
+  // Independent of exploration (`--no-probe`) — gated by its own `--no-exit-probe`.
+  if (!args['no-exit-probe']) await exitProbe(game, seed, cmdsPath, locs);
+
   // Compose prompts.
   const rooms = [];
-  // Coverage report: every location seen gets a classified verdict, so a real room never
-  // disappears silently (the old behavior — a bare skipped[]→stderr line — hid the kind of
-  // regression that dropped 13 real Dreamhold rooms). Buckets:
+  // Coverage report buckets:
   //   ok            description → scene, normal path
+  //   discovered    room found by exploration the walkthrough never entered (optional/puzzle-locked)
+  //   refreshed     spine room whose description was updated to an earlier (pre-puzzle) state
   //   recovered     no description, but scene rebuilt from captured examines/looks  [Gap A]
   //   stateRecov    state-variant: scene = base room's scene + transition delta       [Gap B]
   //   thin          scene built but suspiciously short — probably under-described
   //   needsHuman    a real node (had exits or examine attempts) we still couldn't voice
   //   phantom       nothing attached (no prose/exits/examines) — status-line flavor, safe skip
-  const report = { ok: [], recovered: [], stateRecov: [], thin: [], needsHuman: [], phantom: [] };
+  const report = { ok: [], discovered: [], refreshed: [], recovered: [], stateRecov: [], thin: [], needsHuman: [], phantom: [] };
   const THIN_CHARS = 80;
   // Cross-room landmark glossary: every fixture-lexicon object that WAS examined anywhere, with
   // its examined detail + owning room. Lets mold render a shared landmark (a portrait seen from
@@ -390,17 +843,23 @@ function main() {
     const unprobed = fixtureHits(L.description).filter((w) => !examinedHeads.has(w));
     const room = { name: L.name, slug: L.slug, exits, description: L.description, scene, prompt };
     if (unprobed.length) room.unprobed = unprobed;
+    if (L.exitFacts) room.exitFacts = L.exitFacts;   // exit FORM + reciprocals (exit-probe)
+    if (L.lookFacts) room.lookFacts = L.lookFacts;    // look up/down visibility (exit-probe)
     if (sceneSource === 'examines') room.recoveredFrom = 'examines'; // Gap A provenance for mold/review
     rooms.push(room);
     // Index this prose-bearing room under its stem so Gap B variants can anchor to it.
     const stem = roomStem(L.name);
     if (!stemIndex.has(stem)) stemIndex.set(stem, []);
     stemIndex.get(stem).push({ name: L.name, slug: L.slug, scene, source: sceneSource, isBase: stem === L.name });
-    // Classify for the coverage report (recovered wins over thin — it's the more useful flag).
+    // Classify for the coverage report.
     const preview = scene.length > 140 ? scene.slice(0, 140) + '…' : scene;
-    if (sceneSource === 'examines') report.recovered.push({ name: L.name, examineCount: L.examines.length, preview });
-    else if (scene.length < THIN_CHARS) report.thin.push({ name: L.name, preview });
-    else report.ok.push({ name: L.name });
+    if (L.bfsDiscovered) report.discovered.push({ name: L.name, from: L.discoveredFrom, via: L.discoveryDir, turn: L.discoveryTs, preview });
+    else {
+      if (L.bfsRefreshed) report.refreshed.push({ name: L.name, from: L.bfsFrom, preview });
+      if (sceneSource === 'examines') report.recovered.push({ name: L.name, examineCount: L.examines.length, preview });
+      else if (scene.length < THIN_CHARS) report.thin.push({ name: L.name, preview });
+      else report.ok.push({ name: L.name });
+    }
   }
 
   // Gap B pass: prose-less state-variants. Each is the same physical space as a base room under a
@@ -423,6 +882,14 @@ function main() {
     let scene = '', sceneSource = '';
     if (anchor && anchor.scene) { scene = delta ? `${anchor.scene} ${delta}` : anchor.scene; sceneSource = 'state-delta'; }
     else if (delta && delta.length >= THIN_CHARS) { scene = delta; sceneSource = 'transition'; }
+    // A transition-only scene with no anchor and no inbound navigation is a status-line flash
+    // (e.g. Theatre's Latin-curse text that getCurrentLocation() briefly reports on Boiler Room
+    // entry). The fixed exit tracker now gives these locations exits, but nothing ever LEADS to
+    // them, so they are not real rooms. Treat them as phantoms before adding to the pack.
+    if (sceneSource === 'transition' && !anchor && !exitTargets.has(L.name)) {
+      report.phantom.push({ name: L.name, reason: 'transition-only scene, no inbound navigation — status-line flash phantom' });
+      continue;
+    }
     if (!scene) {
       // Still nothing usable. Phantom = nothing attached (status-line flavor); else needsHuman.
       const isPhantom = !exits.length && !L.examines.length && !exitTargets.has(L.name);
@@ -460,6 +927,10 @@ function main() {
   for (const r of rooms) {
     md.push(`## ${r.name}  \`${r.slug}\``);
     if (r.exits.length) md.push(`**Exits:** ${r.exits.join(' · ')}`);
+    if (r.exitFacts) md.push(`**Exit form:** ${r.exitFacts.map((f) => f.kind === 'noun'
+      ? (f.ref + (f.traverse ? ' →' + f.traverse.destination : '') + (f.examine ? ': ' + f.examine.slice(0, 60) : ''))
+      : (f.ref + '→' + f.destination)).join('  ·  ')}`);
+    if (r.lookFacts) md.push(`**Look:** ${[r.lookFacts.up && 'up: ' + r.lookFacts.up.slice(0, 60), r.lookFacts.down && 'down: ' + r.lookFacts.down.slice(0, 60)].filter(Boolean).join('  ·  ')}`);
     md.push('', '```', r.prompt, '```', '');
   }
   fs.writeFileSync(path.join(gameDir, 'prompts.md'), md.join('\n'));
@@ -471,14 +942,26 @@ function main() {
   // --- Coverage report (loud + classified; replaces the old silent skipped[] line) ---
   const c = report;
   const pad = (n) => String(n).padStart(3);
-  console.error(`\n=== Coverage: ${locs.size} location(s) seen → ${rooms.length} in pack ===`);
+  const discoveredPackCount = c.discovered.length;
+  const spinePackCount = rooms.length - discoveredPackCount;
+  console.error(`\n=== Coverage: ${locs.size} locations seen · ${spinePackCount} spine + ${discoveredPackCount} explored → ${rooms.length} in pack ===`);
   console.error(`  ok          ${pad(c.ok.length)}  description → scene`);
+  console.error(`  discovered  ${pad(c.discovered.length)}  rooms found by exploration (walkthrough never entered)`);
+  console.error(`  refreshed   ${pad(c.refreshed.length)}  spine rooms recaptured in earlier (pre-puzzle) state`);
   console.error(`  recovered   ${pad(c.recovered.length)}  Gap A: no description; scene rebuilt from examines/looks`);
   console.error(`  state-recov ${pad(c.stateRecov.length)}  Gap B: state-variant; base scene + transition delta (img2img anchor)`);
   console.error(`  thin        ${pad(c.thin.length)}  scene < ${THIN_CHARS} chars — likely under-described`);
   console.error(`  needs-human ${pad(c.needsHuman.length)}  real node, no usable prose — NOT in pack`);
   console.error(`  phantom     ${pad(c.phantom.length)}  no prose/exits/examines — status-line flavor, skipped`);
 
+  if (c.discovered.length) {
+    console.error(`\nDISCOVERED — rooms the walkthrough never entered, captured at earliest reachable turn:`);
+    for (const r of c.discovered) console.error(`  • ${r.name}  (from "${r.from}" via ${r.via}, turn ${r.turn})\n      ${r.preview}`);
+  }
+  if (c.refreshed.length) {
+    console.error(`\nREFRESHED — spine rooms recaptured pre-puzzle (walkthrough first saw them post-puzzle):`);
+    for (const r of c.refreshed) console.error(`  • ${r.name}  (from "${r.from}")\n      ${r.preview}`);
+  }
   if (c.recovered.length) {
     console.error(`\nRECOVERED — now in pack via Gap A; verify each rebuilt scene reads right:`);
     for (const r of c.recovered) console.error(`  • ${r.name}  (from ${r.examineCount} look/examine)\n      ${r.preview}`);
@@ -503,4 +986,4 @@ function main() {
   console.error(`\nNext: node tools/gen-room-images.cjs ${game}`);
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });
