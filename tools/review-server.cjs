@@ -15,7 +15,10 @@
  *
  * Notes (per topic and per item) persist in docs/games/images/_review-notes.json.
  *
- *   node tools/review-server.cjs [defaultGame] [--port 3009] [--no-open]
+ *   node tools/review-server.cjs [--port 3009] [--no-open]
+ *
+ * The server is game-agnostic: it serves ALL games and topics. The reviewer remembers
+ * where you last navigated in localStorage, so there is no launch-time "focus game".
  */
 
 const http = require('http');
@@ -29,7 +32,6 @@ const REPO = path.resolve(__dirname, '..');
 // (SendKeys toggles NumLock as a side effect — the "numlock on" announcement on restart).
 const BOOT_ID = String(Date.now());
 const args = process.argv.slice(2);
-const defaultGameArg = args.find((a) => !a.startsWith('--'));
 const portIdx = args.indexOf('--port');
 const port = parseInt((args.find((a) => a.startsWith('--port=')) || '').split('=')[1]
   || (portIdx !== -1 ? args[portIdx + 1] : null) || '3009', 10);
@@ -65,6 +67,11 @@ function gamePaths(slug) {
 // Capitalize first letter (mirrors the client's cap() so server-composed audition
 // prompts match the reviewer's Composed prompt exactly).
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+// Artist medium leads the composed prompt and is told to govern lighting/finish, so the
+// chosen medium actually renders instead of collapsing into the aesthetic's tone. Aesthetics
+// describe WORLD content only; lighting/palette belongs to the artist. Must match the same
+// constant in gen-room-images.cjs and the client composedPrompt() so all three agree.
+const ARTIST_LEAD = 'This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
 
 function candidatesFor(g, slug) {
   if (!fs.existsSync(g.review)) return [];
@@ -165,9 +172,29 @@ function locationsFor(gameSlug) {
     const auditions = {};   // id → {artist, artistName} for the aud: candidates (location-page tag)
     for (const p of audPieces) auditions[p.id] = { artist: p.artist, artistName: artName(p.artist) };
     const candidatePrompts = {};   // sidecar: the exact prompt that made each image
+    const mtimes = {};             // candidate id → file mtime (ms) so the client can sort by date
+    // Per-candidate provenance for the thumbnail chip: artist + model tag. Artist comes from the
+    // .json sidecar (regen/batch write it), falling back to the game's selected artist for legacy
+    // images; modelTag is only needed for untagged batch files (regen/audition carry it in the name).
+    const candMeta = {};
+    const selId = (readJSON(g.selArtist, {}) || {}).id;
+    const selArtistName = selId ? artName(selId) : '';
     for (const f of candidates) {
       const tp = candPath(f).replace(/\.png$/i, '.txt');
       if (fs.existsSync(tp)) candidatePrompts[f] = fs.readFileSync(tp, 'utf8');
+      try { mtimes[f] = fs.statSync(candPath(f)).mtimeMs; } catch (e) { mtimes[f] = 0; }
+      let artistName = '', mtag = '';
+      if (f.indexOf('aud:') === 0) {
+        artistName = (auditions[f] && auditions[f].artistName) || selArtistName;
+      } else {
+        const meta = readJSON(candPath(f).replace(/\.png$/i, '.json'), null);
+        if (meta) {
+          artistName = meta.artistName || (meta.artistId && artName(meta.artistId)) || '';
+          if (meta.provider) mtag = modelTag(meta.provider, meta.quality);
+        }
+        if (!artistName) artistName = selArtistName;
+      }
+      candMeta[f] = { artistName, modelTag: mtag };
     }
     // Which candidate is the in-game image? Committed is saved as `<slug>.png` (a copy), so
     // filenames never match — compare bytes instead so already-promoted images flag too.
@@ -187,7 +214,7 @@ function locationsFor(gameSlug) {
     }
     return {
       slug: r.slug, name: r.name, description: r.description || '', exits: r.exits || [],
-      committed, committedSource, candidates, candidatePrompts, auditions,
+      committed, committedSource, candidates, candidatePrompts, auditions, mtimes, candMeta,
       sceneDefault, sceneOverride: style.scenes[r.slug] || '',
     };
   });
@@ -238,14 +265,42 @@ function reject(gameSlug, candidate) {
 }
 // Timestamped server log line — goes to stdout, which artview.ps1 redirects to a
 // file (tools/.artview-server.log) so a flashed-by gen can be reviewed after the fact.
+// In-memory ring of recent log lines so the bottom-left "Logs" panel can review a gen that
+// already flashed by (including FAILs, which the progress banner prunes 15s after finishing).
+const LOG_RING = [];
+const LOG_RING_MAX = 500;
 function logLine(...parts) {
   const t = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  console.log(`[${t}] ${parts.join(' ')}`);
+  const msg = parts.join(' ');
+  console.log(`[${t}] ${msg}`);
+  LOG_RING.push({ t, msg });
+  if (LOG_RING.length > LOG_RING_MAX) LOG_RING.shift();
 }
 // In-flight generation registry — survives client navigation/reload because progress lives
 // SERVER-side. The browser polls /api/jobs to render the progress banner and refresh on done.
 const JOBS = new Map();
 let jobSeq = 0;
+// Concurrency limiter — prevents spawning dozens of child processes simultaneously.
+const MAX_CONCURRENT_GENS = 2;
+let _genActive = 0;
+const _genQueue = [];
+function scheduleGen(fn, label) {
+  return new Promise((resolve, reject) => {
+    const run = () => {
+      _genActive++;
+      if (label) logLine(`QUEUE  start  ${label}  active=${_genActive}  pending=${_genQueue.length}`);
+      fn().then(resolve, reject).finally(() => {
+        _genActive--;
+        if (_genQueue.length) _genQueue.shift()();
+      });
+    };
+    if (_genActive < MAX_CONCURRENT_GENS) run();
+    else {
+      if (label) logLine(`QUEUE  enqueue  ${label}  active=${_genActive}  pending=${_genQueue.length + 1}`);
+      _genQueue.push(run);
+    }
+  });
+}
 function jobsList() {
   const now = Date.now();
   const out = [];
@@ -270,7 +325,7 @@ function regen(gameSlug, slug, prompt, provider, quality, model, ref, refMode, a
     // Register the job synchronously so the very next /api/jobs poll sees it (before this
     // request even responds — important, since the client fires regen and navigates away).
     const jobId = String(++jobSeq);
-    JOBS.set(jobId, { game: gameSlug, slug, mode: prov, file: outName, status: 'running', startedAt: Date.now() });
+    JOBS.set(jobId, { game: gameSlug, slug, mode: prov, file: outName, status: 'queued', startedAt: Date.now() });
     const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt, '--out', out];
     if (provider === 'openai') {
       cliArgs.push('--provider', 'openai', '--quality', quality || 'low');
@@ -288,24 +343,31 @@ function regen(gameSlug, slug, prompt, provider, quality, model, ref, refMode, a
         refNote = `  [ref:${rm} ${path.basename(ref)}]`;
       }
     }
-    logLine(`REGEN  ${gameSlug}/${slug}  via ${prov}${refNote}  → ${outName}`);
-    const t0 = Date.now();
-    execFile('node', cliArgs,
-      { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
-        const dt = ((Date.now() - t0) / 1000).toFixed(1);
-        const job = JOBS.get(jobId);
-        if (err || !fs.existsSync(out)) {
-          const msg = (stderr || stdout || (err && err.message) || 'unknown error').slice(0, 500);
-          logLine(`REGEN  FAIL ${gameSlug}/${slug} (${dt}s): ${msg}`);
-          if (job) { job.status = 'error'; job.error = msg; job.finishedAt = Date.now(); }
-          return _reject(new Error(msg));
-        }
-        // Artist tag — lets the Audition grid borrow this location image for (artist × scene).
-        if (artistId) { try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId, artistName: artistName || artistId, locSlug: slug }, null, 2)); } catch {} }
-        logLine(`REGEN  OK   ${gameSlug}/${slug} (${dt}s) ${outName}`);
-        if (job) { job.status = 'done'; job.finishedAt = Date.now(); }
-        resolve({ file: outName });
-      });
+    scheduleGen(() => new Promise((innerResolve) => {
+      const job = JOBS.get(jobId);
+      if (job) job.status = 'running';
+      logLine(`REGEN  ${gameSlug}/${slug}  via ${prov}${refNote}  → ${outName}`);
+      const t0 = Date.now();
+      execFile('node', cliArgs,
+        { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
+          const dt = ((Date.now() - t0) / 1000).toFixed(1);
+          const job2 = JOBS.get(jobId);
+          if (err || !fs.existsSync(out)) {
+            const errBody = (stderr || stdout || (err && err.message) || 'unknown error');
+            const msg = errBody.slice(0, 500);
+            logLine(`REGEN  FAIL ${gameSlug}/${slug} (${dt}s): ${errBody.slice(0, 800)}`);
+            if (job2) { job2.status = 'error'; job2.error = msg; job2.finishedAt = Date.now(); }
+            _reject(new Error(msg));
+          } else {
+            // Artist tag — lets the Audition grid borrow this location image for (artist × scene).
+            if (artistId) { try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId, artistName: artistName || artistId, locSlug: slug }, null, 2)); } catch {} }
+            logLine(`REGEN  OK   ${gameSlug}/${slug} (${dt}s) ${outName}`);
+            if (job2) { job2.status = 'done'; job2.finishedAt = Date.now(); }
+            resolve({ file: outName });
+          }
+          innerResolve();
+        });
+    }));
   });
 }
 
@@ -328,14 +390,14 @@ function listArtists(gameSlug) {
 }
 // Create a new artist persona in the shared artists.json. id is slugified from the name
 // (or supplied); name is required; summary/style optional. Returns the created artist.
-function createArtist({ id, name, summary, style }) {
+function createArtist({ id, name, summary, goodFor, style }) {
   if (!name || !name.trim()) throw new Error('name required');
   const d = readJSON(artistsPath, { artists: [] });
   d.artists = d.artists || [];
   const slug = (id || name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   if (!slug) throw new Error('could not derive an id from the name');
   if (d.artists.some((a) => a.id === slug)) throw new Error('an artist with id "' + slug + '" already exists');
-  const artist = { id: slug, name: name.trim(), summary: (summary || '').trim(), style: (style || '').trim(), examples: [] };
+  const artist = { id: slug, name: name.trim(), summary: (summary || '').trim(), goodFor: (goodFor || '').trim(), style: (style || '').trim(), examples: [] };
   d.artists.push(artist);
   fs.mkdirSync(artistsDir, { recursive: true });
   fs.writeFileSync(artistsPath, JSON.stringify(d, null, 2) + '\n');
@@ -365,8 +427,9 @@ function composedFor(slug, artistId, sceneSlug) {
   const at = (room.prompt || '').indexOf('Scene:');
   const sceneDefault = at >= 0 ? room.prompt.slice(at + 'Scene:'.length).trim() : (room.description || '');
   const sc = (style.scenes[sceneSlug] && style.scenes[sceneSlug].trim()) || room.description || sceneDefault || '';
-  return [appPrompt(), a && a.style ? ('Artist: ' + a.style) : '', style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '',
-    sc ? ('Scene: ' + sc) : ''].filter(Boolean).join(' ');
+  // Artist LEADS + governs lighting (see ARTIST_LEAD). Order: Artist ▸ Scene ▸ Aesthetic ▸ App.
+  return [a && a.style ? (a.style + ' ' + ARTIST_LEAD) : '', sc ? ('Scene: ' + sc) : '',
+    style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '', appPrompt()].filter(Boolean).join(' ');
 }
 // Heuristic scene classifier so we can auto-suggest a stress-test trio: one exterior
 // (weather/light), one dim interior (chiaroscuro/darks), one signature room. Best-effort
@@ -434,7 +497,12 @@ function auditionState(slug) {
   const roomName = (s) => { const r = rooms.find((x) => x.slug === s); return r ? r.name : s; };
   const scenes = (cfg.scenes && cfg.scenes.length ? cfg.scenes : suggestScenes(slug)).slice(0, 4);
   const arts = (readJSON(artistsPath, { artists: [] }).artists) || [];
-  const selArtists = cfg.artists && cfg.artists.length ? cfg.artists : arts.map((a) => a.id);
+  // Absent cfg.artists → default to all; an explicit [] (user clicked "Select none") → none.
+  // Don't collapse empty-vs-absent with .length, or "Select none" reads back as "Select all".
+  const selArtists = Array.isArray(cfg.artists) ? cfg.artists : arts.map((a) => a.id);
+  // Finalists = the audition shortlist — a separate flag from the grid checkbox (cfg.artists).
+  // Non-destructive: a culled artist stays in the grid, just unstarred. Empty by default.
+  const finalists = cfg.finalists || [];
   const native = listAuditionImages(slug);
   // Borrowed = a tagged image made elsewhere for this artist+location, ONLY for cells with no
   // native audition image (native always wins). Keyed the same "artistId__sceneSlug" as native.
@@ -445,7 +513,7 @@ function auditionState(slug) {
     slug,
     scenes: scenes.map((s) => ({ slug: s, name: roomName(s) })),
     allScenes: rooms.map((r) => ({ slug: r.slug, name: r.name })),
-    artists: arts.map((a) => ({ id: a.id, name: a.name, summary: a.summary || '', style: a.style || '', selected: selArtists.includes(a.id) })),
+    artists: arts.map((a) => ({ id: a.id, name: a.name, summary: a.summary || '', goodFor: a.goodFor || '', style: a.style || '', selected: selArtists.includes(a.id), finalist: finalists.includes(a.id) })),
     houseArtist: (readJSON(gamePaths(slug).selArtist, {}) || {}).id || null,
     images: native,
     borrowed,
@@ -458,6 +526,17 @@ function saveAuditionCfg(slug, scenes, artists) {
   if (Array.isArray(artists)) d.artists = artists.filter(Boolean);
   fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n');
   return { ok: true };
+}
+// Toggle one artist's finalist (shortlist) flag. Independent of the grid checkbox — driven
+// from the row's ☆/★ button and from the lightbox (F). Persists cfg.finalists in audition.json.
+function toggleFinalist(slug, artistId, on) {
+  const p = gamePaths(slug).auditionCfg;
+  const d = readJSON(p, {});
+  const set = new Set(d.finalists || []);
+  if (on) set.add(artistId); else set.delete(artistId);
+  d.finalists = [...set];
+  fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n');
+  return { ok: true, finalist: !!on, finalists: d.finalists };
 }
 // Generate one audition cell (scene × artist). Same execFile/JOBS plumbing as regen(),
 // but composes the prompt server-side for the chosen artist and writes to _audition/.
@@ -477,25 +556,44 @@ function auditionGen(slug, sceneSlug, artistId, provider, quality, model) {
     const out = path.join(g.audition, outName);
     const prov = provider === 'openai' ? `openai/${quality || 'low'}` : (isPro ? 'gemini-pro' : 'gemini');
     const jobId = String(++jobSeq);
-    JOBS.set(jobId, { game: slug, slug: sceneSlug, kind: 'audition', artist: artistId, mode: prov, file: outName, status: 'running', startedAt: Date.now() });
+    JOBS.set(jobId, { game: slug, slug: sceneSlug, kind: 'audition', artist: artistId, mode: prov, file: outName, status: 'queued', startedAt: Date.now() });
     const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt, '--out', out];
     if (provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', quality || 'low');
     else if (model) cliArgs.push('--model', model);
-    logLine(`AUDIT  ${slug}/${sceneSlug} × ${artistId}  via ${prov}  → ${outName}`);
-    const t0 = Date.now();
-    execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
-      const dt = ((Date.now() - t0) / 1000).toFixed(1);
+    // Fire-and-forget: respond immediately, process via the concurrency queue.
+    // Client polls /api/jobs to track progress and refresh the grid on completion.
+    // On HTTP 429 (rate limit), the slot is released and the job re-queued after a backoff.
+    logLine(`AUDIT  REQ   ${slug}/${sceneSlug} × ${artistId}  via ${prov}  job=${jobId}`);
+    const attemptAudit = (retryNum) => () => new Promise((innerResolve) => {
       const job = JOBS.get(jobId);
-      if (err || !fs.existsSync(out)) {
-        const msg = (stderr || stdout || (err && err.message) || 'unknown error').slice(0, 500);
-        logLine(`AUDIT  FAIL ${slug}/${sceneSlug} × ${artistId} (${dt}s): ${msg}`);
-        if (job) { job.status = 'error'; job.error = msg; job.finishedAt = Date.now(); }
-        return _reject(new Error(msg));
-      }
-      logLine(`AUDIT  OK   ${slug}/${sceneSlug} × ${artistId} (${dt}s) ${outName}`);
-      if (job) { job.status = 'done'; job.finishedAt = Date.now(); }
-      resolve({ file: outName });
+      if (job) job.status = 'running';
+      const retryNote = retryNum ? ` (retry ${retryNum})` : '';
+      logLine(`AUDIT  START ${slug}/${sceneSlug} × ${artistId}${retryNote}  → ${outName}`);
+      const t0 = Date.now();
+      execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
+        const dt = ((Date.now() - t0) / 1000).toFixed(1);
+        const job2 = JOBS.get(jobId);
+        const errBody = (stderr || stdout || (err && err.message) || 'unknown error');
+        if ((err || !fs.existsSync(out)) && /429|rate.?limit/i.test(errBody) && retryNum < 4) {
+          const delayMs = (retryNum + 1) * 45000;
+          logLine(`AUDIT  RLIMIT ${slug}/${sceneSlug} × ${artistId} (${dt}s) — retry ${retryNum + 1}/4 in ${delayMs / 1000}s`);
+          if (job2) { job2.status = 'queued'; job2.startedAt = Date.now() + delayMs; }
+          innerResolve(); // release slot now; re-enqueue after backoff
+          setTimeout(() => scheduleGen(attemptAudit(retryNum + 1), `${artistId}×${sceneSlug} retry${retryNum + 1}`), delayMs);
+        } else if (err || !fs.existsSync(out)) {
+          const msg = errBody.slice(0, 500);
+          logLine(`AUDIT  FAIL ${slug}/${sceneSlug} × ${artistId} (${dt}s): ${errBody.slice(0, 800)}`);
+          if (job2) { job2.status = 'error'; job2.error = msg; job2.finishedAt = Date.now(); }
+          innerResolve();
+        } else {
+          logLine(`AUDIT  OK   ${slug}/${sceneSlug} × ${artistId} (${dt}s) ${outName}`);
+          if (job2) { job2.status = 'done'; job2.finishedAt = Date.now(); }
+          innerResolve();
+        }
+      });
     });
+    scheduleGen(attemptAudit(0), `${artistId}×${sceneSlug}`);
+    resolve({ file: outName });
   });
 }
 // --- Sandbox: free-play prompt tweaking, no commit ---------------------------
@@ -569,27 +667,34 @@ function sandboxGen(slug, fields, meta, provider, quality, model) {
     const isPro = provider !== 'openai' && model === 'gemini-3-pro-image-preview';
     const prov = provider === 'openai' ? `openai/${quality || 'low'}` : (isPro ? 'gemini-pro' : 'gemini');
     const jobId = String(++jobSeq);
-    JOBS.set(jobId, { game: slug, slug: outName, kind: 'sandbox', mode: prov, file: outName, status: 'running', startedAt: Date.now() });
+    JOBS.set(jobId, { game: slug, slug: outName, kind: 'sandbox', mode: prov, file: outName, status: 'queued', startedAt: Date.now() });
     const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt, '--out', out];
     if (provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', quality || 'low');
     else if (model) cliArgs.push('--model', model);
-    logLine(`SANDBOX ${slug}  via ${prov}  → ${outName}`);
-    const t0 = Date.now();
-    execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
-      const dt = ((Date.now() - t0) / 1000).toFixed(1);
+    scheduleGen(() => new Promise((innerResolve) => {
       const job = JOBS.get(jobId);
-      if (err || !fs.existsSync(out)) {
-        const msg = (stderr || stdout || (err && err.message) || 'unknown error').slice(0, 500);
-        logLine(`SANDBOX FAIL ${slug} (${dt}s): ${msg}`);
-        if (job) { job.status = 'error'; job.error = msg; job.finishedAt = Date.now(); }
-        return _reject(new Error(msg));
-      }
-      // Structured sidecar — lets a click on this render restore EVERY editable field.
-      try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ ...(meta || {}), ...(fields || {}), prompt }, null, 2)); } catch {}
-      logLine(`SANDBOX OK   ${slug} (${dt}s) ${outName}`);
-      if (job) { job.status = 'done'; job.finishedAt = Date.now(); }
-      resolve({ file: outName });
-    });
+      if (job) job.status = 'running';
+      logLine(`SANDBOX ${slug}  via ${prov}  → ${outName}`);
+      const t0 = Date.now();
+      execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, stdout, stderr) => {
+        const dt = ((Date.now() - t0) / 1000).toFixed(1);
+        const job2 = JOBS.get(jobId);
+        if (err || !fs.existsSync(out)) {
+          const errBody = (stderr || stdout || (err && err.message) || 'unknown error');
+          const msg = errBody.slice(0, 500);
+          logLine(`SANDBOX FAIL ${slug} (${dt}s): ${errBody.slice(0, 800)}`);
+          if (job2) { job2.status = 'error'; job2.error = msg; job2.finishedAt = Date.now(); }
+          _reject(new Error(msg));
+        } else {
+          // Structured sidecar — lets a click on this render restore EVERY editable field.
+          try { fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ ...(meta || {}), ...(fields || {}), prompt }, null, 2)); } catch {}
+          logLine(`SANDBOX OK   ${slug} (${dt}s) ${outName}`);
+          if (job2) { job2.status = 'done'; job2.finishedAt = Date.now(); }
+          resolve({ file: outName });
+        }
+        innerResolve();
+      });
+    }), `sandbox:${slug}`);
   });
 }
 
@@ -650,17 +755,21 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${port}`);
   const q = u.searchParams;
   try {
-    if (u.pathname === '/') { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(PAGE); return; }
+    // no-store so F5 (and the BOOT_ID auto-reload) always refetch the live PAGE — otherwise the
+    // --app window serves a cached copy and code changes don't show up on refresh.
+    if (u.pathname === '/') { res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }); res.end(PAGE); return; }
     if (u.pathname === '/api/state') {
       const games = listGames();
-      const def = games.includes(defaultGameArg) ? defaultGameArg : games[0] || null;
-      return sendJSON(res, 200, { games, defaultGame: def, notes: readJSON(notesPath, {}) });
+      // No server-side focus game — the client restores its last spot from localStorage and
+      // falls back to the first game only on a brand-new browser. defaultGame is always null.
+      return sendJSON(res, 200, { games, defaultGame: null, notes: readJSON(notesPath, {}) });
     }
     if (u.pathname === '/api/game') {
       const s = q.get('slug');
       return sendJSON(res, 200, { slug: s, aesthetic: gameStyle(s).aesthetic, artist: artistSignatureFor(s), app: appPrompt(), locations: locationsFor(s) });
     }
     if (u.pathname === '/api/jobs') return sendJSON(res, 200, { jobs: jobsList(), boot: BOOT_ID });
+    if (u.pathname === '/api/logs') return sendJSON(res, 200, { logs: LOG_RING, boot: BOOT_ID });
     if (u.pathname === '/api/glyphs') return sendJSON(res, 200, listGlyphs());
     if (u.pathname === '/api/artists') return sendJSON(res, 200, listArtists(q.get('game')));
     if (u.pathname === '/api/audition') return sendJSON(res, 200, auditionState(q.get('game')));
@@ -692,6 +801,7 @@ const server = http.createServer(async (req, res) => {
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
       }
       if (u.pathname === '/api/audition-config') return wrap(() => saveAuditionCfg(body.game, body.scenes, body.artists));
+      if (u.pathname === '/api/audition-finalist') return wrap(() => toggleFinalist(body.game, body.artist, body.on));
       if (u.pathname === '/api/audition-gen') {
         try { const r = await auditionGen(body.game, body.scene, body.artist, body.provider, body.quality, body.model); return sendJSON(res, 200, { ok: true, ...r }); }
         catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
@@ -732,6 +842,11 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   #rail{flex:0 0 150px;border-right:1px solid #2a2536;padding:12px 8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
   #rail .brand{font-size:12px;color:#8a8398;text-transform:uppercase;letter-spacing:.08em;margin:2px 6px 8px}
   #rail .sep{height:1px;background:#2a2536;margin:8px 4px}
+  /* Browser-style back/forward over (topic,item) navigation history. */
+  #rail .navbtns{display:flex;gap:4px;margin:0 4px 8px}
+  #rail .navbtns button{flex:1;font:inherit;font-size:11px;padding:4px 6px;border-radius:6px;border:1px solid #3a3450;background:#1f1b2c;color:#cbbf9a;cursor:pointer;white-space:nowrap}
+  #rail .navbtns button:hover:not(:disabled){background:#2a2440;border-color:#c4a35a;color:#fff}
+  #rail .navbtns button:disabled{opacity:.35;cursor:default}
   .topic{padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600;text-transform:capitalize}
   .topic:hover{background:#1a1722}
   .topic.active{background:#2a2440;color:#c4a35a;box-shadow:inset 3px 0 0 #c4a35a}
@@ -739,14 +854,14 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   #itemhead{padding:12px 12px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#8a8398}
   #itemhead .newbtn{float:right;font:inherit;text-transform:none;letter-spacing:0;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid #3a3450;background:#1f1b2c;color:#c4a35a;cursor:pointer}
   #itemhead .newbtn:hover{background:#2a2440;border-color:#c4a35a;color:#fff}
+  #itemfilter{margin:0 12px 6px;padding:6px 10px;font:inherit;font-size:13px;border-radius:6px;border:1px solid #3a3450;background:#16131f;color:#e8e3f0;outline:none}
+  #itemfilter:focus{border-color:#c4a35a}
   #itemlist{flex:1;overflow-y:auto;padding:0 8px}
   .item{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
   .item:hover{background:#1a1722}
   .item.active{background:#2a2440;box-shadow:inset 3px 0 0 #c4a35a;color:#fff}
   .item .dot{font-size:11px;color:#6a6478}
   .item .dot.has{color:#9be8b0}
-  #topicnotes{border-top:1px solid #2a2536;padding:10px}
-  #topicnotes label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8a8398}
   #detail{flex:1;overflow:hidden;padding:0}
   #detail h1{font-family:Georgia,serif;font-size:24px;margin:0 0 4px}
   .sub{color:#b0a9c2;font-size:12px;margin-bottom:16px}
@@ -762,6 +877,9 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .bigprev img{height:100%;max-width:100%;width:auto;object-fit:contain;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);cursor:zoom-in}
   .bigprev.empty{color:#8c85a0;font-style:italic}
   .cands{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px}
+  .candbar{display:flex;justify-content:flex-end;margin:2px 0 6px}
+  .candbar label{font-size:12px;color:#9aa;display:flex;align-items:center;gap:6px}
+  .candbar select{font-size:12px}
   .cand{width:190px;border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;
     background:#15121d;background-image:linear-gradient(45deg,#23202e 25%,transparent 25%,transparent 75%,#23202e 75%),linear-gradient(45deg,#23202e 25%,transparent 25%,transparent 75%,#23202e 75%);background-size:16px 16px;background-position:0 0,8px 8px}
   .cand.sel{border-color:#c4a35a;box-shadow:0 0 0 2px #c4a35a,0 0 16px rgba(196,163,90,.55)}
@@ -778,6 +896,10 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .mchip.m-oai{background:#0f2a28;color:#6fe0d6}
   .mchip.m-pro{background:#34234a;color:#d4a8ff}
   .mchip.m-aud{background:#2e2410;color:#e0b766}
+  .mchip.m-art{background:#241a2e;color:#cdb4f0}
+  .mchip.m-date{background:#1b1b1b;color:#9aa0a6}
+  .cand .cap .meta{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .cand .cap .meta .mchip{margin-right:0}
   /* Audition pieces bridged onto the location page — blue corner pill + dashed accent. */
   .cand.aud{border-color:#3a4f7a}
   .cand.aud::before{content:'audition';position:absolute;top:6px;right:6px;z-index:1;background:#4f7bd0;color:#0d0b12;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
@@ -834,7 +956,6 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   textarea.edit{border:1px solid #5a4a2a;background:#1c1830;box-shadow:inset 0 0 0 9999px rgba(196,163,90,.04)}
   textarea.edit:focus{outline:none;border-color:#c4a35a;box-shadow:0 0 0 2px rgba(196,163,90,.35)}
   textarea{width:100%;background:#15121d;border:1px solid #2a2536;border-radius:8px;color:#e8e4ee;padding:11px 13px;font:14px/1.5 system-ui,sans-serif;resize:vertical}
-  #topicnotes textarea{min-height:90px}
   .sec textarea{min-height:80px}
   .promptbox{min-height:120px}
   /* Thumbnail magnifier — click to open full screen. */
@@ -851,6 +972,21 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   #lb .lbprev{left:0}#lb .lbnext{right:0}
   #lb .lbcap{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#1a1722;color:#c2bbd4;
     padding:6px 14px;border-radius:8px;font-size:13px}
+  /* Finalist toggle in the lightbox (audition mode only) — top-centre, mirrors the row button. */
+  #lb .lbfin{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:13px;padding:6px 14px;
+    border-radius:8px;border:1px solid #3a3450;background:#1a1722;color:#cbbf9a;cursor:pointer}
+  #lb .lbfin:hover{background:#2a2440;border-color:#c4a35a;color:#fff}
+  #lb .lbfin.on{background:#c4a35a;border-color:#c4a35a;color:#0d0b12;font-weight:700}
+  /* Per-image notes panel, right edge of the lightbox. Same notes store as the detail screen —
+     shown for every zoomed image (location candidates, audition cells, artist examples). */
+  #lb .lbnotes{position:absolute;top:0;right:0;height:100%;width:360px;box-sizing:border-box;cursor:default;
+    background:#13111c;border-left:1px solid #2a2536;padding:52px 18px 18px;display:none;flex-direction:column;gap:8px;z-index:3}
+  #lb.notes .lbnotes{display:flex}
+  #lb.notes{padding-right:360px}
+  #lb.notes .lbnext{right:360px}
+  #lb .lbnotes label.ed{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#e0b766;margin-bottom:2px}
+  #lb .lbnotefor{font-size:11.5px;color:#8a8398;word-break:break-word;line-height:1.4}
+  #lb .lbnotes textarea.edit{flex:1;width:100%;box-sizing:border-box;min-height:120px;resize:none}
   /* Note flag chip + status actions. Resolved/wontfix grey the note so it reads as handled. */
   .noteflag:empty{display:none}
   .noteflag{font-size:10px;font-weight:700;letter-spacing:.04em;padding:1px 7px;border-radius:5px;margin-left:8px;vertical-align:1px}
@@ -868,6 +1004,19 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   #gens.show{display:flex}
   #gens .genrow{background:#241c33;border:1px solid #4a3d6b;color:#dcd5f2;padding:7px 12px;border-radius:8px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
   #gens .genrow .spin{display:inline-block;animation:spin 1s linear infinite}
+  /* Bottom-left generation-log button + slide-up panel */
+  #logsBtn{position:fixed;bottom:14px;left:18px;z-index:60;background:#2a2440;border:1px solid #4a3d6b;color:#cfc7e6;padding:7px 13px;border-radius:8px;font-size:12.5px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  #logsBtn:hover{filter:brightness(1.2)}
+  #logsBtn .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7fe0a0;margin-right:6px;vertical-align:middle}
+  #logsPanel{position:fixed;bottom:52px;left:18px;width:min(620px,calc(100vw - 36px));max-height:62vh;overflow:auto;display:none;flex-direction:column;background:#161227;border:1px solid #4a3d6b;border-radius:10px;z-index:60;box-shadow:0 10px 36px rgba(0,0,0,.55)}
+  #logsPanel.show{display:flex}
+  #logsPanel .logshead{position:sticky;top:0;display:flex;align-items:center;gap:8px;background:#221a36;border-bottom:1px solid #4a3d6b;padding:8px 12px;font-size:13px;color:#dcd5f2;font-weight:600}
+  #logsPanel .logshead .ct{opacity:.55;font-weight:400}
+  #logsPanel .logshead .logsx{margin-left:auto;background:none;border:none;color:#cfc7e6;font-size:15px;cursor:pointer}
+  #logsPanel .ll{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.45;color:#c4bcd8;padding:2px 12px;white-space:pre-wrap;word-break:break-word}
+  #logsPanel .ll .lt{color:#7d7397;margin-right:8px}
+  #logsPanel .ll.good{color:#9be8b4}
+  #logsPanel .ll.bad{color:#f3a0a0;background:rgba(120,30,30,.18)}
   @keyframes spin{to{transform:rotate(360deg)}}
   #status.show{opacity:1}
   /* Inline "Edit" affordance on editable read-only fields (Artist / Game style). */
@@ -883,9 +1032,23 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   .aud-scenes .slot{display:flex;flex-direction:column;gap:3px}
   .aud-scenes .slot label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#8a8398}
   .aud-scenes select,.aud select{font:inherit;padding:6px 8px;border-radius:7px;border:1px solid #3a3450;background:#1f1b2c;color:#e8e4ee}
-  .aud-artists{display:flex;flex-wrap:wrap;gap:8px 16px;margin:6px 0 18px}
+  .aud-artists{display:flex;flex-wrap:wrap;gap:8px 16px;margin:6px 0 10px}
   .aud-artists label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#cbbf9a;cursor:pointer}
   .aud-artists input{width:15px;height:15px;accent-color:#c4a35a}
+  /* Toolbar above the grid: select all/none + finalists-only filter. */
+  .aud-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 18px}
+  .aud-tools .audtool{font-size:12px;padding:4px 11px;border-radius:6px;border:1px solid #3a3450;background:#1f1b2c;color:#cbbf9a;cursor:pointer}
+  .aud-tools .audtool:hover{background:#2a2440;border-color:#c4a35a;color:#fff}
+  .aud-tools .audfilter{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#cbbf9a;cursor:pointer;margin-left:auto}
+  .aud-tools .audfilter input{width:15px;height:15px;accent-color:#c4a35a}
+  .aud-tools .audfilter input:disabled+span,.aud-tools .audfilter:has(input:disabled){opacity:.5;cursor:default}
+  /* Finalist (shortlist) affordances: row ☆/★ toggle + the star next to the name. */
+  .aud-rowhead .finstar{color:#c4a35a}
+  .finbtn{font-size:11px;padding:4px 9px;margin-top:6px;border-radius:6px;border:1px solid #3a3450;background:#1f1b2c;color:#cbbf9a;cursor:pointer}
+  .finbtn:hover{background:#2a2440;border-color:#c4a35a;color:#fff}
+  .finbtn.on{background:#c4a35a;border-color:#c4a35a;color:#0d0b12;font-weight:700}
+  .aud-rowhead.finalist{box-shadow:inset 3px 0 0 #c4a35a}
+  .aud-rowhead.finalist.house{box-shadow:inset 3px 0 0 #9be8b0,inset 6px 0 0 #c4a35a}
   table.aud-grid{border-collapse:collapse;width:100%}
   table.aud-grid th,table.aud-grid td{border:1px solid #2a2536;padding:8px;vertical-align:top}
   table.aud-grid th{font-size:12px;color:#b0a9c2;text-align:left;background:#15121d}
@@ -931,7 +1094,6 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
     .topic{flex:0 0 auto;padding:8px 14px}
     #items{flex:0 0 auto;max-height:34vh;border-right:none;border-bottom:1px solid #2a2536}
     #itemlist{padding:0 8px 8px}
-    #topicnotes{display:none}                 /* topic notes hidden on small screens to save room */
     #detail{flex:1 1 auto;overflow:visible}
     .loc-wrap{flex-direction:column;height:auto;overflow:visible}
     .loc-left{flex:1 1 auto;border-right:none;padding:14px 16px;overflow-y:visible}
@@ -948,13 +1110,28 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
     #lb img{max-width:96vw}
     #lb .lbnav{width:64px;font-size:32px}
   }
+  #modal{position:fixed;inset:0;z-index:10000;background:rgba(6,5,9,.92);display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .12s}
+  #modal.show{opacity:1;pointer-events:auto}
+  #modal .mbox{background:#1a1722;border:1px solid #322c40;border-radius:12px;padding:20px 22px;width:min(440px,92vw);box-shadow:0 16px 60px rgba(0,0,0,.7);cursor:auto}
+  #modal h3{margin:0 0 14px;color:#e8e2f4;font-size:16px}
+  #modal .mfld{display:block;margin-bottom:12px}
+  #modal .mfld span{display:block;color:#c2bbd4;font-size:12px;margin-bottom:4px}
+  #modal input,#modal textarea{width:100%;box-sizing:border-box;background:#100d17;border:1px solid #322c40;color:#e8e2f4;border-radius:7px;padding:8px 10px;font:inherit;resize:vertical}
+  #modal input:focus,#modal textarea:focus{outline:none;border-color:#6b5bd0}
+  #modal .mbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+  #modal .mbtns button{padding:7px 16px;border-radius:7px;border:1px solid #322c40;background:#251f31;color:#e8e2f4;cursor:pointer;font:inherit}
+  #modal .mok{background:#6b5bd0;border-color:#6b5bd0}
+  #modal .mbtns button:hover{filter:brightness(1.15)}
 </style></head><body>
 <div id="rail"></div>
-<div id="items"><div id="itemhead"></div><div id="itemlist"></div>
-  <div id="topicnotes"><label class="ed">Topic notes</label><textarea class="edit" id="tnotes" placeholder="Notes about this whole topic…"></textarea></div></div>
+<div id="items"><div id="itemhead"></div><input id="itemfilter" placeholder="Filter locations…" autocomplete="off" spellcheck="false" style="display:none"><div id="itemlist"></div></div>
 <div id="detail"><p class="none">Loading…</p></div>
-<div id="lb"><button class="lbnav lbprev" title="Previous">‹</button><img alt=""><button class="lbnav lbnext" title="Next">›</button><div class="lbcap"></div></div>
+<div id="lb"><button class="lbnav lbprev" title="Previous">‹</button><img alt=""><button class="lbnav lbnext" title="Next">›</button><button class="lbfin" title="Toggle finalist (F)">☆ Finalist</button><div class="lbcap"></div>
+  <div class="lbnotes" id="lbNotes"><label class="ed">Notes / feedback<span class="noteflag" id="lbNoteFlag"></span></label><div class="lbnotefor" id="lbNoteFor"></div><textarea class="edit" id="lbNote" placeholder="What you think of THIS image — Claude reads these to tune the artist. Saved to the same notes as the location screen."></textarea><div class="noteacts" id="lbNoteActs"></div></div></div>
+<div id="modal"></div>
 <div id="gens"></div>
+<button id="logsBtn" title="Generation logs (this server)" onclick="toggleLogs()"><span class="dot"></span>Logs</button>
+<div id="logsPanel"></div>
 <div id="status"></div>
 <script>
 let STATE=null, ARTISTS=null, GLYPHS=null, GAMES={}, GAMEINFO={}, topic=null, curGame=null, curItem=null, sel=null, ver=0;
@@ -973,13 +1150,69 @@ async function loadGame(slug){const gi=await (await fetch('/api/game?slug='+enco
 const $=s=>document.querySelector(s);
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function toast(m){const s=$('#status');s.textContent=m;s.classList.add('show');clearTimeout(s._t);s._t=setTimeout(()=>s.classList.remove('show'),2200);}
+// Inline modal — replaces window.prompt()/confirm(), which Chrome SUPPRESSES in the
+// chromeless --app= window that artview.ps1 launches (that's why "+ New artist" looked
+// dead). fields: [{key,label,type:'text'|'textarea',value,placeholder}]. Resolves to
+// {key:value,...} on OK, or null on Cancel/Escape.
+function askModal(title, fields, okLabel){
+  return new Promise(resolve=>{
+    const m=$('#modal');
+    const rows=fields.map(f=>{
+      const id='mf_'+f.key;
+      const input=f.type==='textarea'
+        ? '<textarea id="'+id+'" rows="4" placeholder="'+esc(f.placeholder||'')+'">'+esc(f.value||'')+'</textarea>'
+        : '<input id="'+id+'" type="text" value="'+esc(f.value||'')+'" placeholder="'+esc(f.placeholder||'')+'">';
+      return '<label class="mfld"><span>'+esc(f.label)+'</span>'+input+'</label>';
+    }).join('');
+    m.innerHTML='<div class="mbox"><h3>'+esc(title)+'</h3>'+rows+
+      '<div class="mbtns"><button class="mcancel">Cancel</button><button class="mok">'+esc(okLabel||'Create')+'</button></div></div>';
+    m.classList.add('show');
+    const close=v=>{m.classList.remove('show');m.innerHTML='';document.removeEventListener('keydown',onkey,true);resolve(v);};
+    const submit=()=>{const out={};for(const f of fields){const el=$('#mf_'+f.key);out[f.key]=el?el.value:'';}close(out);};
+    const onkey=e=>{
+      if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(null);}
+      else if(e.key==='Enter'&&e.target.tagName!=='TEXTAREA'){e.preventDefault();e.stopPropagation();submit();}
+    };
+    document.addEventListener('keydown',onkey,true);
+    m.querySelector('.mcancel').onclick=()=>close(null);
+    m.querySelector('.mok').onclick=submit;
+    m.querySelector('.mbox').onclick=e=>e.stopPropagation();
+    m.onclick=()=>close(null);
+    const first=m.querySelector('input,textarea'); if(first) first.focus();
+  });
+}
 function fmtElapsed(s){const m=Math.floor(s/60),ss=s%60;return m?(m+':'+String(ss).padStart(2,'0')):(ss+'s');}
 function renderGens(jobs){
   const box=$('#gens'); if(!box)return;
-  const act=jobs.filter(j=>j.status==='running');
-  if(!act.length){box.classList.remove('show');box.innerHTML='';return;}
+  const running=jobs.filter(j=>j.status==='running');
+  const queued=jobs.filter(j=>j.status==='queued');
+  if(!running.length&&!queued.length){box.classList.remove('show');box.innerHTML='';return;}
   box.classList.add('show');
-  box.innerHTML=act.map(j=>'<div class="genrow"><span class="spin">⟳</span> Generating <b>'+esc(j.slug)+'</b> · '+esc(j.mode)+' · '+fmtElapsed(j.elapsed)+(j.game!==curGame?(' · '+esc(j.game)):'')+'</div>').join('');
+  const qNote=queued.length?' <span style="opacity:.6">(+'+queued.length+' queued)</span>':'';
+  box.innerHTML=running.map(j=>'<div class="genrow"><span class="spin">⟳</span> Generating <b>'+esc(j.slug)+'</b> · '+esc(j.mode)+' · '+fmtElapsed(j.elapsed)+(j.game!==curGame?(' · '+esc(j.game)):'')+qNote+'</div>').join('')+(running.length?'':'<div class="genrow"><span class="spin">⟳</span> '+queued.length+' image(s) queued…</div>');
+}
+// Bottom-left generation log — a per-server in-memory ring (survives nothing but the process,
+// but catches FAILs that the progress banner prunes). Polls only while the panel is open.
+let LOGS_OPEN=false, _logsT=null;
+function toggleLogs(){
+  LOGS_OPEN=!LOGS_OPEN;
+  const p=$('#logsPanel'); if(p) p.classList.toggle('show',LOGS_OPEN);
+  if(LOGS_OPEN){ refreshLogs(); _logsT=setInterval(refreshLogs,2000); }
+  else { clearInterval(_logsT); _logsT=null; }
+}
+async function refreshLogs(){
+  if(!LOGS_OPEN) return;
+  let data; try{ data=await (await fetch('/api/logs')).json(); }catch(e){ return; }
+  const p=$('#logsPanel'); if(!p||!LOGS_OPEN) return;
+  const logs=data.logs||[];
+  const atBottom = p.scrollHeight - p.scrollTop - p.clientHeight < 60;
+  const rows = logs.length
+    ? logs.map(l=>{ const cls=/\bFAIL\b|error/i.test(l.msg)?'bad':(/\bOK\b|\bdone\b/i.test(l.msg)?'good':'');
+        return '<div class="ll '+cls+'"><span class="lt">'+esc((l.t||'').slice(11))+'</span>'+esc(l.msg)+'</div>'; }).join('')
+    : '<div class="ll" style="opacity:.55;padding:10px 12px">No generation activity yet on this server.</div>';
+  p.innerHTML='<div class="logshead">Generation log <span class="ct">'+logs.length+'</span>'
+    +'<button class="logsx" title="Close" onclick="toggleLogs()">✕</button></div>'+rows;
+  if(atBottom) p.scrollTop=p.scrollHeight;   // keep pinned to newest unless the user scrolled up
 }
 // Poll server-side job state — the single source of truth for generation progress. Because it
 // lives on the server, the banner + completion refresh work across navigation AND full reloads.
@@ -1031,6 +1264,33 @@ function persistNav(){try{localStorage.setItem(NAVKEY,JSON.stringify(NAV));}catc
 let _navT=null;
 function scheduleNavPersist(){clearTimeout(_navT);_navT=setTimeout(persistNav,300);}
 function saveNav(){NAV.topic=topic; if(curItem!=null) NAV.byTopic[topic]=curItem; persistNav();}
+// Browser-style back/forward over (topic,item) navigation. Every settled navigation funnels
+// through openItem() (and the empty-topic branch of selectTopic), which calls pushHist().
+// histGo() replays an entry with histNavigating set so the replay itself doesn't push.
+let HIST=[], HISTI=-1, histNavigating=false;
+function pushHist(){
+  if(histNavigating) return;
+  const top=HIST[HISTI];
+  if(top && top.topic===topic && top.item===curItem) return;   // re-render / no-op move
+  HIST=HIST.slice(0,HISTI+1);   // drop any forward branch
+  HIST.push({topic,item:curItem}); HISTI=HIST.length-1;
+  updateNavBtns();
+}
+function updateNavBtns(){
+  const b=$('#navBack'), f=$('#navFwd');
+  if(b) b.disabled=HISTI<=0;
+  if(f) f.disabled=HISTI>=HIST.length-1;
+}
+async function histGo(d){
+  const ni=HISTI+d; if(ni<0||ni>=HIST.length) return;
+  HISTI=ni; const e=HIST[HISTI];
+  histNavigating=true;
+  try{
+    if(e.topic!==topic) await selectTopic(e.topic, e.item==null?undefined:e.item);
+    else if(e.item!=null && e.item!==curItem) await openItem(e.item);
+  } finally { histNavigating=false; }
+  updateNavBtns();
+}
 function scrollKey(){return topic+'|'+curItem;}
 function detailScroller(){return document.querySelector('#detail .loc-left, #detail .aud-wrap, #detail .sbx-left');}
 // Restore the remembered scroll for the current topic|item and keep it updated as you scroll.
@@ -1048,7 +1308,7 @@ async function loadAll(){
   buildRail();
   let t=NAV.topic;
   const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
-  if(!valid) t=STATE.defaultGame?'g:'+STATE.defaultGame:(STATE.games[0]?'g:'+STATE.games[0]:'placeholders');
+  if(!valid) t=STATE.games[0]?'g:'+STATE.games[0]:'placeholders';   // fresh browser only; NAV (localStorage) wins otherwise
   selectTopic(t);   // no explicit item → selectTopic restores NAV.byTopic[t]
   pollGens(); setInterval(pollGens, 2000);   // progress banner + cross-navigation completion refresh
 }
@@ -1061,9 +1321,14 @@ window.addEventListener('beforeunload',()=>{
 });
 function buildRail(){
   const games=STATE.games.map(g=>'<div class="topic" data-t="g:'+g+'">'+esc(g)+'</div>').join('');
-  $('#rail').innerHTML='<div class="brand">Art Review</div>'+games+'<div class="sep"></div>'+
+  $('#rail').innerHTML='<div class="brand">Art Review</div>'+
+    '<div class="navbtns"><button id="navBack" title="Back (Alt+←)">‹ Back</button><button id="navFwd" title="Forward (Alt+→)">Fwd ›</button></div>'+
+    games+'<div class="sep"></div>'+
     '<div class="topic" data-t="audition">Audition</div><div class="topic" data-t="sandbox">Sandbox</div><div class="topic" data-t="placeholders">Placeholders</div><div class="topic" data-t="artist">Artist</div>';
   document.querySelectorAll('.topic').forEach(d=>d.onclick=()=>selectTopic(d.dataset.t));
+  const bb=$('#navBack'); if(bb) bb.onclick=()=>histGo(-1);
+  const ff=$('#navFwd'); if(ff) ff.onclick=()=>histGo(1);
+  updateNavBtns();
 }
 async function selectTopic(t, wantItem){
   topic=t; curItem=null; sel=null;
@@ -1081,13 +1346,16 @@ async function selectTopic(t, wantItem){
   } else if(t==='sandbox'){
     $('#itemhead').textContent='Sandbox · pick a game';
   } else { $('#itemhead').textContent='Glyphs'; }
-  const nk='topic:'+t; const tn=$('#tnotes'); tn.value=noteVal(nk); tn.onblur=()=>saveNote(nk,tn.value);
+  // Location filter: only meaningful for the per-game location list. Reset on topic switch.
+  itemFilter=''; const fi=$('#itemfilter');
+  if(fi){ fi.style.display=isGame(t)?'block':'none'; fi.value='';
+    fi.oninput=()=>{ itemFilter=fi.value; renderItems(); }; }
   renderItems();
   const list=items();
   // Prefer an explicit item, else the last-selected item remembered for THIS topic, else first.
   const remembered=(wantItem!=null)?wantItem:NAV.byTopic[t];
   const target=(remembered&&list.some(x=>x.id===remembered))?remembered:(list[0]&&list[0].id);
-  if(target) await openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); }
+  if(target) await openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); pushHist(); }
 }
 function items(){
   if(isGame(topic)) return (GAMES[curGame]||[]).map(l=>({id:l.slug,name:l.name,mark:l.committed?'●':(l.candidates.length?'○':'·'),has:!!l.committed,count:l.candidates.length}));
@@ -1096,9 +1364,12 @@ function items(){
   if(topic==='audition'||topic==='sandbox') return (STATE.games||[]).map(g=>({id:g,name:g,mark:'·',has:false}));
   return (ARTISTS.artists||[]).map(a=>({id:a.id,name:a.name,mark:a.id===ARTISTS.selected?'●':'·',has:a.id===ARTISTS.selected}));
 }
+let itemFilter='';
 function renderItems(){
   const il=$('#itemlist');
-  il.innerHTML=items().map(it=>'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
+  const q=itemFilter.trim().toLowerCase();
+  const list=q?items().filter(it=>(it.name||'').toLowerCase().includes(q)):items();
+  il.innerHTML=list.map(it=>'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
     '<span class="dot '+(it.has?'has':'')+'">'+it.mark+(it.count?' '+it.count:'')+'</span></div>').join('')||'<p class="none" style="padding:12px">none</p>';
   document.querySelectorAll('.item').forEach(d=>d.onclick=()=>openItem(d.dataset.id));
   const ly=NAV.listScroll[topic]; if(ly!=null) il.scrollTop=ly;
@@ -1110,22 +1381,44 @@ async function openItem(id){ curItem=id; renderItems(); saveNav();
   else if(topic==='audition') await detailAudition(id);
   else if(topic==='sandbox') await detailSandbox(id);
   else detailArtist((ARTISTS.artists||[]).find(a=>a.id===id));
+  pushHist();
 }
 function noteSection(key){return '<div class="sec"><label class="ed">Notes / feedback</label><textarea class="edit" id="inote" placeholder="What you think — usually means: regen. (Claude reads these to tune the artist.)">'+esc(noteVal(key))+'</textarea></div>';}
 function wireNote(key){const n=$('#inote');if(n)n.onblur=()=>saveNote(key,n.value);}
 
-let curLoc=null, curArtist=null, artSel=null, AUD=null, audLBList=[];
+let curLoc=null, curArtist=null, artSel=null, AUD=null, audLBList=[], audGrid=[], audFinalistsOnly=false;
+// Candidate-strip sort (persists across re-renders). 'date' = newest first; 'model' groups by
+// generator (cheap→pricey); 'name' = filename. Sorts l.candidates IN PLACE so the rendered strip
+// AND the arrow-key nav (which reads l.candidates) stay in the same order.
+let candSort='date';
+const MODEL_RANK={'oai-low':0,'oai-med':1,'oai-high':2,'gem':3,'gem-pro':4,'':5};
+function modelOf(f){const m=(f||'').match(/[-_](gem-pro|gem|oai-(?:low|med|high))-r\\d+\\.png$/i);return m?m[1].toLowerCase():'';}
+function sortCands(l){
+  const nm=f=>(f.indexOf('aud:')===0?f.slice(4):f).toLowerCase();
+  const mt=f=>(l.mtimes&&l.mtimes[f])||0;
+  const rk=f=>{const r=MODEL_RANK[modelOf(f)];return r==null?9:r;};
+  l.candidates.sort((a,b)=>{
+    if(candSort==='name') return nm(a).localeCompare(nm(b));
+    if(candSort==='model') return (rk(a)-rk(b))||nm(a).localeCompare(nm(b));
+    return (mt(b)-mt(a))||nm(a).localeCompare(nm(b));   // date: newest first
+  });
+}
 function detailLocation(l){
   if(!l){$('#detail').innerHTML='<p class="none">No location.</p>';return;}
   curLoc=l;
+  sortCands(l);
   if(!sel||l.candidates.indexOf(sel)<0) sel=l.committed||l.candidates[0]||null;
   const gi=GAMEINFO[curGame]||{artist:{},aesthetic:''};
   const art=(gi.artist&&gi.artist.name)||'(none)';
   const cands=l.candidates.map(f=>{const isC=l.committedSource===f;
     const aud=(l.auditions||{})[f];
-    const chip=aud?'<span class="mchip m-aud" title="Audition piece — '+esc(aud.artistName)+'">audition · '+esc(aud.artistName)+'</span>':mchip(f);
-    return '<div class="cand'+(f===sel?' sel':'')+(isC?' committed':'')+(aud?' aud':'')+'" data-f="'+esc(f)+'">'+candImg(f)+
-      '<div class="cap"><span>'+chip+esc(aud?f.slice(4):f)+'</span></div></div>';}).join('');
+    const meta=(l.candMeta||{})[f]||{};
+    const audChip=aud?'<span class="mchip m-aud" title="Audition piece">aud</span>':'';
+    const aChip=meta.artistName?'<span class="mchip m-art" title="Artist">'+esc(meta.artistName)+'</span>':'';
+    const mChip=mchipTag(meta.modelTag||modelOf(f));
+    const dChip=dchip((l.mtimes||{})[f]);
+    return '<div class="cand'+(f===sel?' sel':'')+(isC?' committed':'')+(aud?' aud':'')+'" data-f="'+esc(f)+'" title="'+esc(aud?f.slice(4):f)+'">'+candImg(f)+
+      '<div class="cap"><span class="meta">'+audChip+aChip+mChip+dChip+'</span></div></div>';}).join('');
   // Scope-tagged field helper: tag chip + label + a read-only value box.
   const field=(scope,tag,label,val,cls)=>'<div class="sec scope-'+scope+'"><label class="ro"><span class="tag">'+tag+'</span>'+esc(label)+'</label>'+
     '<div class="val '+(cls||'')+'">'+esc(val)+'</div></div>';
@@ -1137,8 +1430,8 @@ function detailLocation(l){
       '<select id="genMode" class="genmode" title="Which generator Generate uses">'+
         '<option value="openai-low">OpenAI · low — cheap proto (~$0.006)</option>'+
         '<option value="gemini">Gemini · finals (~$0.04)</option>'+
+        '<option value="openai-medium">OpenAI · medium (~$0.05)</option>'+
         '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>'+
-        '<option value="openai-high">OpenAI · high (~$0.21)</option>'+
       '</select>'+
       '<span class="segmode" id="regenSeg" title="How the selected image\\'s note feeds Generate">'+
         '<button data-rm="clean" title="Composed prompt only — ignores the note">Clean</button>'+
@@ -1147,6 +1440,9 @@ function detailLocation(l){
       '</span>'+
       '<button id="bRegen">Generate ▸</button>'+
       '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\\'s layers to play freely">⚗ Sandbox!</button></div>'+
+    '<div class="candbar">'+(l.candidates.length>1?'<label>Sort <select id="candSort">'+
+        '<option value="date">date (newest)</option><option value="name">name</option>'+
+        '<option value="model">model</option></select></label>':'')+'</div>'+
     '<div class="cands">'+(cands||'<span class="none">No candidates yet — Generate to create one.</span>')+'</div>'+
     // Actual prompt that made the selected image — TOP, right under the candidates.
     '<div class="sec scope-image"><label class="ro"><span class="tag">Per-image</span>Actual prompt used for the selected image</label><div class="val" id="actual">(none)</div></div>'+
@@ -1177,13 +1473,9 @@ function detailLocation(l){
   document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>selectCand(c.dataset.f));
   document.querySelectorAll('#detail .zoom').forEach(b=>b.onclick=(e)=>{e.stopPropagation();openLB(b.dataset.zoom);});
   $('#bProm').onclick=()=>act('/api/promote',{game:curGame,slug:l.slug,candidate:sel},'Promoted '+sel);
-  $('#bRej').onclick=()=>{
-    if(!sel) return;
-    const label=sel.indexOf('aud:')===0?sel.slice(4)+' (audition piece)':sel;
-    if(!confirm('Delete this image?\\n\\n'+label)) return;
-    act('/api/reject',{game:curGame,candidate:sel},'Deleted '+label);
-  };
+  $('#bRej').onclick=()=>rejectSelected();
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }
+  const cs=$('#candSort'); if(cs){ cs.value=candSort; cs.onchange=()=>{candSort=cs.value; detailLocation(curLoc);}; }
   const seg=$('#regenSeg');
   if(seg){ seg.querySelectorAll('button').forEach(b=>{
     b.classList.toggle('on',b.dataset.rm===regenMode);
@@ -1247,8 +1539,16 @@ async function commitEdit(kind, value){
     detailLocation(curLoc);
   }catch(e){ toast('Error: '+e.message); }
 }
+// Per-image note key for a candidate file + its location slug. A borrowed audition piece
+// (aud:<file>) gets a canonical, page-independent key by its audition filename, so a note on
+// the location page and on the Audition page are literally the same note. Native candidates
+// stay location-scoped (they never appear on the Audition page).
+function imgNoteKey(file, slug){
+  if(file && file.indexOf('aud:')===0) return 'aud:'+curGame+':'+file.slice(4);
+  return 'game:'+curGame+':'+slug+(file?(':'+file):'');
+}
 // Per-image note key — feedback is tied to the SELECTED candidate, not the location.
-function noteKeyFor(l){ return 'game:'+curGame+':'+l.slug+(sel?(':'+sel):''); }
+function noteKeyFor(l){ return imgNoteKey(sel, l.slug); }
 // Render the note's flag chip + status actions. A note must exist to be flagged; resolved/
 // wontfix grey the textarea and offer Re-open; open offers Resolved / Won't fix.
 function renderNoteStatus(k){
@@ -1268,14 +1568,17 @@ function renderNoteStatus(k){
 // Composed from the live layers — Artist + Style + Scene. The Scene component is the
 // per-location override if set, else the canonical in-game prose (so editing EITHER the
 // Scene box or the In-game prose updates the Composed prompt in real time).
+// Artist medium leads + governs lighting (keep in sync with ARTIST_LEAD in review-server.cjs
+// server scope and gen-room-images.cjs).
+const ARTIST_LEAD='This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
 function composedPrompt(){
   const gi=GAMEINFO[curGame]||{}; const l=curLoc||{};
   const app=gi.app||'';
   const art=(gi.artist&&gi.artist.style)||'';
   const aes=gi.aesthetic||'';
   const sc=(l.sceneOverride&&l.sceneOverride.trim())||l.description||l.sceneDefault||'';
-  // SENT order = hierarchy order: App ▸ Artist ▸ Game ▸ Scene (display order is reversed).
-  return [app, art?('Artist: '+art):'', aes?('Aesthetic: '+cap(aes)):'', sc?('Scene: '+sc):''].filter(Boolean).join(' ');
+  // SENT order: Artist (leads, governs lighting) ▸ Scene ▸ Aesthetic ▸ App.
+  return [art?(art+' '+ARTIST_LEAD):'', sc?('Scene: '+sc):'', aes?('Aesthetic: '+cap(aes)):'', app].filter(Boolean).join(' ');
 }
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 // DISPLAY ONLY: split a composed prompt into Artist / Aesthetic / Scene paragraphs at the
@@ -1301,9 +1604,8 @@ async function doRegen(l){
   }
   // Nano Banana Pro is ~3x the cost of finals — confirm before spending.
   if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image (vs ~$0.04 Gemini finals / ~$0.006 OpenAI low). Generate one?')) return;
-  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image (vs ~$0.006 OpenAI low / ~$0.04 Gemini finals). Generate one?')) return;
   const provider=genMode.startsWith('openai')?'openai':'gemini';
-  const quality=genMode==='openai-high'?'high':'low';
+  const quality=genMode==='openai-medium'?'medium':'low';
   const model=genMode==='gemini-pro'?'gemini-3-pro-image-preview':null;
   const b=$('#bRegen'); if(b){b.disabled=true;b.textContent='Generating…';}
   // Fire-and-forget: the SERVER tracks the job and the poller below renders progress + refreshes
@@ -1333,13 +1635,17 @@ function candUrl(f){
   if(f&&f.indexOf('aud:')===0) return '/img/audition?game='+curGame+'&f='+encodeURIComponent(f.slice(4))+'&v='+ver;
   return '/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
 }
-function mchip(f){
-  const m=f.match(/-(gem-pro|gem|oai-(?:low|med|high))-r\\d+\\.png$/i); if(!m) return '';
-  const t=m[1].toLowerCase();
+function mchipTag(tag){ if(!tag) return ''; const t=String(tag).toLowerCase();
+  if(!/^(gem-pro|gem|oai-(?:low|med|high))$/.test(t)) return '';
   const label=t==='gem-pro'?'Nano Pro':(t==='gem'?'Gemini':('OpenAI '+t.slice(4)));
   const cls=t==='gem-pro'?'m-pro':(t==='gem'?'m-gem':'m-oai');
   return '<span class="mchip '+cls+'">'+label+'</span>';
 }
+function mchip(f){ return mchipTag(modelOf(f)); }   // modelOf() reads the tag from the filename
+// Date chip from a file mtime (ms) — short, sortable. User chose mtime over a stored timestamp.
+function dchip(ms){ if(!ms) return ''; const d=new Date(ms);
+  const s=d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  return '<span class="mchip m-date" title="Created (file mtime)">'+esc(s)+'</span>'; }
 // Big-preview zoom: click (mouse) OR press-and-hold (touch) opens the full-size overlay.
 // On touch we suppress the tap so a stray tap while scrolling doesn't open the overlay —
 // you must hold (~380ms) to view full size, per the mobile design.
@@ -1389,10 +1695,14 @@ function detailGlyph(g){
 // Create a new artist from the Artist page: prompt for name, summary, and signature,
 // POST to the server, then refresh the list and open the new persona.
 async function newArtist(){
-  const name=prompt('New artist name:'); if(name===null) return;
-  if(!name.trim()){ toast('Name is required.'); return; }
-  const summary=prompt('One-line summary (optional):','')||'';
-  const style=prompt('Style signature — the prompt text that defines this artist (optional, editable later):','')||'';
+  const v=await askModal('New artist',[
+    {key:'name',label:'Name',placeholder:'e.g. Wren Halloway'},
+    {key:'summary',label:'One-line summary (optional)'},
+    {key:'style',label:'Style signature — the prompt text that defines this artist (optional, editable later)',type:'textarea'},
+  ],'Create');
+  if(!v) return;
+  if(!v.name.trim()){ toast('Name is required.'); return; }
+  const {name,summary,style}=v;
   try{
     const r=await (await postJSON('/api/artist-create',{name,summary,style})).json();
     if(!r.ok){ toast('Error: '+(r.error||'create failed')); return; }
@@ -1414,6 +1724,7 @@ function detailArtist(a){
   // LEFT: name, summary, example strip, style signature, notes. RIGHT: big selected example.
   const left='<h1>'+esc(a.name)+(isSel?' <span class="badge" style="font-size:12px;padding:2px 6px">'+esc(gname)+' artist</span>':'')+'</h1>'+
     '<div class="sub">'+esc(a.summary||'')+'</div>'+
+    (a.goodFor?'<div style="font-size:12px;color:#888;margin:2px 0 8px"><em>Good for:</em> '+esc(a.goodFor)+'</div>':'')+
     '<div class="cands">'+(cands||'<span class="none">No examples.</span>')+'</div>'+
     '<div class="sec" data-eartfield="'+esc(a.id)+'"><label class="ro">Style signature <button class="editbtn" data-editartstyle="'+esc(a.id)+'">✎ Edit</button></label><div class="val" data-artstyle="'+esc(a.id)+'">'+esc(a.style||'')+'</div></div>'+noteSection('artist:'+a.id);
   const right='<div class="bigprev empty" id="bigprev"><span>no image selected</span></div>';
@@ -1459,11 +1770,11 @@ function artistEditStyle(id){
 const GENMODE_OPTS=
   '<option value="openai-low">OpenAI · low — cheap proto (~$0.006)</option>'+
   '<option value="gemini">Gemini · finals (~$0.04)</option>'+
-  '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>'+
-  '<option value="openai-high">OpenAI · high (~$0.21)</option>';
+  '<option value="openai-medium">OpenAI · medium (~$0.05)</option>'+
+  '<option value="gemini-pro">Nano Banana Pro (~$0.13)</option>';
 function genParams(){
   return {provider:genMode.startsWith('openai')?'openai':'gemini',
-    quality:genMode==='openai-high'?'high':'low',
+    quality:genMode==='openai-medium'?'medium':'low',
     model:genMode==='gemini-pro'?'gemini-3-pro-image-preview':null};
 }
 function audCellUrl(source,file){ const k=source==='sandbox'?'sandbox':'review'; return '/img/'+k+'?game='+curGame+'&f='+encodeURIComponent(file)+'&v='+ver; }
@@ -1605,7 +1916,6 @@ function sbxGen(){
   const fields={app:SBXW.app, artist:SBXW.artist, aesthetic:SBXW.aesthetic, scene:SBXW.scene};
   const meta={artistId:SBXW.artistId, artistName:SBXW.artistName, edited:sbxIsEdited(), locSlug:SBXW.locSlug, locName:SBXW.locName};
   if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image. Generate one?')) return;
-  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image. Generate one?')) return;
   const {provider,quality,model}=genParams();
   const b=$('#bSbxGen'); if(b){b.disabled=true;b.textContent='Generating…';}
   postJSON('/api/sandbox-gen',{game:curGame,fields,meta,provider,quality,model})
@@ -1615,10 +1925,12 @@ function sbxGen(){
   setTimeout(pollGens,500);
 }
 async function sbxSaveNew(){
-  if(!confirm('Save the current Artist text as a NEW roster artist? It becomes available to every game.')) return;
   const suggested=(SBXW.artistName&&SBXW.artistName!=='(custom)')?SBXW.artistName+' variant':'';
-  const name=prompt('Name for the new artist (its id is slugified from this):',suggested);
-  if(!name) return;
+  const v=await askModal('Save as new roster artist',[
+    {key:'name',label:'Name (its id is slugified from this; available to every game)',value:suggested},
+  ],'Save');
+  if(!v||!v.name.trim()) return;
+  const name=v.name;
   const r=await (await postJSON('/api/artist-create',{name,style:SBXW.artist})).json();
   if(!r.ok){ toast('Error: '+(r.error||'create failed')); return; }
   ARTISTS=await (await fetch('/api/artists?game='+encodeURIComponent(curGame))).json();
@@ -1640,28 +1952,56 @@ async function audSaveCfg(){
   await postJSON('/api/audition-config',{game:curGame,scenes,artists});
   await reloadAudition();
 }
+// Bulk-check every artist into the grid, or clear them all (scenes untouched server-side).
+async function audSelectAll(on){
+  const artists=on?(AUD.artists||[]).map(a=>a.id):[];
+  await postJSON('/api/audition-config',{game:curGame,artists});
+  await reloadAudition();
+}
+// Star/unstar an artist as a finalist. Updates the local model, persists, and re-renders the
+// grid (and the lightbox caption/button if it's open over this artist).
+async function audToggleFinalist(id){
+  const a=(AUD.artists||[]).find(x=>x.id===id); if(!a) return;
+  const on=!a.finalist;
+  const r=await (await postJSON('/api/audition-finalist',{game:curGame,artist:id,on})).json();
+  if(!r.ok){ toast('Error: '+(r.error||'failed')); return; }
+  a.finalist=on;
+  renderAudition();
+  if(lbOpen && lbMode==='aud') renderLB();
+}
 function renderAudition(){
   const A=AUD; if(!A){$('#detail').innerHTML='<p class="none">No game.</p>';return;}
-  const selArts=A.artists.filter(a=>a.selected);
+  const finCount=A.artists.filter(a=>a.finalist).length;
+  if(audFinalistsOnly && !finCount) audFinalistsOnly=false;   // nothing starred → don't blank the grid
+  let selArts=A.artists.filter(a=>a.selected);
+  if(audFinalistsOnly) selArts=selArts.filter(a=>a.finalist);
   const cols=A.scenes.filter(s=>s&&s.slug);
   const slots=[0,1,2,3].map(i=>{
     const cur=A.scenes[i]?A.scenes[i].slug:'';
     const opts=A.allScenes.map(s=>'<option value="'+esc(s.slug)+'"'+(s.slug===cur?' selected':'')+'>'+esc(s.name)+'</option>').join('');
     return '<div class="slot"><label>Scene '+(i+1)+'</label><select data-scene-slot="'+i+'"><option value="">— none —</option>'+opts+'</select></div>';
   }).join('');
-  const checks=A.artists.map(a=>'<label><input type="checkbox" data-art="'+esc(a.id)+'"'+(a.selected?' checked':'')+'>'+esc(a.name)+'</label>').join('');
-  audLBList=[];
+  const checks=A.artists.map(a=>'<label><input type="checkbox" data-art="'+esc(a.id)+'"'+(a.selected?' checked':'')+'>'+esc(a.name)+(a.finalist?' <span class="finstar">★</span>':'')+'</label>').join('');
+  const audTools='<div class="aud-tools">'+
+    '<button class="audtool" id="audAll">Select all</button>'+
+    '<button class="audtool" id="audNone">Select none</button>'+
+    '<label class="audfilter"><input type="checkbox" id="audFinOnly"'+(audFinalistsOnly?' checked':'')+(finCount?'':' disabled')+'><span>Finalists only ('+finCount+')</span></label>'+
+    '</div>';
+  audLBList=[]; audGrid=[];   // audGrid[row=artist][col=scene] = native file | null (for 2D lightbox nav)
   const head='<tr><th class="aud-rowhead">Artist</th>'+cols.map(s=>'<th class="scenecol">'+esc(s.name)+'</th>').join('')+'</tr>';
   const rows=selArts.map(a=>{
     const house=a.id===A.houseArtist;
-    const rh='<th class="aud-rowhead'+(house?' house':'')+'"><div class="aname">'+esc(a.name)+'</div><div class="asum">'+esc(a.summary)+'</div>'+
+    const rh='<th class="aud-rowhead'+(house?' house':'')+(a.finalist?' finalist':'')+'"><div class="aname">'+esc(a.name)+(a.finalist?' <span class="finstar">★</span>':'')+'</div><div class="asum">'+esc(a.summary)+'</div>'+
       '<div class="aud-style" data-astyle="'+esc(a.id)+'">'+esc(a.style||'(no signature)')+'</div>'+
       '<button class="editbtn" data-editart="'+esc(a.id)+'">✎ Edit signature</button><br>'+
+      '<button class="finbtn'+(a.finalist?' on':'')+'" data-fin="'+esc(a.id)+'" title="Toggle finalist (shortlist)">'+(a.finalist?'★ Finalist':'☆ Finalist')+'</button> '+
       '<button class="housebtn" data-aud-art="'+esc(a.id)+'">Audition ▸</button> '+
       (house?'<span class="badge">★ game artist</span>':'<button class="housebtn" data-house="'+esc(a.id)+'">Make game artist</button>')+'</th>';
+    const gridRow=[];
     const cells=cols.map(s=>{
       const arr=A.images[a.id+'__'+s.slug]||[]; const f=arr.length?arr[arr.length-1].file:null;
       if(f) audLBList.push(f);
+      gridRow.push(f||null);
       const bor=!f?((A.borrowed||{})[a.id+'__'+s.slug]||null):null;   // only when no native audition take
       let img;
       if(f){ img='<img class="thumb" data-zoomaud="'+esc(f)+'" src="/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver+'">'; }
@@ -1673,17 +2013,22 @@ function renderAudition(){
       const sbx='<a class="goloc" data-sbxart="'+esc(a.id)+'" data-sbxscene="'+esc(s.slug)+'" title="Play with this artist + scene in the Sandbox">⚗ sandbox</a>';
       return '<td class="aud-cell">'+img+goloc+sbx+'<button data-gen-art="'+esc(a.id)+'" data-gen-scene="'+esc(s.slug)+'">Generate</button></td>';
     }).join('');
+    audGrid.push(gridRow);
     return '<tr>'+rh+cells+'</tr>';
   }).join('');
   const grid=(cols.length&&selArts.length)?'<table class="aud-grid"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table>':'<p class="none">Pick at least one scene and one artist above.</p>';
   $('#detail').innerHTML='<div class="aud-wrap"><h1>Audition · '+esc(curGame)+'</h1>'+
     '<div class="sub">Render the selected artists against the same 4 scenes (this game\\'s Aesthetic + saved Scene prompts), compare, then make one the game artist. Click an artist\\'s <b>Audition ▸</b> to render that artist across all scenes at the selected model.</div>'+
-    '<div class="aud-scenes">'+slots+'</div><div class="aud-artists">'+checks+'</div>'+
+    '<div class="aud-scenes">'+slots+'</div><div class="aud-artists">'+checks+'</div>'+audTools+
     '<div class="aud-controls"><select id="genMode" class="genmode" title="Which generator to use">'+GENMODE_OPTS+'</select>'+
       '<button class="primary" id="bGenAll">Generate all missing ▸</button></div>'+grid+'</div>';
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>genMode=gm.value; }
   document.querySelectorAll('[data-scene-slot]').forEach(s=>s.onchange=audSaveCfg);
   document.querySelectorAll('[data-art]').forEach(c=>c.onchange=audSaveCfg);
+  const fo=$('#audFinOnly'); if(fo) fo.onchange=()=>{audFinalistsOnly=fo.checked; renderAudition();};
+  const aa=$('#audAll'); if(aa) aa.onclick=()=>audSelectAll(true);
+  const an=$('#audNone'); if(an) an.onclick=()=>audSelectAll(false);
+  document.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>audToggleFinalist(b.dataset.fin));
   document.querySelectorAll('[data-house]').forEach(b=>b.onclick=()=>audMakeHouse(b.dataset.house));
   document.querySelectorAll('[data-aud-art]').forEach(b=>b.onclick=()=>audArtistGen(b.dataset.audArt));
   document.querySelectorAll('[data-editart]').forEach(b=>b.onclick=()=>audEditArtist(b.dataset.editart));
@@ -1730,7 +2075,6 @@ async function audMakeHouse(id){
 }
 function audCellGen(artist,scene){
   if(genMode==='gemini-pro' && !confirm('Nano Banana Pro costs ~$0.13 per image. Generate one?')) return;
-  if(genMode==='openai-high' && !confirm('OpenAI · high costs ~$0.21 per image. Generate one?')) return;
   const {provider,quality,model}=genParams();
   postJSON('/api/audition-gen',{game:curGame,scene,artist,provider,quality,model})
     .then(r=>r.json()).then(r=>{ if(r&&!r.ok&&r.error) toast('Error: '+r.error); }).catch(e=>toast('Error: '+e.message));
@@ -1745,20 +2089,18 @@ function audArtistGen(artist){
   const name=(AUD.artists.find(a=>a.id===artist)||{}).name||artist;
   if(!confirm('Audition '+name+' across '+cols.length+' scene(s) via '+genMode+'?')) return;
   if(genMode==='gemini-pro' && !confirm('That is Nano Banana Pro at ~$0.13 each (~$'+(cols.length*0.13).toFixed(2)+' total). Proceed?')) return;
-  if(genMode==='openai-high' && !confirm('That is OpenAI · high at ~$0.21 each (~$'+(cols.length*0.21).toFixed(2)+' total). Proceed?')) return;
   const {provider,quality,model}=genParams();
   cols.forEach(s=>postJSON('/api/audition-gen',{game:curGame,scene:s.slug,artist,provider,quality,model}).then(r=>r.json()).then(r=>{if(r&&!r.ok&&r.error)toast('Error: '+r.error);}).catch(e=>toast('Error: '+e.message)));
   toast('Auditioning '+name+' across '+cols.length+' scene(s)… (tracked bottom-right)');
   setTimeout(pollGens,500);
 }
 function audGenAll(){
-  const A=AUD; const sel=A.artists.filter(a=>a.selected); const cols=A.scenes.filter(s=>s&&s.slug);
+  const A=AUD; let sel=A.artists.filter(a=>a.selected); if(audFinalistsOnly) sel=sel.filter(a=>a.finalist); const cols=A.scenes.filter(s=>s&&s.slug);
   const missing=[];
   sel.forEach(a=>cols.forEach(s=>{ if(!(A.images[a.id+'__'+s.slug]||[]).length) missing.push([a.id,s.slug]); }));
   if(!missing.length){ toast('Nothing missing — every cell has an image.'); return; }
   if(!confirm('Generate '+missing.length+' missing image(s) via '+genMode+'?')) return;
   if(genMode==='gemini-pro' && !confirm('That is Nano Banana Pro at ~$0.13 each (~$'+(missing.length*0.13).toFixed(2)+' total). Proceed?')) return;
-  if(genMode==='openai-high' && !confirm('That is OpenAI · high at ~$0.21 each (~$'+(missing.length*0.21).toFixed(2)+' total). Proceed?')) return;
   const {provider,quality,model}=genParams();
   missing.forEach(([artist,scene])=>postJSON('/api/audition-gen',{game:curGame,scene,artist,provider,quality,model}).then(r=>r.json()).then(r=>{if(r&&!r.ok&&r.error)toast('Error: '+r.error);}).catch(e=>toast('Error: '+e.message)));
   toast('Generating '+missing.length+' image(s)… (tracked bottom-right)');
@@ -1775,16 +2117,61 @@ async function act(url,body,msg){const r=await (await fetch(url,{method:'POST',h
   }else toast('Error: '+(r.error||'failed'));}
 // Full-screen lightbox. Open via a thumbnail's magnifier (or clicking the big preview);
 // click anywhere / Esc to close; on-screen arrows + arrow keys step through candidates.
-const lb=$('#lb'), lbimg=lb.querySelector('img'), lbcap=lb.querySelector('.lbcap');
+const lb=$('#lb'), lbimg=lb.querySelector('img'), lbcap=lb.querySelector('.lbcap'), lbfin=lb.querySelector('.lbfin');
 let lbOpen=false, lbIndex=0, lbMode='loc';   // lbMode: 'loc' candidates | 'artist' examples
+// The lightbox finalist button is shown only in audition mode (aud images carry an artist id
+// in their filename: <artist>__<scene>__…). updateLBFin paints state; click + F key toggle it.
+function audArtistOf(f){ return f?f.split('__')[0]:null; }
+function updateLBFin(aid){
+  if(!lbfin) return;
+  if(!aid){ lbfin.style.display='none'; return; }
+  const a=(AUD&&AUD.artists||[]).find(x=>x.id===aid); const fin=!!(a&&a.finalist);
+  lbfin.style.display=''; lbfin.dataset.fin=aid;
+  lbfin.classList.toggle('on',fin); lbfin.textContent=fin?'★ Finalist':'☆ Finalist';
+}
+if(lbfin) lbfin.onclick=e=>{ e.stopPropagation(); const aid=lbfin.dataset.fin; if(aid) audToggleFinalist(aid); };
+// Per-image note key for the zoomed file. loc mode reuses the EXACT detail-screen per-image key
+// (renderLB sets sel=f, so the lightbox note and the location screen note are one and the same).
+// aud/artist images have no detail-screen view, so they get their own stable namespaced keys.
+function lbNoteKey(f){
+  if(!f) return null;
+  if(lbMode==='loc') return imgNoteKey(f, curItem);   // borrowed aud:<file> → canonical aud: key (synced)
+  if(lbMode==='aud') return 'aud:'+curGame+':'+f;     // f is the raw audition filename
+  if(lbMode==='artist') return 'artist-ex:'+f;
+  return null;   // 'one' (arbitrary-URL) views have no stable key → no notes
+}
+function renderLBNoteStatus(k){
+  const flag=$('#lbNoteFlag'), acts=$('#lbNoteActs'), ta=$('#lbNote'); if(!flag||!acts) return;
+  const hasText=!!noteVal(k).trim(), st=noteStatusOf(k), done=st==='resolved'||st==='wontfix';
+  flag.className='noteflag'+(done?' resolved':''); flag.textContent=done?'✓ resolved':'';
+  if(ta) ta.classList.toggle('resolved',done);
+  acts.innerHTML='<label class="resolvebox"><input type="checkbox" id="lbNResolved"'+(done?' checked':'')+(hasText?'':' disabled')+'>Resolved</label>';
+  const cb=$('#lbNResolved');
+  if(cb) cb.onchange=async()=>{await setNoteStatus(k,cb.checked?'resolved':'open');renderLBNoteStatus(k);};
+}
+// Load/wire the notes panel for the zoomed file. Editing persists to the shared notes store;
+// in loc mode it also mirrors back into the detail screen's note box so both stay in sync.
+function loadLBNote(f){
+  const ta=$('#lbNote'); if(!ta) return;
+  const k=lbNoteKey(f);
+  if(!k){ lb.classList.remove('notes'); return; }
+  lb.classList.add('notes');
+  const forEl=$('#lbNoteFor'); if(forEl) forEl.textContent=f||'';
+  ta.value=noteVal(k);
+  ta.onblur=async()=>{ await saveNote(k,ta.value); renderLBNoteStatus(k);
+    if(lbMode==='loc'){ const di=$('#inote'); if(di){ di.value=ta.value; renderNoteStatus(k); } } };
+  renderLBNoteStatus(k);
+}
 const lbList=()=>{
   if(lbMode==='artist') return (curArtist&&curArtist.examples||[]).map(e=>e.file);
   if(lbMode==='aud') return audLBList;
   const l=(GAMES[curGame]||[]).find(x=>x.slug===curItem);return l?l.candidates:[];
 };
 function renderLB(){
-  if(lbMode==='one'){ lbimg.onerror=null; lbimg.src=(lbOne&&lbOne.url)||''; lbcap.textContent=(lbOne&&lbOne.cap)||''; return; }
+  if(lbfin) lbfin.style.display='none';   // only audition mode re-shows it
+  if(lbMode==='one'){ lb.classList.remove('notes'); lbimg.onerror=null; lbimg.src=(lbOne&&lbOne.url)||''; lbcap.textContent=(lbOne&&lbOne.cap)||''; return; }
   const list=lbList();if(!list.length){hideLB();return;}
+  if(lbIndex>=list.length) lbIndex=list.length-1; if(lbIndex<0) lbIndex=0;   // list can shrink (filter/cull)
   const f=list[lbIndex];
   if(lbMode==='artist'){
     lbimg.onerror=null; lbimg.src='/img/artist?f='+encodeURIComponent(f);
@@ -1792,7 +2179,10 @@ function renderLB(){
     artSel=f; updateArtistSel();
   } else if(lbMode==='aud'){
     lbimg.onerror=null; lbimg.src='/img/audition?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
-    lbcap.textContent=f+'  ('+(lbIndex+1)+'/'+list.length+')';
+    const aid=audArtistOf(f); const a=(AUD&&AUD.artists||[]).find(x=>x.id===aid);
+    const sslug=f.split('__')[1]; const sc=(AUD&&AUD.scenes||[]).find(x=>x&&x.slug===sslug);
+    lbcap.textContent=((sc&&sc.name)||sslug||'')+' — '+((a&&a.name)||aid)+'  ('+(lbIndex+1)+'/'+list.length+')';
+    updateLBFin(aid);
   } else {
     if(f&&f.indexOf('aud:')===0){ lbimg.onerror=null; lbimg.src=candUrl(f); }
     else { lbimg.src='/img/review?game='+curGame+'&f='+encodeURIComponent(f)+'&v='+ver;
@@ -1800,6 +2190,7 @@ function renderLB(){
     lbcap.textContent=(f&&f.indexOf('aud:')===0?f.slice(4):f)+'  ('+(lbIndex+1)+'/'+list.length+')';
     sel=f; updateSelUI();   // keep the main view in sync with what's shown full screen
   }
+  loadLBNote(f);
 }
 // Single arbitrary-URL lightbox (borrowed audition images live in sandbox/review dirs, not
 // the audition list — so they get a one-off view with no prev/next stepping).
@@ -1809,14 +2200,50 @@ function openLB(f){lbMode='loc';const list=lbList();let i=list.indexOf(f);lbInde
 function openArtistLB(f){lbMode='artist';const list=lbList();let i=list.indexOf(f);lbIndex=i<0?0:i;renderLB();lb.classList.add('show');lbOpen=true;}
 function hideLB(){lb.classList.remove('show');lbOpen=false;}
 function lbStep(d){const list=lbList();if(!list.length)return;lbIndex=(lbIndex+d+list.length)%list.length;renderLB();}
+// 2D step within the audition grid lightbox: Left/Right (dc=±1) move between scenes in the
+// same artist row; Up/Down (dr=±1) move between artists in the same scene column. Empty/borrowed
+// cells (no native take, so nothing to show full-screen) are skipped; wraps within the row/column.
+function audLBMove(dr,dc){
+  const cur=audLBList[lbIndex]; let r=-1,c=-1;
+  for(let i=0;i<audGrid.length&&r<0;i++){const j=audGrid[i].indexOf(cur);if(j>=0){r=i;c=j;}}
+  if(r<0){lbStep(dc||dr);return;}                                  // fallback: flat step
+  const rows=audGrid.length, colN=audGrid[0]?audGrid[0].length:0;
+  if(dc){ for(let k=1;k<=colN;k++){const cc=((c+dc*k)%colN+colN)%colN;const f=audGrid[r][cc];if(f){lbIndex=audLBList.indexOf(f);renderLB();return;}} }
+  else  { for(let k=1;k<=rows;k++){const rr=((r+dr*k)%rows+rows)%rows;const f=audGrid[rr][c];if(f){lbIndex=audLBList.indexOf(f);renderLB();return;}} }
+}
 lb.querySelector('.lbprev').onclick=e=>{e.stopPropagation();lbStep(-1);};
 lb.querySelector('.lbnext').onclick=e=>{e.stopPropagation();lbStep(1);};
-lb.addEventListener('click',e=>{if(!e.target.closest('.lbnav'))hideLB();});  // click anywhere else closes
+lb.addEventListener('click',e=>{if(!e.target.closest('.lbnav')&&!e.target.closest('.lbnotes'))hideLB();});  // click anywhere else closes
+// Delete the selected candidate (location detail view) — shared by the Delete button and the
+// Delete/Backspace key. Audition pieces (aud:<file>) are labelled distinctly in the confirm.
+function rejectSelected(){
+  if(!sel) return;
+  const label=sel.indexOf('aud:')===0?sel.slice(4)+' (audition piece)':sel;
+  if(!confirm('Delete this image?\\n\\n'+label)) return;
+  act('/api/reject',{game:curGame,candidate:sel},'Deleted '+label);
+}
 // Keyboard: in the lightbox, arrows navigate & Esc closes. Otherwise arrows cycle the
 // selected candidate (ignored while typing in a notes/prompt field).
 document.addEventListener('keydown',e=>{
+  // Alt+←/→ = back/forward through navigation history (anywhere except while typing).
+  if(e.altKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){
+    if(/^(TEXTAREA|INPUT)$/.test((document.activeElement||{}).tagName||'')) return;
+    e.preventDefault(); histGo(e.key==='ArrowLeft'?-1:1); return;
+  }
   if(lbOpen){
+    if(document.activeElement&&document.activeElement.id==='lbNote'){   // typing a note — don't navigate
+      if(e.key==='Escape'){e.preventDefault();document.activeElement.blur();hideLB();}
+      return;
+    }
     if(e.key==='Escape'){e.preventDefault();hideLB();return;}
+    if(lbMode==='aud'){   // grid nav: ←/→ change scene (same artist), ↑/↓ change artist (same scene)
+      if(e.key==='f'||e.key==='F'){e.preventDefault();const aid=audArtistOf(audLBList[lbIndex]);if(aid)audToggleFinalist(aid);return;}
+      if(e.key==='ArrowLeft'){e.preventDefault();audLBMove(0,-1);return;}
+      if(e.key==='ArrowRight'){e.preventDefault();audLBMove(0,1);return;}
+      if(e.key==='ArrowUp'){e.preventDefault();audLBMove(-1,0);return;}
+      if(e.key==='ArrowDown'){e.preventDefault();audLBMove(1,0);return;}
+      return;
+    }
     if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();lbStep(-1);return;}
     if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();lbStep(1);return;}
     return;
@@ -1840,13 +2267,21 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(!isGame(topic))return;
+  if((e.key==='Delete'||e.key==='Backspace')&&sel){ e.preventDefault(); rejectSelected(); return; }
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key)<0)return;
   const l=(GAMES[curGame]||[]).find(x=>x.slug===curItem);
   if(!l||!l.candidates.length)return;
   e.preventDefault();
-  const step=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;
-  let i=l.candidates.indexOf(sel);if(i<0)i=0;
-  i=(i+step+l.candidates.length)%l.candidates.length;
+  // Up/Down jump a full ROW of the wrapped candidate strip (count cards sharing the first row's
+  // top), Left/Right step one — same row-aware nav as the Sandbox grid above. DOM order of
+  // #detail .cand matches l.candidates order, so the col-count maps onto the array.
+  const vert=(e.key==='ArrowUp'||e.key==='ArrowDown');
+  const cells=Array.from(document.querySelectorAll('#detail .cands .cand'));
+  let cols=1;
+  if(vert&&cells.length){ const top0=cells[0].offsetTop; cols=cells.filter(c=>c.offsetTop===top0).length||1; }
+  const step=((e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1)*(vert?cols:1);
+  let i=l.candidates.indexOf(sel);if(i<0)i=(step>0?-1:0);
+  i=((i+step)%l.candidates.length+l.candidates.length)%l.candidates.length;
   selectCand(l.candidates[i]);
 });
 loadAll();
