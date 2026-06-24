@@ -387,6 +387,21 @@ export function initSettings() {
     welcomeSettingsBtn.addEventListener('click', openSettings);
   }
 
+  // Help button (welcome screen) - "What is Modern Illumination?"
+  const welcomeHelpBtn = document.getElementById('welcomeHelpBtn');
+  const helpDialog = document.getElementById('helpDialog');
+  const helpDialogClose = document.getElementById('helpDialogClose');
+  if (welcomeHelpBtn && helpDialog) {
+    welcomeHelpBtn.addEventListener('click', () => helpDialog.showModal());
+    if (helpDialogClose) {
+      helpDialogClose.addEventListener('click', () => helpDialog.close());
+    }
+    // Click outside the dialog content (on the backdrop) to close
+    helpDialog.addEventListener('click', (e) => {
+      if (e.target === helpDialog) helpDialog.close();
+    });
+  }
+
   // Close settings button
   if (dom.closeSettingsBtn) {
     dom.closeSettingsBtn.addEventListener('click', closeSettings);

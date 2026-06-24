@@ -43,6 +43,119 @@
   font-size: 24px;
 }
 
+.welcome-help-btn {
+  position: absolute;
+  top: 4px;
+  right: 44px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: color 0.2s, background 0.2s;
+}
+
+.welcome-help-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.welcome-help-btn .material-icons {
+  font-size: 24px;
+}
+
+/* "What is Modern Illumination?" help dialog */
+.help-dialog {
+  margin: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0;
+  max-width: 480px;
+  width: calc(100% - 32px);
+  max-height: calc(100dvh - 48px);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.help-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.help-dialog-inner {
+  position: relative;
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(100dvh - 48px);
+  text-align: left;
+}
+
+.help-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.help-dialog-close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.help-dialog h2 {
+  margin: 0 32px 16px 0;
+  font-size: 1.3rem;
+  color: #fbbf24;
+}
+
+.help-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.help-feature-list > li {
+  padding: 12px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.help-feature-list > li strong {
+  color: var(--text-primary);
+}
+
+.help-feature-list > li > span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.help-feature-list ul {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--border-subtle);
+}
+
+.help-feature-list ul li {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.help-feature-list ul li strong {
+  color: var(--text-primary);
+}
+
 .welcome-logo {
   width: min(700px, 100%);
   height: auto;

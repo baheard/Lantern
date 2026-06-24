@@ -641,6 +641,47 @@
       <button class="welcome-settings-btn" id="welcomeSettingsBtn" title="Settings">
         <span class="material-icons">settings</span>
       </button>
+      <button class="welcome-help-btn" id="welcomeHelpBtn" title="What is Modern Illumination?" aria-label="What is Modern Illumination?">
+        <span class="material-icons">help_outline</span>
+      </button>
+
+      <!-- "What is Modern Illumination?" help dialog -->
+      <dialog class="help-dialog" id="helpDialog" aria-labelledby="helpDialogTitle">
+        <div class="help-dialog-inner">
+          <button class="help-dialog-close" id="helpDialogClose" aria-label="Close">✕</button>
+          <h2 id="helpDialogTitle">What is Modern Illumination?</h2>
+          <ul class="help-feature-list">
+            <li>
+              <strong>Mobile-friendly</strong>
+              <span>Built for your phone from the ground up, not bolted on.</span>
+              <ul>
+                <li><strong>Auto-load</strong> — pick up right where you left off the moment you open a game.</li>
+                <li><strong>Tap to examine</strong> — touch anything in the text to examine it.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Voice control</strong>
+              <span>Play completely hands-free — perfect for the car.</span>
+            </li>
+            <li>
+              <strong>Hint system</strong>
+              <span>Get a nudge in the right direction with UHS-style, AI-generated hints. Never rage-quit a puzzle again.</span>
+            </li>
+            <li>
+              <strong>Automapper</strong>
+              <span>An interactive map draws itself as you explore — and you can jot notes right on it.</span>
+            </li>
+            <li>
+              <strong>Google Drive sync</strong>
+              <span>Autosync your saves and pick up your adventure on any device.</span>
+            </li>
+            <li>
+              <strong>OpenAI voice</strong>
+              <span>Bring your own API key and listen to a rich AI narrator read the story aloud.</span>
+            </li>
+          </ul>
+        </div>
+      </dialog>
 
       <!-- Status bar for welcome screen - top right -->
       <div class="welcome-status" id="welcomeStatus">
