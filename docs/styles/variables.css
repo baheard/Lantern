@@ -11,8 +11,9 @@
   --accent-warm: #c4a35a;
   --accent-muted: #5c6370;
 
-  --link-color: #60a5fa;        /* Accessible link blue — 7.25:1 on dark backgrounds */
-  --link-color-hover: #93c5fd;  /* Lighter on hover */
+  --text-link-blue: #60a5fa;        /* Light accessible blue — 7.25:1 on dark; base for blue text/links */
+  --link-color: var(--text-link-blue);
+  --link-color-hover: #93c5fd;      /* Lighter on hover */
 
   /* Upper window grid (status-bar-style treatment, blue variant) */
   --upper-window-bg-start: #141c2c;

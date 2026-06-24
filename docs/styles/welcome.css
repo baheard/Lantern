@@ -142,7 +142,7 @@
 }
 
 .help-feature-list > li strong {
-  color: var(--link-color);
+  color: var(--text-link-blue);
 }
 
 .help-feature-list > li > span {
@@ -166,7 +166,7 @@
 }
 
 .help-feature-list ul li strong {
-  color: var(--link-color);
+  color: var(--text-link-blue);
 }
 
 .welcome-logo {
@@ -334,7 +334,7 @@
 }
 
 .if-database-section a {
-  color: var(--link-color);
+  color: var(--text-link-blue);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
