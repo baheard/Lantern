@@ -20,6 +20,18 @@ async function restoreBackup(backupKey) {
       return;
     }
 
+    // Guard: only engine-format saves can be restored (autorestore-migration-plan.md
+    // Phase 6b — performRestore rejects everything else). Restoring a legacy backup used
+    // to write the un-restorable blob into the autosave slot and reload, leaving the
+    // player stuck at the game's fresh intro ("press any key") with their live autosave
+    // clobbered (#174). Bail out BEFORE touching any slot or reloading.
+    let backupFormat = 'legacy';
+    try { backupFormat = JSON.parse(backupData).saveFormat || 'legacy'; } catch (e) { /* corrupt → legacy */ }
+    if (backupFormat !== 'engine') {
+      updateStatus('This backup is in an older format and can no longer be restored.');
+      return;
+    }
+
     const saveType = backupKey.includes('_autosave_') ? 'autosave' : 'quicksave';
     const gameId = state.currentGameName.replace(/\.[^.]+$/, '').toLowerCase();
 
@@ -89,15 +101,20 @@ export function showBackupSavesDialog() {
       const formattedDate = new Date(backup.timestamp).toLocaleString();
       const saveType = backup.type === 'autosave' ? 'Autosave' :
                        backup.type === 'quicksave' ? 'Quicksave' : 'Save';
+      // Legacy-format backups can no longer be restored (Phase 6b). Surface this in the
+      // list — a disabled button — instead of letting the user click into a dead restore
+      // that clobbers their live save and dumps them at the intro (#174).
+      const isLegacy = (backup.data && backup.data.saveFormat) !== 'engine';
+      const btnHTML = isLegacy
+        ? `<button class="restore-backup-btn" disabled title="This backup is in an older format and can no longer be restored." style="padding:8px 16px;background:var(--bg-subtle,#3a3a3a);color:var(--text-secondary,#999);border:none;border-radius:6px;cursor:not-allowed;font-size:14px;">Older format</button>`
+        : `<button class="restore-backup-btn" data-backup-key="${backup.key}" style="padding:8px 16px;background:var(--accent-primary,#4CAF50);color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Restore</button>`;
       backupListHTML += `
         <div class="backup-item">
           <div class="backup-info">
             <div style="font-weight:600;">${saveType} Backup</div>
             <div style="font-size:13px;color:var(--text-secondary,#999);">${formattedDate}</div>
           </div>
-          <button class="restore-backup-btn" data-backup-key="${backup.key}" style="padding:8px 16px;background:var(--accent-primary,#4CAF50);color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;">
-            Restore
-          </button>
+          ${btnHTML}
         </div>
       `;
     });

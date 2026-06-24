@@ -1,6 +1,7 @@
 ---
 title: Save System
 tags: [save, restore, design]
+last-reviewed: 2026-06-24
 created: 2026-04-26
 updated: 2026-06-12
 aliases: [autosave, quicksave, restore]
@@ -94,14 +95,22 @@ quicksave is a single manual slot); they keep using the capped `createBackup` ch
 
 `MAX_SAVES = 5` was enforced in the original `commands.js`, silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`), and later restored: `meta-command-handlers.js` now defines `MAX_SAVES = 5` and enforces it inside `validateSaveName()`, which BOTH `handleSaveResponse` (typed SAVE) and `handleGameSaveResponse` (in-game dialog) route through. Verified 2026-06-12. If save-name validation is ever refactored, keep both handlers on the shared `validateSaveName` path — that's what closed the regression.
 
-## Bootstrap restore (see separate entry)
+## Autorestore (engine path — bootstrap is HISTORICAL)
 
-The autorestore sequence (on page reload, if an autosave exists) runs a bootstrap dummy input to wake the VM. All known bugs in this area were fixed in v1.5.264–268:
-- **v1.5.264**: Bootstrap echo leak for Anchorhead's intermediate status-bar update
-- **v1.5.265–266**: Stale screen_width globals and status bar HTML after restore
-- **v1.5.268**: First player command after restore always failing (char-bootstrap disambiguation mode)
+⚠️ **As of Phase 6b (v1.5.582), restore runs entirely on ZVM's built-in
+`do_autosave`/`do_autorestore`.** The old "bootstrap dummy input to wake the VM"
+mechanism — and its whole bug class (the `'l'` seed, char-bootstrap disambiguation,
+bufaddr mismatch, v1.5.264–409) — was **deleted**. Don't reason about restore using the
+bootstrap model; the VM is restored at boot inside `Glk.init()`/`vm.start()` and never
+resumes mid-`aread`. See [[save-restore-paradigm]] ("COMPLETE") and the now-historical
+[[bootstrap-restore-flow]] / [[quetzal-restore-globals]] for the retired seam.
 
-Full details: [`bootstrap-restore-flow`](bootstrap-restore-flow.md), [`quetzal-restore-globals`](quetzal-restore-globals.md).
+**Hard consequence — legacy saves are stranded by design.** `performRestore` rejects any
+blob whose `saveFormat !== 'engine'` ("This save is in an older format and can no longer
+be restored."). Every restore *entry point* must therefore format-guard **before** any
+destructive write: a path that writes a legacy blob into the autosave slot and *then*
+reloads will clobber the live save and dump the player at the game's intro. Two such gaps
+were fixed in v1.5.639 — see [[backup-dialog-legacy-restore-gap]].
 
 ## Game-dialog bridge: `window._customSaveFilename`
 

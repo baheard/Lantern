@@ -240,6 +240,30 @@ function exportSave(save) {
 }
 
 async function loadSave(save) {
+  const gameName = state.currentGameName;
+  if (!gameName) return;
+  const autosaveKey = `lantern_autosave_${gameName}`;
+
+  // "Just reload" is correct ONLY for the live autosave slot itself. Everything else —
+  // named saves, the quicksave, AND autosave/quicksave BACKUPS — must be copied into the
+  // autosave slot first, because the reload restores whatever lives in that slot. Backup
+  // rows reuse the parent autosave row's object (type:'autosave') with a different
+  // `key`/`saveData`, so keying this decision on `save.type` made "Load" on an autosave
+  // backup silently reload the CURRENT autosave instead of the chosen backup. Key on the
+  // slot identity (save.key) instead.
+  const isLiveAutosaveSlot = save.key === autosaveKey;
+
+  // Only engine-format saves can be restored (autorestore-migration-plan.md Phase 6b;
+  // performRestore rejects everything else). Block legacy BEFORE the destructive
+  // autosave-slot write + reload below — otherwise it clobbers the live autosave and
+  // strands the player at the game's intro (#174; same gap as the backup dialog). The
+  // live-autosave branch only reloads (no write) so autoLoad → performRestore fails it
+  // gracefully; every written path needs the up-front guard.
+  if (!isLiveAutosaveSlot && save.saveData && save.saveData.saveFormat !== 'engine') {
+    updateStatus('This save is in an older format and can no longer be restored.');
+    return;
+  }
+
   const confirmed = await confirmDialog(
     `Load "${escapeHtml(save.name)}"?\n\nAny unsaved progress will be lost.`,
     { title: 'Load Save?', okText: 'Load' }
@@ -247,13 +271,11 @@ async function loadSave(save) {
   if (!confirmed) return;
 
   closeManageSavesModal();
-  if (save.type === 'autosave') {
+  if (isLiveAutosaveSlot) {
     window.location.reload();
     return;
   }
-  const gameName = state.currentGameName;
-  if (!gameName) return;
-  localStorage.setItem(`lantern_autosave_${gameName}`, JSON.stringify(save.saveData));
+  localStorage.setItem(autosaveKey, JSON.stringify(save.saveData));
   sessionStorage.setItem('lantern_manage_saves_restore', save.name);
   window.location.reload();
 }

@@ -255,12 +255,13 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     }
   }
 
-  // "Print [text]" - Literal text bypass (skip command routing)
-  const printMatch = transcript.match(/^print\s+(.+)$/i);
-  if (printMatch) {
-    handlers.sendCommandDirect(printMatch[1]);
-    return false;
-  }
+  // NOTE: "print [text]" is intentionally NOT handled here. Stripping the
+  // "print" prefix and re-sending the bare text re-entered sendCommandDirect,
+  // where the inner word was caught by the app-command interceptor (e.g.
+  // "print repeat" → "repeat" → narration-repeat instead of the game) (#173).
+  // Letting the full "print …" transcript pass through routes it to the
+  // command-router's print handler, which sends the literal text straight to
+  // the game and bypasses interception — the correct behavior.
 
   // "Mark [text]" — append a note to the current map node (#94)
   const markMatch = transcript.match(/^mark\s+(.+)$/i);

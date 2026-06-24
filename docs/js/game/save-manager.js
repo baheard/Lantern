@@ -471,9 +471,28 @@ async function performRestore(storageKey, displayName = null, options = {}) {
             return false;
         }
 
-        // Past the format gate an engine restore has already succeeded (the VM was
-        // restored at boot); this block only reattaches app-side state. Bare scope block
-        // retained to keep the const declarations below local.
+        // Verification gate: confirm the engine's boot-time do_autorestore ACTUALLY took
+        // before we reattach app-side state. If the inner engineSnapshot failed to apply
+        // (e.g. iOS Safari truncated/evicted it under storage pressure — the outer envelope
+        // stays parseable while autosave_read's ungzip/parse throws → null → fresh intro),
+        // the VM is sitting at the game's char-mode intro, NOT the save point. Without this
+        // check we'd paint the saved displayHTML over that intro and report "Restored from
+        // last session" while the input is really waiting for "press any key" (#174). Compare
+        // the saved glk_select PC against the live VM; on mismatch, surface a real error and
+        // leave the intro honest instead of masquerading. Guard on presence so pre-
+        // verification saves (no `verification` block) keep restoring as before.
+        const vmPc = window.zvmInstance && typeof window.zvmInstance.pc === 'number'
+            ? window.zvmInstance.pc : null;
+        const savedPc = saveData.verification && typeof saveData.verification.pc === 'number'
+            ? saveData.verification.pc : null;
+        if (savedPc !== null && savedPc > 0 && vmPc !== null && vmPc !== savedPc) {
+            updateStatus('Could not load this save (the game state failed to restore).', 'error');
+            return false;
+        }
+
+        // Past the format + verification gates an engine restore has already succeeded (the
+        // VM was restored at boot); this block only reattaches app-side state. Bare scope
+        // block retained to keep the const declarations below local.
         {
             // Restore app-tracked move count
             state.appMoveCount = saveData.appMoveCount ?? 0;
