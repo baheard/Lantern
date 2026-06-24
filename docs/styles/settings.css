@@ -177,12 +177,6 @@
   display: none !important;
 }
 
-/* Subtle highlight on a directly-matched row */
-.settings-search-active .search-hit {
-  border-left: 2px solid var(--accent-primary, #4CAF50);
-  padding-left: 8px;
-}
-
 /* Live highlight of the matched search terms within the text */
 mark.search-mark {
   background: var(--accent-warm, #c4a35a);

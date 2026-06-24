@@ -17,8 +17,8 @@
  */
 
 const HIDDEN = 'search-hidden';   // display:none (settings.css)
-const HIT = 'search-hit';         // subtle highlight on a directly-matched row
 const HIT_MARK = 'search-mark';   // <mark> wrapping a matched term in the text
+const HL_WRAP = 'search-hl';      // inline span wrapping a highlighted text node (keeps it one flex item)
 const ACTIVE = 'settings-search-active';
 
 /** A row is eligible only if it isn't context-hidden (welcome-only/game-only items set
@@ -46,10 +46,12 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Remove all live-highlight <mark>s, restoring the original text nodes. */
+/** Remove all live-highlight wrappers, restoring the original text nodes. */
 function unmark(root) {
-  root.querySelectorAll('mark.' + HIT_MARK).forEach(m => {
-    m.replaceWith(document.createTextNode(m.textContent));
+  // Each highlighted text node was replaced by a single <span.search-hl> wrapper
+  // containing the (possibly marked) text — unwrap the whole span at once.
+  root.querySelectorAll('span.' + HL_WRAP).forEach(span => {
+    span.replaceWith(document.createTextNode(span.textContent));
   });
   root.normalize(); // merge the split text nodes back together
 }
@@ -76,19 +78,24 @@ function highlight(root, terms) {
     re.lastIndex = 0;
     if (!re.test(text)) return;
     re.lastIndex = 0;
-    const frag = document.createDocumentFragment();
+    // Wrap the whole replacement in ONE inline span. Critical inside flex/grid
+    // containers (e.g. .setting-item <label> is display:flex with space-between):
+    // emitting bare text + <mark> siblings would make each a separate flex item and
+    // scatter the words across the row. A single span stays one flex item.
+    const wrap = document.createElement('span');
+    wrap.className = HL_WRAP;
     let last = 0, m;
     while ((m = re.exec(text))) {
-      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      if (m.index > last) wrap.appendChild(document.createTextNode(text.slice(last, m.index)));
       const mark = document.createElement('mark');
       mark.className = HIT_MARK;
       mark.textContent = m[0];
-      frag.appendChild(mark);
+      wrap.appendChild(mark);
       last = m.index + m[0].length;
       if (m.index === re.lastIndex) re.lastIndex++; // guard against zero-length matches
     }
-    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-    node.replaceWith(frag);
+    if (last < text.length) wrap.appendChild(document.createTextNode(text.slice(last)));
+    node.replaceWith(wrap);
   });
 }
 
@@ -106,7 +113,6 @@ export function initSettingsSearch() {
     content.classList.remove(ACTIVE);
     unmark(content);
     content.querySelectorAll('.' + HIDDEN).forEach(el => el.classList.remove(HIDDEN));
-    content.querySelectorAll('.' + HIT).forEach(el => el.classList.remove(HIT));
     // Restore default: every collapsible section collapsed.
     allSections().forEach(s => s.classList.add('collapsed'));
     if (noResults) noResults.hidden = true;
@@ -123,7 +129,6 @@ export function initSettingsSearch() {
     // Reset prior pass (unmark FIRST so textContent matching sees clean text nodes).
     unmark(content);
     content.querySelectorAll('.' + HIDDEN).forEach(el => el.classList.remove(HIDDEN));
-    content.querySelectorAll('.' + HIT).forEach(el => el.classList.remove(HIT));
 
     const opaque = opaqueSections();
     // Atomic rows: individual settings, help commands, and opaque sub-sections as whole units.
@@ -137,7 +142,6 @@ export function initSettingsSearch() {
     atomicRows.forEach(row => {
       const hit = isEligible(row) && matches(row.textContent);
       row.classList.toggle(HIDDEN, !hit);
-      if (hit) row.classList.add(HIT);
     });
 
     // 2. Header match reveals every row inside that section.
