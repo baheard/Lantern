@@ -218,6 +218,7 @@ function createHeadlessGlkote(getCurrentLocation, getStatusContext) {
     inputWindowId: null,
     windows: new Map(),  // id -> window def {id, type}
     buffer: '',          // accumulated buffer-window text since last drain
+    gridLines: new Map(),// id -> Map<lineNum, text>: persistent grid state (mirrors voxglk-grid.js)
     statusRaw: '',       // latest grid/status text (lines joined with \n)
     location: null,      // app-derived location name (mirrors auto-mapper)
     phase: '',           // app-derived status context, e.g. "day one, evening"
@@ -228,10 +229,27 @@ function createHeadlessGlkote(getCurrentLocation, getStatusContext) {
     const win = state.windows.get(content.id);
     const isGrid = win && win.type === 'grid';
     if (isGrid) {
+      // Mirror voxglk-grid.js: a grid window is a persistent line buffer. Merge
+      // this update's (possibly partial) lines into retained state and rebuild
+      // the full status text from line 0 up to the highest non-blank line, so a
+      // partial redraw (Curses repaints only its turns/region line on a no-move
+      // turn) keeps the room name on line 0 instead of dropping it.
+      if (content.clear) state.gridLines.delete(content.id);
       if (Array.isArray(content.lines)) {
-        const lines = content.lines.map((l) => runsToText(l.content));
-        const joined = lines.join('\n').replace(/[ \t]+$/gm, '');
-        if (joined.trim()) state.statusRaw = joined;
+        let lm = state.gridLines.get(content.id);
+        if (!lm) { lm = new Map(); state.gridLines.set(content.id, lm); }
+        for (const l of content.lines) {
+          const ln = l.line !== undefined ? l.line : 0;
+          lm.set(ln, runsToText(l.content).replace(/[ \t]+$/, ''));
+        }
+        let maxLine = -1;
+        for (const [ln, text] of lm) if (ln > maxLine && text.trim()) maxLine = ln;
+        if (maxLine >= 0) {
+          const out = [];
+          for (let i = 0; i <= maxLine; i++) out.push(lm.has(i) ? lm.get(i) : '');
+          const joined = out.join('\n').replace(/[ \t]+$/gm, '');
+          if (joined.trim()) state.statusRaw = joined;
+        }
       }
       return;
     }

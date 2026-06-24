@@ -784,26 +784,15 @@ export function sendInput(text, type = 'line') {
     // Watchdog start failed silently
   });
 
-  // Clear line 0 of the status bar window before sending input.
-  // Some games (e.g. Theatre) reuse a multi-line TextGrid as a 1-line status
-  // bar and never call erase_window(1), so stale characters from previous
-  // longer location names persist in glkapi's char array.  We cannot use
-  // glk_window_clear here because (a) it clears ALL lines of the window and
-  // (b) it throws if a line_request is pending.  Clearing only line 0 and
-  // marking it dirty is sufficient: glkapi sends the full char array for every
-  // dirty line, so the renderer will see a clean slate.
-  if (type === 'line') {
-    try {
-      const win = window.zvmInstance?.statuswin || window.zvmInstance?.upperwin;
-      if (win && win.lines && win.lines[0]) {
-        const lineobj = win.lines[0];
-        lineobj.dirty = true;
-        for (let cx = 0; cx < win.gridwidth; cx++) {
-          lineobj.chars[cx] = ' ';
-        }
-      }
-    } catch (e) { /* ignore — e.g. window not yet created */ }
-  }
+  // NOTE: We used to force-clear line 0 of the status window here before every
+  // line input, to scrub stale characters left by games that redraw the status
+  // bar without erasing it first. That is no longer needed (the grid windows we
+  // see write the full line width each turn) and was actively harmful: it blew
+  // away the room-name line of games like Curses that repaint the status's
+  // turns/region line but NOT the room line on a no-move turn, leaving line 0
+  // blank so getCurrentLocation() read the region string. Stale content is now
+  // handled correctly by persistent grid state in voxglk-grid.js, which mirrors
+  // GlkOte/Parchment's "leave untouched lines alone" model.
 
   // Send the input event to Glk
   if (!s.acceptCallback) return;
