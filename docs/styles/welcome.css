@@ -68,20 +68,25 @@
 /* "What is Modern Illumination?" help dialog */
 .help-dialog {
   margin: auto;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--accent-primary);
   border-radius: 12px;
   padding: 0;
   max-width: 480px;
   width: calc(100% - 32px);
   max-height: calc(100dvh - 48px);
-  background: var(--bg-surface);
+  /* subtle blue wash over the surface */
+  background:
+    linear-gradient(160deg, rgba(58, 100, 190, 0.12) 0%, rgba(58, 100, 190, 0) 55%),
+    var(--bg-surface);
   color: var(--text-primary);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5),
+              0 0 24px rgba(58, 100, 190, 0.25);
   overflow: hidden;
 }
 
 .help-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  /* dark with a faint blue cast */
+  background: rgba(12, 20, 40, 0.62);
 }
 
 .help-dialog-inner {
@@ -115,6 +120,9 @@
   margin: 0 32px 6px 0;
   font-size: 1.3rem;
   color: #fbbf24;
+  /* soft darker-orange glow */
+  text-shadow: 0 0 10px rgba(217, 119, 6, 0.55),
+               0 0 22px rgba(217, 119, 6, 0.3);
 }
 
 .help-dialog-lede {
