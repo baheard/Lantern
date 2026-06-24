@@ -25,11 +25,16 @@
   position: absolute;
   top: 4px;
   right: 8px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 0;
   border-radius: 50%;
   transition: color 0.2s, background 0.2s;
 }
@@ -46,12 +51,17 @@
 .welcome-help-btn {
   position: absolute;
   top: 4px;
-  right: 44px;
+  right: 52px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 0;
   border-radius: 50%;
   transition: color 0.2s, background 0.2s;
 }
