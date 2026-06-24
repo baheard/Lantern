@@ -60,7 +60,7 @@ let hintsModule = null;
 // Utility modules
 import { initKeepAwake, enableKeepAwake, disableKeepAwake, isKeepAwakeEnabled, activateIfEnabled } from './utils/wake-lock.js';
 import { initLockScreen, lockScreen, unlockScreen, isScreenLocked, toggleLockScreen, updateLockScreenMicStatus, updateLockButtonVisibility, updateConvModeButton } from './utils/lock-screen.js';
-import { playUnmuteTone } from './utils/audio-feedback.js';
+import { playMicTick } from './utils/audio-feedback.js';
 import { initPWA } from './utils/pwa-updater.js';
 import { scrollToBottom } from './utils/scroll.js';
 
@@ -712,9 +712,9 @@ function wireEventListeners() {
         const { startRecognitionSafely } = await import('./voice/recognition.js');
         const success = await startRecognitionSafely();
 
-        // If recognition started successfully, play unmute tone
+        // If recognition started successfully, play the subtle mic-on tick (#138)
         if (success) {
-          playUnmuteTone();
+          playMicTick();
           updateStatus('🎤 Listening... Speak now!');
         } else {
           // If recognition failed, revert state
@@ -733,7 +733,7 @@ function wireEventListeners() {
         }
       } else {
         // Recognition already active or not available
-        playUnmuteTone();
+        playMicTick();
         updateStatus('🎤 Listening... Speak now!');
       }
     };

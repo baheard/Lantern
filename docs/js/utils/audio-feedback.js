@@ -117,6 +117,43 @@ export async function playCommandSent() {
 }
 
 /**
+ * Play a subtle "mic engaged" tick for push-to-talk press (#138).
+ *
+ * PTT presses are frequent, so the full two-note unmute chime (playUnmuteTone) was
+ * too intrusive in PTT mode. This is a single short, quiet pop — enough to confirm
+ * eyes-free that the mic went live, without the prominent chime. Continuous mode
+ * still uses the richer unmute chime. (The iPhone's own system listening tone fires
+ * on recognition.start() and is OS-level — not suppressible from the web.)
+ */
+export async function playMicTick() {
+  if (!areSoundEffectsEnabled()) return;
+
+  try {
+    const ctx = await getContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const masterVol = getMasterVolume();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    // Short, soft single pop — a touch higher than the command-sent click so it
+    // reads as "mic on" rather than "command sent".
+    osc.frequency.value = 720;
+    osc.type = 'sine';
+
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.12 * masterVol, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } catch (err) {
+    // Ignore audio errors
+  }
+}
+
+/**
  * Play tone for app/navigation command (Soft Pulse)
  */
 export async function playAppCommand() {
