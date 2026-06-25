@@ -12,8 +12,8 @@
       }
     ],
     "generatedBy": "generate-hints skill",
-    "generatedAt": "2026-06-12",
-    "appVersion": "1.5.630"
+    "generatedAt": "2026-06-24",
+    "appVersion": "1.5.676"
   },
   "sections": [
     {
@@ -59,15 +59,7 @@
           "hints": [
             "You can't win this fight, and you can't run past him. The street is no longer an option.",
             "Let him come. He isn't trying to kill you — he's herding you.",
-            "Answer: EXAMINE THUG, then WAIT three times. He drives you back into the theatre — which is exactly where the story wants you. Go N. The real game starts now."
-          ]
-        },
-        {
-          "id": "act1-pager-beeps",
-          "q": "My pager just went off! What do I do?",
-          "hints": [
-            "It happens on its own partway through the night — you didn't trigger it and you can't prevent it.",
-            "Answer: There's nothing to solve here. Read the message if you're curious, but the beep is just an event — it won't hurt you and you don't need to do anything about it."
+            "Answer: EXAMINE THUG, then WAIT three times. He drives you back into the theatre. Go N."
           ]
         }
       ]
@@ -104,9 +96,8 @@
           "q": "Green gas is leaking in the Attic Observatory and it's killing me!",
           "locations": ["Attic Observatory"],
           "hints": [
-            "The gas comes from the telescope area. On your first visit, you can dash in and out — don't linger.",
-            "Grab the one thing worth taking — the lens — and get out fast.",
-            "To stay longer you'll need breathing protection. Theatres keep all sorts of props and costumes...",
+            "On a quick visit you can dash in and out before the gas overwhelms you — just don't linger.",
+            "To stay longer you'll need breathing protection, the sort of thing a theatre's costume stores might hold.",
             "Answer: There's a gas mask in the Costume Room. WEAR MASK before entering."
           ]
         },
@@ -115,10 +106,12 @@
           "q": "What is the telescope in the Observatory for?",
           "locations": ["Attic Observatory"],
           "hints": [
-            "It's missing something. Examine it closely.",
-            "An ordinary lens isn't enough — it needs to carry a particular pattern before it'll show you anything.",
-            "The lens must already be carrying that pattern before it's any use here — getting it there is a separate puzzle. Once it does, wear the gas mask and bring the lens back.",
-            "Answer: WEAR MASK, go to the Observatory, PUT LENS IN TELESCOPE (this also stops the gas), then LOOK THROUGH TELESCOPE. You collapse — and wake with a star crystal in your inventory."
+            "The lens isn't wrong — it just has to carry a pattern before the telescope will show you anything.",
+            "A pattern like that is burned into glass by light shining through one, not carved by hand.",
+            "Patterned light streams through a window on the Southern Landing, behind the drawn curtains.",
+            "Open them and look down — the window casts that pattern as a spotlight on the lobby floor below.",
+            "Using the telescope means standing in this gassy room, so you'll need breathing protection first.",
+            "Answer: Take the plain lens down to the lobby and PUT LENS IN SPOTLIGHT to burn the pattern in. Then WEAR MASK (the gas mask from the Costume Room), come back here, PUT LENS IN TELESCOPE — this also stops the gas — and LOOK THROUGH TELESCOPE. You collapse, and wake holding a star crystal."
           ]
         }
       ]
@@ -137,7 +130,7 @@
             "They're just heavy, not magical. Shift them aside.",
             "With the rolls moved the passage north opens up — but don't hurry past what they were lying on top of.",
             "Steel yourself and search what's underneath; it was left there for a reason, and it's carrying something.",
-            "Answer: MOVE CARPET ROLLS to free the passage north and uncover a body. SEARCH BODY, then READ APPOINTMENT BOOK — Reinhart left his cellular phone in the theatre; find it and you can call for help."
+            "Answer: MOVE CARPET ROLLS to free the passage north and uncover a body. SEARCH BODY, then READ APPOINTMENT BOOK — Rienhart left his cellular phone in the theatre; find it and you can call for help."
           ]
         }
       ]
@@ -146,7 +139,7 @@
       "id": "landing",
       "title": "The Staircase Landing",
       "verified": true,
-      "locations": ["Staircase Landing", "Eastern Landing", "Eastern Stairway", "Southern Landing", "Secret Gallery"],
+      "locations": ["Staircase Landing", "Secret Gallery"],
       "questions": [
         {
           "id": "landing-portrait",
@@ -155,17 +148,6 @@
           "hints": [
             "It is. Get your hands on it — literally.",
             "Answer: FEEL PAINTING, then OPEN DOOR and go N into the Secret Gallery. Take the camera you find there (GET CAMERA)."
-          ]
-        },
-        {
-          "id": "landing-window",
-          "q": "What's the deal with the curiously patterned circular window?",
-          "locations": ["Southern Landing"],
-          "hints": [
-            "First make sure you can see it properly — the curtains on the southern landing are drawn.",
-            "Look down — the light through the window casts a patterned spotlight on the lobby floor below.",
-            "A pattern made of light... Have you found anything made for catching light? If not, don't go on — explore the attic first and come back.",
-            "Answer: Go down to the lobby and PUT LENS IN SPOTLIGHT. The pattern is burned into the lens."
           ]
         }
       ]
@@ -189,13 +171,13 @@
         },
         {
           "id": "show-ticket-booth",
-          "q": "The old ticket booth is boarded up — is there a way inside?",
+          "q": "Is there anything else I can do in the Manager's Office?",
           "locations": ["Manager's Office"],
           "hints": [
-            "Not through the boarded front. But a booth this small must back onto another room — and the manager's office sits right beside it.",
-            "The Manager's Office desk has a drawer worth opening — there are architect's plans inside.",
-            "The plans show the ticket booth lies directly south of the office — and the wall between is just plaster and lath.",
-            "Answer: EXAMINE SOUTH WALL, then KICK SOUTH WALL. It gives way, opening an exit south into the booth. Inside: a loose page, and a skeleton with rags and a pocket watch."
+            "The desk is worth a closer look — start with the drawer.",
+            "The drawer holds a set of old architect's plans — read them.",
+            "The plans show a small ticket booth once stood directly south of the office — and the wall between is just plaster and lath, not brick.",
+            "Answer: EXAMINE SOUTH WALL, then KICK SOUTH WALL. It gives way, opening an exit south into the sealed booth. Inside: a loose page, and a skeleton with rags and a pocket watch."
           ]
         },
         {
@@ -235,7 +217,7 @@
           "hints": [
             "Not every gap is crossed on foot.",
             "If the chandelier is still hanging high, you can't cross yet — lower it first. Once it's down: a chandelier on a long chain is a pendulum.",
-            "Answer: From the Eastern Balcony, SWING CHANDELIER. You swing across to the Western Balcony — which leads to the back wall and the Secret Library."
+            "Answer: The chandelier has to be moving first — down in the auditorium aisle, PUSH CHANDELIER to set it swinging. Then come back up to the Eastern Balcony and SWING CHANDELIER to swing across to the Western Balcony, which leads to the back wall and the Secret Library."
           ]
         },
         {
@@ -257,7 +239,7 @@
             "You can't catch it. Follow it instead — where did it go?",
             "Chimneys in this theatre connect rooms vertically — the fireplace in the guest star room is a way down.",
             "In the sealed office below, there's a coffin worth opening. The crow steals the key — and drops it further down the chimney.",
-            "Answer: Climb down again to the Boiler Room and GET KEY — that shiny key unlocks a door deep underground. While you're there, OPEN CHEST and GET BOTTLE (glue), and GET LUMP from the coal bin then CLEAN LUMP, which reveals a violet eye-like pearl."
+            "Answer: GET CROW — it escapes down the chimney. Follow it: D into the Guest Star Room, then CLIMB DOWN CHIMNEY into the sealed office below. OPEN COFFIN — the crow snatches the key inside and drops it further down. EXAMINE FIREPLACE, then D to the Boiler Room, where GET KEY — that shiny key unlocks a door deep underground. While you're there, OPEN CHEST and GET BOTTLE (glue), and GET LUMP from the coal bin then CLEAN LUMP, which reveals a violet eye-like pearl."
           ]
         },
         {
@@ -309,7 +291,7 @@
             "It's the eye-like pearls he cares about, and he'll want all four — one of each colour.",
             "If you're missing any: the red is locked in the Manager's Office safe; the green is among the odds and ends under the stage; the blue is in the slug's nest in the library; the violet is hidden inside a lump of coal in the Boiler Room.",
             "Show him things. Note down what he says — his answers are different in every playthrough, and you will need them word for word later.",
-            "Answer: SHOW VIOLET PEARL TO GOBLIN, SHOW BLUE PEARL TO GOBLIN, SHOW RED PEARL TO GOBLIN, SHOW GREEN PEARL TO GOBLIN — and WRITE DOWN which socket he names for each. The statue in the Witch's Lair has four sockets, and the correct placement is randomized per game."
+            "Answer: SHOW VIOLET PEARL TO GOBLIN, SHOW BLUE PEARL TO GOBLIN, SHOW RED PEARL TO GOBLIN, SHOW GREEN PEARL TO GOBLIN, and WRITE DOWN how he describes each one — he doesn't name a socket, he gives each pearl a place ('stands above the others', 'forms the foundation', and so on). Which pearl gets which is randomized per game, so his words are your only key to the statue's four sockets in the Witch's Lair."
           ]
         },
         {
@@ -357,7 +339,7 @@
     {
       "id": "endgame",
       "title": "The Endgame",
-      "verified": true,
+      "verified": false,
       "locations": ["Witch's Lair", "Old Hallway", "Outside the Burning Mansion", "Smoky Hall", "Wine Cellar"],
       "questions": [
         {
@@ -367,8 +349,8 @@
           "hints": [
             "They're described as eye-like. Something in the deepest part of the theatre is missing its eyes.",
             "The statue in the Witch's Lair — look at its forehead. Four sockets in a diamond.",
-            "Each pearl belongs in one specific socket — and the assignment is random in each playthrough. The caged goblin tells you which is which when you show him each pearl.",
-            "Answer: PUT each PEARL IN the SOCKET the goblin named for it (e.g. PUT BLUE PEARL IN UPPER SOCKET). When all four are placed, the statue yields a dagger. GET DAGGER, EXAMINE DAGGER."
+            "Each pearl has one correct socket, randomized per game — the caged goblin's description of each pearl is your key to which.",
+            "Answer: PUT each PEARL IN the SOCKET its goblin description points to — the one he called 'stands above' goes in the upper socket, 'forms the foundation' the lower, and so on (e.g. PUT BLUE PEARL IN UPPER SOCKET). When all four are placed, the statue yields a dagger. GET DAGGER, EXAMINE DAGGER."
           ]
         },
         {
@@ -390,16 +372,17 @@
             "Help the man first. You've been carrying something medicinal since the Sick Bay.",
             "Give him the tablets. He is Trent — and he tells you what must be destroyed, and that it is below, in female form.",
             "Take back your tools before descending — the dagger and the star crystal.",
-            "Answer: Go D to the wine cellar and THROW STAR AT YOUNG WOMAN. The crystal shatters, the evil is consumed, and you wake in the theatre lobby. Collect your pager from Reinhart in the Manager's Office (NW, D, U), then SE, S, and ENTER CAR. You have won — 50 out of 50."
+            "Answer: Go D to the wine cellar and THROW STAR AT YOUNG WOMAN. The crystal shatters, the evil is consumed, and you wake in the theatre lobby. Collect your pager from Rienhart in the Manager's Office (NW, D, U), then SE, S, and ENTER CAR. You have won — 50 out of 50."
           ]
         },
         {
           "id": "endgame-pages",
           "q": "How do I get a perfect score of 50?",
+          "locations": ["Deep in the Mines", "Witch's Lair"],
           "hints": [
-            "Three of the fifty points come from the loose pages scattered everywhere.",
-            "There are pages in the basement, hallways, attic, alley bin, secret gallery, reading recess, ticket booth, backstage, under the stage, the underground passages, and the Witch's Lair. Take every one you see.",
-            "Answer: Collect every loose page and READ PAGES (read all of them) before the ceremony. Reading the full set is worth 3 points; the rest come from solving the game's puzzles."
+            "Three of the fifty points come from the loose pages scattered everywhere — and you'll want them all before the ceremony.",
+            "There are pages in the basement, hallways, attic, alley bin, secret gallery, reading recess, ticket booth, backstage, under the stage, the underground passages, and the Witch's Lair. If you've missed any, go back for them now.",
+            "Answer: With every loose page collected, READ PAGES (read all of them) before the ceremony. Reading the full set is worth 3 points; the rest come from solving the game's puzzles."
           ]
         }
       ]

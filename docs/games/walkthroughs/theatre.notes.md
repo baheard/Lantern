@@ -156,9 +156,18 @@ opened from the Southern Landing.
 **Visible symptom:** the chandelier is on the auditorium floor, swinging.
 
 **Mechanism:** From the Eastern Theatre Aisle, `PUSH CHANDELIER` sets it swinging (it also
-triggers a whisper: "Tickets please" — but you are too early at this point). Go E → E → U to
-the Eastern Balcony. The chandelier's arc now reaches you: `SWING CHANDELIER` → you swing
-across to the Western Balcony (+2 points, observed). A hole in the wall leads NW into the Back
+triggers a whisper: "Tickets please" — but you are too early at this point). From the aisle,
+`S → E → U` reaches the Eastern Balcony (the canonical cmds get there via a `DROP TICKET`
+teleport to the Staircase Landing, then `E → E → U` — same destination). The chandelier's arc
+now reaches you: `SWING CHANDELIER` → you swing across to the Western Balcony (+2 points, observed).
+
+**`PUSH` is a hard requirement, verified by review probe (2026-06-24):** `SWING CHANDELIER`
+from the balcony *without* a prior `PUSH` →
+"You grab hold of the chandelier but nothing much happens. Perhaps if you tried pushing it."
+And `SWING` from the *wrong spot* (e.g. straight up from the aisle area rather than the Eastern
+Balcony) is **fatal** — "you jumping onto it seems to have robbed it of most of its momentum.
+Perhaps if you were higher up. … *** You have died ***". So the answer must teach: lower it
+(attic) → `PUSH` it (aisle) → reach the Eastern Balcony → `SWING`. A hole in the wall leads NW into the Back
 Wall → S → W into the Secret Library.
 
 **Ghost ticket gate (first use):** when you `DROP TICKET` in the Eastern Theatre Aisle the
@@ -275,6 +284,12 @@ a number combination.
 **Visible symptom:** the south wall of the Manager's Office looks like it has been plastered
 over (revealed after reading the plans).
 
+**The booth is invisible until the plans, verified by review probe (2026-06-24):**
+`EXAMINE (TICKET) BOOTH` from both the Theatre Lobby and Outside The Theatre →
+"You can't see any such thing", and neither room's prose mentions a booth. The player has **no**
+awareness that a ticket booth exists until they read the architect's plans in the office — so a
+hint question must not presume knowledge of the booth (anchor it to office exploration instead).
+
 **Mechanism:** `OPEN DRAWER` → reveals a loose page and **architect's plans**. `GET PLANS` →
 `EXAMINE PLANS` reveals a ticket booth should exist south of the office (1955 plans by
 Nelson, Meldrew, and Grahams). `EXAMINE SOUTH WALL` identifies the plaster. `DROP PLANS` →
@@ -314,7 +329,11 @@ ticket is consumed and not returned.
 
 **Mechanism:** backstage is reached via Stage → N (Back Stage) → `CLIMB ROPE` → W (Dressing
 Room). `OPEN LOCKER` reveals an **ancient amulet**, an old newspaper clipping, and a coiled
-serpent. The serpent is dangerous — do not try to take it. Instead, `PUSH LOCKER EAST` — the
+serpent. The serpent is dangerous — do not try to take it. **Reaching in is instant death,
+verified by review probe (2026-06-24):** `GET AMULET` with the serpent present →
+"As you reach into the locker, the snake strikes, biting you in the hand. … you expire.
+*** You have died ***" (and `GET SERPENT` likewise kills you). This is a genuine death trap
+with no in-game warning — the hint must steer the player off it. Instead, `PUSH LOCKER EAST` — the
 locker tips and falls down to the stage, killing the serpent (+2 points). `D` → on the stage
 you find the locker's contents scattered. `READ NEWSPAPER` (reveals Marcilax the magician's
 quote: the theatre's mystical energy is dangerous, and his medallion — the amulet — protects
