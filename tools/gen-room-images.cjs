@@ -159,7 +159,13 @@ function refWrappedPrompt(prompt, refMode) {
       + 'aisle runners, scattered debris, dust, cobwebs, fallen plaster, drapery, worn fabric, small '
       + 'clutter — and apply the described era, materials, lighting, age and ATMOSPHERE richly (deep '
       + 'shadow, gloom, patina, decay, moody contrast). It should look like the real, weathered place, '
-      + 'NOT a clean sterile model. Only the major masses and the overall layout are fixed.\n\n' + prompt;
+      + 'NOT a clean sterile model. Only the major masses and the overall layout are fixed. '
+      + 'CRITICAL: preserve the exact LEFT-RIGHT arrangement of the blockout — never mirror, flip or '
+      + 'rotate the composition; whatever is on the left/right of the supplied image stays on that side. '
+      + 'The supplied image is the SOLE authority for spatial placement — which wall, which side, what is '
+      + 'foreground or background. COMPASS directions in the description (north, south, east, west) are '
+      + 'unreliable and do NOT correspond to the image; NEVER move, place or relabel anything to satisfy a '
+      + 'compass word. Each element goes exactly where the blockout shows it, full stop.\n\n' + prompt;
   }
   return 'Use the supplied image ONLY as a style/art-direction reference (palette, '
     + 'rendering, mood). Render a NEW scene described below.\n\n' + prompt;

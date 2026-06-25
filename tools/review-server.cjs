@@ -86,7 +86,8 @@ function composeForRoom(game, slug, sceneOverride) {
   const scenes = st.scenes || (readJSON(path.join(gamePaths(game).dir, 'style.json'), {}).scenes) || {};
   let sc = (typeof sceneOverride === 'string' && sceneOverride.trim()) ? sceneOverride.trim() : (scenes[slug] || '');
   if (!sc) { const loc = (locationsFor(game) || []).find((l) => l.slug === slug); sc = (loc && (loc.sceneOverride || loc.description)) || ''; }
-  return [art ? (art + ' ' + ARTIST_LEAD) : '', sc ? ('Scene: ' + sc) : '', aes ? ('Aesthetic: ' + cap(aes)) : '', appPrompt()].filter(Boolean).join(' ');
+  // Labelled, line-broken sections so the saved prompt is readable on the location page.
+  return [art ? ('ARTIST: ' + art + ' ' + ARTIST_LEAD) : '', sc ? ('SCENE: ' + sc) : '', aes ? ('GAME: ' + cap(aes)) : '', appPrompt() ? ('APP: ' + appPrompt()) : ''].filter(Boolean).join('\n\n');
 }
 // The scene layer alone (what the renderer's Scene box shows/edits).
 function sceneForRoom(game, slug) {
@@ -117,6 +118,8 @@ const ROLE_LEGEND = {
   door: 'the olive panels are DOORS',
   chandelier: 'the pale-gold cluster hanging from the ceiling is the CHANDELIER',
   rail: 'the warm-brown rails are carved WOODEN balustrades/railings (timber, not fabric or upholstery)',
+  brick: 'the brick-red panel set into a wall is a BRICKED-UP DOORWAY — an old doorway filled in with bricks',
+  hole: 'the dark ragged recess in a wall is a HOLE broken through the wall, opening onto darkness beyond',
   wall: 'the cool-grey planes are WALLS', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
@@ -142,8 +145,14 @@ function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, fac
     const roles = new Set(); (def.parts || []).forEach((p) => { if (p.role) roles.add(p.role); (p.of || []).forEach((s) => { if (s.role) roles.add(s.role); }); });
     const legendParts = [...roles].filter((r) => ROLE_LEGEND[r]).map((r) => ROLE_LEGEND[r]);
     const legend = legendParts.length ? ('Blockout colour legend — render each coloured region as what it denotes: ' + legendParts.join('; ') + '. ') : '';
-    const face = (typeof facing === 'string' && facing.trim()) ? (facing.trim() + ' ') : '';
-    const prompt = face + legend + composeForRoom(game, view, sceneOverride) + (note.trim() ? (' Adjustments: ' + note.trim()) : '');
+    const blocks = [];
+    // NOTE: we deliberately do NOT send the camera's compass facing — image models can't map
+    // compass to a picture, and it fought the blockout (placing "west wall" on the wrong side).
+    // The image is the sole spatial authority (enforced in the guide wrapper).
+    if (legend) blocks.push(legend.trim());
+    blocks.push(composeForRoom(game, view, sceneOverride));
+    if (note.trim()) blocks.push('ADJUSTMENTS: ' + note.trim());
+    const prompt = blocks.join('\n\n');
     const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt,
       '--out', out, '--ref', refPath, '--ref-mode', 'guide'];
     if (m.provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', m.quality);
@@ -919,7 +928,8 @@ const server = http.createServer(async (req, res) => {
       const notes = readJSON(notesPath, {});   // image notes share the reviewer's _review-notes.json
       if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter((n) => /-r\d+\.png$/i.test(n))) {
         const view = f.split('__')[0], key = `game:${game}:${view}:${f}`;
-        out.push({ file: f, view, mtime: fs.statSync(path.join(dir, f)).mtimeMs, key, note: noteText(notes[key]), status: noteStatus(notes[key]) }); }
+        let prompt = ''; try { prompt = fs.readFileSync(path.join(dir, f.replace(/\.png$/i, '.txt')), 'utf8'); } catch (e) {}
+        out.push({ file: f, view, mtime: fs.statSync(path.join(dir, f)).mtimeMs, key, note: noteText(notes[key]), status: noteStatus(notes[key]), prompt }); }
       out.sort((a, b) => b.mtime - a.mtime);
       return sendJSON(res, 200, { gens: out });
     }

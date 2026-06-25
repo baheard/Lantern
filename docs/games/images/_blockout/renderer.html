@@ -43,11 +43,12 @@
   #prompt{flex:1;width:100%;resize:none;background:#120f18;color:#e2e8d0;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px/1.5 system-ui,sans-serif}
   #noteWrap{flex:0 0 auto}
   #note{width:100%;height:96px;resize:vertical;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
-  #colImgNote{flex:0 0 300px;display:flex;flex-direction:column;gap:6px;min-height:0}
+  #colImgNote{flex:0 0 460px;display:flex;flex-direction:column;gap:5px;min-height:0}
   #colImgNote > label{font-size:13px;color:#9a93a8}
   #colImgNote .resolve{float:right;font-size:13px;color:#cbbf9a;cursor:pointer}
-  #imgnote{flex:1;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
+  #imgnote{flex:1;min-height:0;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
   #imgnote:disabled{opacity:.45}
+  #actualPrompt{flex:3;min-height:0;width:100%;resize:none;background:#0e0c14;color:#b8c0a8;border:1px solid #2a2536;border-radius:6px;padding:8px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
   #hint{position:fixed;left:14px;bottom:10px;color:#cfc8da;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:5px;font-size:11px;pointer-events:none;z-index:4}
   #err{position:fixed;inset:48px 0 0 0;display:none;place-items:center;color:#f88;background:#2a1416;font-size:15px;padding:30px;text-align:center;z-index:9}
 </style>
@@ -81,6 +82,8 @@
   <div id="colImgNote">
     <label>Note on the selected shot <label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
     <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
+    <label>Actual prompt sent to the model</label>
+    <textarea id="actualPrompt" readonly placeholder="(generate a shot to see its prompt)"></textarea>
   </div>
 </div>
 <div id="hint"><b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/Ctrl</b> up/down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
@@ -109,13 +112,20 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 const clay = (hex) => new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
 // Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
 // stage from seats from boxes). MUST match ROLE_LEGEND in review-server.cjs.
-const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', floor: '#9c9c9c' };
+const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#161318', floor: '#9c9c9c' };
 const roleColor = (p, inherit) => ROLE_COLORS[p.role || inherit] || p.color;
 const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
 const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;
 function fail(msg) { const e = document.getElementById('err'); e.style.display = 'grid'; e.textContent = msg; console.error(msg); }
 
-function mesh(geom, at, color) { const m = new THREE.Mesh(geom, clay(color)); if (at) m.position.set(at[0], at[1], at[2]); m.castShadow = true; m.receiveShadow = true; return m; }
+function mesh(geom, at, color) {
+  const m = new THREE.Mesh(geom, clay(color));
+  if (at) m.position.set(at[0], at[1], at[2]);
+  m.castShadow = true; m.receiveShadow = true;
+  // Dark edge lines so corners read clearly (cel-shaded look) — helps the human and the model see structure.
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 20), new THREE.LineBasicMaterial({ color: 0x141414 })));
+  return m;
+}
 function buildPart(p, parent, offset, inherit) {
   const off = offset || [0, 0, 0];
   const at = p.at ? [p.at[0] + off[0], p.at[1] + off[1], p.at[2] + off[2]] : off.slice();
@@ -152,8 +162,11 @@ function facingString() {
   const dir = (rad) => { let d = (rad * 180 / Math.PI) % 360; if (d < 0) d += 360; return COMPASS[Math.round(d / 45) % 8]; };
   const ahead = Math.atan2(f.x, -f.z);   // frame: north=-Z, east=+X
   const pitch = Math.asin(THREE.MathUtils.clamp(f.y, -1, 1)) * 180 / Math.PI;
-  const tilt = pitch > 12 ? 'angled upward' : pitch < -12 ? 'angled downward' : 'roughly level';
-  return `Viewpoint orientation: the camera faces ${dir(ahead)} and is ${tilt}; to the viewer's right is ${dir(ahead + Math.PI / 2)}, to the left is ${dir(ahead - Math.PI / 2)}, and behind is ${dir(ahead + Math.PI)}. Place any compass-referenced feature accordingly (e.g. something on the ${dir(ahead + Math.PI / 2)} wall belongs on the right of the frame).`;
+  const tilt = pitch > 12 ? 'angled downward looking up at it' : pitch < -12 ? 'angled looking downward' : 'roughly level';
+  // Compass facing as CONTEXT ONLY (to interpret compass words in the description). It must NOT
+  // dictate screen placement — the blockout image is the authority on left/right. (The earlier
+  // "X is on the right" version fought the image and caused mirror flips.)
+  return `For context, the camera is looking toward the ${dir(ahead)} and is ${tilt} — use this only to interpret compass references in the description below; the supplied image already shows the correct left/right layout, which you must keep.`;
 }
 function applyView(name) {
   const v = CAMERAS[name]; if (!v) return;
@@ -182,8 +195,9 @@ function setResult(file) {
   document.querySelectorAll('#gallery .thumb').forEach((t) => t.classList.toggle('on', t.dataset.f === file));
   // Image note (shared with the reviewer's _review-notes.json, keyed per shot).
   const g = GENS.find((x) => x.file === file), inote = document.getElementById('imgnote'), ir = document.getElementById('imgResolve');
-  if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; }
-  else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; }
+  const ap = document.getElementById('actualPrompt');
+  if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; ap.value = g.prompt || '(no saved prompt)'; }
+  else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; ap.value = ''; }
   saveNav();
 }
 async function saveImgNote() {
@@ -272,7 +286,7 @@ function installNav() {
     if (pressed.KeyW) m.add(f); if (pressed.KeyS) m.addScaledVector(f, -1);
     if (pressed.KeyD) m.add(r); if (pressed.KeyA) m.addScaledVector(r, -1);
     if (pressed.Space || pressed.KeyE) m.y += 1; if (pressed.ControlLeft || pressed.ControlRight || pressed.KeyQ) m.y -= 1;
-    if (m.lengthSq() > 0) { m.normalize().multiplyScalar((pressed.ShiftLeft || pressed.ShiftRight) ? 0.55 : 0.04); camera.position.add(m); markDirty(); }
+    if (m.lengthSq() > 0) { m.normalize().multiplyScalar((pressed.ShiftLeft || pressed.ShiftRight) ? 0.55 : 0.015); camera.position.add(m); markDirty(); }
   };
 }
 

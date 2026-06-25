@@ -117,3 +117,6 @@ tmpclaude-*-cwd
 
 # Scratch dir for headless-replay snapshots/probes
 tmp/
+
+# Blockout generated outputs (clay refs + styled renders) — throwaway
+docs/games/images/*/_blockout/_gen/

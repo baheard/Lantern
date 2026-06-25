@@ -87,6 +87,40 @@ get the work-list for free.
   generate-location-prompts / mold / render-rooms are discrete skills under studio. Decide
   when building; don't fold it inline into studio.
 
+## Compass is the enemy; the image is the spatial authority (2026-06-24)
+
+Image models CANNOT reason about compass ("the hole in the west wall") — they have no idea
+which way is south, so compass words in the prose fight the blockout and cause mis-placement
+and mirror flips. Hard-won rules:
+- **Generation prompt tells the model to IGNORE compass words** and treat the blockout image
+  as the SOLE authority for placement/sides (enforced in `gen-room-images.cjs` `guide` mode +
+  an explicit "never mirror/flip" line). We also STOPPED sending the camera's compass facing —
+  it fought the image. A separate orientation sentence asserting "X is on the right" caused a
+  left-right flip; don't reintroduce it.
+- **Placement-critical features must be BLOCKED OUT, not described by compass.** If a feature's
+  position matters (a crawl-hole, a bricked-up doorway, a specific door), model it as a small
+  mass on the correct wall with its own role/colour/legend (`brick`, `hole`, …). Then the image
+  carries it and it renders in the right place. Compass-only prose features get lost once the
+  model is told to ignore compass — by design. The blockout is the spec.
+- **A grazing/flat clay → the model freelances.** If a vantage looks at a wall edge-on (mostly
+  one flat colour), there's nothing to anchor and the model paints the described scene from
+  scratch. The vantage must actually FRAME its subject head-on enough to read.
+
+## Pipeline direction (decided 2026-06-24, not yet built): frame-relative mold + a blockout skill
+
+The root fix for the compass problem is upstream: **`mold` should author the per-room SCENE
+prose in VANTAGE-RELATIVE terms, not compass** — "you are looking at the stage; a balcony box
+is on the left, a bricked doorway on the right," NOT "a doorway to the northwest." That's how
+you describe a view, and it makes prose + image agree with nothing to translate. Compass stays
+in the framing *dossier* (the spatial facts the mold reasons over); the *scene the model reads*
+is frame-relative. mold already records the **Vantage** per room (`location-framing.md`) — it
+should lead the scene with that vantage and place everything relative to it.
+
+And the blockout itself should become its **own skill** (doesn't exist yet — hand-driven so
+far): read the framing, build the volume from the major masses PLUS any placement-critical
+named features (holes, doorways, fixtures), and set each member's camera from the recorded
+**Vantage**. It is the deterministic spec that the frame-relative scene prose then describes.
+
 ## When NOT to use it
 
 Most rooms: skip. Players see one room at a time; text-layer consistency is enough. Reserve
