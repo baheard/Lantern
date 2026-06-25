@@ -1917,6 +1917,10 @@ function deleteMap(mapId) {
   const idx = mapState.mapOrder.findIndex(m => m.id === mapId);
   if (idx === -1) return;
 
+  // Capture the name before splicing — deleteMap takes only mapId, but the hint below
+  // needs the name (it isn't a parameter; referencing the caller's was a ReferenceError).
+  const deletedName = mapState.mapOrder[idx].name || 'map';
+
   delete _allMapsData[mapId];
   mapState.mapOrder.splice(idx, 1);
 
@@ -1947,7 +1951,7 @@ function deleteMap(mapId) {
   updateNodeCount();
   updateMapBadge();
   if (isVisible) { render(); centerOnCurrentLocation({ instant: true }); }
-  showHint(`Deleted "${mapName}"`);
+  showHint(`Deleted "${deletedName}"`);
 }
 
 // ============================================================================
