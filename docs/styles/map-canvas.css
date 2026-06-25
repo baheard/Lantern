@@ -632,8 +632,8 @@ body.map-resizing .map-canvas-overlay * {
 
 /* Gesture-row icons in the legend's "Using the map" section */
 .legend-gesture-ic {
-  font-size: 14px;
-  width: 14px;
+  font-size: 17px;
+  width: 17px;
   color: #94a3b8;
   flex-shrink: 0;
 }
@@ -678,12 +678,12 @@ body.map-resizing .map-canvas-overlay * {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 14px;
   color: #94a3b8;
 }
 
 .legend-section {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -1277,7 +1277,7 @@ body.map-resizing .map-canvas-overlay * {
      into the picture. */
   color: color-mix(in srgb, var(--text-primary) 90%, transparent);
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
