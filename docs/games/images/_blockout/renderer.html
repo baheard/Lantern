@@ -16,6 +16,9 @@
   #gen{border-color:#c4a35a!important;color:#f0d9a0!important;font-weight:600}
   #upd{background:#3a6ea5!important;border-color:#5a8ec5!important;color:#fff!important;font-weight:600}
   #upd:hover{background:#4a7eb5!important}
+  #saveAll{background:#3a8a4a!important;border-color:#5ab06a!important;color:#fff!important;font-weight:700;padding:4px 12px!important}
+  #saveAll:hover:not(:disabled){background:#4a9a5a!important}
+  #saveAll:disabled{background:#241f30!important;border-color:#4a4458!important;color:#7a7488!important;opacity:1}
   #msg{color:#bdb4c8;font-size:12px;margin-left:4px}
   /* Narrow-screen cluster toggle — hidden on wide layouts, shown by the media query below. */
   #modeToggle{display:none;gap:4px;margin-right:4px}
@@ -99,6 +102,7 @@
   <span id="views"></span>
   <button id="upd" title="Save the current camera as this room’s vantage" style="display:none">✓ Update vantage</button>
   <button id="addblk" title="Drop a 1×1×1 block in front of the camera, then edit it" style="display:none">➕ Add block</button>
+  <button id="saveAll" title="Save all pending block changes to the scene" style="display:none" disabled>💾 Save all</button>
   <span class="spacer"></span>
   <select id="model" title="Generator model">
     <option value="openai-low">OpenAI · low (~$0.006)</option>
@@ -156,7 +160,18 @@ const G = params.get('game'), VOL = params.get('volume');
 const srcUrl = params.get('src') || (G && VOL ? `/games/images/${G}/_blockout/${VOL}.scene.json` : null);
 const liveTool = !!(G && VOL);
 
-const CW = 768, CH = 1024;
+// Capture/viewport aspect tracks the SELECTED model's true output aspect, so the frame you
+// compose is the frame you get. OpenAI has no native 3:4 → portrait collapses to 2:3 (taller);
+// Gemini renders true 3:4. Keep width fixed at 768; height follows the ratio.
+const MODEL_ASPECT = { 'openai-low': [2, 3], 'openai-medium': [2, 3], 'gemini': [3, 4], 'gemini-pro': [3, 4] };
+let CW = 768, CH = 1024;
+function applyModelAspect() {
+  const sel = document.getElementById('model');
+  const [aw, ah] = MODEL_ASPECT[sel ? sel.value : 'openai-low'] || [3, 4];
+  CW = 768; CH = Math.round((768 * ah) / aw);
+  const vp = document.getElementById('viewport'); if (vp) vp.style.aspectRatio = aw + '/' + ah;
+  if (typeof sizeToViewport === 'function') sizeToViewport();
+}
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, CW / CH, 0.1, 500);
 const canvas = document.getElementById('c');
@@ -279,7 +294,26 @@ function readEditor() {
   if (rx || ry || rz) p.rot = [rx, ry, rz]; else delete p.rot;
   return p;
 }
-function onEdit() { selPart = readEditor(); applyPartToMesh(editMesh, selPart); editMesh.userData.part = selPart; $('pickName').textContent = selPart.name || '(unnamed)'; }
+// --- Pending-edit tracking: any block whose live state diverges from scene.json is "dirty".
+// Keyed by mesh; each dirty mesh carries userData.savedName = its name as last persisted, so a
+// rename still updates the right part. The top-bar "Save all" flushes them in one pass.
+const dirty = new Set();
+function updSaveAll() { const b = $('saveAll'); if (!b) return; const n = dirty.size; b.disabled = !n; b.textContent = n ? `💾 Save all (${n})` : '💾 Save all'; }
+function markDirtyPart(m) { if (!m) return; if (m.userData.savedName == null) m.userData.savedName = (m.userData.part && m.userData.part.name) || null; dirty.add(m); updSaveAll(); }
+function clearDirtyPart(m) { if (m) dirty.delete(m); updSaveAll(); }
+async function saveAll() {
+  if (!dirty.size) return;
+  const meshes = [...dirty]; let ok = 0, fail = 0;
+  for (const m of meshes) {
+    const p = m.userData.part; if (!p || !p.name) { fail++; continue; }
+    const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'update', name: m.userData.savedName || p.name, part: p });
+    if (r.ok) { m.userData.savedName = p.name; dirty.delete(m); ok++; } else { fail++; }
+  }
+  updSaveAll();
+  setMsg(`saved ${ok} block${ok === 1 ? '' : 's'}` + (fail ? ` · ${fail} failed` : ''));
+  if (editMesh && !dirty.has(editMesh)) edMsg('✓ saved');
+}
+function onEdit() { selPart = readEditor(); applyPartToMesh(editMesh, selPart); editMesh.userData.part = selPart; $('pickName').textContent = selPart.name || '(unnamed)'; markDirtyPart(editMesh); }
 
 // --- 3D transform gizmo (TransformControls): Move / Scale / Rotate -----------------------
 let gizmo = null, gmode = 'translate';
@@ -316,7 +350,7 @@ function syncFromMesh() {
   selPart = Object.assign({}, selPart, { at: [r3(m.position.x), r3(m.position.y), r3(m.position.z)] });
   const rd = [rdeg(m.rotation.x), rdeg(m.rotation.y), rdeg(m.rotation.z)];
   if (rd.some((v) => Math.abs(v) > 0.05)) selPart.rot = rd; else delete selPart.rot;
-  editMesh.userData.part = selPart; refreshFields();
+  editMesh.userData.part = selPart; refreshFields(); markDirtyPart(editMesh);
 }
 function refreshFields() {
   const p = selPart; if (!$('ed_x')) return;
@@ -331,13 +365,14 @@ async function savePart() {
   const p = readEditor();
   if (!p.name) { edMsg('name required'); return; }
   const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'update', name: selName, part: p });
-  if (r.ok) { selPart = p; selName = p.name; editMesh.userData.part = p; edMsg('✓ saved'); }
+  if (r.ok) { selPart = p; selName = p.name; editMesh.userData.part = p; editMesh.userData.savedName = p.name; clearDirtyPart(editMesh); edMsg('✓ saved'); }
   else edMsg('⚠ ' + r.error);
 }
 async function deletePart() {
   if (!confirm('Delete block "' + selName + '"? This removes it from the scene.')) return;
   const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'delete', name: selName });
   if (!r.ok) { edMsg('⚠ ' + r.error); return; }
+  clearDirtyPart(editMesh);
   if (editMesh && editMesh.parent) editMesh.parent.remove(editMesh);
   pickedMesh = null; clearPick();
 }
@@ -349,13 +384,14 @@ async function addBlock() {
   const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'add', part });
   if (!r.ok) { setMsg('⚠ ' + r.error); return; }
   buildPart(part, worldGroup);
-  const m = findMeshFor(part); if (m) { highlight(m); showPick(part, m); }
+  const m = findMeshFor(part); if (m) { m.userData.savedName = part.name; highlight(m); showPick(part, m); markDirtyPart(m); }
   setMsg('added ' + part.name + ' — set role/detail/size, then Save');
 }
 function uniqueName(base) { const n = existingNames(); if (!n.has(base)) return base; let i = 2; while (n.has(base + ' ' + i)) i++; return base + ' ' + i; }
 
 function showPick(p, m) {
   selPart = p; selName = p.name; editMesh = m;
+  if (!dirty.has(m)) m.userData.savedName = p.name;   // baseline for rename-safe Save all (don't clobber if already dirty)
   $('pick').style.display = 'block';
   $('pickName').textContent = p.name || '(unnamed)';
   const body = $('pickBody');
@@ -613,6 +649,7 @@ async function boot() {
     await loadInfo(); await loadGallery();
     const u = document.getElementById('upd'); u.style.display = ''; u.onclick = () => updateVantage(u);
     const ab = document.getElementById('addblk'); ab.style.display = ''; ab.onclick = addBlock;
+    const sa = document.getElementById('saveAll'); sa.style.display = ''; sa.onclick = saveAll; updSaveAll();
     const ol = document.getElementById('openloc'); ol.style.display = ''; ol.onclick = openLocation;
     document.getElementById('note').addEventListener('blur', saveNote);
     document.getElementById('imgnote').addEventListener('blur', saveImgNote);
@@ -620,6 +657,9 @@ async function boot() {
     document.getElementById('imgDel').onclick = deleteImage;
   } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
   document.getElementById('gen').onclick = generate;
+  // Reflow the clay viewport to the selected model's true output aspect so framing translates.
+  document.getElementById('model').addEventListener('change', applyModelAspect);
+  applyModelAspect();
 
   document.getElementById('pickClose').onclick = clearPick;
   addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const a = document.activeElement; if (a && /INPUT|SELECT|TEXTAREA/.test(a.tagName)) a.blur(); clearPick(); });
