@@ -625,6 +625,17 @@ body.map-resizing .map-canvas-overlay * {
   z-index: var(--z-map-legend);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* "Using the map" section can make this tall — cap and scroll on small screens */
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+
+/* Gesture-row icons in the legend's "Using the map" section */
+.legend-gesture-ic {
+  font-size: 14px;
+  width: 14px;
+  color: #94a3b8;
+  flex-shrink: 0;
 }
 
 .map-legend.legend-visible {
@@ -1165,6 +1176,7 @@ body.map-resizing .map-canvas-overlay * {
 
 .node-location-image {
   width: 100%;
+  max-width: 140px;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 10px;

@@ -194,6 +194,14 @@ function createMapUI() {
           <div class="legend-item"><span class="legend-line legend-vertical"></span><span>Up/Down</span></div>
           <div class="legend-item"><span class="legend-line legend-portal"></span><span>Portal</span></div>
           <div class="legend-item"><span class="legend-line legend-player"></span><span>Player-created</span></div>
+          <div class="legend-section">Using the map</div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">pan_tool</span><span>Drag empty space to pan; pinch or +/− to zoom</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">touch_app</span><span>Tap a location to rename, add a note, or delete it</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">open_with</span><span>Drag a location to move it</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">add_location</span><span>Add location, then tap the map to place it</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">timeline</span><span>Add connection, then tap two locations</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">my_location</span><span>Center on your current location</span></div>
+          <div class="legend-item"><span class="material-icons legend-gesture-ic">auto_fix_high</span><span>Auto builds the map as you play</span></div>
         </div>
       </div>
       <div class="map-hint hidden" id="mapHint">
