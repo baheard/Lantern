@@ -261,9 +261,9 @@
             </div>
           </div>
 
-          <!-- Voice Commands (collapsible help) -->
+          <!-- Voice Command Help (collapsible) — header contains "Help" so it surfaces on a "help" search -->
           <div class="settings-section collapsible collapsed" id="voiceCommandsSection">
-            <h4 class="section-header">Voice Commands</h4>
+            <h4 class="section-header">Voice Command Help</h4>
             <div class="section-content help-content">
               <div class="help-section">
                 <strong>Narration Control</strong>
@@ -276,7 +276,14 @@
                   <li><span class="material-icons">fast_forward</span> <code>"Skip"</code> — Skip one chunk ahead</li>
                   <li><span class="material-icons">fast_forward</span> <code>"Skip 3"</code> — Skip 3 chunks (1-10)</li>
                   <li><span class="material-icons">skip_next</span> <code>"Stop"</code> <code>"Skip All"</code> <code>"End"</code> — Skip to end</li>
-                  <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code> — Toggle microphone</li>
+                </ul>
+              </div>
+              <div class="help-section">
+                <strong>Microphone &amp; Screen</strong>
+                <ul class="help-commands">
+                  <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code> — Turn the microphone off / on</li>
+                  <li><span class="material-icons">ac_unit</span> <code>"Freeze"</code> <code>"Unfreeze"</code> — Temporarily stop / resume listening</li>
+                  <li><span class="material-icons">lock</span> <code>"Lock Screen"</code> <code>"Unlock Screen"</code> — Lock or unlock the display</li>
                 </ul>
               </div>
               <div class="help-section">
@@ -305,9 +312,11 @@
               <div class="help-section">
                 <strong>App Commands</strong>
                 <ul class="help-commands">
-                  <li><span class="material-icons">info</span> <code>"Status"</code> — Read status bar aloud</li>
+                  <li><span class="material-icons">info</span> <code>"Status"</code> — Read the status bar aloud</li>
+                  <li><span class="material-icons">history</span> <code>"Read Last Command"</code> (or <code>"What did I say"</code>) — Repeat your last command</li>
+                  <li><span class="material-icons">edit_location</span> <code>"Mark [text]"</code> — Add a note to the current map location</li>
+                  <li><span class="material-icons">feedback</span> <code>"Feedback"</code> — Send feedback</li>
                   <li><span class="material-icons">question_mark</span> <code>"App Help"</code> — Show all app commands</li>
-                  <li><span class="material-icons">lightbulb</span> <code>"Get Hint"</code> — ChatGPT assistance</li>
                   <li><span class="material-icons">build</span> <code>"Repair"</code> — Fix broken game state</li>
                   <li><span class="material-icons">exit_to_app</span> <code>"Quit"</code> — Auto-save and exit</li>
                 </ul>
