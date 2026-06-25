@@ -435,11 +435,25 @@ body.hints-resizing .hints-overlay * {
 
 /* Indent hints clearly under their parent question (which sits at +10px) */
 .hints-hint-item {
-  padding: 3px 0 3px 24px;
+  padding: 5px 0 5px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* Number prefix for each revealed hint */
+.hints-hint-num {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted, #64748b);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Hint lines */
 .hints-hint-text {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -487,7 +501,7 @@ body.hints-resizing .hints-overlay * {
 .hints-feedback {
   display: flex;
   align-items: center;
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .hints-feedback-btn {

@@ -528,6 +528,9 @@ export function stopAppMessage() {
 export function speakAppMessage(text) {
   if (!('speechSynthesis' in window) || !text) return Promise.resolve();
 
+  // Stop current narration before speaking, same as game narration interrupt behavior
+  stopNarration(false);
+
   state.appVoicePromise = new Promise((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     const voices = speechSynthesis.getVoices();

@@ -1146,16 +1146,23 @@ body.map-resizing .map-canvas-overlay * {
 }
 
 .sheet-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: block;
 }
 
+/* Block flow (not flex) so the floated art lets the form fields wrap around it.
+   Field spacing is restored via margins below since there's no flex gap. */
 .sheet-body-main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: block;
   min-width: 0;
+}
+.sheet-body-main > .sheet-field,
+.sheet-body-main > .sheet-merge-section,
+.sheet-body-main > .sheet-actions {
+  margin-bottom: 20px;
+}
+.sheet-body-main > .sheet-field:last-child,
+.sheet-body-main > .sheet-actions:last-child {
+  margin-bottom: 0;
 }
 
 .sheet-field {
@@ -1166,17 +1173,20 @@ body.map-resizing .map-canvas-overlay * {
 
 /* ============================================================================
    Generated location art (node sheet)
-   - Narrow (default): inputs full width, then a full-width image at the bottom,
-     plus a small thumbnail next to the name. Either tap opens the overlay.
-   - Wide (>=600px): inputs column on the left, image on the right (sticky).
+   The image floats to the top-right so the form fields wrap around it instead of
+   reserving a full row/column of vertical space. Tapping it opens the overlay.
    Visibility is driven by the `has-art` class the JS toggles when art exists.
    ============================================================================ */
 .node-edit-sheet:not(.has-art) .sheet-body-art,
 .node-edit-sheet:not(.has-art) .node-art-thumb { display: none; }
 
+.sheet-body-art {
+  float: right;
+  margin: 0 0 12px 16px;
+}
+
 .node-location-image {
-  width: 100%;
-  max-width: 140px;
+  width: 120px;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 10px;
@@ -1186,34 +1196,11 @@ body.map-resizing .map-canvas-overlay * {
   cursor: pointer;
 }
 
-/* Header thumbnail (narrow only) */
-.node-art-thumb {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #463d57;
-  cursor: pointer;
-  flex: 0 0 auto;
-}
+/* Header thumbnail — redundant now the art floats inline; keep hidden. */
+.node-art-thumb { display: none !important; }
 
-/* Wide: split layout, image to the right; hide the header thumbnail. */
 @media (min-width: 600px) {
-  .node-edit-sheet.has-art .sheet-body {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 20px;
-  }
-  .node-edit-sheet.has-art .sheet-body-main { flex: 1 1 0; }
-  .node-edit-sheet.has-art .sheet-body-art {
-    flex: 0 0 40%;
-    max-width: 40%;
-  }
-  .node-edit-sheet.has-art .node-location-image {
-    position: sticky;
-    top: 0;
-  }
-  .node-art-thumb { display: none !important; }
+  .node-location-image { width: 150px; }
 }
 
 /* Full-screen art overlay (shared lightbox) */
@@ -1277,7 +1264,7 @@ body.map-resizing .map-canvas-overlay * {
      into the picture. */
   color: color-mix(in srgb, var(--text-primary) 90%, transparent);
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: 15px;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
@@ -1286,12 +1273,18 @@ body.map-resizing .map-canvas-overlay * {
 }
 .node-art-caption:empty { display: none; }
 
-/* "Leave feedback" bubble pinned to the picture's top-right corner. */
-.node-art-feedback-btn {
+/* Action buttons (feedback bubble + close X) pinned to the picture's top-right corner. */
+.node-art-actions {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.node-art-feedback-btn,
+.node-art-close-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1308,11 +1301,13 @@ body.map-resizing .map-canvas-overlay * {
   pointer-events: auto;
   transition: background 0.15s, color 0.15s;
 }
-.node-art-feedback-btn:hover {
+.node-art-feedback-btn:hover,
+.node-art-close-btn:hover {
   background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
   color: var(--text-primary);                  /* brighten on hover */
 }
-.node-art-feedback-btn .material-icons { font-size: 20px; }
+.node-art-feedback-btn .material-icons,
+.node-art-close-btn .material-icons { font-size: 20px; }
 
 .sheet-field label {
   font-size: 12px;

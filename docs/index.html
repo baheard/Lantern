@@ -127,23 +127,12 @@
             <p class="setting-description">Auto-enable map tracking when starting new games</p>
           </div>
 
-          <!-- Show Location Art by Default (welcome screen only) -->
-          <div class="setting-item welcome-section-item">
-            <label>
-              Show Location Art by Default
-              <input type="checkbox" id="locationArtByDefaultToggle" class="toggle-switch">
-            </label>
-            <p class="setting-description">Show generated location images for games (can be turned off per game)</p>
-          </div>
-
-          <!-- Location Art (per-game) -->
-          <div class="setting-item game-section-item">
-            <label>
-              Location Art
-              <input type="checkbox" id="locationArtToggle" class="toggle-switch">
-            </label>
-            <p class="setting-description">Show a generated image for the current location</p>
-          </div>
+          <!-- Location Art toggles removed from Settings for now. The feature still
+               works but defaults OFF (features/location-art.js -> isLocationArtEnabled()).
+               To bring the toggles back, re-add the two blocks here
+               (#locationArtByDefaultToggle welcome-section-item + #locationArtToggle
+               game-section-item); their handlers in ui/settings/settings-panel.js were
+               left in place (guarded, harmless without the elements). -->
 
           <!-- Keep Screen Awake toggle -->
           <div class="setting-item">
@@ -307,6 +296,17 @@
                   <li><span class="material-icons">touch_app</span> <code>"Take [thing]"</code> <code>"Drop [thing]"</code> — Manipulate items</li>
                   <li><span class="material-icons">undo</span> <code>"Undo"</code> <code>"Wait"</code> <code>"Again"</code> — Meta commands</li>
                   <li><span class="material-icons">text_fields</span> <code>"Print [text]"</code> — Send literal text (bypass parsing)</li>
+                </ul>
+              </div>
+              <div class="help-section">
+                <strong>Hints</strong>
+                <ul class="help-commands">
+                  <li><span class="material-icons">lightbulb</span> <code>"Give hint"</code> — Hints for your current location</li>
+                  <li><span class="material-icons">arrow_forward</span> <code>"Next hint"</code> — Go deeper into the active hint</li>
+                  <li><span class="material-icons">search</span> <code>"What else"</code> — All hints from places you've been</li>
+                  <li><span class="material-icons">tag</span> <code>"Hint for 2"</code> (or just <code>"2"</code>) — Select a numbered hint</li>
+                  <li><span class="material-icons">replay</span> <code>"Repeat"</code> — Re-read the last hint</li>
+                  <li><span class="material-icons">close</span> <code>"Cancel"</code> — Exit hints (or say any game command)</li>
                 </ul>
               </div>
               <div class="help-section">
@@ -773,13 +773,13 @@
               <div class="game-title">Wishbringer <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1985" data-author="Brian Moriarty" data-difficulty="Engaging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
               <div class="game-desc">Beginner-friendly Infocom fantasy adventure</div>
             </button>
-            <button class="game-card" data-game="theatre.z5">
-              <div class="game-title">Theatre <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1995" data-author="Brendon Wyber" data-difficulty="Engaging" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
-              <div class="game-desc">Backstage mystery at an old playhouse</div>
-            </button>
             <button class="game-card" data-game="bronze.zblorb">
               <div class="game-title">Bronze <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2006" data-author="Emily Short" data-difficulty="Engaging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
               <div class="game-desc">Fairy-tale retelling of Beauty and the Beast</div>
+            </button>
+            <button class="game-card" data-game="theatre.z5">
+              <div class="game-title">Theatre <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1995" data-author="Brendon Wyber" data-difficulty="Challenging" data-length="Medium (~1.5-4 hrs)">ⓘ</span></div>
+              <div class="game-desc">Backstage mystery at an old playhouse</div>
             </button>
             <button class="game-card" data-game="galatea.zblorb">
               <div class="game-title">Galatea <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="2000" data-author="Emily Short" data-difficulty="Relaxed" data-length="Short (~30 min - 1.5 hrs)">ⓘ</span></div>
@@ -794,7 +794,7 @@
           <p class="category-desc">Iconic works that show the power of the medium</p>
           <div class="game-category-grid">
             <button class="game-card" data-game="curses.z5">
-              <div class="game-title">Curses <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1993" data-author="Graham Nelson" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-title">Curses <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1993" data-author="Graham Nelson" data-difficulty="Challenging" data-length="Very long (~8+ hrs)">ⓘ</span></div>
               <div class="game-desc">Puzzle-rich adventure with humor and exploration</div>
             </button>
             <button class="game-card" data-game="trinity.z4">
@@ -806,7 +806,7 @@
               <div class="game-desc">Espionage thriller with clever narrative puzzles</div>
             </button>
             <button class="game-card" data-game="anchorhead.z8">
-              <div class="game-title">Anchorhead <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1998" data-author="Michael Gentry" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-title">Anchorhead <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1998" data-author="Michael Gentry" data-difficulty="Challenging" data-length="Very long (~8+ hrs)">ⓘ</span></div>
               <div class="game-desc">Lovecraftian horror - atmospheric masterpiece</div>
             </button>
           </div>
@@ -832,7 +832,7 @@
               <div class="game-desc">Dystopian AI simulation - Infocom's boldest</div>
             </button>
             <button class="game-card" data-game="zork.z5">
-              <div class="game-title">Dungeon (Zork) <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1977" data-author="MIT (Lebling, Blank, et al.)" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-title">Dungeon (Zork) <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1977" data-author="MIT (Lebling, Blank, et al.)" data-difficulty="Challenging" data-length="Very long (~8+ hrs)">ⓘ</span></div>
               <div class="game-desc">The original MIT mainframe classic</div>
             </button>
             <button class="game-card" data-game="edifice.z5">
@@ -840,11 +840,11 @@
               <div class="game-desc">Explore evolving language puzzles</div>
             </button>
             <button class="game-card" data-game="hitchhik.z5">
-              <div class="game-title">Hitchhiker's Guide <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1984" data-author="Douglas Adams & Steve Meretzky" data-difficulty="Notorious" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-title">Hitchhiker's Guide <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1984" data-author="Douglas Adams & Steve Meretzky" data-difficulty="Notorious" data-length="Very long (~8+ hrs)">ⓘ</span></div>
               <div class="game-desc">Douglas Adams' comedic sci-fi classic</div>
             </button>
             <button class="game-card" data-game="jigsaw.z8">
-              <div class="game-title">Jigsaw <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1995" data-author="Graham Nelson" data-difficulty="Challenging" data-length="Very long (~10+ hrs)">ⓘ</span></div>
+              <div class="game-title">Jigsaw <span class="save-badge" data-save-indicator></span> <span class="game-meta" data-year="1995" data-author="Graham Nelson" data-difficulty="Challenging" data-length="Very long (~8+ hrs)">ⓘ</span></div>
               <div class="game-desc">Time-travel through historical moments</div>
             </button>
             <button class="game-card" data-game="metamorphoses.z5">

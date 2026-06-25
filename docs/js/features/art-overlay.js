@@ -37,10 +37,16 @@ export function ensureArtOverlay() {
     overlay.innerHTML = `
       <div class="node-art-frame">
         <div id="nodeArtCaption" class="node-art-caption"></div>
-        <button id="nodeArtFeedbackBtn" class="node-art-feedback-btn" type="button"
-                aria-label="Leave feedback" title="Leave feedback">
-          <span class="material-icons">chat_bubble_outline</span>
-        </button>
+        <div class="node-art-actions">
+          <button id="nodeArtFeedbackBtn" class="node-art-feedback-btn" type="button"
+                  aria-label="Leave feedback" title="Leave feedback">
+            <span class="material-icons">chat_bubble_outline</span>
+          </button>
+          <button id="nodeArtCloseBtn" class="node-art-close-btn" type="button"
+                  aria-label="Close" title="Close">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
         <img id="nodeArtOverlayImg" class="node-art-overlay-img" alt="">
       </div>
     `;
@@ -55,6 +61,10 @@ export function ensureArtOverlay() {
     document.getElementById('nodeArtFeedbackBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       openArtFeedback();
+    });
+    document.getElementById('nodeArtCloseBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeArtOverlay();
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeArtOverlay();

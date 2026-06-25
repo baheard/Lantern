@@ -46,9 +46,11 @@ export function currentGameName() {
 }
 
 // Whether location art should be shown for the current game. Per-game override
-// wins; otherwise the app default (welcome screen); otherwise ON (default).
+// wins; otherwise the app default; otherwise OFF (default). The Settings toggles
+// were removed for now (see docs/index.html), so with no stored value this stays
+// off. Was defaulting ON; flip the hardcoded default back to `true` to restore.
 export function isLocationArtEnabled() {
-  return getGameSetting('locationArt', true) !== false;
+  return getGameSetting('locationArt', false) !== false;
 }
 
 // Resolve the image URL for a location name, or null if art is disabled / absent.
@@ -109,13 +111,54 @@ function container() {
   return gameOutput && gameOutput.parentElement;
 }
 
+// --- hover thumbnail ---------------------------------------------------------
+// A small floating preview shown on PC hover, anchored to the hovered eye. This is
+// deliberately NOT the full-screen lightbox — popping the whole overlay open on a
+// stray mouseover was jarring. Click/tap still opens the full lightbox (below).
+// One reused element; pointer-events:none so it never grabs the cursor (which would
+// pull the hover off the eye and flicker the preview).
+let _thumbEl = null;
+function ensureThumb() {
+  if (_thumbEl) return _thumbEl;
+  const el = document.createElement('div');
+  el.id = 'locationArtThumb';
+  el.className = 'location-art-thumb hidden';
+  el.innerHTML = `<img alt="">`;
+  document.body.appendChild(el);
+  _thumbEl = el;
+  return el;
+}
+function showThumb(anchor, url) {
+  if (!url) return;
+  const el = ensureThumb();
+  const img = el.querySelector('img');
+  if (img.getAttribute('src') !== url) img.setAttribute('src', url);
+  el.classList.remove('hidden');
+  // Position below the eye, left-aligned to it, but clamp into the viewport.
+  const r = anchor.getBoundingClientRect();
+  const margin = 8;
+  const w = el.offsetWidth || 280;
+  const h = el.offsetHeight || 200;
+  let left = r.left;
+  let top = r.bottom + margin;
+  if (left + w > window.innerWidth - margin) left = window.innerWidth - margin - w;
+  if (left < margin) left = margin;
+  // If it would run off the bottom, flip above the eye instead.
+  if (top + h > window.innerHeight - margin) top = Math.max(margin, r.top - margin - h);
+  el.style.left = `${Math.round(left)}px`;
+  el.style.top = `${Math.round(top)}px`;
+}
+function hideThumb() {
+  if (_thumbEl) _thumbEl.classList.add('hidden');
+}
+
 // Wire an eye element to preview the location image, keyed to a lazily-resolved
 // URL + caption:
-//   - PC hover: transient preview that shows on mouseenter, hides on mouseleave
-//     (unless it's been pinned by a click).
-//   - Click / phone tap: TOGGLES a pinned preview — first click/tap opens it and
-//     keeps it up, a second closes it. `touchstart` is preventDefault'd so the tap
-//     doesn't also fire a synthetic hover/click.
+//   - PC hover: a small floating thumbnail anchored to the eye (showThumb), unless
+//     the full lightbox is already pinned open.
+//   - Click / phone tap: TOGGLES the full-screen lightbox — first click/tap opens it
+//     pinned and keeps it up, a second closes it. `touchstart` is preventDefault'd so
+//     the tap doesn't also fire a synthetic hover/click (no thumbnail on touch).
 function attachPeek(el, getUrl, getCaption) {
   // Is the overlay currently up AND showing this element's image? (getAttribute
   // keeps the relative URL we set, unlike img.src which resolves to absolute.)
@@ -136,10 +179,11 @@ function attachPeek(el, getUrl, getCaption) {
     if (isArtOverlayPinned() && isShowingThis()) closeArtOverlay();
     else open(true);
   };
-  // PC hover: transient preview, but never disturb a pinned one.
-  el.addEventListener('mouseenter', () => { if (!isArtOverlayPinned()) open(false); });
-  el.addEventListener('mouseleave', () => { if (!isArtOverlayPinned()) closeArtOverlay(); });
-  el.addEventListener('click', (e) => { e.preventDefault(); toggle(); });
+  // PC hover: small floating thumbnail, but never while the full lightbox is pinned.
+  el.addEventListener('mouseenter', () => { if (!isArtOverlayPinned()) showThumb(el, getUrl()); });
+  el.addEventListener('mouseleave', () => { hideThumb(); });
+  // Click opens the full lightbox — drop the hover thumbnail first so they don't stack.
+  el.addEventListener('click', (e) => { e.preventDefault(); hideThumb(); toggle(); });
   el.addEventListener('touchstart', (e) => { e.preventDefault(); toggle(); }, { passive: false });
 }
 

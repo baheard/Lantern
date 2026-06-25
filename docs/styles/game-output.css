@@ -281,10 +281,12 @@ body.tap-to-examine-enabled .game-text {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: top;          /* eye sits at the top of the room-name line */
+  vertical-align: middle;       /* eye sits centered on the room-name line */
+  position: relative;
+  top: -0.22em;                 /* middle reads low vs. cap-height; nudge up to optical center */
   width: 22px;
   height: 22px;
-  margin: 0 0 2px 16px;         /* 16px gap from the location name */
+  margin: 0 0 0 16px;           /* 16px gap from the location name */
   padding: 0;
   border: none;
   background: none;
@@ -298,6 +300,32 @@ body.tap-to-examine-enabled .game-text {
 .location-art-inline-eye:active {
   color: rgba(231, 199, 122, 1);    /* brighten on hover / tap */
 }
+/* Floating hover thumbnail (PC). Anchored to the hovered eye by JS; pointer-events
+   off so it never steals the cursor and flickers the hover. Click on the eye opens
+   the full-screen lightbox instead. */
+.location-art-thumb {
+  position: fixed;
+  z-index: 9000;
+  max-width: 580px;
+  padding: 4px;
+  background: rgba(20, 18, 14, 0.96);
+  border: 1px solid rgba(196, 163, 90, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.12s ease;
+}
+.location-art-thumb.hidden { display: none; }
+.location-art-thumb > img {
+  display: block;
+  max-width: 572px;
+  max-height: 460px;
+  width: auto;
+  height: auto;
+  border-radius: 3px;
+}
+
 /* When the side panel is actually visible (wide screen, game has art, not collapsed)
    the inline eyes are redundant — hide them. Mirrors the panel's own visibility rule. */
 @media (min-width: 1000px) {

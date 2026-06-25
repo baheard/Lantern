@@ -96,6 +96,9 @@ export function createNodeEditSheet() {
       </div>
       <div class="sheet-body">
         <div class="sheet-body-main">
+        <div class="sheet-body-art" id="nodeImageField">
+          <img id="nodeLocationImage" class="node-location-image" alt="" loading="lazy">
+        </div>
         <div class="sheet-field sheet-field-inline">
           <div class="field-primary">
             <label for="nodeNameInput">Name <span class="field-hint">(max 100 characters)</span></label>
@@ -157,9 +160,6 @@ export function createNodeEditSheet() {
           </button>
         </div>
         </div>
-        <div class="sheet-body-art" id="nodeImageField">
-          <img id="nodeLocationImage" class="node-location-image" alt="" loading="lazy">
-        </div>
       </div>
     </div>
   `;
@@ -173,7 +173,7 @@ export function createNodeEditSheet() {
   const openFromSheet = () => {
     const img = document.getElementById('nodeLocationImage');
     const nameInput = document.getElementById('nodeNameInput');
-    if (img && img.getAttribute('src')) openArtOverlay(img.src, nameInput ? nameInput.value : '');
+    if (img && img.getAttribute('src')) openArtOverlay(img.src, nameInput ? nameInput.value : '', { pinned: true });
   };
   sheet.querySelector('#nodeLocationImage').addEventListener('click', openFromSheet);
   sheet.querySelector('#nodeImageThumb').addEventListener('click', openFromSheet);

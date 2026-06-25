@@ -17,13 +17,22 @@ import { closeSettings } from '../ui/settings/settings-panel.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
+import { resetAllHintState } from '../features/hints/hints-state.js';
 import {
   trackCustomGame,
   removeCustomGame,
   showLoadingOverlay,
   showResumeDialog,
   renderRecentlyPlayedSection,
+  renderResumeCard,
 } from '../ui/recently-played.js';
+
+// Gate for the vm.restart hook: the engine calls restart() with no arg BOTH on initial
+// boot (zvm.js start(), when not autorestoring) AND on a typed in-game RESTART. They're
+// indistinguishable by argument, but the boot one always fires before the player has sent
+// any command, while an in-game RESTART is always player-initiated. So we only treat a
+// no-arg restart() as "in-game" once the player has acted. Reset per game load.
+let _playerHasActed = false;
 
 /**
  * Start a game using browser-based ZVM
@@ -33,6 +42,7 @@ import {
 export async function startGame(gamePath, onOutput, { skipDriveCheck = false } = {}) {
 
   try {
+    _playerHasActed = false; // re-gate the in-game-restart hook for this fresh load
     state.currentGamePath = gamePath;
     // Set game name for save/restore
     state.currentGameName = gamePath.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
@@ -49,7 +59,7 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     const gameDisplayName = gamePath.split('/').pop().replace(/\.[^.]+$/, '')
       .replace(/([A-Z])/g, ' $1').trim()
       .replace(/^\w/, c => c.toUpperCase());
-    document.title = `${gameDisplayName} - IF Talk`;
+    document.title = `${gameDisplayName} - Lantern`;
 
     // Update game name display in settings
     updateCurrentGameDisplay(gamePath.split('/').pop());
@@ -152,6 +162,32 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
     // Create ZVM instance
     const vm = new window.ZVM();
     window.zvmInstance = vm;
+
+    // Hook the VM's restart so a genuine in-game RESTART resets progress/hint state.
+    // The @restart opcode calls restart() with NO argument; the RESTORE path calls
+    // restart(1) — so `!autorestoring` rules out RESTORE. The boot path ALSO calls
+    // restart() with no arg (zvm.js start()), so we additionally gate on _playerHasActed
+    // to exclude the boot restart from the typed in-game one. Fires only after the game's
+    // own "are you sure?" resolves to yes, respecting each game's restart UX. This is the
+    // signal no move counter could give us (see .tome/hints-restart-detection-deadend.md):
+    // appMoveCount is autosave-incremented and only drops on RESTORE; GlkOte's generation
+    // is monotonic. The restart happens in-place (no page reload), so we reset the move
+    // count + clear hint state here — the start-room locationChanged that follows re-renders
+    // the hints panel against the wiped state.
+    {
+      const _origRestart = vm.restart.bind(vm);
+      vm.restart = function (autorestoring) {
+        const result = _origRestart(autorestoring);
+        if (!autorestoring && _playerHasActed) {
+          state.appMoveCount = 0;
+          if (state.currentGameName) resetAllHintState(state.currentGameName);
+          window.dispatchEvent(new CustomEvent('gameRestarted', {
+            detail: { gameName: state.currentGameName }
+          }));
+        }
+        return result;
+      };
+    }
 
     // Create VoxGlk display engine
     const voxglk = createVoxGlk(onOutput);
@@ -300,6 +336,11 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
 
     // Save as last played game for auto-resume
     localStorage.setItem('lantern_last_game', gamePath);
+    // Persistent pointer for the home-screen Resume card. Unlike lantern_last_game
+    // (which the Home button clears so it won't auto-jump), this survives going Home
+    // so the card can offer to resume the last game. The card itself re-checks that
+    // an autosave still exists before showing, so a stale value just renders nothing.
+    localStorage.setItem('lantern_resume_path', gamePath);
 
     // Reset narration state
     resetNarrationState();
@@ -350,6 +391,10 @@ export async function startGame(gamePath, onOutput, { skipDriveCheck = false } =
  * @param {string} cmd - Command to send
  */
 export function sendCommandToGame(cmd) {
+  // The player has now acted — arms the in-game-restart detection in the vm.restart hook
+  // (distinguishes a typed RESTART from the no-arg restart() the engine runs at boot).
+  _playerHasActed = true;
+
   const input = cmd !== undefined ? cmd : '';
 
   // Get the current input type from VoxGlk (game may want 'char' or 'line')
@@ -367,7 +412,7 @@ export function sendCommandToGame(cmd) {
  */
 export function unloadGame() {
   // Restore original title
-  document.title = 'IF Talk - Voice-Powered Interactive Fiction';
+  document.title = 'Lantern';
 
   // Hide game output, show welcome screen
   const gameOutput = document.getElementById('gameOutput');
@@ -400,6 +445,22 @@ export function unloadGame() {
 
   // Update status
   updateStatus('Select a game to start');
+}
+
+/**
+ * Restart the current game from scratch via page reload (the deterministic, app-owned
+ * restart used by the Settings "Restart Game" button). Skips autoload, clears the
+ * autosave + map + ALL hint state for the game, then reloads — a fresh boot resets
+ * appMoveCount to 0. Distinct from a typed in-game RESTART, which the @restart hook in
+ * startGame() handles in-place (no reload). Caller is responsible for any confirmation.
+ */
+export function restartGame() {
+  localStorage.setItem('lantern_skip_autoload', 'true');
+  if (state.currentGameName) {
+    localStorage.removeItem(`lantern_map_${state.currentGameName}`);
+    resetAllHintState(state.currentGameName);
+  }
+  location.reload();
 }
 
 /**
@@ -487,20 +548,11 @@ export function initGameSelection(onOutput) {
     restartGameBtn.addEventListener('click', async () => {
       // Show confirmation dialog
       const confirmed = await confirmDialog(
-        'This will restart the game from the beginning.\nYour autosave and map will be cleared.\n\nAre you sure you want to continue?',
+        'This will restart the game from the beginning.\nYour autosave, map, and hint progress will be cleared.\n\nAre you sure you want to continue?',
         { title: 'Restart Game?' }
       );
 
-      if (confirmed) {
-        // Set flag to skip autoload on next page load
-        localStorage.setItem('lantern_skip_autoload', 'true');
-        // Clear the map data for this game
-        if (state.currentGameName) {
-          localStorage.removeItem(`lantern_map_${state.currentGameName}`);
-        }
-        // Reload to restart the game from beginning
-        location.reload();
-      }
+      if (confirmed) restartGame();
     });
   }
 
@@ -631,6 +683,7 @@ export function initGameSelection(onOutput) {
         loadingOverlay.classList.add('fade-out');
         const finish = () => {
           loadingOverlay.remove();
+          renderResumeCard(onOutput, startGame);
           renderRecentlyPlayedSection(onOutput, startGame);
         };
         // Fallback in case transitionend doesn't fire (background tab, reduced-motion, etc.)
@@ -638,6 +691,7 @@ export function initGameSelection(onOutput) {
         loadingOverlay.addEventListener('transitionend', () => { clearTimeout(fallback); finish(); }, { once: true });
       } else {
         // No overlay present - render immediately
+        renderResumeCard(onOutput, startGame);
         renderRecentlyPlayedSection(onOutput, startGame);
       }
     }, 100);

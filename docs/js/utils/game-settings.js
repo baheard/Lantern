@@ -269,11 +269,19 @@ export function hasGameData(gameName) {
 export function clearAllGameData(gameName = null) {
   const name = gameName || state.currentGameName || 'default';
 
+  // Settings + non-lantern-prefixed engine saves (explicit — these don't start with
+  // `lantern_` so the prefix sweep below won't catch them).
   removeItem(`gameSettings_${name}`);
-  removeItem(`lantern_quicksave_${name}`);
-  removeItem(`lantern_autosave_${name}`);
   removeItem(`glkote_quetzal_${name}`);
   removeItem(`zvm_autosave_${name}`);
+
+  // Sweep EVERY `lantern_*_<name>` key (autosave, quicksave, map, hints, hints_seen,
+  // hints_qseen, hints_milestone, go-to slots, …). Using a prefix sweep rather than a
+  // hardcoded list means a new per-game key can never be silently forgotten here again
+  // — which is exactly how hint state used to survive a "Reset game data".
+  getItemsByPrefix('lantern_')
+    .filter(key => key.includes(`_${name}`))
+    .forEach(key => removeItem(key));
 }
 
 /**

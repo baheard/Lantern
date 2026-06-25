@@ -84,6 +84,24 @@ export function resetAll(gameName) {
 }
 
 /**
+ * Wipe ALL hint state for a game — revealed counts, seen-sections, seen-questions,
+ * and the act milestone. This is the "fresh start" reset used by the surfaces that
+ * mean "play this game as if from scratch": the Settings Restart button, a genuine
+ * in-game RESTART (@restart opcode hook in game-loader.js), and "Reset game data".
+ *
+ * Distinct from the panel's "Reset revealed hints" (resetAll + resetSeenQuestions),
+ * which deliberately keeps seen-sections so visited areas stay un-blurred.
+ *
+ * @param {string} [gameName]
+ */
+export function resetAllHintState(gameName) {
+    setJSON(getGameKey('hints', gameName), { revealed: {}, updatedAt: new Date().toISOString() });
+    setJSON(getGameKey('hints_seen', gameName), []);
+    setJSON(getGameKey('hints_qseen', gameName), []);
+    setJSON(getGameKey('hints_milestone', gameName), 0);
+}
+
+/**
  * Return the set of section IDs that have ever been pinned (location-matched)
  * for this game. Used to decide which sections to blur.
  *

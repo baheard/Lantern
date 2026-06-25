@@ -95,6 +95,7 @@ export function initHintsPanel() {
             _currentGameName = gameName;
             loadHints(gameName).then(data => {
                 _currentHintsData = data;
+                import('./voice-hints.js').then(m => m.setHintsData(gameName, data));
                 if (_isVisible) renderHintsContent();
             });
         }
@@ -142,6 +143,7 @@ function handleGameLoaded(e) {
     _currentHintsData = null; // clear stale data
     loadHints(gameName).then(data => {
         _currentHintsData = data;
+        import('./voice-hints.js').then(m => m.setHintsData(gameName, data));
         if (_isVisible) {
             renderHintsContent();
         }
@@ -493,6 +495,7 @@ function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
         const isAnswer = i === total - 1;
         hintsHtml += `
           <div class="hints-hint-item ${isAnswer ? 'hints-hint-answer' : ''}">
+            <span class="hints-hint-num">${i + 1}.</span>
             <span class="hints-hint-text">${escHtml(hints[i])}</span>
             ${renderFeedbackBtn(question.id, sectionId, i, total)}
           </div>`;

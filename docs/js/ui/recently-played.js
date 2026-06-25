@@ -5,6 +5,8 @@
  * games, resume/restart dialog, and the loading overlay.
  */
 
+import { resetAllHintState } from '../features/hints/hints-state.js';
+
 // Predefined game slugs — excluded from the recently-played list
 const PREDEFINED_GAMES = [
   'lostpig', 'dreamhold', 'photopia', '905',
@@ -119,6 +121,7 @@ export function showResumeDialog(gamePath, gameName) {
       if (action === 'restart') {
         localStorage.removeItem(`lantern_autosave_${gameName}`);
         localStorage.removeItem(`lantern_map_${gameName}`);
+        resetAllHintState(gameName); // "Start Over" is a fresh game → wipe hint progress too
         // Skip autoload on the upcoming startGame, otherwise Drive auto-sync
         // re-downloads the cloud autosave and restores it anyway. Mirrors the
         // "Restart Game" settings button.
@@ -140,6 +143,131 @@ export function showResumeDialog(gamePath, gameName) {
 
     setTimeout(() => overlay.querySelector('.resume-btn')?.focus(), 50);
   });
+}
+
+/**
+ * Render the "Resume" card pinned to the top of the home screen. Offers a one-tap
+ * jump back into the last-played game's autosave. Shown only when there's a persisted
+ * last game (lantern_resume_path) that still has an autosave. Tapping the card resumes
+ * directly (no Resume/Restart dialog — "Resume" already states the intent).
+ *
+ * Metadata (display name + the ⓘ tooltip's year/author/difficulty/length) is reused
+ * from the matching predefined game card in the DOM; custom URL games fall back to a
+ * name derived from the path and get no ⓘ.
+ *
+ * @param {Function} onOutput - Callback for game output (TTS)
+ * @param {Function} startGameFn - startGame function from game-loader (passed to avoid circular import)
+ */
+// Resolve a loadable game path to offer in the Resume card, or null if there's
+// nothing to resume. Prefers the explicit lantern_resume_path pointer (set on every
+// game start); falls back to the most-recently-saved autosave across all games, so a
+// save made before this feature existed still surfaces a card. The fallback maps a
+// game name back to a path via the matching predefined card or the custom-games registry.
+function resolveResumePath() {
+  // Explicit pointer wins — it's stamped the moment a game starts (see startGame),
+  // so the card points at the last game you ran immediately, even before its first
+  // autosave. Clicking resumes if there's a save, otherwise just opens the game.
+  const explicit = localStorage.getItem('lantern_resume_path');
+  if (explicit) return explicit;
+
+  // No pointer (e.g. a save predating this feature): fall back to the newest autosave
+  // by its stored ISO timestamp.
+  let best = null; // { name, ts }
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith('lantern_autosave_')) continue;
+    const name = key.slice('lantern_autosave_'.length);
+    let ts = 0;
+    try { ts = Date.parse(JSON.parse(localStorage.getItem(key))?.timestamp) || 0; } catch {}
+    if (!best || ts > best.ts) best = { name, ts };
+  }
+  if (!best) return null;
+
+  // Map the winning game name to a loadable path.
+  for (const c of document.querySelectorAll('.game-card[data-game]')) {
+    const p = c.dataset.game;
+    if (p.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase() === best.name) return p;
+  }
+  try {
+    const custom = JSON.parse(localStorage.getItem('lantern_custom_games') || '{}');
+    if (custom[best.name]?.url) return custom[best.name].url;
+  } catch {}
+  return null;
+}
+
+export function renderResumeCard(onOutput, startGameFn) {
+  document.getElementById('resumeCard')?.remove(); // idempotent
+
+  const path = resolveResumePath();
+  if (!path) return; // nothing to resume
+
+  const gameList = document.querySelector('.game-list');
+  if (!gameList) return;
+
+  // Reuse display name + ⓘ metadata from the matching predefined card, if present.
+  const srcCard = document.querySelector(`.game-card[data-game="${CSS.escape(path)}"]`);
+  let displayName = '';
+  let meta = null;
+  if (srcCard) {
+    displayName = srcCard.querySelector('.game-title')?.childNodes[0]?.textContent?.trim() || '';
+    meta = srcCard.querySelector('.game-meta');
+  }
+  if (!displayName) {
+    const gameName = path.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+    displayName = gameName.replace(/([A-Z])/g, ' $1').trim().replace(/^\w/, c => c.toUpperCase());
+  }
+
+  const card = document.createElement('button');
+  card.className = 'resume-card';
+  card.id = 'resumeCard';
+  card.dataset.game = path;
+
+  const infoHtml = meta ? `<span class="game-meta resume-card-info"
+        data-title="${displayName}"
+        data-year="${meta.dataset.year || ''}"
+        data-author="${meta.dataset.author || ''}"
+        data-difficulty="${meta.dataset.difficulty || ''}"
+        data-length="${meta.dataset.length || ''}">ⓘ</span>` : '';
+
+  card.innerHTML = `
+    <span class="material-icons resume-card-icon">play_arrow</span>
+    <span class="resume-card-text">
+      <span class="resume-card-label">Resume</span>
+      <span class="resume-card-title">${displayName}</span>
+    </span>
+    ${infoHtml}
+  `;
+
+  // ⓘ: hover tooltip is pure CSS; this handles tap-to-toggle (touch) and closes on
+  // the next outside tap. stopPropagation so tapping ⓘ doesn't launch the game.
+  const info = card.querySelector('.resume-card-info');
+  if (info) {
+    info.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const wasActive = info.classList.contains('active');
+      document.querySelectorAll('.game-meta.active').forEach(t => t.classList.remove('active'));
+      if (!wasActive) {
+        info.classList.add('active');
+        setTimeout(() => {
+          document.addEventListener('click', function onDoc(ev) {
+            if (!ev.target.closest('.resume-card-info')) {
+              info.classList.remove('active');
+              document.removeEventListener('click', onDoc);
+            }
+          });
+        }, 0);
+      }
+    });
+  }
+
+  // Tap the card → resume straight into the autosave (matches the launch auto-resume path).
+  card.addEventListener('click', () => {
+    showLoadingOverlay();
+    startGameFn(path, onOutput);
+  });
+
+  gameList.insertBefore(card, gameList.firstChild);
 }
 
 /**

@@ -795,6 +795,73 @@
   visibility: visible;
 }
 
+/* ---------------------------------------------------------------------------
+   Resume card — "continue your last game" tile pinned to the top of the home
+   screen (rendered by renderResumeCard in recently-played.js). Styled like a
+   regular game card (gray-on-gray), full width. Spacing below it is the
+   .game-list flex gap (40px), matching the gap between
+   the card grids and the section titles below them.
+   --------------------------------------------------------------------------- */
+.resume-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;                     /* spacing handled by .game-list gap */
+  padding: 16px 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+@media (hover: hover) {
+  .resume-card:hover {
+    background: var(--bg-elevated);
+    border-color: var(--accent-muted);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+.resume-card:active { transform: scale(0.99); }
+
+.resume-card-icon {
+  font-size: 28px;
+  color: var(--accent-warm);
+  flex-shrink: 0;
+}
+.resume-card-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+.resume-card-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+}
+.resume-card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The ⓘ rides at the far right. Override the absolute top/right placement that
+   .game-meta uses on grid cards so it flows inline; keep position:relative so the
+   ::after tooltip still anchors to the icon. */
+.resume-card .resume-card-info {
+  position: relative;
+  top: auto;
+  right: auto;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .game-desc {
   font-family: var(--font-serif);
   font-size: var(--font-s);

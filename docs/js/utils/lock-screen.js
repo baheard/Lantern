@@ -275,11 +275,12 @@ export function updateLockButtonVisibility() {
     const micActive = !state.isMuted;
     const wantLock = state.isScreenLocked || micActive;
     showLock(wantLock);
-    showConv(!wantLock);
+    // Only show conv button when mic is already on (it adds narration to an active mic session)
+    showConv(micActive && !state.isScreenLocked);
   } else {
-    // Desktop: conv button only
+    // Desktop: conv button only when mic is active (prevents confusion with the mic button)
     showLock(false);
-    showConv(true);
+    showConv(!state.isMuted);
   }
 }
 

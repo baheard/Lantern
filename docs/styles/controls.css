@@ -60,21 +60,25 @@
   font-size: 14px;
 }
 
+/* Send is the primary action — it carries the accent (the blue that used to sit on
+   the play/mic buttons), so there's one clear primary among the neutral controls. */
+#sendBtn {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+#sendBtn:hover {
+  color: var(--accent-primary);
+}
+
 .btn-nav:hover {
   transform: scale(1.05);
 }
 
-/* Primary color for play/pause button only */
+/* Play/pause uses the same neutral look as the other nav buttons (inherits
+   .btn-control colors). position/overflow are kept for the .playing gradient. */
 #pausePlayBtn {
-  background: transparent;
-  color: var(--accent-primary);
-  border: 2px solid var(--accent-primary);
   position: relative;
   overflow: hidden;
-}
-
-#pausePlayBtn:hover {
-  background: var(--highlight-active);
 }
 
 /* Animated rotating gradient border when playing */
@@ -139,9 +143,9 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 2px solid var(--accent-primary);
-  background: transparent;
-  color: var(--accent-primary);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
   font-size: 20px;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.3s ease;

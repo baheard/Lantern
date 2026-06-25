@@ -253,6 +253,12 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
       sendInput('delete', 'char');
       return false;
     }
+
+    // Escape
+    if (lower === 'escape' || lower === 'esc') {
+      sendInput('escape', 'char');
+      return false;
+    }
   }
 
   // NOTE: "print [text]" is intentionally NOT handled here. Stripping the
@@ -262,6 +268,26 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
   // Letting the full "print …" transcript pass through routes it to the
   // command-router's print handler, which sends the literal text straight to
   // the game and bypasses interception — the correct behavior.
+
+  // Hint verb intercept — must run before game fall-through so hint words never
+  // reach the Z-machine parser. Transient context: non-hint utterances fall through
+  // to the game AND exit hint mode (see isHintContextActive check below).
+  {
+    const { tryHandleHintCommand, isHintVerb, isHintContextActive, exitHintContext } =
+      await import('../features/hints/voice-hints.js');
+
+    if (isHintVerb(lower)) {
+      state.pendingCommandProcessed = true;
+      await tryHandleHintCommand(lower);
+      return false;
+    }
+
+    // Non-hint utterance while hint context is live → exit context, pass to game
+    if (isHintContextActive()) {
+      exitHintContext();
+      // fall through to game with the original transcript
+    }
+  }
 
   // "Mark [text]" — append a note to the current map node (#94)
   const markMatch = transcript.match(/^mark\s+(.+)$/i);
