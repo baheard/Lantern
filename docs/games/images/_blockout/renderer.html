@@ -1,0 +1,328 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Blockout renderer</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#23202a;color:#e8e4ee;font:13px system-ui,sans-serif;overflow:hidden}
+  textarea{max-width:100%}
+  #bar{position:fixed;top:0;left:0;right:0;min-height:42px;display:flex;align-items:center;gap:6px;padding:5px 10px;background:#17151d;border-bottom:1px solid #2a2536;z-index:5;flex-wrap:wrap}
+  #bar .spacer{flex:1}
+  #bar button,#bar select{font:12px system-ui;padding:4px 8px;border:1px solid #4a4458;border-radius:5px;background:#241f30;color:#e8e4ee;cursor:pointer}
+  #bar button:disabled{opacity:.5;cursor:default}
+  #views button{margin-right:3px;background:#1f1b2c}
+  #views button.on{background:#3a3450;color:#fff;border-color:#6a5}
+  #gen{border-color:#c4a35a!important;color:#f0d9a0!important;font-weight:600}
+  #upd{background:#3a6ea5!important;border-color:#5a8ec5!important;color:#fff!important;font-weight:600}
+  #upd:hover{background:#4a7eb5!important}
+  #msg{color:#bdb4c8;font-size:12px;margin-left:4px}
+  #cols{position:absolute;top:48px;left:0;right:0;bottom:0;display:flex;gap:10px;padding:10px}
+  #colView{flex:0 0 auto;height:100%}
+  #viewport{height:100%;aspect-ratio:3/4;background:#888;border-radius:8px;overflow:hidden}
+  #viewport canvas{width:100%;height:100%;display:block}
+  #colResult{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px}
+  #result{position:relative;flex:1;min-height:0;background:#17151d;border:1px solid #2a2536;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #result img{max-width:100%;max-height:100%;object-fit:contain}
+  #resultCap{position:absolute;top:0;left:0;right:0;padding:6px 10px;font-size:13px;font-weight:600;
+       color:#f0e6d0;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));border-radius:8px 8px 0 0;pointer-events:none;z-index:2}
+  #result .ph{color:#6a6478;text-align:center;padding:24px;line-height:1.6}
+  #gallery{flex:0 0 auto;height:104px;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px}
+  #gallery .thumb{flex:0 0 auto;height:96px;border:2px solid transparent;border-radius:5px;cursor:pointer;position:relative;background:#000}
+  #gallery .thumb.on{border-color:#c4a35a}
+  #gallery .thumb img{height:100%;display:block;border-radius:3px}
+  #gallery .thumb .cap{position:absolute;left:0;right:0;bottom:0;font-size:9px;background:rgba(0,0,0,.6);color:#ddd;padding:1px 3px;border-radius:0 0 3px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #gallery .none{color:#6a6478;align-self:center;padding:0 10px}
+  #colText{flex:0 0 420px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  #colText .panel{background:#17151d;border:1px solid #2a2536;border-radius:8px;padding:10px 12px}
+  #desc{flex:0 0 auto;max-height:32%;overflow:auto}
+  #desc h3{margin:0 0 5px;font-size:17px;color:#f0d9a0}
+  #desc .prose{color:#d2ccde;font-size:15px;line-height:1.55;white-space:pre-wrap}
+  #colText label{font-size:13px;color:#9a93a8;display:block;margin-bottom:4px}
+  #promptWrap{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+  #prompt{flex:1;width:100%;resize:none;background:#120f18;color:#e2e8d0;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px/1.5 system-ui,sans-serif}
+  #noteWrap{flex:0 0 auto}
+  #note{width:100%;height:96px;resize:vertical;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
+  #colImgNote{flex:0 0 300px;display:flex;flex-direction:column;gap:6px;min-height:0}
+  #colImgNote > label{font-size:13px;color:#9a93a8}
+  #colImgNote .resolve{float:right;font-size:13px;color:#cbbf9a;cursor:pointer}
+  #imgnote{flex:1;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
+  #imgnote:disabled{opacity:.45}
+  #hint{position:fixed;left:14px;bottom:10px;color:#cfc8da;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:5px;font-size:11px;pointer-events:none;z-index:4}
+  #err{position:fixed;inset:48px 0 0 0;display:none;place-items:center;color:#f88;background:#2a1416;font-size:15px;padding:30px;text-align:center;z-index:9}
+</style>
+</head>
+<body>
+<div id="bar">
+  <span id="views"></span>
+  <button id="upd" title="Save the current camera as this room’s vantage" style="display:none">✓ Update vantage</button>
+  <span class="spacer"></span>
+  <select id="model" title="Generator model">
+    <option value="openai-low">OpenAI · low (~$0.006)</option>
+    <option value="openai-medium">OpenAI · medium (~$0.05)</option>
+    <option value="gemini">Gemini (~$0.04)</option>
+    <option value="gemini-pro">Nano Banana Pro (~$0.13)</option>
+  </select>
+  <button id="gen" title="Render this vantage and style it through the model">✨ Generate</button>
+  <button id="openloc" title="Open this room’s location page in artview" style="display:none">↗ Location</button>
+  <span id="msg"></span>
+</div>
+<div id="cols">
+  <div id="colText">
+    <div id="desc" class="panel"><h3 id="descName">—</h3><div class="prose" id="descProse">(canon room description)</div></div>
+    <div id="promptWrap"><label>Scene — the scene layer (artist &amp; mood added automatically)</label><textarea id="prompt" spellcheck="false"></textarea></div>
+    <div id="noteWrap"><label>Notes for this vantage — appended to every render</label><textarea id="note" placeholder="e.g. warmer light; curtain half-open"></textarea></div>
+  </div>
+  <div id="colView"><div id="viewport"><canvas id="c" width="768" height="1024"></canvas></div></div>
+  <div id="colResult">
+    <div id="result"><div id="resultCap" style="display:none"></div><div class="ph">Pick a vantage, frame it, then <b>Generate</b>.<br>Selecting a vantage shows its latest shot.</div></div>
+    <div id="gallery"></div>
+  </div>
+  <div id="colImgNote">
+    <label>Note on the selected shot <label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
+    <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
+  </div>
+</div>
+<div id="hint"><b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/Ctrl</b> up/down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
+<div id="err"></div>
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script>
+// Generic blockout renderer + clay→image generator + per-volume gallery/notes/prompt.
+// Shell parts (walls/ceiling) auto-hide when the camera leaves the volume → "look in" from
+// outside, walls intact from interior vantages. See .tome/blockout-3d-continuity.md.
+const params = new URLSearchParams(location.search);
+const lock = params.get('lock') === '1';
+const startView = params.get('view') || null;
+const G = params.get('game'), VOL = params.get('volume');
+const srcUrl = params.get('src') || (G && VOL ? `/games/images/${G}/_blockout/${VOL}.scene.json` : null);
+const liveTool = !!(G && VOL);
+
+const CW = 768, CH = 1024;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, CW / CH, 0.1, 500);
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(CW, CH, false);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const clay = (hex) => new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
+// Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
+// stage from seats from boxes). MUST match ROLE_LEGEND in review-server.cjs.
+const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', floor: '#9c9c9c' };
+const roleColor = (p, inherit) => ROLE_COLORS[p.role || inherit] || p.color;
+const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
+const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;
+function fail(msg) { const e = document.getElementById('err'); e.style.display = 'grid'; e.textContent = msg; console.error(msg); }
+
+function mesh(geom, at, color) { const m = new THREE.Mesh(geom, clay(color)); if (at) m.position.set(at[0], at[1], at[2]); m.castShadow = true; m.receiveShadow = true; return m; }
+function buildPart(p, parent, offset, inherit) {
+  const off = offset || [0, 0, 0];
+  const at = p.at ? [p.at[0] + off[0], p.at[1] + off[1], p.at[2] + off[2]] : off.slice();
+  const col = roleColor(p, inherit);
+  if (p.box) parent.add(mesh(new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]), at, col));
+  else if (p.sphere) parent.add(mesh(new THREE.IcosahedronGeometry(p.sphere, 1), at, col));
+  else if (p.cyl) {
+    const c = p.cyl, m = mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 16, 1, false, 0, c.half ? Math.PI : Math.PI * 2), at, col);
+    if (c.axis === 'x') { m.rotation.z = Math.PI / 2; if (c.half) m.rotation.y = Math.PI; } else if (c.axis === 'z') m.rotation.x = Math.PI / 2;
+    parent.add(m);
+  } else if (p.grid) {
+    const g = p.grid, [x0, x1, dx] = g.x, [z0, z1, dz] = g.z; let row = 0;
+    for (let z = z0; z <= z1 + 1e-6; z += dz, row++) { const lift = (g.rakePerRow || 0) * row;
+      for (let x = x0; x <= x1 + 1e-6; x += dx) for (const sub of (p.of || [])) buildPart(sub, parent, [x, lift, z], p.role); }
+  }
+}
+function addLights() {
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x404040, 0.7));
+  const key = new THREE.DirectionalLight(0xffffff, 0.45); key.position.set(7, 16, 9); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 90 }); key.shadow.bias = -0.0006; scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.18); fill.position.set(-8, 6, 10); scene.add(fill);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+}
+
+let CAMERAS = {}, currentView = null, INFO = {}, GENS = [], shellGroup = null, bounds = null;
+// Update Vantage is only meaningful once the camera has moved off the saved vantage.
+let vantageDirty = false;
+function updUpd() { const b = document.getElementById('upd'); if (b) b.disabled = !(liveTool && vantageDirty); }
+function markDirty() { if (!vantageDirty) { vantageDirty = true; updUpd(); } }
+// Compass facing (+ tilt) for the model, so compass-referenced features land on the right side.
+const COMPASS = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+function facingString() {
+  const f = new THREE.Vector3(); camera.getWorldDirection(f);
+  const dir = (rad) => { let d = (rad * 180 / Math.PI) % 360; if (d < 0) d += 360; return COMPASS[Math.round(d / 45) % 8]; };
+  const ahead = Math.atan2(f.x, -f.z);   // frame: north=-Z, east=+X
+  const pitch = Math.asin(THREE.MathUtils.clamp(f.y, -1, 1)) * 180 / Math.PI;
+  const tilt = pitch > 12 ? 'angled upward' : pitch < -12 ? 'angled downward' : 'roughly level';
+  return `Viewpoint orientation: the camera faces ${dir(ahead)} and is ${tilt}; to the viewer's right is ${dir(ahead + Math.PI / 2)}, to the left is ${dir(ahead - Math.PI / 2)}, and behind is ${dir(ahead + Math.PI)}. Place any compass-referenced feature accordingly (e.g. something on the ${dir(ahead + Math.PI / 2)} wall belongs on the right of the frame).`;
+}
+function applyView(name) {
+  const v = CAMERAS[name]; if (!v) return;
+  currentView = name;
+  camera.position.set(v.pos[0], v.pos[1], v.pos[2]);
+  camera.fov = v.fov || 50; camera.updateProjectionMatrix();
+  camera.lookAt(v.look[0], v.look[1], v.look[2]);
+  document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b.dataset.v === name));
+  showDesc(name); showNote(name); showScene(name); renderGallery(); showLatest(name);
+  vantageDirty = false; updUpd();   // just arrived at the saved vantage → nothing to update
+  return v;
+}
+function showDesc(name) { const i = INFO[name] || {}; document.getElementById('descName').textContent = 'Vantage: ' + (i.name || name); document.getElementById('descProse').textContent = i.description || '(no canon description)'; }
+function showNote(name) { document.getElementById('note').value = (INFO[name] || {}).note || ''; }
+function showScene(name) { document.getElementById('prompt').value = (INFO[name] || {}).scene || ''; }
+let selKey = null, lastFile = null;
+const NAVKEY = 'blockout:' + G + ':' + VOL;
+function saveNav() { try { localStorage.setItem(NAVKEY, JSON.stringify({ view: currentView, file: lastFile })); } catch (e) {} }
+function readNav() { try { return JSON.parse(localStorage.getItem(NAVKEY) || '{}'); } catch (e) { return {}; } }
+function setResult(file) {
+  lastFile = file || null;
+  const name = (INFO[currentView] || {}).name || currentView || '';
+  document.getElementById('result').innerHTML = file
+    ? `<div id="resultCap">${name}</div><img src="${imgUrl(file)}" alt="gen">`
+    : '<div class="ph">No shot yet from this vantage — Generate one.</div>';
+  document.querySelectorAll('#gallery .thumb').forEach((t) => t.classList.toggle('on', t.dataset.f === file));
+  // Image note (shared with the reviewer's _review-notes.json, keyed per shot).
+  const g = GENS.find((x) => x.file === file), inote = document.getElementById('imgnote'), ir = document.getElementById('imgResolve');
+  if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; }
+  else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; }
+  saveNav();
+}
+async function saveImgNote() {
+  if (!selKey) return; const text = document.getElementById('imgnote').value;
+  const g = GENS.find((x) => x.key === selKey); if (g) { g.note = text; g.status = 'open'; }
+  try { await fetch('/api/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: selKey, text }) }); } catch (e) {}
+}
+async function toggleImgResolve() {
+  if (!selKey) return; const status = document.getElementById('imgResolve').checked ? 'resolved' : 'open';
+  const g = GENS.find((x) => x.key === selKey); if (g) g.status = status;
+  try { await fetch('/api/note-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: selKey, status }) }); } catch (e) {}
+}
+function showLatest(view) { const g = GENS.find((x) => x.view === view); setResult(g ? g.file : null); }
+
+function captureClay() {
+  const wasVis = shellGroup ? shellGroup.visible : true; if (shellGroup) shellGroup.visible = true;   // clay always keeps walls
+  renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix(); renderer.render(scene, camera);
+  const url = canvas.toDataURL('image/png'); if (shellGroup) shellGroup.visible = wasVis; sizeToViewport(); return url;
+}
+function sizeToViewport() { const vp = document.getElementById('viewport'); const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+
+async function updateVantage(btn) {
+  if (!currentView) return;
+  const p = camera.position, f = new THREE.Vector3(); camera.getWorldDirection(f);
+  const r2 = (n) => +n.toFixed(2), pos = [r2(p.x), r2(p.y), r2(p.z)], look = [r2(p.x + f.x * 6), r2(p.y + f.y * 6), r2(p.z + f.z * 6)], fov = Math.round(camera.fov);
+  const label = btn.textContent;
+  try { const j = await (await fetch('/api/blockout-camera', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view: currentView, pos, look, fov }) })).json();
+    if (!j.ok) throw new Error(j.error || 'save failed'); CAMERAS[currentView] = { pos, look, fov }; vantageDirty = false; updUpd(); btn.textContent = '✓ saved'; }
+  catch (e) { btn.textContent = '⚠ ' + e.message; }
+  setTimeout(() => { btn.textContent = label; }, 1600);
+}
+async function saveNote() {
+  if (!currentView) return; const text = document.getElementById('note').value;
+  INFO[currentView] = INFO[currentView] || {}; INFO[currentView].note = text;
+  try { await fetch('/api/blockout-note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view: currentView, text }) }); } catch (e) {}
+}
+async function loadInfo() { try { const j = await (await fetch(`/api/blockout-info?game=${G}&volume=${VOL}`)).json(); (j.rooms || []).forEach((r) => INFO[r.slug] = r); } catch (e) {} }
+async function loadGallery() {
+  try { GENS = ((await (await fetch(`/api/blockout-gens?game=${G}&volume=${VOL}`)).json()).gens) || []; } catch (e) { GENS = []; }
+  renderGallery();
+}
+// Only the CURRENT vantage's shots are shown — switch vantage to see others.
+function renderGallery() {
+  const el = document.getElementById('gallery');
+  const list = GENS.filter((g) => g.view === currentView);
+  if (!list.length) { el.innerHTML = '<span class="none">No shots from this vantage yet — Generate one.</span>'; return; }
+  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}" data-f="${g.file}" title="${tag}"><img src="${imgUrl(g.file)}"><div class="cap">${tag}</div></div>`; }).join('');
+  el.querySelectorAll('.thumb').forEach((t) => t.onclick = () => setResult(t.dataset.f));
+}
+async function generate() {
+  if (!liveTool) { setMsg('Open from artview to generate.'); return; }
+  const gen = document.getElementById('gen'), model = document.getElementById('model').value, sceneText = document.getElementById('prompt').value;
+  gen.disabled = true; setMsg('Rendering clay…'); const png = captureClay(); setMsg('Generating · ' + model + ' … (~10–20s)');
+  try {
+    const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view: currentView, model, png, scene: sceneText, facing: facingString() }) })).json();
+    if (!j.ok) throw new Error(j.error || 'failed');
+    await loadGallery(); setResult(j.file); setMsg('✓ ' + currentView + ' · ' + model);
+  } catch (e) { setMsg('⚠ ' + e.message); }
+  gen.disabled = false;
+}
+function openLocation() { try { if (window.parent && window.parent !== window && window.parent.selectTopic) window.parent.selectTopic('g:' + G, currentView); else setMsg('(open artview to jump to the location)'); } catch (e) { setMsg('(cannot reach artview)'); } }
+
+function installNav() {
+  const el = canvas; let yaw = 0, pitch = 0, looking = false, lx = 0, ly = 0;
+  const applyRot = () => camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+  const locked = () => document.pointerLockElement === el;
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+  el.addEventListener('pointerdown', (e) => { if (e.button !== 2) return; const d = new THREE.Vector3(); camera.getWorldDirection(d); yaw = Math.atan2(-d.x, -d.z); pitch = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1)); looking = true; lx = e.clientX; ly = e.clientY; if (el.requestPointerLock) el.requestPointerLock(); });
+  el.addEventListener('pointerup', (e) => { if (e.button === 2) { looking = false; if (document.exitPointerLock && locked()) document.exitPointerLock(); } });
+  document.addEventListener('pointerlockchange', () => { if (!locked()) looking = false; });
+  el.addEventListener('pointermove', (e) => {
+    if (!looking) return;
+    const dx = locked() ? e.movementX : (e.clientX - lx), dy = locked() ? e.movementY : (e.clientY - ly);
+    yaw -= dx * 0.0025; pitch -= dy * 0.0025; pitch = THREE.MathUtils.clamp(pitch, -Math.PI / 2 + 0.05, Math.PI / 2 - 0.05);
+    lx = e.clientX; ly = e.clientY; applyRot(); markDirty();
+  });
+  el.addEventListener('wheel', (e) => { e.preventDefault(); const f = new THREE.Vector3(); camera.getWorldDirection(f); camera.position.addScaledVector(f, -Math.sign(e.deltaY) * 1.2); markDirty(); }, { passive: false });
+  const pressed = {};
+  addEventListener('keydown', (e) => { if (e.target && /TEXTAREA|INPUT/.test(e.target.tagName)) return; pressed[e.code] = true; if (e.code === 'Space') e.preventDefault(); });
+  addEventListener('keyup', (e) => pressed[e.code] = false);
+  return () => {
+    // W/S follow the FULL facing direction (incl. pitch — look down, fly down). A/D strafe
+    // horizontally. Space/Ctrl are always world up/down. Normal speed is fast; Shift = slow.
+    const f = new THREE.Vector3(); camera.getWorldDirection(f).normalize();
+    const r = new THREE.Vector3().crossVectors(f, new THREE.Vector3(0, 1, 0)).normalize(); const m = new THREE.Vector3();
+    if (pressed.KeyW) m.add(f); if (pressed.KeyS) m.addScaledVector(f, -1);
+    if (pressed.KeyD) m.add(r); if (pressed.KeyA) m.addScaledVector(r, -1);
+    if (pressed.Space || pressed.KeyE) m.y += 1; if (pressed.ControlLeft || pressed.ControlRight || pressed.KeyQ) m.y -= 1;
+    if (m.lengthSq() > 0) { m.normalize().multiplyScalar((pressed.ShiftLeft || pressed.ShiftRight) ? 0.55 : 0.04); camera.position.add(m); markDirty(); }
+  };
+}
+
+async function boot() {
+  if (!srcUrl) return fail('No scene. Use ?game=&volume= or ?src=.');
+  let def; try { const res = await fetch(srcUrl); if (!res.ok) throw new Error('HTTP ' + res.status); def = await res.json(); } catch (e) { return fail('Could not load scene: ' + srcUrl + '\n' + e.message); }
+  scene.background = new THREE.Color(def.background || '#9a9a9a');
+  if (def.fog) scene.fog = new THREE.Fog(new THREE.Color(def.background || '#9a9a9a'), def.fog.near, def.fog.far);
+  document.title = (def.title || def.volume || 'Blockout') + ' — blockout';
+  const world = new THREE.Group(); shellGroup = new THREE.Group(); world.add(shellGroup);
+  for (const p of (def.parts || [])) buildPart(p, p.shell ? shellGroup : world);
+  scene.add(world); addLights();
+  bounds = new THREE.Box3().setFromObject(world);   // hide shell when camera leaves this
+
+  CAMERAS = def.cameras || {}; const names = Object.keys(CAMERAS); if (!names.length) return fail('Scene has no cameras.');
+  const nav = (!lock) ? readNav() : {};   // remember last vantage/shot across reloads
+  const first = (startView && CAMERAS[startView]) ? startView : (nav.view && CAMERAS[nav.view]) ? nav.view : names[0];
+  const bar = document.getElementById('views');
+  bar.innerHTML = names.map((n) => `<button data-v="${n}">${n}</button>`).join('');
+  bar.querySelectorAll('button').forEach((b) => b.onclick = () => applyView(b.dataset.v));
+
+  if (lock) {
+    document.getElementById('bar').style.display = 'none';
+    document.getElementById('cols').style.cssText = 'position:absolute;inset:0;padding:0';
+    document.getElementById('colResult').style.display = 'none'; document.getElementById('colText').style.display = 'none'; document.getElementById('colImgNote').style.display = 'none';
+    document.getElementById('colView').style.cssText = 'flex:1'; document.getElementById('viewport').style.cssText = 'width:100%;height:100%;aspect-ratio:auto'; document.getElementById('hint').style.display = 'none';
+    applyView(first); sizeToViewport(); renderer.render(scene, camera); window.__ready = true; return;
+  }
+
+  if (liveTool) {
+    await loadInfo(); await loadGallery();
+    const u = document.getElementById('upd'); u.style.display = ''; u.onclick = () => updateVantage(u);
+    const ol = document.getElementById('openloc'); ol.style.display = ''; ol.onclick = openLocation;
+    document.getElementById('note').addEventListener('blur', saveNote);
+    document.getElementById('imgnote').addEventListener('blur', saveImgNote);
+    document.getElementById('imgResolve').addEventListener('change', toggleImgResolve);
+  } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
+  document.getElementById('gen').onclick = generate;
+
+  applyView(first); sizeToViewport(); addEventListener('resize', sizeToViewport);
+  if (nav.file && GENS.some((x) => x.file === nav.file)) setResult(nav.file);   // re-show the last shot
+  const move = installNav();
+  (function loop() {
+    requestAnimationFrame(loop); move();
+    if (shellGroup && bounds) shellGroup.visible = bounds.containsPoint(camera.position);   // dollhouse from outside
+    renderer.render(scene, camera);
+  })();
+  window.__ready = true;
+}
+boot();
+</script>
+</body>
+</html>

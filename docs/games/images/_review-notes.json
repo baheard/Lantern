@@ -20,24 +20,87 @@
     "resolved": "2026-06-19",
     "detail": "Window-too-high fixed earlier in scene override (north wall, reachable above cans); border-width half is won-t-fix (see tome art-direction-model)."
   },
-  "game:theatre:witchs-lair:aud:comic-book-style__witchs-lair__oai-low-r1.png": {
+  "aud:theatre:comic-book-style__witchs-lair__oai-low-r1.png": {
     "note": "The canonical text clearly says the statue is holding a jewelled dagger. why did the skill miss this point?\n",
     "status": "resolved",
     "appliedTo": "scene",
     "resolved": "2026-06-19",
     "detail": "Scene dropped the jewelled dagger(s). Examine-statue canon: four arms each gripping a jewelled dagger + four eye-sockets in a diamond. Scene override corrected; regenerated oai-low-r2 shows daggers."
   },
-  "game:anchorhead:junction:aud:comic-book-style__junction__oai-low-r1.png": {
+  "aud:anchorhead:comic-book-style__junction__oai-low-r1.png": {
     "note": "This looks unnatural, the left side opening to the country with no buildings looks strange, the middle building looks thin. it seems like it wants to follow the instructions so carefully but we don't need to show all the exits. maybe prioritize grounded layouts unless specifically indicated otherwise?\n",
     "status": "resolved",
     "appliedTo": "rule",
     "resolved": "2026-06-19",
     "detail": "Encoded systemically as mold checklist factor 10 (grounded vantage; do not enumerate every exit; exits are mere THRESHOLDS). Future molds prefer one plausible camera over cramming all exits."
   },
-  "game:theatre:witchs-lair:aud:gouache__witchs-lair__oai-low-r1.png": {
+  "aud:theatre:gouache__witchs-lair__oai-low-r1.png": {
     "note": "I think only one hand carries a dagger? I remember being unclear on this when I played it, please probe.",
     "status": "wontfix",
     "resolved": "2026-06-22",
     "detail": "Already settled by the resolved comic-book sibling note for the same witchs-lair: examine-statue canon is FOUR arms each gripping a jewelled dagger (four eye-sockets in a diamond), and the location Scene override was corrected. This is just an audition piece — no action needed."
-  }
+  },
+  "aud:theatre:pastel-nocturne__staircase-landing__oai-low-r1.png": {
+    "note": "the landing is at the top of a long set of stairs. this shows the stairs going south, and shows them going UP. whoops.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:sumi-rubbing__staircase-landing__oai-low-r1.png": {
+    "note": "this might be the best composition. do we have to see the stairs going south? maybe a little bit of them, it's like we're not even on the landing.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:silver-plate__staircase-landing__oai-low-r1.png": {
+    "note": "No on these stairs lol. is this the landing? the stairs are on the south side going down, here they're north, this is wrong. why are the exits left and right doors in all these images? the scene doesn't have that? they could just be stair cases going off frame to the left and right?",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:illustration-plate__staircase-landing__oai-low-r1.png": {
+    "note": "another case of up south stairs, wrong. again doors for exits on the left right, not correct- the stairs lead up to the atrium balcony.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:drypoint__staircase-landing__oai-low-r1.png": {
+    "note": "lol again doors on left right. the stairs go down in the south... this one is really messed up. the stairs go down to below the landing",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:comic-panel__staircase-landing__oai-low-r1.png": {
+    "note": "Almost perfect. The stairs to this landing are pretty short, but this looks good. stairs go off the left and right, i think that's good, but exits seem to be the doorways... doesn't need to be doors, in fact that's not quite right.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:pulp-press__staircase-landing__oai-low-r1.png": {
+    "note": "pretty good. short stairs,incorrect doors for exits.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:spirit-copy__staircase-landing__oai-low-r1.png": {
+    "note": "stairs down from landing again, messed up. stairs are supposed to go up left and right to balcony, not to doors.",
+    "status": "resolved",
+    "appliedTo": "scene",
+    "resolved": "2026-06-23",
+    "detail": "Audition done (artist=comic-panel selected). Spatial fix folded into the staircase-landing Scene override (camera ON the landing; grand staircase shown SPLITTING up east/west off-frame; south down-stair screened/demoted) and the global App THRESHOLDS rule was dropped so exits aren't forced into dark doorways — exit form is now the mold's call. Re-rendered clean on OpenAI-low (staircase-landing-oai-low-r1)."
+  },
+  "aud:theatre:drypoint__above-the-pit__oai-low-r1.png": "not sure why there are stairs. you can't see down into the pit, you hear the growl but can't see what it is.",
+  "aud:theatre:comic-panel__above-the-pit__oai-low-r1.png": "why stairs? i guess it's not clear from the description that you can't see in the pit, but there is a growl that you can hear, indicating you can't see what it is. i think you could determine it's too dark by examining the pit or looking down or something, how to capture this? probing?",
+  "aud:theatre:pulp-press__above-the-pit__oai-low-r1.png": "stairs and visible pit. why the stairs? probing should figure out how navigation into the pit works...",
+  "aud:theatre:spirit-copy__above-the-pit__oai-low-r1.png": "stairs, visibilibty. ",
+  "aud:theatre:sumi-rubbing__above-the-pit__oai-low-r1.png": "this is pretty good, but by chance. ",
+  "aud:theatre:pastel-nocturne__above-the-pit__oai-low-r1.png": "why stairs? visibility. ",
+  "aud:theatre:silver-plate__above-the-pit__oai-low-r1.png": "stairs, visibility"
 }

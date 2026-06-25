@@ -1,6 +1,6 @@
 {
   "game": "theatre",
-  "seed": 1,
+  "seed": "1",
   "style": "gothic",
   "generatedFrom": "docs\\games\\walkthroughs\\theatre.cmds.txt",
   "landmarks": {
@@ -28,8 +28,8 @@
         "northeast → Cloakroom"
       ],
       "description": "This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest.\n\nWhat do you want to do now?",
-      "scene": "This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. now? The anonymous faces smile back at you. These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now. Actually, this room is two stories high. You can see a landing going around the walls. The staircase goes to this landing. The southern wall above the theatre doors in shrouded in darkness.",
-      "prompt": "Scene: This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. now? The anonymous faces smile back at you. These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now. Actually, this room is two stories high. You can see a landing going around the walls. The staircase goes to this landing. The southern wall above the theatre doors in shrouded in darkness.",
+      "scene": "This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. The anonymous faces smile back at you. These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now. Actually, this room is two stories high. You can see a landing going around the walls. The staircase goes to this landing. The southern wall above the theatre doors in shrouded in darkness.",
+      "prompt": "Scene: This room is a tribute to the now-faded glory of the theatre. The still-smiling faces of forgotten productions stare out from faded posters at you. An old grand staircase leads up, while the exit lies to the south. Small private doors lead northeast and northwest. The anonymous faces smile back at you. These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now. Actually, this room is two stories high. You can see a landing going around the walls. The staircase goes to this landing. The southern wall above the theatre doors in shrouded in darkness.",
       "unprobed": [
         "poster"
       ]
@@ -44,8 +44,44 @@
         "south → Sealed Up Ticket Booth"
       ],
       "description": "Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north.\n\nThere is an open trapdoor in the floor. It was through here that you left your pager.\n\nYou can also see a closed metal safe here.\n\nWhat do you want to do now?",
-      "scene": "Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north. There is an open trapdoor in the floor. It was through here that you left your pager. now? (the plastered-over southern wall) The southern wall has been roughly plastered-over.",
-      "prompt": "Scene: Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north. There is an open trapdoor in the floor. It was through here that you left your pager. now? (the plastered-over southern wall) The southern wall has been roughly plastered-over."
+      "scene": "Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north. There is an open trapdoor in the floor. It was through here that you left your pager. (the plastered-over southern wall) The southern wall has been roughly plastered-over.",
+      "prompt": "Scene: Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north. There is an open trapdoor in the floor. It was through here that you left your pager. (the plastered-over southern wall) The southern wall has been roughly plastered-over.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the trapdoor) You see nothing special about the trapdoor.",
+          "traverse": {
+            "verb": "go through door",
+            "destination": "Basement",
+            "reciprocal": "(the trapdoor) Basement You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain…"
+          }
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Basement",
+          "reciprocal": "You can barely make anything out in here."
+        },
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Theatre Lobby",
+          "reciprocal": "This room is a tribute to the now-faded glory of the theatre."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Cramped Hallway",
+          "reciprocal": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Sealed Up Ticket Booth",
+          "reciprocal": "This is a small room that has been sealed up."
+        }
+      ]
     },
     {
       "name": "Basement",
@@ -53,11 +89,28 @@
       "exits": [
         "up → Manager's Office"
       ],
-      "description": "You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels.\n\nThere is an open trapdoor in the ceiling. It was through here that you left your pager.\n\nAn old electrical panel is mounted on the wall.\n\nSitting on one of the boxes is your trusty pager, right where you left it.\n\nYou can also see a loose page here.\n\nWhat now?",
+      "description": "You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels.\n\nThere is an open trapdoor in the ceiling. It was through here that you left your pager.\n\nAn old electrical panel is mounted on the wall.\n\nSitting on one of the boxes is your trusty pager, right where you left it.\n\nYou can also see a loose page here.\n\nWhat do you want to do now?",
       "scene": "You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels. There is an open trapdoor in the ceiling. It was through here that you left your pager. An old electrical panel is mounted on the wall. Sitting on one of the boxes is your trusty pager, right where you left it. The electrical panel is mounted on the wall. On it you can see a switch. The switch is off.",
       "prompt": "Scene: You can barely make anything out in here. The only source of illumination is the light seeping in from the street-level windows. Not that it really matters because all this room seems to contain is boxes and a couple of barrels. There is an open trapdoor in the ceiling. It was through here that you left your pager. An old electrical panel is mounted on the wall. Sitting on one of the boxes is your trusty pager, right where you left it. The electrical panel is mounted on the wall. On it you can see a switch. The switch is off.",
       "unprobed": [
         "window"
+      ],
+      "exitFacts": [
+        {
+          "ref": "trapdoor",
+          "kind": "noun",
+          "traverse": {
+            "verb": "go through trapdoor",
+            "destination": "Manager's Office",
+            "reciprocal": "Manager's Office Judging from the desk and lots of papers everywhere, this must have been the manager's office. Doors lead to the southeast and to the north. There is an open trapdoor in the floor. You can also see a…"
+          }
+        },
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Manager's Office",
+          "reciprocal": "Judging from the desk and lots of papers everywhere, this must have been the manager's office."
+        }
       ]
     },
     {
@@ -68,7 +121,18 @@
       ],
       "description": "The neighbourhood outside the theatre has deteriorated steadily over the last three decades, to the state of a slum (not that you would ever use that word, of course). Now a slight mist covers the litter-strewn streets. The street heads east and west into the murky twilight.\n\nYou stop for a moment. Something is wrong with this scene. Your car is missing. Your car is not here. Your car is gone. There is a big space where your car was once parked. It's absent, vanished, vacated the premises, disappeared, ... stolen. Someone has stolen your car! How typical, in order to save an annoying little pager, fate has robbed you of your car. That car has been part of your life for years and now it is gone. It looks like you could be late for the opera, after all.\n\nWhat now?",
       "scene": "The neighbourhood outside the theatre has deteriorated steadily over the last three decades, to the state of a slum (not that you would ever use that word, of course). Now a slight mist covers the litter-strewn streets. The street heads east and west into the murky twilight. You stop for a moment. Something is wrong with this scene. Your car is missing. Your car is not here. Your car is gone. There is a big space where your car was once parked. It's absent, vanished, vacated the premises, disappeared, ... stolen. Someone has stolen your car! How typical, in order to save an annoying little pager, fate has robbed you of your car. That car has been part of your life for years and now it is gone. This individual is very large and bulky, and is wearing heavy leather clothing that is ripped in several places. He has very pale skin but dark spooky eyes that stare at you with no trace of emotion (perhaps even life). You can't help but notice that half of his mouth is sewn together.",
-      "prompt": "Scene: The neighbourhood outside the theatre has deteriorated steadily over the last three decades, to the state of a slum (not that you would ever use that word, of course). Now a slight mist covers the litter-strewn streets. The street heads east and west into the murky twilight. You stop for a moment. Something is wrong with this scene. Your car is missing. Your car is not here. Your car is gone. There is a big space where your car was once parked. It's absent, vanished, vacated the premises, disappeared, ... stolen. Someone has stolen your car! How typical, in order to save an annoying little pager, fate has robbed you of your car. That car has been part of your life for years and now it is gone. This individual is very large and bulky, and is wearing heavy leather clothing that is ripped in several places. He has very pale skin but dark spooky eyes that stare at you with no trace of emotion (perhaps even life). You can't help but notice that half of his mouth is sewn together."
+      "prompt": "Scene: The neighbourhood outside the theatre has deteriorated steadily over the last three decades, to the state of a slum (not that you would ever use that word, of course). Now a slight mist covers the litter-strewn streets. The street heads east and west into the murky twilight. You stop for a moment. Something is wrong with this scene. Your car is missing. Your car is not here. Your car is gone. There is a big space where your car was once parked. It's absent, vanished, vacated the premises, disappeared, ... stolen. Someone has stolen your car! How typical, in order to save an annoying little pager, fate has robbed you of your car. That car has been part of your life for years and now it is gone. This individual is very large and bulky, and is wearing heavy leather clothing that is ripped in several places. He has very pale skin but dark spooky eyes that stare at you with no trace of emotion (perhaps even life). You can't help but notice that half of his mouth is sewn together.",
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Theatre Lobby",
+          "reciprocal": "This room is a tribute to the now-faded glory of the theatre."
+        }
+      ],
+      "lookFacts": {
+        "up": "There is too much smog to the evening sunset."
+      }
     },
     {
       "name": "Cramped Hallway",
@@ -80,7 +144,27 @@
       ],
       "description": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through. Doors lead south and west, while the hallway continues north.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through. Doors lead south and west, while the hallway continues north.",
-      "prompt": "Scene: Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through. Doors lead south and west, while the hallway continues north."
+      "prompt": "Scene: Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through. Doors lead south and west, while the hallway continues north.",
+      "exitFacts": [
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Tight Stairway",
+          "reciprocal": "This narrow little stairway winds its way up to the west and down to the east."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Narrow Hallway",
+          "reciprocal": "Here, the boxes have recently collapsed, creating a large pile of junk."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Manager's Office",
+          "reciprocal": "Judging from the desk and lots of papers everywhere, this must have been the manager's office."
+        }
+      ]
     },
     {
       "name": "Tight Stairway",
@@ -92,7 +176,27 @@
       ],
       "description": "This narrow little stairway winds its way up to the west and down to the east.\n\nWhat now?",
       "scene": "This narrow little stairway winds its way up to the west and down to the east.",
-      "prompt": "Scene: This narrow little stairway winds its way up to the west and down to the east."
+      "prompt": "Scene: This narrow little stairway winds its way up to the west and down to the east.",
+      "exitFacts": [
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Centre of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north and south."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Cramped Hallway",
+          "reciprocal": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Cramped Hallway",
+          "reciprocal": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through."
+        }
+      ]
     },
     {
       "name": "Centre of Long Corridor",
@@ -106,7 +210,39 @@
       ],
       "description": "This is a long wood-panelled corridor that goes north and south. A narrow little staircase leads down to the east from here, while a door goes west.\n\nWhat now?",
       "scene": "This is a long wood-panelled corridor that goes north and south. A narrow little staircase leads down to the east from here, while a door goes west.",
-      "prompt": "Scene: This is a long wood-panelled corridor that goes north and south. A narrow little staircase leads down to the east from here, while a door goes west."
+      "prompt": "Scene: This is a long wood-panelled corridor that goes north and south. A narrow little staircase leads down to the east from here, while a door goes west.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "South End of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north from here."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Tight Stairway",
+          "reciprocal": "This narrow little stairway winds its way up to the west and down to the east."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Costume Room",
+          "reciprocal": "Stepping into this room is like journeying back in time to another era."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "North End of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes south from here."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Tight Stairway",
+          "reciprocal": "This narrow little stairway winds its way up to the west and down to the east."
+        }
+      ]
     },
     {
       "name": "South End of Long Corridor",
@@ -118,7 +254,27 @@
       ],
       "description": "This is a long wood-panelled corridor that goes north from here. Doors lead south and west.\n\nWhat now?",
       "scene": "This is a long wood-panelled corridor that goes north from here. Doors lead south and west.",
-      "prompt": "Scene: This is a long wood-panelled corridor that goes north from here. Doors lead south and west."
+      "prompt": "Scene: This is a long wood-panelled corridor that goes north from here. Doors lead south and west.",
+      "exitFacts": [
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Music Room",
+          "reciprocal": "This room seems to have contained music equipment."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Centre of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north and south."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Prop Room",
+          "reciprocal": "In here were stored many of the smaller props once used in the theatre's production."
+        }
+      ]
     },
     {
       "name": "Music Room",
@@ -135,9 +291,28 @@
         "up → Southern End of the Attic",
         "north → South End of Long Corridor"
       ],
-      "description": "In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north.\n\nThere is a closed trapdoor in the ceiling.\n\nThe piano rolls to a stop.\n\nWhat now?",
-      "scene": "In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north. There is a closed trapdoor in the ceiling. The piano rolls to a stop.",
-      "prompt": "Scene: In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north. There is a closed trapdoor in the ceiling. The piano rolls to a stop."
+      "description": "In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north.\n\nThere is a closed trapdoor in the ceiling.\n\nWhat now?",
+      "scene": "In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north. There is a closed trapdoor in the ceiling.",
+      "prompt": "Scene: In here were stored many of the smaller props once used in the theatre's production. Shelves full of junk line the walls. A door leads out to the north. There is a closed trapdoor in the ceiling.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the trapdoor) You see nothing special about the trapdoor."
+        },
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Southern End of the Attic",
+          "reciprocal": "You have made your way up into the attic of the theatre."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "South End of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north from here."
+        }
+      ]
     },
     {
       "name": "Southern End of the Attic",
@@ -148,7 +323,21 @@
       ],
       "description": "You have made your way up into the attic of the theatre. Wooden studs and crossbeams make progress through the room difficult but not impossible. Cobwebs and thick dust line the area. The attic continues further to the north.\n\nAn open trapdoor in the floor leads down.\n\nYou can also see two loose pages here.\n\nWhat now?",
       "scene": "You have made your way up into the attic of the theatre. Wooden studs and crossbeams make progress through the room difficult but not impossible. Cobwebs and thick dust line the area. The attic continues further to the north. An open trapdoor in the floor leads down.",
-      "prompt": "Scene: You have made your way up into the attic of the theatre. Wooden studs and crossbeams make progress through the room difficult but not impossible. Cobwebs and thick dust line the area. The attic continues further to the north. An open trapdoor in the floor leads down."
+      "prompt": "Scene: You have made your way up into the attic of the theatre. Wooden studs and crossbeams make progress through the room difficult but not impossible. Cobwebs and thick dust line the area. The attic continues further to the north. An open trapdoor in the floor leads down.",
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Attic above the Theatre",
+          "reciprocal": "Dust coats the crossbeams, and covers the thinly plastered floor here."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Prop Room",
+          "reciprocal": "In here were stored many of the smaller props once used in the theatre's production."
+        }
+      ]
     },
     {
       "name": "Attic above the Theatre",
@@ -162,6 +351,20 @@
       "prompt": "Scene: Dust coats the crossbeams, and covers the thinly plastered floor here. Looking through the cracks in some of the plaster, you can see that you are high above the theatre auditorium itself. The attic continues south from here, while to the north you notice a curious construction. Supported on the floor by a couple of sturdy crossbeams is a large winch with a handle. From the winch a thick cable runs down through a hole in the floor. Through the cracks you can see that the cable ends at a large chandelier.",
       "unprobed": [
         "chandelier"
+      ],
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Attic Observatory",
+          "reciprocal": "You conclude that this must be some kind of observatory, after all, what else could it be?"
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Southern End of the Attic",
+          "reciprocal": "You have made your way up into the attic of the theatre."
+        }
       ]
     },
     {
@@ -175,7 +378,23 @@
       "prompt": "Scene: You conclude that this must be some kind of observatory, after all, what else could it be? However, why is it that instead of the usual dome, the roof just has a strangely patterned window? Also, instead of the normal studs and crossbeams, the exposed wooden beams of the walls are set at bizarre angles. It gives you the impression that you are inside a large multi-sided mathematical shape. An opening leads south. Completing the scene is a large strangely shaped telescope. As you gaze through the telescope, the patterned lens seems to cancel out the patterned window, as well as the greenish gas giving you a clear view of the night sky. You suddenly realise that the sun hasn't set yet but you can clearly make out all the various stars. Wait a second... the stars are moving! They are moving aside, to let something else come up from beyond them. An intensely alien presence awaits, tearing at the very fabric of the physical universe, waiting for something to happen to let it in. A cold chill runs down your spine as you realise that the presence has turned its attention to you.",
       "unprobed": [
         "window"
-      ]
+      ],
+      "exitFacts": [
+        {
+          "ref": "window",
+          "kind": "noun",
+          "examine": "The circular window has a pattern that is most peculiar. The more you look at it the less you can see anything discernible about it. It is as if the very act of observing it causes it to swirl in chaotic patterns. No,…"
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Attic above the Theatre",
+          "reciprocal": "Dust coats the crossbeams, and covers the thinly plastered floor here."
+        }
+      ],
+      "lookFacts": {
+        "up": "Above you is the curious window"
+      }
     },
     {
       "name": "Narrow Hallway",
@@ -186,7 +405,21 @@
       ],
       "description": "Here, the boxes have recently collapsed, creating a large pile of junk. The air is very musty here. A large pile of carpet rolls have fallen over, effectively blocking the way north, but you can go back to the south.\n\nWhat now?",
       "scene": "Here, the boxes have recently collapsed, creating a large pile of junk. The air is very musty here. A large pile of carpet rolls have fallen over, effectively blocking the way north, but you can go back to the south.",
-      "prompt": "Scene: Here, the boxes have recently collapsed, creating a large pile of junk. The air is very musty here. A large pile of carpet rolls have fallen over, effectively blocking the way north, but you can go back to the south."
+      "prompt": "Scene: Here, the boxes have recently collapsed, creating a large pile of junk. The air is very musty here. A large pile of carpet rolls have fallen over, effectively blocking the way north, but you can go back to the south.",
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "End of Hallway",
+          "reciprocal": "The narrow hallway and its rows of boxes come to an end here."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Cramped Hallway",
+          "reciprocal": "Boxes of junk line the walls, making the narrow hallway even more difficult to navigate through."
+        }
+      ]
     },
     {
       "name": "End of Hallway",
@@ -197,7 +430,26 @@
       ],
       "description": "The narrow hallway and its rows of boxes come to an end here. To the north is the back exit of the theatre while the hallway continues south, and an office door leads west.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "The narrow hallway and its rows of boxes come to an end here. To the north is the back exit of the theatre while the hallway continues south, and an office door leads west.",
-      "prompt": "Scene: The narrow hallway and its rows of boxes come to an end here. To the north is the back exit of the theatre while the hallway continues south, and an office door leads west."
+      "prompt": "Scene: The narrow hallway and its rows of boxes come to an end here. To the north is the back exit of the theatre while the hallway continues south, and an office door leads west.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the sealed door) The office door has been nailed shut."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Alley Courtyard",
+          "reciprocal": "You are behind the old theatre building in a small courtyard in the centre of the city block."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Narrow Hallway",
+          "reciprocal": "Here, the boxes have recently collapsed, creating a large pile of junk."
+        }
+      ]
     },
     {
       "name": "Alley Courtyard",
@@ -207,7 +459,15 @@
       ],
       "description": "You are behind the old theatre building in a small courtyard in the centre of the city block. On all sides tall buildings block you in. Once an alleyway allowed passage to the streets, but that alleyway was built over a couple of decades ago, so now the large stage doors to the south are quite useless. A small back entrance, however, lies to the southwest.\n\nA closed rubbish bin stands in the corner.\n\nWhat now?",
       "scene": "You are behind the old theatre building in a small courtyard in the centre of the city block. On all sides tall buildings block you in. Once an alleyway allowed passage to the streets, but that alleyway was built over a couple of decades ago, so now the large stage doors to the south are quite useless. A small back entrance, however, lies to the southwest. A closed rubbish bin stands in the corner.",
-      "prompt": "Scene: You are behind the old theatre building in a small courtyard in the centre of the city block. On all sides tall buildings block you in. Once an alleyway allowed passage to the streets, but that alleyway was built over a couple of decades ago, so now the large stage doors to the south are quite useless. A small back entrance, however, lies to the southwest. A closed rubbish bin stands in the corner."
+      "prompt": "Scene: You are behind the old theatre building in a small courtyard in the centre of the city block. On all sides tall buildings block you in. Once an alleyway allowed passage to the streets, but that alleyway was built over a couple of decades ago, so now the large stage doors to the south are quite useless. A small back entrance, however, lies to the southwest. A closed rubbish bin stands in the corner.",
+      "exitFacts": [
+        {
+          "ref": "southwest",
+          "kind": "dir",
+          "destination": "End of Hallway",
+          "reciprocal": "The narrow hallway and its rows of boxes come to an end here."
+        }
+      ]
     },
     {
       "name": "Staircase Landing",
@@ -219,7 +479,35 @@
       ],
       "description": "Here the grand staircase splits to the east and the west. You can also go back down to the south.\n\nA huge portrait dominates the northern wall.\n\nWhat now?",
       "scene": "Here the grand staircase splits to the east and the west. You can also go back down to the south. A huge portrait dominates the northern wall. It is a full-length picture of a distinguished gentleman in an old-fashioned suit. He is standing in a wood-panelled room with an oaken door and a large fireplace that has a roaring fire in it, casting flickering light all around the room. Looking closer you can't help but feel that the background room has been drawn with an incorrect perspective.",
-      "prompt": "Scene: Here the grand staircase splits to the east and the west. You can also go back down to the south. A huge portrait dominates the northern wall. It is a full-length picture of a distinguished gentleman in an old-fashioned suit. He is standing in a wood-panelled room with an oaken door and a large fireplace that has a roaring fire in it, casting flickering light all around the room. Looking closer you can't help but feel that the background room has been drawn with an incorrect perspective."
+      "prompt": "Scene: Here the grand staircase splits to the east and the west. You can also go back down to the south. A huge portrait dominates the northern wall. It is a full-length picture of a distinguished gentleman in an old-fashioned suit. He is standing in a wood-panelled room with an oaken door and a large fireplace that has a roaring fire in it, casting flickering light all around the room. Looking closer you can't help but feel that the background room has been drawn with an incorrect perspective.",
+      "exitFacts": [
+        {
+          "ref": "staircase",
+          "kind": "noun",
+          "examine": "These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Secret Gallery",
+          "reciprocal": "This is a cramped dimly-lit room, empty but for the rows of pictures that are on the walls."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Theatre Lobby",
+          "reciprocal": "This room is a tribute to the now-faded glory of the theatre."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Eastern Landing",
+          "reciprocal": "This landing circles around the upper level of the lobby allowing you to see down into it."
+        }
+      ],
+      "lookFacts": {
+        "down": "Below you is the theatre lobby."
+      }
     },
     {
       "name": "Secret Gallery",
@@ -229,7 +517,15 @@
       ],
       "description": "This is a cramped dimly-lit room, empty but for the rows of pictures that are on the walls. A small door leads south.\n\nYou can see a loose page and an old-fashioned camera here.\n\nWhat now?",
       "scene": "This is a cramped dimly-lit room, empty but for the rows of pictures that are on the walls. A small door leads south.",
-      "prompt": "Scene: This is a cramped dimly-lit room, empty but for the rows of pictures that are on the walls. A small door leads south."
+      "prompt": "Scene: This is a cramped dimly-lit room, empty but for the rows of pictures that are on the walls. A small door leads south.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Staircase Landing",
+          "reciprocal": "Here the grand staircase splits to the east and the west."
+        }
+      ]
     },
     {
       "name": "Eastern Landing",
@@ -242,7 +538,41 @@
       ],
       "description": "This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and west, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself, while a single finely carved wooden door leads east.\n\nWhat now?",
       "scene": "This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and west, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself, while a single finely carved wooden door leads east.",
-      "prompt": "Scene: This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and west, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself, while a single finely carved wooden door leads east."
+      "prompt": "Scene: This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and west, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself, while a single finely carved wooden door leads east.",
+      "exitFacts": [
+        {
+          "ref": "stairs",
+          "kind": "noun",
+          "examine": "These fine old stairs once would have been the focus of the entire lobby. Unfortunately they are a bit decrepit now."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Southern Landing",
+          "reciprocal": "The landing sweeps around the theatre's entrance hall."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Staircase Landing",
+          "reciprocal": "Here the grand staircase splits to the east and the west."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Eastern Theatre Aisle",
+          "reciprocal": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Eastern Stairway",
+          "reciprocal": "This is a finely carpeted stairway that leads down to a wooden door, and up to the north."
+        }
+      ],
+      "lookFacts": {
+        "down": "Below you is the theatre lobby."
+      }
     },
     {
       "name": "Southern Landing",
@@ -252,7 +582,18 @@
       ],
       "description": "The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest.\n\nAgainst the southern wall you can see some closed heavy curtains.\n\nWhat now?",
       "scene": "The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest. Against the southern wall you can see some closed heavy curtains. Below you is the theatre lobby. Actually you see that the light shining through the window has made a spotlight on the lobby floor below.",
-      "prompt": "Scene: The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest. Against the southern wall you can see some closed heavy curtains. Below you is the theatre lobby. Actually you see that the light shining through the window has made a spotlight on the lobby floor below."
+      "prompt": "Scene: The landing sweeps around the theatre's entrance hall. Here, at the southern end, you are above the main doors, and you can look down to the lobby below. The landing continues to the northeast and northwest. Against the southern wall you can see some closed heavy curtains. Below you is the theatre lobby. Actually you see that the light shining through the window has made a spotlight on the lobby floor below.",
+      "exitFacts": [
+        {
+          "ref": "northeast",
+          "kind": "dir",
+          "destination": "Eastern Landing",
+          "reciprocal": "This landing circles around the upper level of the lobby allowing you to see down into it."
+        }
+      ],
+      "lookFacts": {
+        "down": "Below you is the theatre lobby."
+      }
     },
     {
       "name": "Eastern Theatre Aisle",
@@ -261,12 +602,26 @@
         "north → Stage",
         "south → Eastern Landing"
       ],
-      "description": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south.\n\nThe chandelier has been lowered to ground level for easy access.\n\nYou hear a faint whisper from out of the darkness, \"Ticketsss, pleassse\".\n\nWhat now?",
-      "scene": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south. The chandelier has been lowered to ground level for easy access.",
-      "prompt": "Scene: This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south. The chandelier has been lowered to ground level for easy access.",
-      "unprobed": [
-        "chandelier"
-      ]
+      "description": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south.\n\nYou hear a faint whisper from out of the darkness, \"Ticketsss, pleassse\".\n\nWhat now?",
+      "scene": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south.",
+      "prompt": "Scene: This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats. Another aisle is to the west while the stage is to the north. Double doors lead south.",
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Stage",
+          "reciprocal": "Here you stand upon a stage that once would have been graced by the finest thespians in the country."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Eastern Landing",
+          "reciprocal": "This landing circles around the upper level of the lobby allowing you to see down into it."
+        }
+      ],
+      "lookFacts": {
+        "up": "Above you you can see a row of balcony seats and a finely-sculptured plaster ceiling."
+      }
     },
     {
       "name": "Eastern Stairway",
@@ -276,18 +631,32 @@
       ],
       "description": "This is a finely carpeted stairway that leads down to a wooden door, and up to the north.\n\nWhat now?",
       "scene": "This is a finely carpeted stairway that leads down to a wooden door, and up to the north.",
-      "prompt": "Scene: This is a finely carpeted stairway that leads down to a wooden door, and up to the north."
+      "prompt": "Scene: This is a finely carpeted stairway that leads down to a wooden door, and up to the north.",
+      "exitFacts": [
+        {
+          "ref": "stairway",
+          "kind": "noun",
+          "examine": "Eastern Stairway This is a finely carpeted stairway that leads down to a wooden door, and up to the north."
+        },
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Eastern Balcony",
+          "reciprocal": "You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below."
+        }
+      ]
     },
     {
       "name": "Eastern Balcony",
       "slug": "eastern-balcony",
       "exits": [],
-      "description": "You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south.\n\nBelow you, the auditorium's chandelier has been lowered to the ground level. The chandelier is swinging back and forth, and its arc is carrying it within your reach.\n\nWhat now?",
-      "scene": "You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south. Below you, the auditorium's chandelier has been lowered to the ground level. The chandelier is swinging back and forth, and its arc is carrying it within your reach.",
-      "prompt": "Scene: You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south. Below you, the auditorium's chandelier has been lowered to the ground level. The chandelier is swinging back and forth, and its arc is carrying it within your reach.",
-      "unprobed": [
-        "chandelier"
-      ]
+      "description": "You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south.\n\nWhat now?",
+      "scene": "You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south.",
+      "prompt": "Scene: You are in the eastern balcony overlooking the theatre auditorium, where once the elite would have been seated enjoying the shows on the stage below. Far across from you to the west you can see the other balcony seats. The only exit for those who cannot fly is down to the south.",
+      "lookFacts": {
+        "up": "The plaster of the ceiling above you is finely-sculptured.",
+        "down": "Below you is the stage and the theatre auditorium."
+      }
     },
     {
       "name": "Western Balcony",
@@ -300,7 +669,24 @@
       "prompt": "Scene: A thick layer of dust everywhere shows that no one has been here for quite a while, which is not surprising since there seems to be no way out of here. A bricked-up doorway once led west from here. Looking closer you realise that there is an exit. A small hole has been knocked into the wooden wall to the side of the bricked-up wall. The hole, which is small enough to crawl through, leads northwest. Below you, the auditorium's chandelier has been lowered to the ground level. The chandelier is swinging back and forth, and its arc is carrying it within your reach.",
       "unprobed": [
         "chandelier"
-      ]
+      ],
+      "exitFacts": [
+        {
+          "ref": "doorway",
+          "kind": "noun",
+          "examine": "The bricks form quite a sturdy wall, blocking the exit west."
+        },
+        {
+          "ref": "northwest",
+          "kind": "dir",
+          "destination": "Back Wall",
+          "reciprocal": "You seem to be crawling along inside a hollow in the wall separating the theatre from the building next to it."
+        }
+      ],
+      "lookFacts": {
+        "up": "The plaster of the ceiling above you is finely-sculptured.",
+        "down": "Below you is the stage and theatre auditorium."
+      }
     },
     {
       "name": "Back Wall",
@@ -310,7 +696,15 @@
       ],
       "description": "You seem to be crawling along inside a hollow in the wall separating the theatre from the building next to it. It is very dirty in here, and the lack of light makes it difficult to see anything clearly. The hollow continues south from here, while a hole lies to the southeast.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "You seem to be crawling along inside a hollow in the wall separating the theatre from the building next to it. It is very dirty in here, and the lack of light makes it difficult to see anything clearly. The hollow continues south from here, while a hole lies to the southeast.",
-      "prompt": "Scene: You seem to be crawling along inside a hollow in the wall separating the theatre from the building next to it. It is very dirty in here, and the lack of light makes it difficult to see anything clearly. The hollow continues south from here, while a hole lies to the southeast."
+      "prompt": "Scene: You seem to be crawling along inside a hollow in the wall separating the theatre from the building next to it. It is very dirty in here, and the lack of light makes it difficult to see anything clearly. The hollow continues south from here, while a hole lies to the southeast.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Wall with Large Hole",
+          "reciprocal": "This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here."
+        }
+      ]
     },
     {
       "name": "Wall with Large Hole",
@@ -320,7 +714,15 @@
       ],
       "description": "This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here. However a large hole leads west from here, into the neighbouring building itself.\n\nWhat now?",
       "scene": "This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here. However a large hole leads west from here, into the neighbouring building itself.",
-      "prompt": "Scene: This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here. However a large hole leads west from here, into the neighbouring building itself."
+      "prompt": "Scene: This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here. However a large hole leads west from here, into the neighbouring building itself.",
+      "exitFacts": [
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Secret Library",
+          "reciprocal": "You appear to have discovered a secret library."
+        }
+      ]
     },
     {
       "name": "Secret Library",
@@ -331,7 +733,31 @@
       ],
       "description": "You appear to have discovered a secret library. The room is filled with rows and rows of bookcases, each containing hundreds of old books. The air is filled with the smell of musty paper. Aisles lead south, while a small recess lies to the north. To the east, a bookcase has collapsed leaving a hole in the wall.\n\nWhat now?",
       "scene": "You appear to have discovered a secret library. The room is filled with rows and rows of bookcases, each containing hundreds of old books. The air is filled with the smell of musty paper. Aisles lead south, while a small recess lies to the north. To the east, a bookcase has collapsed leaving a hole in the wall.",
-      "prompt": "Scene: You appear to have discovered a secret library. The room is filled with rows and rows of bookcases, each containing hundreds of old books. The air is filled with the smell of musty paper. Aisles lead south, while a small recess lies to the north. To the east, a bookcase has collapsed leaving a hole in the wall."
+      "prompt": "Scene: You appear to have discovered a secret library. The room is filled with rows and rows of bookcases, each containing hundreds of old books. The air is filled with the smell of musty paper. Aisles lead south, while a small recess lies to the north. To the east, a bookcase has collapsed leaving a hole in the wall.",
+      "exitFacts": [
+        {
+          "ref": "hole",
+          "kind": "noun",
+          "examine": "The hole is big enough to enter.",
+          "traverse": {
+            "verb": "go through hole",
+            "destination": "Wall with Large Hole",
+            "reciprocal": "Wall with Large Hole This narrow hollow, which exists in the wall separating the theatre from its neighbouring building, continues north from here. However a large hole leads west from here, into the neighbouring…"
+          }
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Reading Recess",
+          "reciprocal": "This little recess appears to have been once a reading area."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Southern End of the Library",
+          "reciprocal": "You are at the southern end of the library, surrounded by rows and rows of old bookcases, all covered with strange glistening ropes."
+        }
+      ]
     },
     {
       "name": "Reading Recess",
@@ -341,7 +767,15 @@
       ],
       "description": "This little recess appears to have been once a reading area. A small reading table and chair are still here. The library continues to the south.\n\nOn the reading desk are two loose pages.\n\nWhat now?",
       "scene": "This little recess appears to have been once a reading area. A small reading table and chair are still here. The library continues to the south. On the reading desk are two loose pages.",
-      "prompt": "Scene: This little recess appears to have been once a reading area. A small reading table and chair are still here. The library continues to the south. On the reading desk are two loose pages."
+      "prompt": "Scene: This little recess appears to have been once a reading area. A small reading table and chair are still here. The library continues to the south. On the reading desk are two loose pages.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Secret Library",
+          "reciprocal": "You appear to have discovered a secret library."
+        }
+      ]
     },
     {
       "name": "Southern End of the Library",
@@ -355,6 +789,20 @@
       "prompt": "Scene: You are at the southern end of the library, surrounded by rows and rows of old bookcases, all covered with strange glistening ropes. A cold and damp breeze blows in from a broken French window to the west, while a library aisle leads north. You can see that all the strange glistening strands converge in the centre of a large heap of rotting books that appear to have been made into a nest. In the centre of the nest you can see a large slug or larva at least one and a half metres in length. In the large nest is a strange blue eye-like pearl.",
       "unprobed": [
         "window"
+      ],
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Secret Library",
+          "reciprocal": "You appear to have discovered a secret library."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Street Balcony",
+          "reciprocal": "You are high above a side street on an old stone balcony."
+        }
       ]
     },
     {
@@ -369,7 +817,19 @@
       "unprobed": [
         "sign",
         "window"
-      ]
+      ],
+      "exitFacts": [
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Theatre Roof",
+          "reciprocal": "You are high on the roof of the theatre, near a large chimney."
+        }
+      ],
+      "lookFacts": {
+        "up": "Sadly, the evening sky is lost above clouds of smog.",
+        "down": "You can see a side street below you."
+      }
     },
     {
       "name": "Theatre Roof",
@@ -377,9 +837,21 @@
       "exits": [
         "down → Guest Star Room"
       ],
-      "description": "You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down.\n\nYou can see a battered crow here.\n\nThe crow shifts side to side.\n\nWhat now?",
-      "scene": "You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down. The crow shifts side to side.",
-      "prompt": "Scene: You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down. The crow shifts side to side."
+      "description": "You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down.\n\nYou can see a battered crow here.\n\nWhat now?",
+      "scene": "You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down.",
+      "prompt": "Scene: You are high on the roof of the theatre, near a large chimney. All around you, the city is starting to light up for the oncoming sunset. The roof slopes off dangerously in all directions but you know that you can safely go west to the balcony. Also a chimney leads down.",
+      "exitFacts": [
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Guest Star Room",
+          "reciprocal": "This is a rather posh little suite, probably used by the theatre's owner or perhaps by an occasional guest star actor."
+        }
+      ],
+      "lookFacts": {
+        "up": "It is almost sunset, and you can just make out some of the stars above you.",
+        "down": "Far below you, on the mist covered street, you can see the street thug staring back up at you."
+      }
     },
     {
       "name": "Guest Star Room",
@@ -393,6 +865,14 @@
       "unprobed": [
         "poster",
         "fireplace"
+      ],
+      "exitFacts": [
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "North End of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes south from here."
+        }
       ]
     },
     {
@@ -404,15 +884,46 @@
       ],
       "description": "This room was once an office but all of the furniture has been removed, leaving only a small fireplace in the west wall. A door once led east from here but you can see that it has been completely boarded up.\n\nIn the middle of the room, straight out of a scene from a silly vampire movie, is an old-style wooden coffin with brass fittings, on a mahogany stand.\n\nYou can also see a battered crow here.\n\nWhat now?",
       "scene": "This room was once an office but all of the furniture has been removed, leaving only a small fireplace in the west wall. A door once led east from here but you can see that it has been completely boarded up. In the middle of the room, straight out of a scene from a silly vampire movie, is an old-style wooden coffin with brass fittings, on a mahogany stand. This sooty shaft seems to be the only access out of here. It continues both up and down.",
-      "prompt": "Scene: This room was once an office but all of the furniture has been removed, leaving only a small fireplace in the west wall. A door once led east from here but you can see that it has been completely boarded up. In the middle of the room, straight out of a scene from a silly vampire movie, is an old-style wooden coffin with brass fittings, on a mahogany stand. This sooty shaft seems to be the only access out of here. It continues both up and down."
+      "prompt": "Scene: This room was once an office but all of the furniture has been removed, leaving only a small fireplace in the west wall. A door once led east from here but you can see that it has been completely boarded up. In the middle of the room, straight out of a scene from a silly vampire movie, is an old-style wooden coffin with brass fittings, on a mahogany stand. This sooty shaft seems to be the only access out of here. It continues both up and down.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the sealed door) The door has been soundly boarded up."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Boiler Room",
+          "reciprocal": "A huge boiler dominates this room."
+        },
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Guest Star Room",
+          "reciprocal": "This is a rather posh little suite, probably used by the theatre's owner or perhaps by an occasional guest star actor."
+        }
+      ]
     },
     {
       "name": "Boiler Room",
       "slug": "boiler-room",
       "exits": [],
-      "description": "A huge boiler dominates this room. Its pipes extend through the walls, ensnaring them. A shaft from the boiler leads up, but, strangely, there seems to be no other exit out.\n\nAgainst one of the walls is large dirty coal bin.\n\nYou can also see a shiny key and a dirty wooden chest (which is closed) here.\n\nWhat now?",
+      "description": "A huge boiler dominates this room. Its pipes extend through the walls, ensnaring them. A shaft from the boiler leads up, but, strangely, there seems to be no other exit out.\n\nAgainst one of the walls is large dirty coal bin.\n\nYou can also see a dirty wooden chest (which is closed) here.\n\nWhat now?",
       "scene": "A huge boiler dominates this room. Its pipes extend through the walls, ensnaring them. A shaft from the boiler leads up, but, strangely, there seems to be no other exit out. Against one of the walls is large dirty coal bin.",
-      "prompt": "Scene: A huge boiler dominates this room. Its pipes extend through the walls, ensnaring them. A shaft from the boiler leads up, but, strangely, there seems to be no other exit out. Against one of the walls is large dirty coal bin."
+      "prompt": "Scene: A huge boiler dominates this room. Its pipes extend through the walls, ensnaring them. A shaft from the boiler leads up, but, strangely, there seems to be no other exit out. Against one of the walls is large dirty coal bin.",
+      "exitFacts": [
+        {
+          "ref": "shaft",
+          "kind": "noun",
+          "examine": "The boiler would have once heated the entire theatre, but now its only use is to provide an exit up and out of here.",
+          "traverse": {
+            "verb": "go through shaft",
+            "destination": "Sealed-Off Office",
+            "reciprocal": "You clamber back up the shaft. Sealed-Off Office This room was once an office but all of the furniture has been removed, leaving only a small fireplace in the west wall. A door once led east from here but you can see…"
+          }
+        }
+      ]
     },
     {
       "name": "North End of Long Corridor",
@@ -423,7 +934,21 @@
       ],
       "description": "This is a long wood-panelled corridor that goes south from here. Doors lead north and west.\n\nWhat now?",
       "scene": "This is a long wood-panelled corridor that goes south from here. Doors lead north and west.",
-      "prompt": "Scene: This is a long wood-panelled corridor that goes south from here. Doors lead north and west."
+      "prompt": "Scene: This is a long wood-panelled corridor that goes south from here. Doors lead north and west.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Centre of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north and south."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Sick Bay",
+          "reciprocal": "This small room seems to be reserved for medical emergencies."
+        }
+      ]
     },
     {
       "name": "Costume Room",
@@ -433,7 +958,15 @@
       ],
       "description": "Stepping into this room is like journeying back in time to another era. This room is filled with racks and racks of old costumes. The costumes range from Imperial Rome to World War I uniforms. An exit leads east.\n\nBundled amongst some other scraps of clothing is an old gas mask.\n\nYou can also see a mannequin dressed in a pirate costume, a mannequin dressed in a cowboy costume and a mannequin dressed in a gladiator costume here.\n\nWhat now?",
       "scene": "Stepping into this room is like journeying back in time to another era. This room is filled with racks and racks of old costumes. The costumes range from Imperial Rome to World War I uniforms. An exit leads east. Bundled amongst some other scraps of clothing is an old gas mask.",
-      "prompt": "Scene: Stepping into this room is like journeying back in time to another era. This room is filled with racks and racks of old costumes. The costumes range from Imperial Rome to World War I uniforms. An exit leads east. Bundled amongst some other scraps of clothing is an old gas mask."
+      "prompt": "Scene: Stepping into this room is like journeying back in time to another era. This room is filled with racks and racks of old costumes. The costumes range from Imperial Rome to World War I uniforms. An exit leads east. Bundled amongst some other scraps of clothing is an old gas mask.",
+      "exitFacts": [
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Centre of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes north and south."
+        }
+      ]
     },
     {
       "name": "Sick Bay",
@@ -446,6 +979,14 @@
       "prompt": "Scene: This small room seems to be reserved for medical emergencies. The walls are covered with old medical posters giving cheerful descriptions on how to heal cuts, tend to burns, and deliver babies?! Healthy people can leave to the south. There is a bed here, for the infirm. On the bed are a letter and a small glass vial (in which is a clear blue liquid).",
       "unprobed": [
         "poster"
+      ],
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "North End of Long Corridor",
+          "reciprocal": "This is a long wood-panelled corridor that goes south from here."
+        }
       ]
     },
     {
@@ -459,6 +1000,14 @@
       "prompt": "Scene: This is a small room that has been sealed up. The windows have been boarded over, but faint light enters through cracks. The booth smells very bad, like old rotten meat. Obviously the source of the smell, you can see a human skeleton lying in a ragged heap in the corner. Actually, it looks like a pretty flashy pocket watch for its age, and it has a little dial on it. It currently says it is about 3:40 but the time is wrong, because the watch has stopped.",
       "unprobed": [
         "window"
+      ],
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Manager's Office",
+          "reciprocal": "Judging from the desk and lots of papers everywhere, this must have been the manager's office."
+        }
       ]
     },
     {
@@ -471,7 +1020,30 @@
       ],
       "description": "Here you stand upon a stage that once would have been graced by the finest thespians in the country. However, now the only players upon this stage are the spiders who spin the cobwebs, and who act out that never-ending saga of life, death, and life again.\n\nAnyway to the southeast and southwest aisles wind their way through the endless sea of seats, to the north is the back stage area, while down to the south is the orchestra pit.\n\nWhat now?",
       "scene": "Here you stand upon a stage that once would have been graced by the finest thespians in the country. However, now the only players upon this stage are the spiders who spin the cobwebs, and who act out that never-ending saga of life, death, and life again. Anyway to the southeast and southwest aisles wind their way through the endless sea of seats, to the north is the back stage area, while down to the south is the orchestra pit.",
-      "prompt": "Scene: Here you stand upon a stage that once would have been graced by the finest thespians in the country. However, now the only players upon this stage are the spiders who spin the cobwebs, and who act out that never-ending saga of life, death, and life again. Anyway to the southeast and southwest aisles wind their way through the endless sea of seats, to the north is the back stage area, while down to the south is the orchestra pit."
+      "prompt": "Scene: Here you stand upon a stage that once would have been graced by the finest thespians in the country. However, now the only players upon this stage are the spiders who spin the cobwebs, and who act out that never-ending saga of life, death, and life again. Anyway to the southeast and southwest aisles wind their way through the endless sea of seats, to the north is the back stage area, while down to the south is the orchestra pit.",
+      "exitFacts": [
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Back Stage",
+          "reciprocal": "A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Orchestra Pit",
+          "reciprocal": "This depression would have been too small for anything but the most basic of orchestras."
+        },
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Eastern Theatre Aisle",
+          "reciprocal": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by a sea of seats."
+        }
+      ],
+      "lookFacts": {
+        "up": "Far above you, you can see endless rows of lighting and girders."
+      }
     },
     {
       "name": "Back Stage",
@@ -481,7 +1053,28 @@
       ],
       "description": "A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments. The general clutter isn't helped by the rolls and rolls of canvas scenery backdrops. The stage doors, leading north, have been boarded over, and you can see that the remains of stairs leading up have been pulled down, so only the exit seems to be back south to the stage.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments. The general clutter isn't helped by the rolls and rolls of canvas scenery backdrops. The stage doors, leading north, have been boarded over, and you can see that the remains of stairs leading up have been pulled down, so only the exit seems to be back south to the stage.",
-      "prompt": "Scene: A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments. The general clutter isn't helped by the rolls and rolls of canvas scenery backdrops. The stage doors, leading north, have been boarded over, and you can see that the remains of stairs leading up have been pulled down, so only the exit seems to be back south to the stage."
+      "prompt": "Scene: A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments. The general clutter isn't helped by the rolls and rolls of canvas scenery backdrops. The stage doors, leading north, have been boarded over, and you can see that the remains of stairs leading up have been pulled down, so only the exit seems to be back south to the stage.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the stage doors) The stage doors have been nailed over."
+        },
+        {
+          "ref": "stairs",
+          "kind": "noun",
+          "examine": "Once stairs lead up, but sadly they have been removed."
+        },
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Stage",
+          "reciprocal": "Here you stand upon a stage that once would have been graced by the finest thespians in the country."
+        }
+      ],
+      "lookFacts": {
+        "up": "Looking up you can see several doors above you. You would imagine that there once would have been a landing there but it must have been pulled down like the stairs."
+      }
     },
     {
       "name": "Up the Ropes",
@@ -492,7 +1085,21 @@
       ],
       "description": "You are suspended about five metres above the stage, clinging on to one of the many ropes. Across a narrow space you can see some doors set in the west wall that would have once lead onto a landing (which is long since gone). One of the doors is very close by.\n\nWhat now?",
       "scene": "You are suspended about five metres above the stage, clinging on to one of the many ropes. Across a narrow space you can see some doors set in the west wall that would have once lead onto a landing (which is long since gone). One of the doors is very close by.",
-      "prompt": "Scene: You are suspended about five metres above the stage, clinging on to one of the many ropes. Across a narrow space you can see some doors set in the west wall that would have once lead onto a landing (which is long since gone). One of the doors is very close by."
+      "prompt": "Scene: You are suspended about five metres above the stage, clinging on to one of the many ropes. Across a narrow space you can see some doors set in the west wall that would have once lead onto a landing (which is long since gone). One of the doors is very close by.",
+      "exitFacts": [
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Dressing Room",
+          "reciprocal": "This room was probably once an old dressing room, but it is hard to tell as scuff marks on the floor are the only traces of the room's original furniture left."
+        },
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Back Stage",
+          "reciprocal": "A jumble of supports, ropes, and curtains divide the back stage in to a maze of compartments."
+        }
+      ]
     },
     {
       "name": "Dressing Room",
@@ -511,7 +1118,24 @@
       ],
       "description": "This depression would have been too small for anything but the most basic of orchestras. Looking about you can see why this is called a pit. You can go back up to the stage, or east to some walk-in storage cupboards.\n\nWhat now?",
       "scene": "This depression would have been too small for anything but the most basic of orchestras. Looking about you can see why this is called a pit. You can go back up to the stage, or east to some walk-in storage cupboards.",
-      "prompt": "Scene: This depression would have been too small for anything but the most basic of orchestras. Looking about you can see why this is called a pit. You can go back up to the stage, or east to some walk-in storage cupboards."
+      "prompt": "Scene: This depression would have been too small for anything but the most basic of orchestras. Looking about you can see why this is called a pit. You can go back up to the stage, or east to some walk-in storage cupboards.",
+      "exitFacts": [
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Pit Cupboards",
+          "reciprocal": "It is very dark inside the cupboards here."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Stage",
+          "reciprocal": "Here you stand upon a stage that once would have been graced by the finest thespians in the country."
+        }
+      ],
+      "lookFacts": {
+        "up": "Far above you, you can see endless rows of lighting and girders."
+      }
     },
     {
       "name": "Pit Cupboards",
@@ -525,6 +1149,20 @@
       "prompt": "Scene: It is very dark inside the cupboards here. You imagine that this is where the orchestra used to keep its equipment, but there is no sign of it here now. The cupboards are empty except for the shadowy gloom. The orchestra pit itself lies to the west and a gap in the east wall leads east. The creature is a intangible shadowy presence.",
       "unprobed": [
         "sign"
+      ],
+      "exitFacts": [
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Dark Place",
+          "reciprocal": "This is a very dark place and you can barely make out passages heading west and northwest."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Orchestra Pit",
+          "reciprocal": "This depression would have been too small for anything but the most basic of orchestras."
+        }
       ]
     },
     {
@@ -536,7 +1174,21 @@
       ],
       "description": "This is a very dark place and you can barely make out passages heading west and northwest.\n\nWhat now?",
       "scene": "This is a very dark place and you can barely make out passages heading west and northwest.",
-      "prompt": "Scene: This is a very dark place and you can barely make out passages heading west and northwest."
+      "prompt": "Scene: This is a very dark place and you can barely make out passages heading west and northwest.",
+      "exitFacts": [
+        {
+          "ref": "northwest",
+          "kind": "dir",
+          "destination": "Under the Stage",
+          "reciprocal": "Light filters through from the cracks on the boards above you, that form the stage."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Pit Cupboards",
+          "reciprocal": "It is very dark inside the cupboards here."
+        }
+      ]
     },
     {
       "name": "Under the Stage",
@@ -546,7 +1198,15 @@
       ],
       "description": "Light filters through from the cracks on the boards above you, that form the stage. It is quite cramped here, and you have to bend over slightly as you walk to avoid hitting your head on the low ceiling.\n\nA passage leads southeast from here into darkness.\n\nLittered on the ground are various small items that seem to have fallen through the cracks above you.\n\nYou can also see a loose page here.\n\nWhat now?",
       "scene": "Light filters through from the cracks on the boards above you, that form the stage. It is quite cramped here, and you have to bend over slightly as you walk to avoid hitting your head on the low ceiling. A passage leads southeast from here into darkness. Littered on the ground are various small items that seem to have fallen through the cracks above you. Looking through the stuff you see little of interest; some coins, a pencil, little bits of paper and a strange green eye-like pearl!",
-      "prompt": "Scene: Light filters through from the cracks on the boards above you, that form the stage. It is quite cramped here, and you have to bend over slightly as you walk to avoid hitting your head on the low ceiling. A passage leads southeast from here into darkness. Littered on the ground are various small items that seem to have fallen through the cracks above you. Looking through the stuff you see little of interest; some coins, a pencil, little bits of paper and a strange green eye-like pearl!"
+      "prompt": "Scene: Light filters through from the cracks on the boards above you, that form the stage. It is quite cramped here, and you have to bend over slightly as you walk to avoid hitting your head on the low ceiling. A passage leads southeast from here into darkness. Littered on the ground are various small items that seem to have fallen through the cracks above you. Looking through the stuff you see little of interest; some coins, a pencil, little bits of paper and a strange green eye-like pearl!",
+      "exitFacts": [
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Dark Place",
+          "reciprocal": "This is a very dark place and you can barely make out passages heading west and northwest."
+        }
+      ]
     },
     {
       "name": "Cloakroom",
@@ -554,9 +1214,17 @@
       "exits": [
         "down → Secret Stairway"
       ],
-      "description": "Once, people would have hung up their coats and hats here, but now the hooks lining the walls are home only for cobwebs. The lobby lies to the southwest.\n\nWhat now?",
+      "description": "Once, people would have hung up their coats and hats here, but now the hooks lining the walls are home only for cobwebs. The lobby lies to the southwest.\n\nWhat do you want to do now?",
       "scene": "Once, people would have hung up their coats and hats here, but now the hooks lining the walls are home only for cobwebs. The lobby lies to the southwest. Cobwebs cover the whole row of dirty hooks. Looking closer you see that one is a lot cleaner than the others.",
-      "prompt": "Scene: Once, people would have hung up their coats and hats here, but now the hooks lining the walls are home only for cobwebs. The lobby lies to the southwest. Cobwebs cover the whole row of dirty hooks. Looking closer you see that one is a lot cleaner than the others."
+      "prompt": "Scene: Once, people would have hung up their coats and hats here, but now the hooks lining the walls are home only for cobwebs. The lobby lies to the southwest. Cobwebs cover the whole row of dirty hooks. Looking closer you see that one is a lot cleaner than the others.",
+      "exitFacts": [
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Secret Stairway",
+          "reciprocal": "This is an old secret stairway that leads up and down."
+        }
+      ]
     },
     {
       "name": "Secret Stairway",
@@ -566,7 +1234,18 @@
       ],
       "description": "This is an old secret stairway that leads up and down. The area is feebly lit by electrical lights set in the roof.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "This is an old secret stairway that leads up and down. The area is feebly lit by electrical lights set in the roof.",
-      "prompt": "Scene: This is an old secret stairway that leads up and down. The area is feebly lit by electrical lights set in the roof."
+      "prompt": "Scene: This is an old secret stairway that leads up and down. The area is feebly lit by electrical lights set in the roof.",
+      "exitFacts": [
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Underground Passage",
+          "reciprocal": "This is a miserably dank underground passage lined by old brick walls."
+        }
+      ],
+      "lookFacts": {
+        "down": "The stairs descend into darkness."
+      }
     },
     {
       "name": "Underground Passage",
@@ -576,7 +1255,20 @@
       ],
       "description": "This is a miserably dank underground passage lined by old brick walls. The passage heads up to the west and continues to the east to a locked iron door.\n\nWhat now?",
       "scene": "This is a miserably dank underground passage lined by old brick walls. The passage heads up to the west and continues to the east to a locked iron door.",
-      "prompt": "Scene: This is a miserably dank underground passage lined by old brick walls. The passage heads up to the west and continues to the east to a locked iron door."
+      "prompt": "Scene: This is a miserably dank underground passage lined by old brick walls. The passage heads up to the west and continues to the east to a locked iron door.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the iron door) The iron door looks quite sturdy. It is currently locked tightly shut."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Above the Pit",
+          "reciprocal": "In the centre of this huge cavern-like room is a large pit, somewhat reminding you of an empty indoor swimming pool."
+        }
+      ]
     },
     {
       "name": "Above the Pit",
@@ -584,7 +1276,24 @@
       "exits": [],
       "description": "In the centre of this huge cavern-like room is a large pit, somewhat reminding you of an empty indoor swimming pool. A passage heads off to the west to an open iron door, while inside the pit you can see a passage leading down to the east.\n\nYou can see a loose page here.\n\nA deep growl is heard from the pit.\n\nWhat now?",
       "scene": "In the centre of this huge cavern-like room is a large pit, somewhat reminding you of an empty indoor swimming pool. A passage heads off to the west to an open iron door, while inside the pit you can see a passage leading down to the east. A deep growl is heard from the pit. For a closer look, you will have to go down into it. You can hear some sort of growling beast in the pit.",
-      "prompt": "Scene: In the centre of this huge cavern-like room is a large pit, somewhat reminding you of an empty indoor swimming pool. A passage heads off to the west to an open iron door, while inside the pit you can see a passage leading down to the east. A deep growl is heard from the pit. For a closer look, you will have to go down into it. You can hear some sort of growling beast in the pit."
+      "prompt": "Scene: In the centre of this huge cavern-like room is a large pit, somewhat reminding you of an empty indoor swimming pool. A passage heads off to the west to an open iron door, while inside the pit you can see a passage leading down to the east. A deep growl is heard from the pit. For a closer look, you will have to go down into it. You can hear some sort of growling beast in the pit.",
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "(the iron door) The iron door looks quite sturdy. It is currently open."
+        },
+        {
+          "ref": "pit",
+          "kind": "noun",
+          "examine": "For a closer look, you will have to go down into it.",
+          "traverse": {
+            "verb": "go through pit",
+            "destination": "Inside Pit",
+            "reciprocal": "Inside Pit The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east. In the gloom, you can make the outline of some sort of transparent yet very large creature that is trapped in the…"
+          }
+        }
+      ]
     },
     {
       "name": "Inside Pit",
@@ -592,9 +1301,22 @@
       "exits": [
         "east → Tunnel Junction"
       ],
-      "description": "The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east.\n\nWhat now?",
-      "scene": "The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east.",
-      "prompt": "Scene: The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east."
+      "description": "The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east.\n\nIn the gloom, you can make the outline of some sort of transparent yet very large creature that is trapped in the pit.\n\nWith a howl the creature charges you. You are unable to see or resist its onslaught.\n\n*** You have died ***\n\nYou have failed to discover the secret of the Theatre, but you did score twenty-eight out of a possible fifty in two hundred and thirty-five turns, meaning that you were making steady progress.\n\nWould you like to RESTART, RESTORE a saved game, give the FULL score for that game, UNDO the previous turn, or QUIT?",
+      "scene": "The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east. In the gloom, you can make the outline of some sort of transparent yet very large creature that is trapped in the pit. With a howl the creature charges you. You are unable to see or resist its onslaught. *** You have died *** You have failed to discover the secret of the Theatre, but you did score twenty-eight out of a possible fifty in two hundred and thirty-five turns, meaning that you were making steady progress. Would you like to RESTART, RESTORE a saved game, give the FULL score for that game, UNDO the previous turn, or QUIT?",
+      "prompt": "Scene: The rough walls of the pit make an easy climb up and out of here. A gloomy tunnel heads east. In the gloom, you can make the outline of some sort of transparent yet very large creature that is trapped in the pit. With a howl the creature charges you. You are unable to see or resist its onslaught. *** You have died *** You have failed to discover the secret of the Theatre, but you did score twenty-eight out of a possible fifty in two hundred and thirty-five turns, meaning that you were making steady progress. Would you like to RESTART, RESTORE a saved game, give the FULL score for that game, UNDO the previous turn, or QUIT?",
+      "exitFacts": [
+        {
+          "ref": "pit",
+          "kind": "noun",
+          "examine": "They provide easy hand holds to climb up out of here."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Tunnel Junction",
+          "reciprocal": "You are at a junction in a little network of tunnels."
+        }
+      ]
     },
     {
       "name": "Tunnel Junction",
@@ -605,7 +1327,21 @@
       ],
       "description": "You are at a junction in a little network of tunnels. One tunnel heads west back to the pit, while others branch northeast, southeast, and southwest.\n\nYou can see a loose page here.\n\nWhat now?",
       "scene": "You are at a junction in a little network of tunnels. One tunnel heads west back to the pit, while others branch northeast, southeast, and southwest.",
-      "prompt": "Scene: You are at a junction in a little network of tunnels. One tunnel heads west back to the pit, while others branch northeast, southeast, and southwest."
+      "prompt": "Scene: You are at a junction in a little network of tunnels. One tunnel heads west back to the pit, while others branch northeast, southeast, and southwest.",
+      "exitFacts": [
+        {
+          "ref": "southwest",
+          "kind": "dir",
+          "destination": "Mine Shaft",
+          "reciprocal": "You are in something that looks very much like a mine shaft."
+        },
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Western End of Sewer",
+          "reciprocal": "You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance."
+        }
+      ]
     },
     {
       "name": "Mine Shaft",
@@ -616,7 +1352,21 @@
       ],
       "description": "You are in something that looks very much like a mine shaft. In the dim electrical light you can just make out rough walls and not much else. Tunnels lead in all directions.\n\nWhat now?",
       "scene": "You are in something that looks very much like a mine shaft. In the dim electrical light you can just make out rough walls and not much else. Tunnels lead in all directions.",
-      "prompt": "Scene: You are in something that looks very much like a mine shaft. In the dim electrical light you can just make out rough walls and not much else. Tunnels lead in all directions."
+      "prompt": "Scene: You are in something that looks very much like a mine shaft. In the dim electrical light you can just make out rough walls and not much else. Tunnels lead in all directions.",
+      "exitFacts": [
+        {
+          "ref": "down",
+          "kind": "dir",
+          "destination": "Deep in the Mines",
+          "reciprocal": "You are much deeper in the mine shaft here."
+        },
+        {
+          "ref": "northeast",
+          "kind": "dir",
+          "destination": "Tunnel Junction",
+          "reciprocal": "You are at a junction in a little network of tunnels."
+        }
+      ]
     },
     {
       "name": "Deep in the Mines",
@@ -629,6 +1379,14 @@
       "prompt": "Scene: You are much deeper in the mine shaft here. The area has been widened out into a cavern and there are signs that some major excavations occurred here. A large cage dominates the area. Inside the cage is a curious goblin-like creature. It appeared to be resting but as you entered it awoke and sniggered at you with a surprisingly soft voice. The creature is humanoid and about five feet tall. However he is very thin and his skin has hardened into rough black leather. His face has also distorted into ugly pig-like features with solid black eyes. The eyes look back at you intelligently but sadly.",
       "unprobed": [
         "sign"
+      ],
+      "exitFacts": [
+        {
+          "ref": "up",
+          "kind": "dir",
+          "destination": "Mine Shaft",
+          "reciprocal": "You are in something that looks very much like a mine shaft."
+        }
       ]
     },
     {
@@ -639,7 +1397,20 @@
       ],
       "description": "You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre.\n\nThis end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck.\n\nWhat now?",
       "scene": "You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre. This end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck.",
-      "prompt": "Scene: You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre. This end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck."
+      "prompt": "Scene: You have reached the western end of a large sewage drainage trench that continues east quite some smelly distance. A passageway leads northwest, back under the theatre. This end of the trench seems to terminate at a large sluice gate that opens into a drain leading further down into the muck.",
+      "exitFacts": [
+        {
+          "ref": "gate",
+          "kind": "noun",
+          "examine": "The sluice gate is at the end of the trench, above a large drain."
+        },
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Centre of Sewer",
+          "reciprocal": "You appear to be in the centre of the drainage trench, which leads east and west from here."
+        }
+      ]
     },
     {
       "name": "Centre of Sewer",
@@ -650,7 +1421,21 @@
       ],
       "description": "You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform.\n\nWhat now?",
       "scene": "You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform.",
-      "prompt": "Scene: You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform."
+      "prompt": "Scene: You appear to be in the centre of the drainage trench, which leads east and west from here. Above you, to the north, is a strange metal platform.",
+      "exitFacts": [
+        {
+          "ref": "east",
+          "kind": "dir",
+          "destination": "Eastern End of Sewer",
+          "reciprocal": "Here the drainage trench ends at a junction of small pipes, each impassable."
+        },
+        {
+          "ref": "north",
+          "kind": "dir",
+          "destination": "Metal Platform",
+          "reciprocal": "You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south."
+        }
+      ]
     },
     {
       "name": "Eastern End of Sewer",
@@ -661,7 +1446,21 @@
       ],
       "description": "Here the drainage trench ends at a junction of small pipes, each impassable. The trench leads west, while a tunnel leads southeast.\n\nWhat now?",
       "scene": "Here the drainage trench ends at a junction of small pipes, each impassable. The trench leads west, while a tunnel leads southeast.",
-      "prompt": "Scene: Here the drainage trench ends at a junction of small pipes, each impassable. The trench leads west, while a tunnel leads southeast."
+      "prompt": "Scene: Here the drainage trench ends at a junction of small pipes, each impassable. The trench leads west, while a tunnel leads southeast.",
+      "exitFacts": [
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Rat Nest",
+          "reciprocal": "This small northwest-southeast tunnel is covered in rotting sewage and animal droppings."
+        },
+        {
+          "ref": "west",
+          "kind": "dir",
+          "destination": "Centre of Sewer",
+          "reciprocal": "You appear to be in the centre of the drainage trench, which leads east and west from here."
+        }
+      ]
     },
     {
       "name": "Rat Nest",
@@ -672,7 +1471,26 @@
       ],
       "description": "This small northwest-southeast tunnel is covered in rotting sewage and animal droppings. The tunnel ends at a unusual archway to the south-east.\n\nFrom out of the debris, several rats swarm, angrily squeaking at you with shrill little voices.\n\nWhat now?",
       "scene": "This small northwest-southeast tunnel is covered in rotting sewage and animal droppings. The tunnel ends at a unusual archway to the south-east. From out of the debris, several rats swarm, angrily squeaking at you with shrill little voices.",
-      "prompt": "Scene: This small northwest-southeast tunnel is covered in rotting sewage and animal droppings. The tunnel ends at a unusual archway to the south-east. From out of the debris, several rats swarm, angrily squeaking at you with shrill little voices."
+      "prompt": "Scene: This small northwest-southeast tunnel is covered in rotting sewage and animal droppings. The tunnel ends at a unusual archway to the south-east. From out of the debris, several rats swarm, angrily squeaking at you with shrill little voices.",
+      "exitFacts": [
+        {
+          "ref": "archway",
+          "kind": "noun",
+          "examine": "The archway's smoothly polished surface is distinctly out of place with the rest of the surroundings."
+        },
+        {
+          "ref": "northwest",
+          "kind": "dir",
+          "destination": "Eastern End of Sewer",
+          "reciprocal": "Here the drainage trench ends at a junction of small pipes, each impassable."
+        },
+        {
+          "ref": "southeast",
+          "kind": "dir",
+          "destination": "Witch's Lair",
+          "reciprocal": "Beyond the archway lies a small circular room of red brick, shaped, oddly enough, like an Eskimo's igloo."
+        }
+      ]
     },
     {
       "name": "Metal Platform",
@@ -680,9 +1498,17 @@
       "exits": [
         "south → Centre of Sewer"
       ],
-      "description": "You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south.\n\nBelow you, at the eastern end of the drainage ditch, you can see a swarm of nasty little rats.\n\nFrom out of the roof extends a long rusty lever.\n\nYou see the rats scurry west so that they are now just below you.\n\nWhat now?",
-      "scene": "You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south. Below you, at the eastern end of the drainage ditch, you can see a swarm of nasty little rats. From out of the roof extends a long rusty lever. You see the rats scurry west so that they are now just below you. You imagine the lever operates by pulling it. In the distance you can see the rats are eating something.",
-      "prompt": "Scene: You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south. Below you, at the eastern end of the drainage ditch, you can see a swarm of nasty little rats. From out of the roof extends a long rusty lever. You see the rats scurry west so that they are now just below you. You imagine the lever operates by pulling it. In the distance you can see the rats are eating something."
+      "description": "You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south.\n\nFrom out of the roof extends a long rusty lever.\n\nWhat now?",
+      "scene": "You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south. From out of the roof extends a long rusty lever. You imagine the lever operates by pulling it. In the distance you can see the rats are eating something.",
+      "prompt": "Scene: You are on a metal platform, which grants a clear view of the entire sewer (for what it is worth) that lies down to the south. From out of the roof extends a long rusty lever. You imagine the lever operates by pulling it. In the distance you can see the rats are eating something.",
+      "exitFacts": [
+        {
+          "ref": "south",
+          "kind": "dir",
+          "destination": "Centre of Sewer",
+          "reciprocal": "You appear to be in the centre of the drainage trench, which leads east and west from here."
+        }
+      ]
     },
     {
       "name": "Witch's Lair",
@@ -690,29 +1516,43 @@
       "exits": [],
       "description": "Beyond the archway lies a small circular room of red brick, shaped, oddly enough, like an Eskimo's igloo. Dominating the centre of the room is an old iron cauldron, filled with an unknown bubbling liquid. All around the walls are shelves filled with curious little vials and other knick-knacks that seem to give you the impression of a witch's secret laboratory or the like. The only exit appears to be back to the northwest through the archway.\n\nTo the side of the room against the wall is a large bronze statue of a female with four arms. The statue is holding a jewelled dagger.\n\nYou can also see a loose page here.\n\nWhat now?",
       "scene": "Beyond the archway lies a small circular room of red brick, shaped, oddly enough, like an Eskimo's igloo. Dominating the centre of the room is an old iron cauldron, filled with an unknown bubbling liquid. All around the walls are shelves filled with curious little vials and other knick-knacks that seem to give you the impression of a witch's secret laboratory or the like. The only exit appears to be back to the northwest through the archway. To the side of the room against the wall is a large bronze statue of a female with four arms. The statue is holding a jewelled dagger. The statue depicts a woman that is both hauntingly beautiful and frightfully savage. Her near-perfect beauty is blemished by an elongated forehead, which has four eye sockets forming the shape of a diamond. She also has four arms, each of which maintains a grip on a single jewelled dagger.",
-      "prompt": "Scene: Beyond the archway lies a small circular room of red brick, shaped, oddly enough, like an Eskimo's igloo. Dominating the centre of the room is an old iron cauldron, filled with an unknown bubbling liquid. All around the walls are shelves filled with curious little vials and other knick-knacks that seem to give you the impression of a witch's secret laboratory or the like. The only exit appears to be back to the northwest through the archway. To the side of the room against the wall is a large bronze statue of a female with four arms. The statue is holding a jewelled dagger. The statue depicts a woman that is both hauntingly beautiful and frightfully savage. Her near-perfect beauty is blemished by an elongated forehead, which has four eye sockets forming the shape of a diamond. She also has four arms, each of which maintains a grip on a single jewelled dagger."
+      "prompt": "Scene: Beyond the archway lies a small circular room of red brick, shaped, oddly enough, like an Eskimo's igloo. Dominating the centre of the room is an old iron cauldron, filled with an unknown bubbling liquid. All around the walls are shelves filled with curious little vials and other knick-knacks that seem to give you the impression of a witch's secret laboratory or the like. The only exit appears to be back to the northwest through the archway. To the side of the room against the wall is a large bronze statue of a female with four arms. The statue is holding a jewelled dagger. The statue depicts a woman that is both hauntingly beautiful and frightfully savage. Her near-perfect beauty is blemished by an elongated forehead, which has four eye sockets forming the shape of a diamond. She also has four arms, each of which maintains a grip on a single jewelled dagger.",
+      "exitFacts": [
+        {
+          "ref": "archway",
+          "kind": "noun",
+          "examine": "This side of the archway is formed out of brick.",
+          "traverse": {
+            "verb": "go through archway",
+            "destination": "Rat Nest",
+            "reciprocal": "Rat Nest This small northwest-southeast tunnel is covered in rotting sewage and animal droppings. The tunnel ends at a unusual archway to the south-east."
+          }
+        }
+      ]
     },
     {
-      "name": "He who defiles the tombs of",
-      "slug": "he-who-defiles-the-tombs-of",
-      "exits": [
-        "up → Sealed-Off Office"
-      ],
-      "description": null,
-      "scene": "You rub off some of the coal dust and realise that it is not coal at all but a strange violet eye-like pearl!",
-      "prompt": "Scene: You rub off some of the coal dust and realise that it is not coal at all but a strange violet eye-like pearl!",
-      "recoveredFrom": "transition"
+      "name": "Western Landing",
+      "slug": "western-landing",
+      "exits": [],
+      "description": "This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and east, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself.\n\nWhat now?",
+      "scene": "This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and east, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself.",
+      "prompt": "Scene: This landing circles around the upper level of the lobby allowing you to see down into it. The landing continues south and east, where it goes down the lobby stairs. A set of double doors lead north to the theatre auditorium itself."
     },
     {
-      "name": "Don't rejoice in his defeat",
-      "slug": "dont-rejoice-in-his-defeat",
-      "exits": [
-        "down → Inside Pit"
-      ],
-      "description": null,
-      "scene": "Rienhart's corpse disappears into the pit. You can hear some awful crushing sounds, like bone grinding on bones, coming down from the pit, followed by something like a mixture of a yawn and a howl.",
-      "prompt": "Scene: Rienhart's corpse disappears into the pit. You can hear some awful crushing sounds, like bone grinding on bones, coming down from the pit, followed by something like a mixture of a yawn and a howl.",
-      "recoveredFrom": "transition"
+      "name": "Western Theatre Aisle",
+      "slug": "western-theatre-aisle",
+      "exits": [],
+      "description": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by sea of seats. Another aisle is to the east while the stage is to the north. Double doors lead south.\n\nYou hear a faint whisper from out of the darkness, \"Ticketsss, pleassse\".\n\nWhat now?",
+      "scene": "This aisle runs north and south through the large theatre auditorium, where you are surrounded by sea of seats. Another aisle is to the east while the stage is to the north. Double doors lead south.",
+      "prompt": "Scene: This aisle runs north and south through the large theatre auditorium, where you are surrounded by sea of seats. Another aisle is to the east while the stage is to the north. Double doors lead south."
+    },
+    {
+      "name": "Old Hallway",
+      "slug": "old-hallway",
+      "exits": [],
+      "description": "This sinister and murky hallway leads from the southwest to the northeast, where you can hear the sound of chanting. The chanting has a sinister inflection to it and you can feel an undefinable fear rising up within you.\n\nWhat now?",
+      "scene": "This sinister and murky hallway leads from the southwest to the northeast, where you can hear the sound of chanting. The chanting has a sinister inflection to it and you can feel an undefinable fear rising up within you.",
+      "prompt": "Scene: This sinister and murky hallway leads from the southwest to the northeast, where you can hear the sound of chanting. The chanting has a sinister inflection to it and you can feel an undefinable fear rising up within you."
     }
   ]
 }

@@ -5,29 +5,31 @@
 .DESCRIPTION
   - If the review server is already listening on the port, just opens the UI — no
     second server, no extra browser tab.
-  - Otherwise starts it (hidden) for the given game, waits for it to come up, then opens.
+  - Otherwise starts it (hidden), waits for it to come up, then opens.
+  - The server is game-agnostic — it serves ALL games and topics, and the reviewer
+    remembers where you last navigated in localStorage. There is no "focus game".
   - Opens in an Edge/Chrome "app window" (chromeless, its own taskbar entry) when one
     is found, so it doesn't pile up tabs in your main browser. Falls back to the
     default browser if neither is installed.
 
 .PARAMETER Game
-  Game slug under docs/games/images/ (e.g. anchorhead). Required only when the server
-  isn't already running.
+  Deprecated / ignored — kept only so old invocations (e.g. `.\tools\artview.ps1 anchorhead`)
+  don't error. The server no longer takes a focus game; pick the game from the rail in the UI.
 
 .PARAMETER Port
   Port to use / detect. Default 3009 (matches review-server.cjs default).
 
 .PARAMETER Restart
-  Stop whatever is on the port first, then start fresh for -Game. Use when switching
-  games (the server is bound to a single game per run).
+  Stop whatever is on the port first, then start fresh. (No longer needed for switching
+  games — switch in the UI; only useful to reload after a server-code change.)
 
 .EXAMPLE
-  .\tools\artview.ps1 anchorhead
+  .\tools\artview.ps1
 .EXAMPLE
-  .\tools\artview.ps1 lostpig -Restart
+  .\tools\artview.ps1 -Restart
 #>
 param(
-  [Parameter(Position = 0)][string]$Game,
+  [Parameter(Position = 0)][string]$Game,   # deprecated/ignored — see help above
   [int]$Port = 3009,
   [switch]$Restart
 )
@@ -95,12 +97,10 @@ function Show-Reviewer([string]$u) {
   Open-Reviewer $u
 }
 
+$wasRestart = $Restart.IsPresent
 if ($Restart) { Stop-PortOwner $Port; Start-Sleep -Milliseconds 300 }
 
 if (-not (Test-PortListening $Port)) {
-  if (-not $Game) {
-    throw "No review server on port $Port. Pass a game slug, e.g. .\tools\artview.ps1 anchorhead"
-  }
   Push-Location $repo
   try {
     # Redirect server stdout/stderr to log files so a gen that flashes by in the UI
@@ -108,7 +108,7 @@ if (-not (Test-PortListening $Port)) {
     $outLog = Join-Path $repo 'tools/.artview-server.log'
     $errLog = Join-Path $repo 'tools/.artview-server.err.log'
     Start-Process node `
-      -ArgumentList "tools/review-server.cjs", $Game, "--port", $Port, "--no-open" `
+      -ArgumentList "tools/review-server.cjs", "--port", $Port, "--no-open" `
       -WindowStyle Hidden `
       -RedirectStandardOutput $outLog `
       -RedirectStandardError $errLog
@@ -119,7 +119,17 @@ if (-not (Test-PortListening $Port)) {
     Start-Sleep -Milliseconds 100
   }
   if (-not (Test-PortListening $Port)) { throw "Review server failed to start on port $Port." }
-  Write-Host "Started review server for '$Game' on $url"
+  Write-Host "Started review server on $url"
+
+  if ($wasRestart) {
+    # The existing browser window auto-reloads on BOOT_ID change — no new window needed.
+    # Just try to bring it to the front; if that fails, the user still has it.
+    Write-Host "Server restarted - existing window auto-reloads."
+    $win = Get-Process msedge, chrome -ErrorAction SilentlyContinue |
+      Where-Object { $_.MainWindowTitle -match 'Art Review' } | Select-Object -First 1
+    if ($win) { try { (New-Object -ComObject WScript.Shell).AppActivate($win.Id) | Out-Null } catch {} }
+    return
+  }
 } else {
   Write-Host "Reusing review server already on $url"
 }

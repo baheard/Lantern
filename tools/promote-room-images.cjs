@@ -54,7 +54,10 @@ function main() {
     if (!fs.existsSync(src)) { console.error(`  ! ${slug}: no _review image, skipping`); continue; }
     const dest = path.join(gameDir, `${slug}.png`);
     fs.copyFileSync(src, dest);
-    fs.rmSync(src);
+    // KEEP the staging source: committed is a *copy*, and the reviewer flags the in-game
+    // image by byte-matching a candidate still present in _review (see review-server
+    // candidatesFor + committedSource). Deleting it here left the promoted image with no
+    // selectable tile and no "★ in game" pill. (Next --regen rolls it to <slug>.prev.png.)
     const name = nameBySlug.get(slug) || slug;
     manifest.images[name] = `${slug}.png`;
     console.log(`  ✓ promoted ${slug}  →  "${name}"`);

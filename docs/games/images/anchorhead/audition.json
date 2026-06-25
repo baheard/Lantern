@@ -3,13 +3,29 @@
     "outside-the-real-estate-office",
     "library",
     "outside-the-house",
-    "junction"
+    "whateley-bridge"
   ],
   "artists": [
-    "gouache",
-    "pixel",
-    "ink",
-    "storybook",
-    "comic-book-style"
+    "illustration-plate",
+    "broadsheet",
+    "drypoint",
+    "expedition-log",
+    "lantern-slide",
+    "casein-board",
+    "plein-air",
+    "picture-book",
+    "comic-panel",
+    "pulp-press",
+    "spirit-copy",
+    "risograph",
+    "sumi-rubbing",
+    "pastel-nocturne",
+    "travel-lithograph",
+    "film-still",
+    "available-light",
+    "silver-plate",
+    "cg-render",
+    "old-gouache",
+    "old-pixel"
   ]
 }

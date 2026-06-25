@@ -62,7 +62,137 @@ function gamePaths(slug) {
   return { dir, review: path.join(dir, '_review'), pack: path.join(dir, 'prompts.json'),
     manifest: path.join(dir, 'manifest.json'), selArtist: path.join(dir, 'selected-artist.json'),
     audition: path.join(dir, '_audition'), auditionCfg: path.join(dir, 'audition.json'),
-    sandbox: path.join(dir, '_sandbox') };
+    sandbox: path.join(dir, '_sandbox'), blockout: path.join(dir, '_blockout') };
+}
+// Blockouts = per-game 3D volume models (scene-def JSON in <game>/_blockout/*.scene.json),
+// one per multi-room "Volume" that needs geometric continuity. See .tome/blockout-3d-continuity.md.
+function blockoutsFor(slug) {
+  const g = gamePaths(slug);
+  if (!fs.existsSync(g.blockout)) return [];
+  return fs.readdirSync(g.blockout).filter((n) => /\.scene\.json$/i.test(n)).sort().map((f) => {
+    const def = readJSON(path.join(g.blockout, f), {});
+    return { volume: def.volume || f.replace(/\.scene\.json$/i, ''), title: def.title || def.volume || f,
+      members: def.members || [], cameras: Object.keys(def.cameras || {}) };
+  });
+}
+// Compose the SAME layered prompt the reviewer uses for a room (Artist ▸ Scene ▸ Aesthetic ▸ App),
+// so blockout Generate "just works" off the room's existing layers — no manual selection.
+// sceneOverride (from the renderer's editable Scene box) replaces the stored scene layer;
+// artist / aesthetic / app are always wrapped around it.
+function composeForRoom(game, slug, sceneOverride) {
+  const art = ((artistSignatureFor(game) || {}).style) || '';
+  const st = gameStyle(game) || {};
+  const aes = st.aesthetic || '';
+  const scenes = st.scenes || (readJSON(path.join(gamePaths(game).dir, 'style.json'), {}).scenes) || {};
+  let sc = (typeof sceneOverride === 'string' && sceneOverride.trim()) ? sceneOverride.trim() : (scenes[slug] || '');
+  if (!sc) { const loc = (locationsFor(game) || []).find((l) => l.slug === slug); sc = (loc && (loc.sceneOverride || loc.description)) || ''; }
+  return [art ? (art + ' ' + ARTIST_LEAD) : '', sc ? ('Scene: ' + sc) : '', aes ? ('Aesthetic: ' + cap(aes)) : '', appPrompt()].filter(Boolean).join(' ');
+}
+// The scene layer alone (what the renderer's Scene box shows/edits).
+function sceneForRoom(game, slug) {
+  const scenes = (readJSON(path.join(gamePaths(game).dir, 'style.json'), {}).scenes) || {};
+  if (scenes[slug]) return scenes[slug];
+  const loc = (locationsFor(game) || []).find((l) => l.slug === slug); return (loc && (loc.sceneOverride || loc.description)) || '';
+}
+// Render a blockout clay frame (posted as a PNG data-URL) through the chosen model in edit mode,
+// and return the styled image inline. Synchronous-await so the renderer can show it immediately.
+// Where a volume's kept gens + clay refs live: <game>/_blockout/_gen/<volume>/
+function blockoutGenDir(game, volume) { return path.join(gamePaths(game).blockout, '_gen', path.basename(volume || '')); }
+// Per-volume member info for the renderer's description panel: canon prose + scene override.
+function blockoutInfo(game, volume) {
+  const def = readJSON(path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json'), {});
+  const locs = locationsFor(game) || [];
+  const scenes = (readJSON(path.join(gamePaths(game).dir, 'style.json'), {}).scenes) || {};
+  const notes = def.notes || {};
+  return (def.members || []).map((slug) => { const l = locs.find((x) => x.slug === slug) || {};
+    return { slug, name: l.name || slug, description: l.description || '', scene: scenes[slug] || l.sceneOverride || '', note: notes[slug] || '' }; });
+}
+// Colour legend phrases — MUST match ROLE_COLORS in renderer.html. Only roles present are listed.
+const ROLE_LEGEND = {
+  stage: 'the tan platform is the raised STAGE (its tall front face is the proscenium/stage front, facing the seats)',
+  seat: 'the deep-red blocks are rows of upholstered theatre SEATS',
+  balcony: 'the purple masses on the upper side walls are BALCONY BOXES',
+  pit: 'the dark sunken recess in front of the stage is the ORCHESTRA PIT',
+  curtain: 'the crimson panel above the stage is the CURTAIN',
+  door: 'the olive panels are DOORS',
+  chandelier: 'the pale-gold cluster hanging from the ceiling is the CHANDELIER',
+  rail: 'the warm-brown rails are carved WOODEN balustrades/railings (timber, not fabric or upholstery)',
+  wall: 'the cool-grey planes are WALLS', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
+};
+function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
+  return new Promise((resolve, reject) => {
+    const dir = blockoutGenDir(game, volume);
+    fs.mkdirSync(dir, { recursive: true });
+    const b64in = String(png || '').replace(/^data:image\/\w+;base64,/, '');
+    if (!b64in || !view) return reject(new Error('missing png/view'));
+    const refPath = path.join(dir, path.basename(view) + '.clay.png');
+    fs.writeFileSync(refPath, Buffer.from(b64in, 'base64'));
+    const MAP = { 'openai-low': { provider: 'openai', quality: 'low' }, 'openai-medium': { provider: 'openai', quality: 'medium' },
+      'gemini': { provider: 'gemini' }, 'gemini-pro': { provider: 'gemini', model: 'gemini-3-pro-image-preview' } };
+    const m = MAP[model] || MAP['openai-low'];
+    const isPro = !!m.model, tag = isPro ? 'gem-pro' : modelTag(m.provider, m.quality);
+    let max = 0; for (const f of fs.readdirSync(dir)) { const mm = f.match(/-r(\d+)\.png$/i); if (mm && f.indexOf(view + '__') === 0) max = Math.max(max, +mm[1]); }
+    const outName = `${view}__${tag}-r${max + 1}.png`;
+    const out = path.join(dir, outName);
+    const prov = m.provider === 'openai' ? `openai/${m.quality}` : (isPro ? 'gemini-pro' : 'gemini');
+    // Append this vantage's saved note (if any) as an Adjustments line — the "notes feed the next render" loop.
+    const def = readJSON(path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json'), {});
+    const note = (def.notes || {})[view] || '';
+    // Colour legend for the roles actually present in this volume's blockout.
+    const roles = new Set(); (def.parts || []).forEach((p) => { if (p.role) roles.add(p.role); (p.of || []).forEach((s) => { if (s.role) roles.add(s.role); }); });
+    const legendParts = [...roles].filter((r) => ROLE_LEGEND[r]).map((r) => ROLE_LEGEND[r]);
+    const legend = legendParts.length ? ('Blockout colour legend — render each coloured region as what it denotes: ' + legendParts.join('; ') + '. ') : '';
+    const face = (typeof facing === 'string' && facing.trim()) ? (facing.trim() + ' ') : '';
+    const prompt = face + legend + composeForRoom(game, view, sceneOverride) + (note.trim() ? (' Adjustments: ' + note.trim()) : '');
+    const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt,
+      '--out', out, '--ref', refPath, '--ref-mode', 'guide'];
+    if (m.provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', m.quality);
+    else if (m.model) cliArgs.push('--model', m.model);
+    const jobId = String(++jobSeq);
+    JOBS.set(jobId, { game, slug: view, kind: 'blockout', mode: prov, file: outName, status: 'queued', startedAt: Date.now() });
+    scheduleGen(() => new Promise((inner) => {
+      const job = JOBS.get(jobId); if (job) job.status = 'running';
+      logLine(`BLOCKOUT-GEN ${game}/${view} via ${prov} → ${outName}`);
+      const t0 = Date.now();
+      execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, so, se) => {
+        const dt = ((Date.now() - t0) / 1000).toFixed(1);
+        const j2 = JOBS.get(jobId);
+        if (err || !fs.existsSync(out)) {
+          const msg = String(se || so || (err && err.message) || 'error').slice(0, 500);
+          logLine(`BLOCKOUT-GEN FAIL ${game}/${view} (${dt}s): ${msg}`);
+          if (j2) { j2.status = 'error'; j2.error = msg; j2.finishedAt = Date.now(); }
+          reject(new Error(msg));
+        } else {
+          logLine(`BLOCKOUT-GEN OK ${game}/${view} (${dt}s) ${outName}`);
+          if (j2) { j2.status = 'done'; j2.finishedAt = Date.now(); }
+          resolve({ file: outName, view, model });
+        }
+        inner();
+      });
+    }));
+  });
+}
+// Overwrite one camera (vantage) in a volume's scene-def from the live renderer's "Update vantage".
+function saveBlockoutCamera({ game, volume, view, pos, look, fov }) {
+  const f = path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json');
+  if (!fs.existsSync(f)) throw new Error('no such blockout');
+  if (!view) throw new Error('no view');
+  const def = readJSON(f, {});
+  def.cameras = def.cameras || {};
+  def.cameras[view] = { pos, look, fov };
+  fs.writeFileSync(f, JSON.stringify(def, null, 2) + '\n');
+  return { view };
+}
+// Per-vantage note (appended to the next render as an Adjustments line). Stored in the scene-def's `notes` map.
+function saveBlockoutNote({ game, volume, view, text }) {
+  const f = path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json');
+  if (!fs.existsSync(f)) throw new Error('no such blockout');
+  if (!view) throw new Error('no view');
+  const def = readJSON(f, {});
+  def.notes = def.notes || {};
+  if (text && text.trim()) def.notes[view] = text; else delete def.notes[view];
+  fs.writeFileSync(f, JSON.stringify(def, null, 2) + '\n');
+  return { view };
 }
 // Capitalize first letter (mirrors the client's cap() so server-composed audition
 // prompts match the reviewer's Composed prompt exactly).
@@ -766,7 +896,40 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/game') {
       const s = q.get('slug');
-      return sendJSON(res, 200, { slug: s, aesthetic: gameStyle(s).aesthetic, artist: artistSignatureFor(s), app: appPrompt(), locations: locationsFor(s) });
+      return sendJSON(res, 200, { slug: s, aesthetic: gameStyle(s).aesthetic, artist: artistSignatureFor(s), app: appPrompt(), locations: locationsFor(s), blockouts: blockoutsFor(s) });
+    }
+    // The generic 3D blockout renderer (served from disk so artview is self-contained on :3009).
+    if (u.pathname === '/blockout') {
+      const f = path.join(IMAGES_ROOT, '_blockout', 'renderer.html');
+      if (!fs.existsSync(f)) { res.writeHead(404); res.end('no renderer'); return; }
+      res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' });
+      res.end(fs.readFileSync(f)); return;
+    }
+    // All blockouts across all games (for the Blockout rail section, grouped by game).
+    if (u.pathname === '/api/blockouts') {
+      const all = [];
+      for (const g of listGames()) for (const b of blockoutsFor(g)) all.push({ game: g, ...b });
+      return sendJSON(res, 200, { blockouts: all });
+    }
+    // Per-member canon prose + scene + saved note (renderer's description panel).
+    if (u.pathname === '/api/blockout-info') return sendJSON(res, 200, { rooms: blockoutInfo(q.get('game'), q.get('volume')) });
+    // All kept gens for a volume (the gallery), newest first.
+    if (u.pathname === '/api/blockout-gens') {
+      const game = q.get('game') || '', dir = blockoutGenDir(game, q.get('volume') || ''); const out = [];
+      const notes = readJSON(notesPath, {});   // image notes share the reviewer's _review-notes.json
+      if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter((n) => /-r\d+\.png$/i.test(n))) {
+        const view = f.split('__')[0], key = `game:${game}:${view}:${f}`;
+        out.push({ file: f, view, mtime: fs.statSync(path.join(dir, f)).mtimeMs, key, note: noteText(notes[key]), status: noteStatus(notes[key]) }); }
+      out.sort((a, b) => b.mtime - a.mtime);
+      return sendJSON(res, 200, { gens: out });
+    }
+    if (u.pathname === '/img/blockout') return sendImg(res, path.join(blockoutGenDir(q.get('game') || '', q.get('volume') || ''), path.basename(q.get('f') || '')));
+    // Scene-def JSON for a game's volume (the renderer fetches this via ?src=).
+    if (u.pathname === '/api/blockout') {
+      const f = path.join(gamePaths(q.get('game') || '').blockout, path.basename(q.get('volume') || '') + '.scene.json');
+      if (!fs.existsSync(f)) return sendJSON(res, 404, { error: 'no such blockout' });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(fs.readFileSync(f)); return;
     }
     if (u.pathname === '/api/jobs') return sendJSON(res, 200, { jobs: jobsList(), boot: BOOT_ID });
     if (u.pathname === '/api/logs') return sendJSON(res, 200, { logs: LOG_RING, boot: BOOT_ID });
@@ -792,6 +955,12 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/style') return wrap(() => saveStyle(body.game, body.aesthetic));
       if (u.pathname === '/api/artist-style') return wrap(() => saveArtistStyle(body.game, body.style));
       if (u.pathname === '/api/artist-style-by-id') return wrap(() => saveArtistStyleById(body.id, body.style));
+      if (u.pathname === '/api/blockout-camera') return wrap(() => saveBlockoutCamera(body));
+      if (u.pathname === '/api/blockout-note') return wrap(() => saveBlockoutNote(body));
+      if (u.pathname === '/api/blockout-gen') {
+        try { const r = await blockoutGen(body); return sendJSON(res, 200, { ok: true, ...r }); }
+        catch (e) { return sendJSON(res, 500, { ok: false, error: e.message }); }
+      }
       if (u.pathname === '/api/scene') return wrap(() => saveScene(body.game, body.slug, body.tail));
       if (u.pathname === '/api/description') return wrap(() => saveDescription(body.game, body.slug, body.text));
       if (u.pathname === '/api/note') return wrap(() => saveNote(body.key, body.text));
@@ -1135,6 +1304,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
 <div id="status"></div>
 <script>
 let STATE=null, ARTISTS=null, GLYPHS=null, GAMES={}, GAMEINFO={}, topic=null, curGame=null, curItem=null, sel=null, ver=0;
+let BLOCKOUTS=null, pendingBlockoutView=null;   // Blockout rail section: all volumes (grouped by game) + pending room camera
 let GENS=[];          // in-flight generations (from /api/jobs poll) — drives the progress banner
 let _genSeen={};      // jobId → last-seen status, to fire a toast/refresh on the running→done edge
 // Which generator Regenerate uses; persists across re-renders. Default = OpenAI low
@@ -1146,7 +1316,7 @@ let genMode='openai-low';
 // instruction (preserves composition). Persists across re-renders.
 let regenMode='clean';
 const postJSON=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-async function loadGame(slug){const gi=await (await fetch('/api/game?slug='+encodeURIComponent(slug))).json();GAMES[slug]=gi.locations;GAMEINFO[slug]={aesthetic:gi.aesthetic,artist:gi.artist,app:gi.app||''};return gi;}
+async function loadGame(slug){const gi=await (await fetch('/api/game?slug='+encodeURIComponent(slug))).json();GAMES[slug]=gi.locations;GAMEINFO[slug]={aesthetic:gi.aesthetic,artist:gi.artist,app:gi.app||'',blockouts:gi.blockouts||[]};return gi;}
 const $=s=>document.querySelector(s);
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function toast(m){const s=$('#status');s.textContent=m;s.classList.add('show');clearTimeout(s._t);s._t=setTimeout(()=>s.classList.remove('show'),2200);}
@@ -1307,7 +1477,7 @@ async function loadAll(){
   GLYPHS=await (await fetch('/api/glyphs')).json();
   buildRail();
   let t=NAV.topic;
-  const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
+  const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||t==='blockout'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
   if(!valid) t=STATE.games[0]?'g:'+STATE.games[0]:'placeholders';   // fresh browser only; NAV (localStorage) wins otherwise
   selectTopic(t);   // no explicit item → selectTopic restores NAV.byTopic[t]
   pollGens(); setInterval(pollGens, 2000);   // progress banner + cross-navigation completion refresh
@@ -1324,7 +1494,7 @@ function buildRail(){
   $('#rail').innerHTML='<div class="brand">Art Review</div>'+
     '<div class="navbtns"><button id="navBack" title="Back (Alt+←)">‹ Back</button><button id="navFwd" title="Forward (Alt+→)">Fwd ›</button></div>'+
     games+'<div class="sep"></div>'+
-    '<div class="topic" data-t="audition">Audition</div><div class="topic" data-t="sandbox">Sandbox</div><div class="topic" data-t="placeholders">Placeholders</div><div class="topic" data-t="artist">Artist</div>';
+    '<div class="topic" data-t="blockout">Blockout 3D</div><div class="topic" data-t="audition">Audition</div><div class="topic" data-t="sandbox">Sandbox</div><div class="topic" data-t="placeholders">Placeholders</div><div class="topic" data-t="artist">Artist</div>';
   document.querySelectorAll('.topic').forEach(d=>d.onclick=()=>selectTopic(d.dataset.t));
   const bb=$('#navBack'); if(bb) bb.onclick=()=>histGo(-1);
   const ff=$('#navFwd'); if(ff) ff.onclick=()=>histGo(1);
@@ -1345,6 +1515,9 @@ async function selectTopic(t, wantItem){
     $('#itemhead').textContent='Audition · pick a game';
   } else if(t==='sandbox'){
     $('#itemhead').textContent='Sandbox · pick a game';
+  } else if(t==='blockout'){
+    BLOCKOUTS=((await (await fetch('/api/blockouts')).json()).blockouts)||[];
+    $('#itemhead').textContent='Blockouts · by game';
   } else { $('#itemhead').textContent='Glyphs'; }
   // Location filter: only meaningful for the per-game location list. Reset on topic switch.
   itemFilter=''; const fi=$('#itemfilter');
@@ -1354,7 +1527,7 @@ async function selectTopic(t, wantItem){
   const list=items();
   // Prefer an explicit item, else the last-selected item remembered for THIS topic, else first.
   const remembered=(wantItem!=null)?wantItem:NAV.byTopic[t];
-  const target=(remembered&&list.some(x=>x.id===remembered))?remembered:(list[0]&&list[0].id);
+  const target=(remembered&&list.some(x=>x.id===remembered))?remembered:((list.find(x=>x.id)||{}).id);
   if(target) await openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); pushHist(); }
 }
 function items(){
@@ -1362,14 +1535,21 @@ function items(){
   if(topic==='placeholders') return (GLYPHS.glyphs||[]).map(g=>({id:g.id,name:g.id,mark:g.id===GLYPHS.selected?'●':'·',has:g.id===GLYPHS.selected}));
   // Audition / Sandbox are per-game → the item list is the games (pick one to work on).
   if(topic==='audition'||topic==='sandbox') return (STATE.games||[]).map(g=>({id:g,name:g,mark:'·',has:false}));
+  // Blockout: every volume across all games, grouped by game with a header before each group.
+  if(topic==='blockout'){ const out=[]; let lastG=null;
+    (BLOCKOUTS||[]).forEach(b=>{ if(b.game!==lastG){ out.push({header:true,name:b.game}); lastG=b.game; }
+      out.push({id:b.game+'::'+b.volume,name:b.title||b.volume,mark:'·',has:false}); });
+    return out; }
   return (ARTISTS.artists||[]).map(a=>({id:a.id,name:a.name,mark:a.id===ARTISTS.selected?'●':'·',has:a.id===ARTISTS.selected}));
 }
 let itemFilter='';
 function renderItems(){
   const il=$('#itemlist');
   const q=itemFilter.trim().toLowerCase();
-  const list=q?items().filter(it=>(it.name||'').toLowerCase().includes(q)):items();
-  il.innerHTML=list.map(it=>'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
+  const list=q?items().filter(it=>it.header||(it.name||'').toLowerCase().includes(q)):items();
+  il.innerHTML=list.map(it=>it.header
+    ?'<div style="padding:10px 10px 2px;font-size:11px;color:#8a8398;text-transform:uppercase;letter-spacing:.06em">'+esc(it.name)+'</div>'
+    :'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
     '<span class="dot '+(it.has?'has':'')+'">'+it.mark+(it.count?' '+it.count:'')+'</span></div>').join('')||'<p class="none" style="padding:12px">none</p>';
   document.querySelectorAll('.item').forEach(d=>d.onclick=()=>openItem(d.dataset.id));
   const ly=NAV.listScroll[topic]; if(ly!=null) il.scrollTop=ly;
@@ -1380,8 +1560,21 @@ async function openItem(id){ curItem=id; renderItems(); saveNav();
   else if(topic==='placeholders') detailGlyph((GLYPHS.glyphs||[]).find(g=>g.id===id));
   else if(topic==='audition') await detailAudition(id);
   else if(topic==='sandbox') await detailSandbox(id);
+  else if(topic==='blockout') detailBlockout(id);
   else detailArtist((ARTISTS.artists||[]).find(a=>a.id===id));
   pushHist();
+}
+// Embed the generic 3D renderer (served self-contained from /blockout) for the chosen volume.
+// pendingBlockoutView (set when arriving via a location's 📦 button) opens at that room's camera.
+function detailBlockout(id){
+  const [game,volume]=String(id).split('::');
+  const b=(BLOCKOUTS||[]).find(x=>x.game===game&&x.volume===volume)||{};
+  const view=pendingBlockoutView; pendingBlockoutView=null;
+  let src='/blockout?src='+encodeURIComponent('/api/blockout?game='+game+'&volume='+volume)+'&game='+encodeURIComponent(game)+'&volume='+encodeURIComponent(volume);
+  if(view) src+='&view='+encodeURIComponent(view);
+  $('#detail').innerHTML='<div class="loc-wrap" style="flex-direction:column;height:100%;gap:8px">'+
+    '<div style="padding:4px 2px"><b>'+esc(b.title||volume)+'</b> <span style="color:#8a8398">· '+esc(game)+' · members: '+esc((b.members||[]).join(', '))+'</span></div>'+
+    '<iframe src="'+src+'" style="flex:1;width:100%;border:1px solid #2a2536;border-radius:8px;min-height:72vh;background:#888"></iframe></div>';
 }
 function noteSection(key){return '<div class="sec"><label class="ed">Notes / feedback</label><textarea class="edit" id="inote" placeholder="What you think — usually means: regen. (Claude reads these to tune the artist.)">'+esc(noteVal(key))+'</textarea></div>';}
 function wireNote(key){const n=$('#inote');if(n)n.onblur=()=>saveNote(key,n.value);}
@@ -1410,6 +1603,9 @@ function detailLocation(l){
   if(!sel||l.candidates.indexOf(sel)<0) sel=l.committed||l.candidates[0]||null;
   const gi=GAMEINFO[curGame]||{artist:{},aesthetic:''};
   const art=(gi.artist&&gi.artist.name)||'(none)';
+  // Is this location a member of a 3D blockout volume? If so, offer a link to view it.
+  const bo=(gi.blockouts||[]).find(b=>(b.members||[]).indexOf(l.slug)>=0);
+  const boBtn=bo?'<button id="bBlockout" title="View this room in the '+esc(bo.title)+' 3D blockout">📦 Blockout</button>':'';
   const cands=l.candidates.map(f=>{const isC=l.committedSource===f;
     const aud=(l.auditions||{})[f];
     const meta=(l.candMeta||{})[f]||{};
@@ -1439,7 +1635,7 @@ function detailLocation(l){
         '<button data-rm="edit" title="Img2img: feed the selected image back in, note = edit instruction (preserves composition)">Edit img</button>'+
       '</span>'+
       '<button id="bRegen">Generate ▸</button>'+
-      '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\\'s layers to play freely">⚗ Sandbox!</button></div>'+
+      '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\\'s layers to play freely">⚗ Sandbox!</button>'+boBtn+'</div>'+
     '<div class="candbar">'+(l.candidates.length>1?'<label>Sort <select id="candSort">'+
         '<option value="date">date (newest)</option><option value="name">name</option>'+
         '<option value="model">model</option></select></label>':'')+'</div>'+
@@ -1482,6 +1678,7 @@ function detailLocation(l){
     b.onclick=()=>{regenMode=b.dataset.rm;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.rm===regenMode));}; }); }
   document.querySelectorAll('#detail .editbtn').forEach(b=>b.onclick=()=>beginEdit(b.dataset.edit));
   $('#bRegen').onclick=()=>doRegen(l);
+  if(bo){const bb=$('#bBlockout'); if(bb) bb.onclick=()=>{ pendingBlockoutView=l.slug; selectTopic('blockout', curGame+'::'+bo.volume); };}
   $('#bSandbox').onclick=()=>{
     const gi=GAMEINFO[curGame]||{artist:{},aesthetic:'',app:''};
     // Carry the currently selected picture in (if any): aud:-pieces come from _audition, the

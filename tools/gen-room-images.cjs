@@ -101,13 +101,19 @@ function sceneFor(room, styleScenes) {
 function appPromptText() {
   return (readJSON(path.join(REPO, 'docs/games/images/_app/app.json'), {}) || {}).prompt || '';
 }
+// The artist medium LEADS and is told to govern lighting/finish, so the per-room render
+// medium actually shows instead of collapsing into the aesthetic's tone (oil reads as oil,
+// riso as riso, photo as photo). Aesthetics describe WORLD content only — lighting/palette
+// directives belong to the artist. Order: Artist ▸ Scene ▸ Aesthetic ▸ App. Kept identical to
+// review-server.cjs composedFor()/composedPrompt() so batch == reviewer.
+const ARTIST_LEAD = 'This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
 function composeRoomPrompt(room, layers) {
   const scene = sceneFor(room, layers.scenes);
   return [
-    appPromptText(),
-    layers.artist ? `Artist: ${layers.artist}` : '',
-    layers.aesthetic ? `Aesthetic: ${layers.aesthetic}` : '',
+    layers.artist ? `${layers.artist} ${ARTIST_LEAD}` : '',
     scene ? `Scene: ${scene}` : '',
+    layers.aesthetic ? `Aesthetic: ${layers.aesthetic}` : '',
+    appPromptText(),
   ].filter(Boolean).join(' ');
 }
 
@@ -136,6 +142,24 @@ function refWrappedPrompt(prompt, refMode) {
     return 'Modify the supplied image. Preserve its existing composition, layout, '
       + 'perspective, lighting, and every element not mentioned below. Apply ONLY '
       + 'these changes:\n\n' + prompt;
+  }
+  // GUIDE = the supplied image is a rough grey 3D blockout. Match its CAMERA and the rough
+  // placement/scale of major masses, but reinterpret the blocky forms freely as real subjects,
+  // and include only what is actually blocked in — text is context for style, not a checklist.
+  if (refMode === 'guide') {
+    return 'The supplied image is a rough coloured 3D BLOCKOUT marking only the MAJOR masses of the scene. '
+      + 'KEEP its composition, camera, perspective, and the position and scale of those major masses — do '
+      + 'not move them or change the basic layout, and do not add new LARGE structures that would change '
+      + 'the architecture (extra storeys, walls, doorways, staircases, balconies). But fully realise each '
+      + 'block as its real counterpart, NOT a copy of its crude facets: a small block with an upright back '
+      + 'is one plush upholstered theatre CHAIR (render believable rows of real chairs); the raised slab is '
+      + 'a solid stage; panels are walls. '
+      + 'You SHOULD take artistic liberty to make the place feel real and lived-in: add logical secondary '
+      + 'dressing and detail that plausibly belongs even though it is not blocked in — floor carpets and '
+      + 'aisle runners, scattered debris, dust, cobwebs, fallen plaster, drapery, worn fabric, small '
+      + 'clutter — and apply the described era, materials, lighting, age and ATMOSPHERE richly (deep '
+      + 'shadow, gloom, patina, decay, moody contrast). It should look like the real, weathered place, '
+      + 'NOT a clean sterile model. Only the major masses and the overall layout are fixed.\n\n' + prompt;
   }
   return 'Use the supplied image ONLY as a style/art-direction reference (palette, '
     + 'rendering, mood). Render a NEW scene described below.\n\n' + prompt;
@@ -312,6 +336,13 @@ async function main() {
     aesthetic: styleJson.aesthetic || '',
     scenes: styleJson.scenes || {},
   };
+  // Provenance for the reviewer's thumbnail chip: which artist made each batch render.
+  // (Batch output is untagged `<slug>.png`, so the model can't be read from the filename —
+  // the .json sidecar carries provider/quality/model too. Regen via review-server tags its
+  // own filenames and writes its own sidecar, so this only needs to cover the batch path.)
+  const provId = ((readJSON(path.join(gameDir, 'selected-artist.json'), {}) || {}).id) || null;
+  const provArts = (readJSON(path.join(REPO, 'docs/games/images/_artists/artists.json'), { artists: [] }).artists) || [];
+  const provArtName = ((provArts.find((a) => a.id === provId) || {}).name) || provId;
 
   let rooms = pack.rooms || [];
   // --only accepts one slug OR a comma-separated subset ("a,b,c") so a render skill can
@@ -364,6 +395,7 @@ async function main() {
       if (regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare
       fs.writeFileSync(out, buf);
       fs.writeFileSync(out.replace(/\.png$/i, '.txt'), composed); // sidecar: exact prompt used
+      fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId: provId, artistName: provArtName, provider, quality, model }, null, 2)); // provenance sidecar (reviewer thumbnail chip)
       console.log(`OK (${(buf.length / 1024).toFixed(0)} KB)${regen ? ' — prev kept' : ''}`);
       ok++;
     } catch (e) {

@@ -1,78 +1,180 @@
 {
   "artists": [
     {
-      "id": "gouache",
-      "name": "Gouache Backdrops",
-      "summary": "90s LucasArts/Sierra painted backgrounds — muted, recessive, fills the frame.",
-      "style": "Hand-painted gouache background art in the style of early-1990s LucasArts and Sierra point-and-click adventure games. Full but muted, desaturated palette; soft even ambient light; low contrast. Painterly, slightly soft.",
-      "examples": [
-        {
-          "label": "Wishbringer — Hilltop",
-          "file": "gouache-hilltop.png"
-        },
-        {
-          "label": "Dreamhold — Cell",
-          "file": "gouache-cell.png"
-        },
-        {
-          "label": "Anchorhead — Alley",
-          "file": "gouache-alley.png"
-        }
-      ]
-    },
-    {
-      "id": "pixel",
-      "name": "Indexed Pixel",
-      "summary": "Low-res VGA pixel intent — but the model renders soft illustration; needs a real pixelization pass to be authentic.",
-      "style": "True low-resolution pixel art, early-1990s VGA point-and-click adventure background (256 colour, visible square pixels, hand-dithered gradients, limited muted indexed palette). Soft even light with a subtle warm lantern glow; low contrast.",
-      "examples": [
-        {
-          "label": "Wishbringer — Hilltop",
-          "file": "pixel-hilltop.png"
-        },
-        {
-          "label": "Dreamhold — Cell",
-          "file": "pixel-cell.png"
-        },
-        {
-          "label": "Anchorhead — Alley",
-          "file": "pixel-alley.png"
-        }
-      ]
-    },
-    {
-      "id": "ink",
-      "name": "Aldous Quill",
-      "summary": "THE HOUSE ARTIST (ink & wash). Loose impressionist ink + watercolor on cream paper, high contrast, ragged unframed-plate edges. Recolors per game via the Style/aesthetic.",
+      "id": "illustration-plate",
+      "name": "Ink & Watercolour",
+      "summary": "Loose ink linework over watercolor on cream paper, ragged unframed plate edges — the house style.",
+      "goodFor": "Literary fiction, horror, adventure — the all-purpose house style",
       "style": "Loose impressionistic hand-drawn illustration: confident visible ink linework over watercolor wash on cream paper, granular paper texture, soft ragged blotchy edges fading directly into the bare cream-paper margin so the picture sits loose on the page like an unframed illustration plate. NO hard rectangular border, no black frame, no smooth rectangular vignette or inner box — bare white paper shows at the irregular edges. Full tonal range with rich near-black darks and real contrast, never flat or washed-out.",
+      "examples": []
+    },
+    {
+      "id": "broadsheet",
+      "name": "Victorian Wood Engraving",
+      "summary": "Victorian newspaper wood engraving on coarse newsprint — sepia only, crosshatch, halftone grain.",
+      "goodFor": "Victorian, gothic, historical, crime",
+      "style": "Victorian newspaper wood engraving reproduced on coarse newsprint: fine parallel-line crosshatch and stippling for all shading, sepia ink only, visible coarse newsprint halftone dot texture throughout the image, slight ink spread and fray at line edges, yellowed stock.",
+      "examples": []
+    },
+    {
+      "id": "drypoint",
+      "name": "Copperplate Etching",
+      "summary": "Copper-plate drypoint etching — burr-edged lines, residual plate tone, velvet darks.",
+      "goodFor": "Mystery, literary fiction, dark atmosphere, elegant horror",
+      "style": "Copper-plate drypoint etching: fine burr-edged lines with slight ink fray throughout, plate wiped but retaining a thin residual grey tone even in light areas — no true white, open areas carry a faint plate smear. Rich velvet darks where ink pools in the burr. Delicate, precise, slightly furred quality throughout.",
+      "examples": []
+    },
+    {
+      "id": "expedition-log",
+      "name": "Naturalist Field Sketch",
+      "summary": "Naturalist field sketch on ruled laid paper — pencil under dilute wash, hurried and observed.",
+      "goodFor": "Wilderness, exploration, investigation, natural history",
+      "style": "Victorian naturalist field sketch on cream laid paper: light graphite pencil underdrawing with thin dilute watercolor wash over it, faint ruled or grid lines showing through the wash from the sketchbook paper, abbreviated and economical marks as if drawn quickly on location. Slightly hurried, observed quality.",
+      "examples": []
+    },
+    {
+      "id": "lantern-slide",
+      "name": "Magic Lantern Slide",
+      "summary": "Glass-painted magic lantern illustration — warm amber centre, cool blue-grey margins.",
+      "goodFor": "Ghost stories, dream sequences, Victorian mystery, fairy tale",
+      "style": "Hand-painted illustration on glass for a Victorian magic lantern: warm amber and rose light glowing from the image's own centre, hand-applied translucent colour over a monochrome base, the warmth falling off to cool blue-grey at the margins as if the lamp's beam fades at the slide's edge.",
+      "examples": []
+    },
+    {
+      "id": "casein-board",
+      "name": "Mid-Century Gouache",
+      "summary": "Matte casein on toned board — powdery, formal, 1940s–60s scientific illustration.",
+      "goodFor": "Science fiction, clinical, institutional, cold-war thriller",
+      "style": "Casein or gouache on toned grey-beige board: matte chalky paint surface, flat even light, the warm grey ground showing through wherever paint is thin. Slightly powdery and deliberate — the clean formal manner of 1940s–60s scientific or educational illustration.",
+      "examples": []
+    },
+    {
+      "id": "plein-air",
+      "name": "Impasto Oil",
+      "summary": "Alla prima oil study — thick impasto, wet-on-wet edges, energetic unpolished marks.",
+      "goodFor": "Outdoor scenes, impressionist, vivid naturalistic settings",
+      "style": "Alla prima oil paint study: thick gestural impasto, visible palette-knife and bristle-brush marks, colours mixing wet-on-wet at edges and not fully resolved. Raised paint ridges catch light at every boundary. Energetic, unpolished, painted quickly on a primed white ground.",
+      "examples": []
+    },
+    {
+      "id": "picture-book",
+      "name": "Children's Picture Book",
+      "summary": "Watercolor over waxy colored-pencil underdrawing — 1950s children's book illustration.",
+      "goodFor": "Whimsical, fairy tale, children's adventure, cosy fantasy",
+      "style": "Soft watercolor washes with a waxy colored-pencil underdrawing visible through them: pencil lines peek through the wash in mid-tones, slightly waxy and resistant to the water. Slightly irregular, hand-illustrated character as in a 1950s–60s illustrated children's book. Soft warm paper grain.",
+      "examples": []
+    },
+    {
+      "id": "comic-panel",
+      "name": "Comic Book",
+      "summary": "Hand-inked comic panel — flat solid colour, bold outlines, halftone shadows, no rendered look.",
+      "goodFor": "Noir, action, horror, graphic novel, high-contrast drama",
+      "style": "Hand-inked comic-book panel: crisp black ink outlines of even weight around every form, filled with FLAT areas of solid colour — no gradients, no soft shading, no blending, no painterly brushwork, no 3D rendered look. Shadows are hard-edged flat shapes one shade darker, with Ben-Day / halftone dot texture in the shadow areas only. Bold, graphic, limited mood-driven palette, printed flat like a vintage comic page. No speech bubbles, no panel borders, no captions.",
+      "examples": []
+    },
+    {
+      "id": "pulp-press",
+      "name": "Pulp Magazine",
+      "summary": "1930s pulp magazine linotype — black plus one warm press colour, halftone dot shadows.",
+      "goodFor": "Pulp adventure, noir, hard-boiled mystery, 1930s–40s period",
+      "style": "1930s–40s pulp magazine interior illustration, linotype woodcut reproduction: bold black ink plus one warm press colour (rust, ochre, or brick red), halftone dot pattern in all shadow areas, slight ink bleed at block edges — the coarse result of fast commercial printing on cheap stock.",
+      "examples": []
+    },
+    {
+      "id": "spirit-copy",
+      "name": "Mimeograph Zine",
+      "summary": "Spirit duplicator on onionskin — purple-black ink, horizontal smear banding, crude coverage.",
+      "goodFor": "Punk, absurdist, counterculture, surreal, zine aesthetic",
+      "style": "Spirit duplicator print on thin onionskin stock: purple-black ink with faint horizontal smear banding running across the image from the drum, uneven ink coverage, deliberately crude marks — the faded lo-fi quality of a 1970s underground zine or school handout.",
+      "examples": []
+    },
+    {
+      "id": "risograph",
+      "name": "Risograph Print",
+      "summary": "Risograph print — misregistered colour layers, halftone grain, limited flat palette.",
+      "goodFor": "Contemporary indie, wry comedy, lo-fi, modern horror",
+      "style": "Risograph print: two or three ink-colour layers with deliberate misregistration — each layer visibly offset so colours do not align — limited flat palette, visible halftone grain at layer edges, slightly overinked where layers overlap.",
+      "examples": []
+    },
+    {
+      "id": "sumi-rubbing",
+      "name": "Sumi-e Ink Rubbing",
+      "summary": "Ink rubbing through rice paper over carved block — velvet darks, torn washi edges.",
+      "goodFor": "Minimalist, meditative, Japan-adjacent, lyric",
+      "style": "Ink rubbed through rice paper over a carved block: velvet-rich near-black ink heavier where the block surface is raised, thin and pale at the hollows. Torn washi paper edges with visible fibres. Minimal marks, large areas of bare fibrous paper — traditional Japanese rubbing quality.",
+      "examples": []
+    },
+    {
+      "id": "pastel-nocturne",
+      "name": "Pastel on Black",
+      "summary": "Pastel chalk on dark toned paper — light built from darkness, paper ground is the shadow.",
+      "goodFor": "Night scenes, interior gloom, dream, noir, horror",
+      "style": "Soft pastel chalk on dark-toned paper (deep charcoal or midnight blue): chalk strokes build light from darkness — the paper ground is the shadow everywhere the chalk does not reach. Blended, slightly smudged chalk marks, no outlines, light sculpted from dark.",
+      "examples": []
+    },
+    {
+      "id": "travel-lithograph",
+      "name": "Hand-Coloured Lithograph",
+      "summary": "1880s hand-coloured lithograph — ochre/sepia/cobalt palette, stone grain, slight misregistration.",
+      "goodFor": "Victorian travel, colonial adventure, exotic settings",
+      "style": "Hand-coloured stone lithograph in the style of an 1880s travel book illustration: formal composition, limited warm palette (ochre, sepia, raw sienna) with cobalt blue as the only cool note, visible stone-lithograph grain throughout, slight misregistration of the colour pass over the keystone.",
+      "examples": []
+    },
+    {
+      "id": "film-still",
+      "name": "Cinematic Film Still",
+      "summary": "Cinematic film frame — anamorphic widescreen feel, dramatic key light, shallow focus, fine grain, graded colour.",
+      "goodFor": "Cinematic drama, thriller, horror, prestige-film mood",
+      "style": "A frame from a prestige feature film: photographic realism with a cinematic anamorphic look, a dramatic directional key light with deep shadow falloff, shallow depth of field so the background sits softly out of focus, fine 35mm film grain, and a deliberate cinematic colour grade. Lifelike textures and natural lens character — clearly photographed, not drawn or painted.",
+      "examples": []
+    },
+    {
+      "id": "available-light",
+      "name": "Natural-Light Photo",
+      "summary": "Clean editorial interior photography — natural daylight, even exposure, true colour, sharp throughout.",
+      "goodFor": "Realism, contemporary, clean and legible settings",
+      "style": "Editorial architectural interior photography lit only by available light: soft natural daylight, even balanced exposure with open shadows, true-to-life colour, sharp focus throughout (deep depth of field), neutral white balance. Calm, clean, documentary realism — the room photographed plainly and legibly, with no dramatic grading or heavy crushed shadow.",
+      "examples": []
+    },
+    {
+      "id": "silver-plate",
+      "name": "Antique Photograph",
+      "summary": "Large-format view-camera photograph — silver-gelatin black-and-white or faded sepia, period grain.",
+      "goodFor": "Victorian, historical, gothic, period documentary",
+      "style": "A large-format view-camera photograph in the manner of an early silver-gelatin or albumen print: monochrome — neutral black-and-white or faded warm sepia — with fine large-format sharpness, a long tonal range, slight vignetting, visible period photographic grain, and a touch of age-fade and emulsion mottling at the edges. Photographic realism, never engraved, crosshatched or drawn.",
+      "examples": []
+    },
+    {
+      "id": "cg-render",
+      "name": "3D Render",
+      "summary": "Modern 3D CG render — global illumination, soft ambient occlusion, clean PBR materials, telltale rendered perfection.",
+      "goodFor": "Science fiction, stylised realism, clean modern look, games-adjacent",
+      "style": "A modern 3D computer-graphics render: physically based materials, soft global illumination with gentle ambient-occlusion contact shadows, clean reflections and subtle subsurface light, a shallow rendered depth of field. Slightly idealised, immaculate surfaces with the characteristic flawless smoothness of a high-end offline render — clearly CG, neither photographed nor hand-painted.",
+      "examples": []
+    },
+    {
+      "id": "old-gouache",
+      "name": "OLD — Gouache Backdrops",
+      "summary": "90s LucasArts/Sierra painted backgrounds — muted, recessive, fills the frame.",
+      "goodFor": "",
+      "style": "Hand-painted gouache background art in the style of early-1990s LucasArts and Sierra point-and-click adventure games. Full but muted, desaturated palette; soft even ambient light with a single warm lantern glow as a quiet accent; low contrast, no harsh focal point, a calm backdrop that does not draw the eye, meant as accompaniment to story text. Painterly, slightly soft, no people, no text or UI overlays. Portrait, taller than wide, 3:4.",
       "examples": [
-        {
-          "label": "Wishbringer — Hilltop",
-          "file": "ink-hilltop.png"
-        },
-        {
-          "label": "Dreamhold — Cell",
-          "file": "ink-cell.png"
-        },
-        {
-          "label": "Anchorhead — Alley",
-          "file": "ink-alley.png"
-        }
+        { "label": "Wishbringer — Hilltop", "file": "gouache-hilltop.png" },
+        { "label": "Dreamhold — Cell", "file": "gouache-cell.png" },
+        { "label": "Anchorhead — Alley", "file": "gouache-alley.png" }
       ]
     },
     {
-      "id": "storybook",
-      "name": "Wren Halloway",
-      "summary": "Soft picture-book illustration — gentle watercolor washes over light colored-pencil, tender rounded linework, warm fairy-tale plate. For whimsical games (Wishbringer).",
-      "style": "Soft storybook picture-book illustration: gentle watercolor washes layered with light colored-pencil and waxy crayon texture, tender rounded hand-drawn linework, the warm hand-illustrated quality of a classic children's picture book. Visible soft paper grain; gentle, slightly irregular edges that feather softly into the bare paper margin like a printed picture-book plate — NO hard rectangular border, no black frame, no smooth rectangular vignette or inner box, bare paper shows at the irregular edges. Rounded, friendly, slightly naive forms with soft warm modeling and a full but gentle tonal range — never harsh or flat.",
-      "examples": []
-    },
-    {
-      "id": "comic-book-style",
-      "name": "Comic book style",
-      "summary": "Inked graphic-novel panel — bold black linework, cel-flat color, halftone shadows. Moody noir comic feel.",
-      "style": "Hand-inked comic-book / graphic-novel panel art: bold confident black ink outlines of varying weight, clean cel-shaded flat color fills, hard-edged shadows and crisp lighting. Mood-driven noir palette with restrained, slightly desaturated colors and deep black shadow shapes; subtle halftone / Ben-Day dot texture and occasional crosshatching for shading. Strong graphic shapes, dramatic but uncluttered composition, painterly only where ink and flat color meet. No speech bubbles, no panel borders, no captions or onomatopoeia.",
-      "examples": []
+      "id": "old-pixel",
+      "name": "OLD — Indexed Pixel",
+      "summary": "Low-res VGA pixel intent — but the model renders soft illustration; needs a real pixelization pass to be authentic.",
+      "goodFor": "",
+      "style": "True low-resolution pixel art, early-1990s VGA point-and-click adventure background (256 colour, visible square pixels, hand-dithered gradients, limited muted indexed palette). Soft even light with a subtle warm lantern glow; low contrast, understated backdrop that does not draw the eye, accompaniment to story text. No people, no text or UI overlays. Portrait, taller than wide, 3:4.",
+      "examples": [
+        { "label": "Wishbringer — Hilltop", "file": "pixel-hilltop.png" },
+        { "label": "Dreamhold — Cell", "file": "pixel-cell.png" },
+        { "label": "Anchorhead — Alley", "file": "pixel-alley.png" }
+      ]
     }
   ]
 }

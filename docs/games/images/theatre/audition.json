@@ -1,9 +1,9 @@
 {
   "scenes": [
-    "theatre-lobby",
-    "attic-observatory",
-    "theatre-roof",
-    "witchs-lair"
+    "staircase-landing",
+    "western-balcony",
+    "above-the-pit",
+    "stage"
   ],
   "artists": [
     "illustration-plate",
@@ -21,9 +21,20 @@
     "sumi-rubbing",
     "pastel-nocturne",
     "travel-lithograph",
+    "available-light",
+    "silver-plate",
+    "cg-render",
     "old-gouache",
-    "old-pixel",
-    "old-ink"
+    "old-pixel"
   ],
-  "finalists": []
+  "finalists": [
+    "pastel-nocturne",
+    "illustration-plate",
+    "drypoint",
+    "comic-panel",
+    "pulp-press",
+    "spirit-copy",
+    "sumi-rubbing",
+    "silver-plate"
+  ]
 }
