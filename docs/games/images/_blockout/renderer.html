@@ -17,11 +17,15 @@
   #upd{background:#3a6ea5!important;border-color:#5a8ec5!important;color:#fff!important;font-weight:600}
   #upd:hover{background:#4a7eb5!important}
   #msg{color:#bdb4c8;font-size:12px;margin-left:4px}
+  /* Narrow-screen cluster toggle — hidden on wide layouts, shown by the media query below. */
+  #modeToggle{display:none;gap:4px;margin-right:4px}
+  #modeToggle button{font:12px system-ui;padding:4px 10px;border:1px solid #4a4458;border-radius:5px;background:#241f30;color:#cfc8da;cursor:pointer}
+  #modeToggle button.on{background:#3a3450;color:#fff;border-color:#6a5}
   #cols{position:absolute;top:48px;left:0;right:0;bottom:0;display:flex;gap:10px;padding:10px}
-  #colView{flex:0 0 auto;height:100%}
-  #viewport{height:100%;aspect-ratio:3/4;background:#888;border-radius:8px;overflow:hidden}
+  #colView{flex:3 1 0;min-width:0;height:100%;display:flex;justify-content:center}
+  #viewport{height:100%;width:auto;max-width:100%;aspect-ratio:3/4;background:#888;border-radius:8px;overflow:hidden}
   #viewport canvas{width:100%;height:100%;display:block}
-  #colResult{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px}
+  #colResult{flex:3 1 0;min-width:0;display:flex;flex-direction:column;gap:8px}
   #result{position:relative;flex:1;min-height:0;background:#17151d;border:1px solid #2a2536;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
   #result img{max-width:100%;max-height:100%;object-fit:contain}
   #resultCap{position:absolute;top:0;left:0;right:0;padding:6px 10px;font-size:13px;font-weight:600;
@@ -33,7 +37,7 @@
   #gallery .thumb img{height:100%;display:block;border-radius:3px}
   #gallery .thumb .cap{position:absolute;left:0;right:0;bottom:0;font-size:9px;background:rgba(0,0,0,.6);color:#ddd;padding:1px 3px;border-radius:0 0 3px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #gallery .none{color:#6a6478;align-self:center;padding:0 10px}
-  #colText{flex:0 0 420px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  #colText{flex:2 1 0;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:10px;min-height:0}
   #colText .panel{background:#17151d;border:1px solid #2a2536;border-radius:8px;padding:10px 12px}
   #desc{flex:0 0 auto;max-height:32%;overflow:auto}
   #desc h3{margin:0 0 5px;font-size:17px;color:#f0d9a0}
@@ -43,7 +47,7 @@
   #prompt{flex:1;width:100%;resize:none;background:#120f18;color:#e2e8d0;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px/1.5 system-ui,sans-serif}
   #noteWrap{flex:0 0 auto}
   #note{width:100%;height:96px;resize:vertical;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
-  #colImgNote{flex:0 0 460px;display:flex;flex-direction:column;gap:5px;min-height:0}
+  #colImgNote{flex:2 1 0;min-width:0;max-width:480px;display:flex;flex-direction:column;gap:5px;min-height:0}
   #colImgNote > label{font-size:13px;color:#9a93a8}
   #colImgNote .resolve{float:right;font-size:13px;color:#cbbf9a;cursor:pointer}
   #imgDel{float:right;margin-left:10px;font:12px system-ui;padding:1px 7px;border:1px solid #7a4444;border-radius:5px;background:#3a2020;color:#e6b0b0;cursor:pointer}
@@ -71,10 +75,27 @@
   #pick .tbtn{font:11px system-ui;padding:2px 7px;border:1px solid #4a4458;border-radius:5px;background:#241f30;color:#cfc8da;cursor:pointer}
   #pick .tbtn.on{background:#3a3450;color:#fff;border-color:#6a5}
   #err{position:fixed;inset:48px 0 0 0;display:none;place-items:center;color:#f88;background:#2a1416;font-size:15px;padding:30px;text-align:center;z-index:9}
+
+  /* Narrow screens: the four columns can't coexist (#colText 420px + #colImgNote 460px alone
+     overflow). Split into two activity clusters and show one at a time via #modeToggle:
+       Blockout (make) = 3D viewport + scene/notes        →  #colView + #colText
+       Image    (review) = result + gallery + shot note   →  #colResult + #colImgNote
+     Default (no body class) shows the Blockout cluster. */
+  @media (max-width:1100px){
+    #modeToggle{display:inline-flex}
+    #colText,#colImgNote{flex:1 1 0;max-width:none}   /* full width — only one cluster shows */
+    #colView{flex:1 1 0;min-width:0;height:auto;align-self:stretch;display:flex;align-items:center}
+    #viewport{width:100%;height:auto;max-height:100%;aspect-ratio:3/4}
+    #colResult,#colImgNote{display:none}
+    body.mode-image #colResult{display:flex}
+    body.mode-image #colImgNote{display:flex}
+    body.mode-image #colView,body.mode-image #colText{display:none}
+  }
 </style>
 </head>
 <body>
 <div id="bar">
+  <span id="modeToggle"><button data-m="blockout" class="on" title="3D viewport + scene/notes">📦 Blockout</button><button data-m="image" title="Result, gallery + shot note">🖼 Image</button></span>
   <span id="views"></span>
   <button id="upd" title="Save the current camera as this room’s vantage" style="display:none">✓ Update vantage</button>
   <button id="addblk" title="Drop a 1×1×1 block in front of the camera, then edit it" style="display:none">➕ Add block</button>
@@ -608,6 +629,13 @@ async function boot() {
     if (!gizmo || !gizmo.object) return;
     const mode = { Digit1: 'translate', Digit2: 'scale', Digit3: 'rotate' }[e.code];
     if (mode) { e.preventDefault(); setMode(mode); }
+  });
+  // Narrow-screen cluster toggle (Blockout ↔ Image). The buttons only show ≤1100px via CSS;
+  // resizing the canvas after the layout settles keeps the WebGL viewport crisp.
+  document.querySelectorAll('#modeToggle button').forEach((b) => b.onclick = () => {
+    document.body.classList.toggle('mode-image', b.dataset.m === 'image');
+    document.querySelectorAll('#modeToggle button').forEach((x) => x.classList.toggle('on', x === b));
+    requestAnimationFrame(sizeToViewport);
   });
   applyView(first); sizeToViewport(); addEventListener('resize', sizeToViewport);
   if (nav.file && GENS.some((x) => x.file === nav.file)) setResult(nav.file);   // re-show the last shot
