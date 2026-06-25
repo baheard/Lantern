@@ -46,10 +46,30 @@
   #colImgNote{flex:0 0 460px;display:flex;flex-direction:column;gap:5px;min-height:0}
   #colImgNote > label{font-size:13px;color:#9a93a8}
   #colImgNote .resolve{float:right;font-size:13px;color:#cbbf9a;cursor:pointer}
+  #imgDel{float:right;margin-left:10px;font:12px system-ui;padding:1px 7px;border:1px solid #7a4444;border-radius:5px;background:#3a2020;color:#e6b0b0;cursor:pointer}
+  #imgDel:disabled{opacity:.4;cursor:default}
   #imgnote{flex:1;min-height:0;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
   #imgnote:disabled{opacity:.45}
   #actualPrompt{flex:3;min-height:0;width:100%;resize:none;background:#0e0c14;color:#b8c0a8;border:1px solid #2a2536;border-radius:6px;padding:8px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
   #hint{position:fixed;left:14px;bottom:10px;color:#cfc8da;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:5px;font-size:11px;pointer-events:none;z-index:4}
+  #pick{position:fixed;right:14px;bottom:14px;width:264px;background:rgba(20,17,26,.95);border:1px solid #4a4458;border-radius:8px;padding:9px 12px;z-index:6;display:none}
+  #pick h4{margin:0 0 6px;font-size:14px;color:#f0d9a0;padding-right:16px}
+  #pick .row{font-size:12px;color:#d2ccde;margin:3px 0;line-height:1.4;word-break:break-word}
+  #pick .k{display:inline-block;min-width:46px;color:#9a93a8}
+  #pick .close{position:absolute;top:6px;right:9px;cursor:pointer;color:#9a93a8;font-size:15px;line-height:1}
+  #pick .close:hover{color:#fff}
+  #pick .ed{margin:4px 0;display:flex;align-items:center;gap:4px}
+  #pick .ed label{min-width:46px;color:#9a93a8;font-size:11px}
+  #pick input,#pick select{background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:4px;padding:2px 4px;font:12px system-ui}
+  #pick input[type=number]{width:52px}
+  #pick .btns{margin-top:8px;display:flex;gap:6px}
+  #pick .btns button{font:12px system-ui;padding:3px 9px;border:1px solid #4a4458;border-radius:5px;background:#241f30;color:#e8e4ee;cursor:pointer}
+  #pick #edSave{background:#3a6ea5;border-color:#5a8ec5;color:#fff;font-weight:600}
+  #pick #edDel{background:#5a2a2a;border-color:#7a4444;margin-left:auto}
+  #pick .edmsg{font-size:11px;color:#bdb4c8;margin-top:5px;min-height:13px}
+  #pick .tbtns{display:flex;gap:4px}
+  #pick .tbtn{font:11px system-ui;padding:2px 7px;border:1px solid #4a4458;border-radius:5px;background:#241f30;color:#cfc8da;cursor:pointer}
+  #pick .tbtn.on{background:#3a3450;color:#fff;border-color:#6a5}
   #err{position:fixed;inset:48px 0 0 0;display:none;place-items:center;color:#f88;background:#2a1416;font-size:15px;padding:30px;text-align:center;z-index:9}
 </style>
 </head>
@@ -57,6 +77,7 @@
 <div id="bar">
   <span id="views"></span>
   <button id="upd" title="Save the current camera as this room’s vantage" style="display:none">✓ Update vantage</button>
+  <button id="addblk" title="Drop a 1×1×1 block in front of the camera, then edit it" style="display:none">➕ Add block</button>
   <span class="spacer"></span>
   <select id="model" title="Generator model">
     <option value="openai-low">OpenAI · low (~$0.006)</option>
@@ -80,15 +101,17 @@
     <div id="gallery"></div>
   </div>
   <div id="colImgNote">
-    <label>Note on the selected shot <label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
+    <label>Note on the selected shot <button id="imgDel" title="Permanently delete the selected shot" disabled>🗑 Delete</button><label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
     <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
     <label>Actual prompt sent to the model</label>
     <textarea id="actualPrompt" readonly placeholder="(generate a shot to see its prompt)"></textarea>
   </div>
 </div>
-<div id="hint"><b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/Ctrl</b> up/down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
+<div id="hint"><b>left-click</b> inspect · <b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/E</b> up · <b>Q</b> down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
+<div id="pick"><span class="close" id="pickClose" title="Deselect">✕</span><h4 id="pickName">—</h4><div id="pickBody"></div></div>
 <div id="err"></div>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 <!-- Postprocessing for SSAO (contact-shadow seams where blocks meet). Order matters. -->
 <script src="https://unpkg.com/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
@@ -146,29 +169,220 @@ const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
 const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;
 function fail(msg) { const e = document.getElementById('err'); e.style.display = 'grid'; e.textContent = msg; console.error(msg); }
 
-function mesh(geom, at, color) {
+function mesh(geom, at, color, tag) {
   const m = new THREE.Mesh(geom, clay(color));
   if (at) m.position.set(at[0], at[1], at[2]);
   m.castShadow = true; m.receiveShadow = true;
+  if (tag) m.userData.part = tag;   // source scene-def part, for click-to-inspect
   // Dark edge lines so corners read clearly (cel-shaded look) — helps the human and the model see structure.
   m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 20), new THREE.LineBasicMaterial({ color: 0x141414 })));
   return m;
 }
-function buildPart(p, parent, offset, inherit) {
+const deg = (d) => d * Math.PI / 180, rdeg = (r) => +(r * 180 / Math.PI).toFixed(1), r3 = (n) => +n.toFixed(3);
+// Orient a mesh: an explicit `rot` (euler degrees) wins; otherwise a cyl falls back to its `axis`.
+// Once a part is rotated via the gizmo, `rot` captures its full orientation (incl. any axis base).
+function orient(m, p) {
+  m.rotation.set(0, 0, 0);
+  if (p.rot) m.rotation.set(deg(p.rot[0]), deg(p.rot[1]), deg(p.rot[2]));
+  else if (p.cyl) { const c = p.cyl; if (c.axis === 'x') { m.rotation.z = Math.PI / 2; if (c.half) m.rotation.y = Math.PI; } else if (c.axis === 'z') m.rotation.x = Math.PI / 2; }
+}
+function buildPart(p, parent, offset, inherit, tagPart) {
   const off = offset || [0, 0, 0];
   const at = p.at ? [p.at[0] + off[0], p.at[1] + off[1], p.at[2] + off[2]] : off.slice();
   const col = roleColor(p, inherit);
-  if (p.box) parent.add(mesh(new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]), at, col));
-  else if (p.sphere) parent.add(mesh(new THREE.IcosahedronGeometry(p.sphere, 1), at, col));
+  const tag = tagPart || p;   // grid sub-parts inherit the top grid part as their inspect tag
+  if (p.box) { const m = mesh(new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]), at, col, tag); orient(m, p); parent.add(m); }
+  else if (p.sphere) { const m = mesh(new THREE.IcosahedronGeometry(p.sphere, 1), at, col, tag); orient(m, p); parent.add(m); }
   else if (p.cyl) {
-    const c = p.cyl, m = mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 16, 1, false, 0, c.half ? Math.PI : Math.PI * 2), at, col);
-    if (c.axis === 'x') { m.rotation.z = Math.PI / 2; if (c.half) m.rotation.y = Math.PI; } else if (c.axis === 'z') m.rotation.x = Math.PI / 2;
-    parent.add(m);
+    const c = p.cyl, m = mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 16, 1, false, 0, c.half ? Math.PI : Math.PI * 2), at, col, tag);
+    orient(m, p); parent.add(m);
   } else if (p.grid) {
     const g = p.grid, [x0, x1, dx] = g.x, [z0, z1, dz] = g.z; let row = 0;
     for (let z = z0; z <= z1 + 1e-6; z += dz, row++) { const lift = (g.rakePerRow || 0) * row;
-      for (let x = x0; x <= x1 + 1e-6; x += dx) for (const sub of (p.of || [])) buildPart(sub, parent, [x, lift, z], p.role); }
+      for (let x = x0; x <= x1 + 1e-6; x += dx) for (const sub of (p.of || [])) buildPart(sub, parent, [x, lift, z], p.role, tag); }
   }
+}
+
+// --- Click-to-inspect: raycast a block, highlight it, show its scene-def facts ----------
+const raycaster = new THREE.Raycaster();
+let pickedMesh = null, pickedEmissive = 0;
+function clearPick() {
+  if (pickedMesh && pickedMesh.material) pickedMesh.material.emissive.setHex(pickedEmissive);
+  pickedMesh = null; detachGizmo(); document.getElementById('pick').style.display = 'none';
+}
+function highlight(m) {
+  if (pickedMesh === m) return;
+  if (pickedMesh && pickedMesh.material) pickedMesh.material.emissive.setHex(pickedEmissive);
+  pickedMesh = m; pickedEmissive = m.material.emissive.getHex(); m.material.emissive.setHex(0x2c5a2c);
+}
+async function post(url, b) { try { return await (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })).json(); } catch (e) { return { ok: false, error: e.message }; } }
+const $ = (id) => document.getElementById(id);
+const num = (id) => { const v = parseFloat($(id).value); return isNaN(v) ? 0 : +v.toFixed(3); };
+function existingNames() { const s = new Set(); scene.traverse((o) => { if (o.userData.part) s.add(o.userData.part.name); }); return s; }
+function findMeshFor(part) { let f = null; scene.traverse((o) => { if (o.userData.part === part) f = o; }); return f; }
+
+// Swap a live mesh's geometry (+ its edge-line child) to match an edited part's size.
+function setGeometry(m, p) {
+  let geom = null;
+  if (p.box) geom = new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]);
+  else if (p.sphere != null) geom = new THREE.IcosahedronGeometry(p.sphere, 1);
+  else if (p.cyl) geom = new THREE.CylinderGeometry(p.cyl.r, p.cyl.r, p.cyl.len, 16, 1, false, 0, p.cyl.half ? Math.PI : Math.PI * 2);
+  if (!geom) return;
+  m.geometry.dispose(); m.geometry = geom;
+  const edge = m.children.find((c) => c.isLineSegments);
+  if (edge) { edge.geometry.dispose(); edge.geometry = new THREE.EdgesGeometry(geom, 20); }
+}
+// Re-skin a live mesh fully from an edited part (geometry, position, rotation, role-colour).
+// Resets scale to 1 — size lives in the geometry, never in mesh.scale (the gizmo's scale is baked).
+function applyPartToMesh(m, p) {
+  setGeometry(m, p);
+  m.scale.set(1, 1, 1);
+  if (p.at) m.position.set(p.at[0], p.at[1], p.at[2]);
+  orient(m, p);
+  m.material.color.set(roleColor(p, null) || '#b0b0b0');
+}
+
+let selPart = null, selName = null, editMesh = null;
+function edMsg(t) { const e = $('edMsg'); if (e) e.textContent = t || ''; }
+// Read the editor inputs back into a fresh part object (preserving non-edited keys like shell/half/axis).
+function readEditor() {
+  const p = Object.assign({}, selPart);
+  p.name = $('ed_name').value.trim();
+  const role = $('ed_role').value; if (role) p.role = role; else delete p.role;
+  const det = $('ed_detail').value.trim(); if (det) p.detail = det; else delete p.detail;
+  p.at = [num('ed_x'), num('ed_y'), num('ed_z')];
+  if (selPart.box) p.box = [num('ed_w'), num('ed_h'), num('ed_d')];
+  else if (selPart.sphere != null) p.sphere = num('ed_r');
+  else if (selPart.cyl) p.cyl = Object.assign({}, selPart.cyl, { r: num('ed_cr'), len: num('ed_cl') });
+  const rx = num('ed_rx'), ry = num('ed_ry'), rz = num('ed_rz');
+  if (rx || ry || rz) p.rot = [rx, ry, rz]; else delete p.rot;
+  return p;
+}
+function onEdit() { selPart = readEditor(); applyPartToMesh(editMesh, selPart); editMesh.userData.part = selPart; $('pickName').textContent = selPart.name || '(unnamed)'; }
+
+// --- 3D transform gizmo (TransformControls): Move / Scale / Rotate -----------------------
+let gizmo = null, gmode = 'translate';
+function ensureGizmo() {
+  if (gizmo || !THREE.TransformControls) return;
+  gizmo = new THREE.TransformControls(camera, renderer.domElement);
+  gizmo.setSize(0.8);
+  gizmo.addEventListener('objectChange', liveFields);            // live, during drag
+  gizmo.addEventListener('dragging-changed', (e) => { if (!e.value) syncFromMesh(); });   // bake on drag end
+  scene.add(gizmo);
+}
+function attachGizmo(m) { ensureGizmo(); if (!gizmo) return; gizmo.attach(m); gizmo.setMode(gmode); gizmo.visible = true; }
+function detachGizmo() { if (gizmo) { gizmo.detach(); gizmo.visible = false; } }
+function setMode(mode) { gmode = mode; if (gizmo) gizmo.setMode(mode); document.querySelectorAll('#pick .tbtn').forEach((b) => b.classList.toggle('on', b.dataset.m === mode)); }
+// Live-update the panel fields while a gizmo drag is in progress (scale rides on mesh.scale until baked).
+function liveFields() {
+  const m = editMesh, p = selPart; if (!m || !p) return;
+  if ($('ed_x')) { $('ed_x').value = r3(m.position.x); $('ed_y').value = r3(m.position.y); $('ed_z').value = r3(m.position.z); }
+  if (p.box && $('ed_w')) { $('ed_w').value = r3(p.box[0] * m.scale.x); $('ed_h').value = r3(p.box[1] * m.scale.y); $('ed_d').value = r3(p.box[2] * m.scale.z); }
+  else if (p.sphere != null && $('ed_r')) $('ed_r').value = r3(p.sphere * m.scale.x);
+  else if (p.cyl && $('ed_cr')) { $('ed_cr').value = r3(p.cyl.r * m.scale.x); $('ed_cl').value = r3(p.cyl.len * m.scale.y); }
+  if ($('ed_rx')) { $('ed_rx').value = rdeg(m.rotation.x); $('ed_ry').value = rdeg(m.rotation.y); $('ed_rz').value = rdeg(m.rotation.z); }
+}
+// On drag-end: bake mesh.scale into the geometry, read pos/rot off the mesh into selPart, refresh fields.
+function syncFromMesh() {
+  const m = editMesh, p = selPart; if (!m || !p) return;
+  const s = m.scale;
+  if (Math.abs(s.x - 1) > 1e-4 || Math.abs(s.y - 1) > 1e-4 || Math.abs(s.z - 1) > 1e-4) {
+    if (p.box) selPart = Object.assign({}, p, { box: [r3(p.box[0] * s.x), r3(p.box[1] * s.y), r3(p.box[2] * s.z)] });
+    else if (p.sphere != null) selPart = Object.assign({}, p, { sphere: r3(p.sphere * s.x) });
+    else if (p.cyl) selPart = Object.assign({}, p, { cyl: Object.assign({}, p.cyl, { r: r3(p.cyl.r * s.x), len: r3(p.cyl.len * s.y) }) });
+    m.scale.set(1, 1, 1); setGeometry(m, selPart);
+  }
+  selPart = Object.assign({}, selPart, { at: [r3(m.position.x), r3(m.position.y), r3(m.position.z)] });
+  const rd = [rdeg(m.rotation.x), rdeg(m.rotation.y), rdeg(m.rotation.z)];
+  if (rd.some((v) => Math.abs(v) > 0.05)) selPart.rot = rd; else delete selPart.rot;
+  editMesh.userData.part = selPart; refreshFields();
+}
+function refreshFields() {
+  const p = selPart; if (!$('ed_x')) return;
+  $('ed_x').value = p.at[0]; $('ed_y').value = p.at[1]; $('ed_z').value = p.at[2];
+  if (p.box && $('ed_w')) { $('ed_w').value = p.box[0]; $('ed_h').value = p.box[1]; $('ed_d').value = p.box[2]; }
+  else if (p.sphere != null && $('ed_r')) $('ed_r').value = p.sphere;
+  else if (p.cyl && $('ed_cr')) { $('ed_cr').value = p.cyl.r; $('ed_cl').value = p.cyl.len; }
+  const rot = p.rot || [0, 0, 0];
+  if ($('ed_rx')) { $('ed_rx').value = rot[0]; $('ed_ry').value = rot[1]; $('ed_rz').value = rot[2]; }
+}
+async function savePart() {
+  const p = readEditor();
+  if (!p.name) { edMsg('name required'); return; }
+  const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'update', name: selName, part: p });
+  if (r.ok) { selPart = p; selName = p.name; editMesh.userData.part = p; edMsg('✓ saved'); }
+  else edMsg('⚠ ' + r.error);
+}
+async function deletePart() {
+  if (!confirm('Delete block "' + selName + '"? This removes it from the scene.')) return;
+  const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'delete', name: selName });
+  if (!r.ok) { edMsg('⚠ ' + r.error); return; }
+  if (editMesh && editMesh.parent) editMesh.parent.remove(editMesh);
+  pickedMesh = null; clearPick();
+}
+async function addBlock() {
+  if (!liveTool) return;
+  const f = new THREE.Vector3(); camera.getWorldDirection(f).normalize();
+  const pos = camera.position.clone().addScaledVector(f, 4); const r2 = (n) => +n.toFixed(2);
+  const part = { name: uniqueName('new block'), box: [1, 1, 1], at: [r2(pos.x), r2(pos.y), r2(pos.z)] };
+  const r = await post('/api/blockout-part', { game: G, volume: VOL, op: 'add', part });
+  if (!r.ok) { setMsg('⚠ ' + r.error); return; }
+  buildPart(part, worldGroup);
+  const m = findMeshFor(part); if (m) { highlight(m); showPick(part, m); }
+  setMsg('added ' + part.name + ' — set role/detail/size, then Save');
+}
+function uniqueName(base) { const n = existingNames(); if (!n.has(base)) return base; let i = 2; while (n.has(base + ' ' + i)) i++; return base + ' ' + i; }
+
+function showPick(p, m) {
+  selPart = p; selName = p.name; editMesh = m;
+  $('pick').style.display = 'block';
+  $('pickName').textContent = p.name || '(unnamed)';
+  const body = $('pickBody');
+  const editable = liveTool && !p.grid && Array.isArray(p.at) && (p.box || p.sphere != null || p.cyl);
+  if (!editable) {
+    detachGizmo();
+    const shape = p.box ? `box ${p.box.join(' × ')}` : p.sphere != null ? `sphere r${p.sphere}`
+      : p.cyl ? `cyl r${p.cyl.r} · len ${p.cyl.len} · ${p.cyl.axis || 'y'}` : p.grid ? 'grid (repeated — edit in scene.json)' : '—';
+    body.innerHTML =
+      `<div class="row"><span class="k">role</span>${p.role || '—'}</div>` +
+      `<div class="row"><span class="k">detail</span>${p.detail ? p.detail : '<i>(none yet)</i>'}</div>` +
+      `<div class="row"><span class="k">shape</span>${shape}</div>` +
+      `<div class="row"><span class="k">at</span>${p.at ? p.at.join(', ') : '—'}</div>`;
+    return;
+  }
+  const roles = ['', ...Object.keys(ROLE_COLORS)];
+  let sizeRow = '';
+  if (p.box) sizeRow = `<div class="ed"><label>size</label><input type="number" step="0.05" id="ed_w"><input type="number" step="0.05" id="ed_h"><input type="number" step="0.05" id="ed_d"></div>`;
+  else if (p.sphere != null) sizeRow = `<div class="ed"><label>radius</label><input type="number" step="0.05" id="ed_r"></div>`;
+  else if (p.cyl) sizeRow = `<div class="ed"><label>r / len</label><input type="number" step="0.05" id="ed_cr"><input type="number" step="0.05" id="ed_cl"></div>`;
+  body.innerHTML =
+    `<div class="ed"><label>name</label><input type="text" id="ed_name" style="flex:1"></div>` +
+    `<div class="ed"><label>role</label><select id="ed_role" style="flex:1">${roles.map((r) => `<option value="${r}">${r || '(none)'}</option>`).join('')}</select></div>` +
+    `<div class="ed"><label>detail</label><input type="text" id="ed_detail" style="flex:1" placeholder="what this is"></div>` +
+    `<div class="ed"><label>transform</label><span class="tbtns"><button class="tbtn" data-m="translate">Move</button><button class="tbtn" data-m="scale">Scale</button><button class="tbtn" data-m="rotate">Rotate</button></span></div>` +
+    `<div class="ed"><label>pos</label><input type="number" step="0.05" id="ed_x"><input type="number" step="0.05" id="ed_y"><input type="number" step="0.05" id="ed_z"></div>` +
+    sizeRow +
+    `<div class="ed"><label>rot°</label><input type="number" step="5" id="ed_rx"><input type="number" step="5" id="ed_ry"><input type="number" step="5" id="ed_rz"></div>` +
+    `<div class="btns"><button id="edSave">Save</button><button id="edDel">Delete</button></div>` +
+    `<div class="edmsg" id="edMsg"></div>`;
+  $('ed_name').value = p.name || ''; $('ed_role').value = p.role || ''; $('ed_detail').value = p.detail || '';
+  refreshFields();
+  body.querySelectorAll('input,select').forEach((inp) => inp.addEventListener('input', onEdit));
+  $('pick').querySelectorAll('.tbtn').forEach((b) => b.onclick = () => setMode(b.dataset.m));
+  $('edSave').onclick = savePart; $('edDel').onclick = deletePart;
+  attachGizmo(m); setMode(gmode);
+}
+// Effective visibility: a wall hidden by the dollhouse shellGroup (parent.visible=false) must NOT
+// be selectable — you can see through it, so a click should hit whatever's actually visible behind it.
+function visibleInWorld(o) { for (let n = o; n; n = n.parent) if (!n.visible) return false; return true; }
+function inspectAt(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const meshes = []; scene.traverse((o) => { if (o.isMesh && o.userData.part && visibleInWorld(o)) meshes.push(o); });
+  const hit = raycaster.intersectObjects(meshes, false)[0];
+  if (!hit) { clearPick(); return; }
+  highlight(hit.object); showPick(hit.object.userData.part, hit.object);
 }
 function addLights() {
   scene.add(new THREE.HemisphereLight(0xffffff, 0x404040, 0.7));
@@ -178,7 +392,7 @@ function addLights() {
   scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 }
 
-let CAMERAS = {}, currentView = null, INFO = {}, GENS = [], shellGroup = null, bounds = null;
+let CAMERAS = {}, currentView = null, INFO = {}, GENS = [], shellGroup = null, worldGroup = null, bounds = null;
 // Update Vantage is only meaningful once the camera has moved off the saved vantage.
 let vantageDirty = false;
 function updUpd() { const b = document.getElementById('upd'); if (b) b.disabled = !(liveTool && vantageDirty); }
@@ -224,6 +438,7 @@ function setResult(file) {
   // Image note (shared with the reviewer's _review-notes.json, keyed per shot).
   const g = GENS.find((x) => x.file === file), inote = document.getElementById('imgnote'), ir = document.getElementById('imgResolve');
   const ap = document.getElementById('actualPrompt');
+  const idel = document.getElementById('imgDel'); if (idel) idel.disabled = !file;
   if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; ap.value = g.prompt || '(no saved prompt)'; }
   else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; ap.value = ''; }
   saveNav();
@@ -239,13 +454,27 @@ async function toggleImgResolve() {
   try { await fetch('/api/note-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: selKey, status }) }); } catch (e) {}
 }
 function showLatest(view) { const g = GENS.find((x) => x.view === view); setResult(g ? g.file : null); }
+async function deleteImage() {
+  if (!lastFile) return;
+  if (!confirm('Delete this shot?\n\n' + lastFile + '\n\nThis permanently removes the image file.')) return;
+  const view = currentView, file = lastFile;
+  try {
+    const j = await (await fetch('/api/blockout-gen-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, file }) })).json();
+    if (!j.ok) throw new Error(j.error || 'failed');
+    await loadGallery(); showLatest(view); setMsg('🗑 deleted ' + file);
+  } catch (e) { setMsg('⚠ ' + e.message); }
+}
 
 function captureClay() {
   const wasVis = shellGroup ? shellGroup.visible : true; if (shellGroup) shellGroup.visible = true;   // clay always keeps walls
+  const gv = gizmo && gizmo.visible; if (gizmo) gizmo.visible = false;                                 // no gizmo in the render
+  const pe = pickedMesh; if (pe) pe.material.emissive.setHex(pickedEmissive);                          // no selection tint either
   renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix();
   ensureComposer(CW, CH); if (composer) { composer.setSize(CW, CH); ssaoPass.setSize(CW, CH); }
   renderFrame();
-  const url = canvas.toDataURL('image/png'); if (shellGroup) shellGroup.visible = wasVis; sizeToViewport(); return url;
+  const url = canvas.toDataURL('image/png');
+  if (shellGroup) shellGroup.visible = wasVis; if (gizmo && gv) gizmo.visible = true; if (pe) pe.material.emissive.setHex(0x2c5a2c);
+  sizeToViewport(); return url;
 }
 function sizeToViewport() { const vp = document.getElementById('viewport'); const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); ensureComposer(w, h); if (composer) { composer.setSize(w, h); ssaoPass.setSize(w, h); } }
 
@@ -295,6 +524,19 @@ function installNav() {
   const applyRot = () => camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
   const locked = () => document.pointerLockElement === el;
   el.addEventListener('contextmenu', (e) => e.preventDefault());
+  // Double-click inspects/selects a block (single left-click is free for dragging gizmo handles).
+  el.addEventListener('dblclick', (e) => { if (!looking) inspectAt(e.clientX, e.clientY); });
+  // Single left-click off the selected object deselects it — but never while interacting with the gizmo.
+  el.addEventListener('click', (e) => {
+    if (e.button !== 0 || looking || !pickedMesh) return;
+    if (gizmo && (gizmo.dragging || gizmo.axis)) return;   // a click on/through a gizmo handle
+    const r = canvas.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const meshes = []; scene.traverse((o) => { if (o.isMesh && o.userData.part && visibleInWorld(o)) meshes.push(o); });
+    const hit = raycaster.intersectObjects(meshes, false)[0];
+    if (!hit || hit.object !== pickedMesh) clearPick();   // clicked empty space or a different block
+  });
   el.addEventListener('pointerdown', (e) => { if (e.button !== 2) return; const d = new THREE.Vector3(); camera.getWorldDirection(d); yaw = Math.atan2(-d.x, -d.z); pitch = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1)); looking = true; lx = e.clientX; ly = e.clientY; if (el.requestPointerLock) el.requestPointerLock(); });
   el.addEventListener('pointerup', (e) => { if (e.button === 2) { looking = false; if (document.exitPointerLock && locked()) document.exitPointerLock(); } });
   document.addEventListener('pointerlockchange', () => { if (!locked()) looking = false; });
@@ -315,8 +557,8 @@ function installNav() {
     const r = new THREE.Vector3().crossVectors(f, new THREE.Vector3(0, 1, 0)).normalize(); const m = new THREE.Vector3();
     if (pressed.KeyW) m.add(f); if (pressed.KeyS) m.addScaledVector(f, -1);
     if (pressed.KeyD) m.add(r); if (pressed.KeyA) m.addScaledVector(r, -1);
-    if (pressed.Space || pressed.KeyE) m.y += 1; if (pressed.ControlLeft || pressed.ControlRight || pressed.KeyQ) m.y -= 1;
-    if (m.lengthSq() > 0) { m.normalize().multiplyScalar((pressed.ShiftLeft || pressed.ShiftRight) ? 0.55 : 0.015); camera.position.add(m); markDirty(); }
+    if (pressed.Space || pressed.KeyE) m.y += 1; if (pressed.KeyQ) m.y -= 1;
+    if (m.lengthSq() > 0) { m.normalize().multiplyScalar((pressed.ShiftLeft || pressed.ShiftRight) ? 0.3 : 0.015); camera.position.add(m); markDirty(); }
   };
 }
 
@@ -326,7 +568,7 @@ async function boot() {
   scene.background = new THREE.Color(def.background || '#9a9a9a');
   if (def.fog) scene.fog = new THREE.Fog(new THREE.Color(def.background || '#9a9a9a'), def.fog.near, def.fog.far);
   document.title = (def.title || def.volume || 'Blockout') + ' — blockout';
-  const world = new THREE.Group(); shellGroup = new THREE.Group(); world.add(shellGroup);
+  const world = new THREE.Group(); worldGroup = world; shellGroup = new THREE.Group(); world.add(shellGroup);
   for (const p of (def.parts || [])) buildPart(p, p.shell ? shellGroup : world);
   scene.add(world); addLights();
   bounds = new THREE.Box3().setFromObject(world);   // hide shell when camera leaves this
@@ -349,13 +591,24 @@ async function boot() {
   if (liveTool) {
     await loadInfo(); await loadGallery();
     const u = document.getElementById('upd'); u.style.display = ''; u.onclick = () => updateVantage(u);
+    const ab = document.getElementById('addblk'); ab.style.display = ''; ab.onclick = addBlock;
     const ol = document.getElementById('openloc'); ol.style.display = ''; ol.onclick = openLocation;
     document.getElementById('note').addEventListener('blur', saveNote);
     document.getElementById('imgnote').addEventListener('blur', saveImgNote);
     document.getElementById('imgResolve').addEventListener('change', toggleImgResolve);
+    document.getElementById('imgDel').onclick = deleteImage;
   } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
   document.getElementById('gen').onclick = generate;
 
+  document.getElementById('pickClose').onclick = clearPick;
+  addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const a = document.activeElement; if (a && /INPUT|SELECT|TEXTAREA/.test(a.tagName)) a.blur(); clearPick(); });
+  // 1/2/3 switch the gizmo between Move/Scale/Rotate while a movable block is selected.
+  addEventListener('keydown', (e) => {
+    const a = document.activeElement; if (a && /INPUT|SELECT|TEXTAREA/.test(a.tagName)) return;
+    if (!gizmo || !gizmo.object) return;
+    const mode = { Digit1: 'translate', Digit2: 'scale', Digit3: 'rotate' }[e.code];
+    if (mode) { e.preventDefault(); setMode(mode); }
+  });
   applyView(first); sizeToViewport(); addEventListener('resize', sizeToViewport);
   if (nav.file && GENS.some((x) => x.file === nav.file)) setResult(nav.file);   // re-show the last shot
   const move = installNav();
