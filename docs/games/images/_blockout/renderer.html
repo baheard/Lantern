@@ -89,6 +89,18 @@
 <div id="hint"><b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/Ctrl</b> up/down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
 <div id="err"></div>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<!-- Postprocessing for SSAO (contact-shadow seams where blocks meet). Order matters. -->
+<script src="https://unpkg.com/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/DepthLimitedBlurShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/UnpackDepthRGBAShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/Pass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
 <script>
 // Generic blockout renderer + clay→image generator + per-volume gallery/notes/prompt.
 // Shell parts (walls/ceiling) auto-hide when the camera leaves the volume → "look in" from
@@ -108,6 +120,22 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.setSize(CW, CH, false);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+// --- SSAO postprocessing: contact-shadow seams where two blocks meet -----------------
+// (gives the block-intersection lines EdgesGeometry can't). Falls back to plain render if
+// the postprocessing modules failed to load, so a CDN miss can never break the viewer.
+let composer = null, ssaoPass = null;
+function ensureComposer(w, h) {
+  if (composer || !(THREE.EffectComposer && THREE.SSAOPass && THREE.RenderPass)) return;
+  try {
+    composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    ssaoPass = new THREE.SSAOPass(scene, camera, w, h);
+    ssaoPass.kernelRadius = 8; ssaoPass.minDistance = 0.002; ssaoPass.maxDistance = 0.12;
+    composer.addPass(ssaoPass);
+  } catch (e) { composer = null; ssaoPass = null; console.warn('SSAO unavailable:', e.message); }
+}
+function renderFrame() { if (composer) composer.render(); else renderer.render(scene, camera); }
 
 const clay = (hex) => new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
 // Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
@@ -214,10 +242,12 @@ function showLatest(view) { const g = GENS.find((x) => x.view === view); setResu
 
 function captureClay() {
   const wasVis = shellGroup ? shellGroup.visible : true; if (shellGroup) shellGroup.visible = true;   // clay always keeps walls
-  renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix(); renderer.render(scene, camera);
+  renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix();
+  ensureComposer(CW, CH); if (composer) { composer.setSize(CW, CH); ssaoPass.setSize(CW, CH); }
+  renderFrame();
   const url = canvas.toDataURL('image/png'); if (shellGroup) shellGroup.visible = wasVis; sizeToViewport(); return url;
 }
-function sizeToViewport() { const vp = document.getElementById('viewport'); const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+function sizeToViewport() { const vp = document.getElementById('viewport'); const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); ensureComposer(w, h); if (composer) { composer.setSize(w, h); ssaoPass.setSize(w, h); } }
 
 async function updateVantage(btn) {
   if (!currentView) return;
@@ -313,7 +343,7 @@ async function boot() {
     document.getElementById('cols').style.cssText = 'position:absolute;inset:0;padding:0';
     document.getElementById('colResult').style.display = 'none'; document.getElementById('colText').style.display = 'none'; document.getElementById('colImgNote').style.display = 'none';
     document.getElementById('colView').style.cssText = 'flex:1'; document.getElementById('viewport').style.cssText = 'width:100%;height:100%;aspect-ratio:auto'; document.getElementById('hint').style.display = 'none';
-    applyView(first); sizeToViewport(); renderer.render(scene, camera); window.__ready = true; return;
+    applyView(first); sizeToViewport(); renderFrame(); window.__ready = true; return;
   }
 
   if (liveTool) {
@@ -332,7 +362,7 @@ async function boot() {
   (function loop() {
     requestAnimationFrame(loop); move();
     if (shellGroup && bounds) shellGroup.visible = bounds.containsPoint(camera.position);   // dollhouse from outside
-    renderer.render(scene, camera);
+    renderFrame();
   })();
   window.__ready = true;
 }
