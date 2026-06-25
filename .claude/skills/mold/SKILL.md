@@ -167,15 +167,22 @@ each as it writes.) Grouped:
     a passage → a dim opening). Never a reflexive dark doorway, and never the room beyond. (The old
     global "exits are mere THRESHOLDS / dim doorway" rule was REMOVED from App 2026-06-23 — it stamped
     literal doorways onto exits that were really stairs; form is now wholly the mold's call.)
-    - **Translate EVERY compass direction into IMAGE POSITION — features and exits alike. The model
-      ignores "north/east"; it acts on "on the right", "in the foreground", "overhead".** Once the
-      camera and its facing are fixed, build a quick facing→frame map and place each named thing by it.
-      Facing **north**: N = ahead / background, S = behind the camera (out of frame), **E = right, W =
-      left**, up = above, down = below. (Rotate the map for any other facing.) Then write positions, not
-      compass words: "a closed door on the **right-hand wall**", "the stage rises **ahead and above**",
-      "a passage **off to the left**". Do this for fixtures, walls, light sources, AND exits — anything
-      with a direction. (Orchestra Pit: "door in the *east* side wall" rendered on the left; facing
+    - **HARD RULE: the finished SCENE prose contains ZERO compass terms.** Not "prefer" — *zero*.
+      No "north/south/east/west", no "northeast", no "to the west", no "western wall". The image
+      generator (and the 3D-blockout pipeline that may render this scene — see
+      `.tome/blockout-3d-continuity.md`) has NO idea which way is south; a compass word is noise it
+      mis-applies, which mislocates features and even mirror-flips the frame. Compass lives ONLY in the
+      framing dossier (the facts you reason over), never in the scene the model reads.
+    - **Describe the scene the way a person describes a view: vantage first, then everything relative
+      to it.** Lead with where the camera stands and what it looks at, then place each thing by IMAGE
+      POSITION — "on the right", "in the foreground", "overhead", "off to the left", "ahead and above".
+      To get there, fix the camera + facing and build a quick facing→frame map: facing **north**, N =
+      ahead/background, S = behind (out of frame), **E = right, W = left**, up = above, down = below
+      (rotate for any other facing). Apply it to fixtures, walls, light sources, AND exits — anything
+      with a direction. (Orchestra Pit: "door in the *east* side wall" rendered on the LEFT; facing
       north, east is the RIGHT wall — "right-hand wall" fixed it.)
+    - **Check before you write the override: scan your draft for any compass word and replace it with
+      its frame-relative equivalent. A compass word surviving into a scene is a defect.**
     - **Then reason about DEPTH + OCCLUSION — can the camera even SEE it?** Place each feature in
       foreground/midground/background, use up/down as ELEVATION cues, and DROP whatever is occluded.
       (Theatre Stage: the exit graph shows the orchestra pit is "down" from the stage ⇒ the stage is
