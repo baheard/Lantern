@@ -42,7 +42,7 @@ canon. Example that drove the design (theatre witchs-lair): "the canonical text 
 holds a jewelled dagger — why did the skill miss this?" — that's a **prompt** failure (Scene text
 omitted a canonical object), not an image failure. So every note's analysis pulls all three
 context sources: the PNG, its sidecar `.txt` (the exact composed prompt sent to the generator),
-and the in-game canon (`prompts.json` → room `description`, + walkthrough for spatial/quantity
+and the in-game canon (`room-facts.json` → room `description`, + walkthrough for spatial/quantity
 claims). Verify spatial/object claims against canon, never eyeball the picture.
 
 ## Key → situation resolution
@@ -58,7 +58,7 @@ convention as `noteText`/`noteStatus` in `tools/review-server.cjs`).
 ## Proactive canon-coverage scan (added 2026-06-19)
 
 Beyond human notes, the sweep also diffs each render's composed Scene (sidecar `.txt`) against the
-base room description (`prompts.json`) and flags **salient canon nouns missing from the Scene** —
+base room description (`room-facts.json`) and flags **salient canon nouns missing from the Scene** —
 the failure mode behind the Witch's-Lair jewelled-dagger miss. KEEP/DROP buckets come from
 `location-art` scene-recipe step 6. The authoring-time prevention lives there + in
 [[art-direction-model]] ("Enrich from examine, but never DROP a base-description fact").

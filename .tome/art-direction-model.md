@@ -124,7 +124,7 @@ blatant):
 - General: honor relative exit directions, which rooms are adjacent/visible from where,
   light sources that imply time/occupancy, and any object a puzzle interacts with.
 This wants a **per-room "art note" override** in the composable pack (Artist + Aesthetic
-+ Scene + optional spatial note), since `gen-room-prompts.cjs` can't infer adjacency
++ Scene + optional spatial note), since `gen-room-facts.cjs` can't infer adjacency
 from prose alone.
 
 ## How to craft a Scene prompt (the recipe)
@@ -204,7 +204,7 @@ Three-layer composition is formalized and live:
   Aesthetic and per-room Scene overrides live here (it's one file per game).
 - `gen-room-images.cjs` batch mode now COMPOSES Artist + Aesthetic + Scene from those
   files (mirrors `review-server.cjs` `composedPrompt()`), discarding any stale baked
-  preamble in `prompts.json`. `gen-room-prompts.cjs` now emits **scene-only** prompts
+  preamble in `room-facts.json`. `gen-room-facts.cjs` now emits **scene-only** prompts
   (no baked style). See [[location-art-system]].
 
 ## Don't chase marginal FRAMING nitpicks by editing the global Artist text (2026-06-16)
@@ -302,8 +302,8 @@ state**, so it must show only what stays put regardless of player action.
 ## The pipeline is THREE phases, split by decision type (2026-06-19)
 The art pipeline separates *facts → molded text → pictures*, each its own skill, because building a
 prompt and spending money on a render are different decisions:
-1. **Facts — `generate-location-prompts`** (`gen-room-prompts.cjs`, mechanical). Replays the
-   walkthrough → `prompts.json`. Now also strips chrome + the "You can also see…here." takeable
+1. **Facts — `generate-room-facts`** (`gen-room-facts.cjs`, mechanical). Replays the
+   walkthrough → `room-facts.json`. Now also strips chrome + the "You can also see…here." takeable
    listing, and CAPTURES the walkthrough's own `examine` outputs, folding fixture detail in while
    skipping things the walkthrough TAKES. Deterministic baseline only.
 2. **Mold — `mold` skill** (judgment, phase 2). Turns facts into a finished Scene OVERRIDE per room
@@ -333,7 +333,7 @@ decision it contradicts, and each volume's geometry is authored **once**. (Direc
 standing "fix the engine, not individual prompts" rule — `feedback_fix_engine_not_individual_prompts`.)
 
 **The three-artifact split & its litmus** — `dossier → framing → scene`:
-- **Dossier** (`prompts.json`, mechanical) = *derivable facts*. If something here is wrong/missing
+- **Dossier** (`room-facts.json`, mechanical) = *derivable facts*. If something here is wrong/missing
   and it's derivable, **fix the engine, not framing.**
 - **`_review-notes.json`** = the ONLY home for **human feedback**. It is an *input* to re-molding;
   framing never stores it (that's what keeps framing a reproducible cache — same inputs reproduce it).
@@ -353,14 +353,14 @@ routed to the layer that owns the problem:
   fixtures are routinely never examined — and the trimmed `.cmds.txt` drops even the observation
   verbs (`LOOK UP`, `EXAMINE STAIRCASE`) the source walkthrough *did* have. Two-part rule, both live:
   (1) `trace-walkthrough` now KEEPS source observation verbs unless they break `--strict`; (2)
-  `gen-room-prompts.cjs` folds bare directional `LOOK UP/DOWN` (not just `examine`/`look at <obj>`).
+  `gen-room-facts.cjs` folds bare directional `LOOK UP/DOWN` (not just `examine`/`look at <obj>`).
   The Lobby being a two-storey atrium with a wraparound landing exists ONLY in `LOOK UP`.
 - **Examine misses are fixed by degrade-safe + make-visible, NOT "examine everything."**
   - *Tier 1 (graceful) — App layer:* "render ONLY what the scene names (invent no furniture/figures/
     architecture); a named-but-undescribed surface — painting/poster/mural/sign/lettering — renders
     INDISTINCT, never invented specifics." A miss now degrades to vague, never *wrong*. This killed
     the couch + skylight and the random-girl posters in one global edit (`_app/app.json`).
-  - *Tier 2 (visible) — `gen-room-prompts.cjs`:* per-room `unprobed: [...]` flags (fixture-lexicon
+  - *Tier 2 (visible) — `gen-room-facts.cjs`:* per-room `unprobed: [...]` flags (fixture-lexicon
     nouns named but never examined) + a top-level `landmarks: {noun:{room,detail}}` glossary (every
     examined fixture, game-wide). mold works the `unprobed` list; un-probed → indistinct by default.
   - *Tier 3 (auto-examine sweep) deliberately NOT built* — once Tier 1 makes misses harmless, the
@@ -448,7 +448,7 @@ room LOUDLY (not one buried stderr line) with its reason + triggering response, 
 auto-recoverable (A/B) / genuine-phantom (status-line flavor like Theatre's Boiler-Room Latin
 curse, correctly dropped) / needs-human. The silent `skipped[]` → stderr is the bug to kill.
 
-### RESOLVED 2026-06-22 — Gap A + Gap B + loud coverage report all shipped in `gen-room-prompts.cjs`
+### RESOLVED 2026-06-22 — Gap A + Gap B + loud coverage report all shipped in `gen-room-facts.cjs`
 Dreamhold went 82→95 in pack, 0 needs-human, 0 phantom. What was built (and the non-obvious bits):
 - **Gap A** — `scene = L.description ? merge(...) : merge('', examines, taken)`. A description-less
   room now rebuilds its scene from captured examines/LOOK-dir responses. Tag `recoveredFrom:'examines'`
@@ -539,7 +539,7 @@ Four recurring scene-craft failures surfaced reviewing Theatre renders; all codi
   Theatre rooms whose source never said it, so everything rendered uniformly "dusty and bare". Rule:
   never add them unless the SOURCE room text uses that exact word (the Aesthetic states the global
   condition ONCE). Specific physical uses stay fine ("bare bulbs/crossbeams" = exposed). Stripped 26
-  rooms via script that checks each word against the room's `prompts.json` description.
+  rooms via script that checks each word against the room's `room-facts.json` description.
 - **"Bare" is mostly a PIPELINE artifact, not source fidelity.** Rooms read empty because the App layer
   forbids inventing furniture AND the molded text is terse — anything unnamed is absent. Same root cause
   as floors degrading to dirt: unspecified → generic/void.
@@ -568,19 +568,19 @@ Four recurring scene-craft failures surfaced reviewing Theatre renders; all codi
   map).
 
 ## Walkthrough-replay misses optional rooms + captures post-puzzle state (2026-06-23)
-Phase-1 (`generate-location-prompts`) builds the room set by REPLAYING THE WALKTHROUGH. Two gaps,
+Phase-1 (`generate-room-facts`) builds the room set by REPLAYING THE WALKTHROUGH. Two gaps,
 both proven on Theatre:
 - **Coverage:** rooms the walkthrough never needs are missed entirely. The **Western Theatre Aisle**
   is a real, full room — probe: from the Stage `sw` → *"Western Theatre Aisle… another aisle to the
   east, the stage to the north, double doors lead south"* (a mirror of the eastern aisle) — but it's
-  absent from `prompts.json` because the walkthrough only ever takes the SE aisle.
+  absent from `room-facts.json` because the walkthrough only ever takes the SE aisle.
 - **First-appearance / state timing:** a room is scraped in whatever state it's in WHEN the walkthrough
   passes through — often POST-puzzle. Probing the aisle at command #192 shows *"the chandelier has been
   lowered to ground level"* (the attic-winch puzzle is already done); the canonical first-look state is
   the chandelier hanging HIGH. We caught this one by hand (the eastern-aisle override forces "raised,
   not lowered"), but the pipeline fed the post-puzzle state.
 
-### SHIPPED 2026-06-24 — Unified chronological BFS in `gen-room-prompts.cjs`
+### SHIPPED 2026-06-24 — Unified chronological BFS in `gen-room-facts.cjs`
 One function, `exploreChronological()`, replaces the earlier two-pass design (a separate
 game-start BFS + a separate spine branch-probe — both retired). It captures every reachable room
 in the EARLIEST (most pre-puzzle) state we can navigate to it.

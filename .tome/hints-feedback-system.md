@@ -110,7 +110,7 @@ Both operations use this; it lives here so it can't drift. Given an open `[ART]`
 2. **Write into the notes file** (these files ARE the system of record — they're committed to git):
    - **Art** → `docs/games/images/_review-notes.json`, key `game:<g>:<slug>:<file>` (file-specific,
      so a later regen doesn't blur which picture the note was about). Resolve `<slug>` from the
-     game's manifest/`prompts.json` by `location`/`file`. Tag the note text `[player]` so authored
+     game's manifest/`room-facts.json` by `location`/`file`. Tag the note text `[player]` so authored
      direction and incoming feedback stay distinguishable. Store the `hash` on the entry for the
      staleness check.
    - **Hint** → `docs/games/hints/_review-notes.json`, key `game:<g>:<section>:<q>:<hintIndex>`,

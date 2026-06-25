@@ -9,7 +9,7 @@ Turns "I want to drive `<game>` reliably" into up to three repo-persistent artif
 
 - `docs/games/walkthroughs/<game>.txt` — the raw authoritative walkthrough(s), with a header block (source URLs, author, the build it targets, retrieval date). Never served to the browser. **Keep more than one source if they disagree** — cross-referencing them is how you catch a bad command (e.g. Wishbringer's Misty Island exit: one source's `e, blow whistle` strands you; another's `wait, blow whistle` works).
 - `docs/games/walkthroughs/<game>.cmds.txt` — a **verified** command list (one command per line; `#` comments allowed) that replays cleanly against our exact interpreter via `tools/play.cjs --strict`.
-- `docs/games/walkthroughs/<game>.notes.md` *(required for any non-trivial game — see Step 5)* — **your** puzzle-logic analysis: the *why* behind non-obvious command orderings, timing/patrol mechanics, build-specific divergences from the published walkthrough, per-run-random gates, and the game's core mechanics. This is what survives when the raw walkthrough is wrong or terse, and it's the **primary feedstock** for `generate-hints` (which teaches method, not commands). **Write it whenever the *game* is non-obvious — not only when *deriving the commands* was hard.** A clean first-try `--strict` replay says the command list is right; it says nothing about whether the puzzles are simple. (Bronze replayed clean yet needed full notes.)
+- `docs/games/walkthroughs/<game>.puzzle-notes.md` *(required for any non-trivial game — see Step 5)* — **your** puzzle-logic analysis: the *why* behind non-obvious command orderings, timing/patrol mechanics, build-specific divergences from the published walkthrough, per-run-random gates, and the game's core mechanics. This is what survives when the raw walkthrough is wrong or terse, and it's the **primary feedstock** for `generate-hints` (which teaches method, not commands). **Write it whenever the *game* is non-obvious — not only when *deriving the commands* was hard.** A clean first-try `--strict` replay says the command list is right; it says nothing about whether the puzzles are simple. (Bronze replayed clean yet needed full notes.)
 
 `<game>` is the game filename minus extension, lowercased (matches `game-loader.js` normalisation).
 
@@ -79,7 +79,7 @@ Write `docs/games/walkthroughs/<game>.cmds.txt`: one parser command per line.
   defining architecture is often revealed only by a secondary verb, not its default `LOOK`
   (Theatre Lobby's default text says "a staircase leads up"; only `LOOK UP` reveals it's a
   **two-story atrium ringed by a wraparound landing** — the fact every lobby image needs).
-  `generate-location-prompts` folds these examine/look outputs into the scene facts, so cutting
+  `generate-room-facts` folds these examine/look outputs into the scene facts, so cutting
   them silently strips visual signal we already had. **Rule: keep observation verbs unless they
   break `--strict`** (they consume a turn, so on a timing-sensitive sequence — patrols, a
   pager/bomb countdown — one can desync the replay; `--strict` will flag it, and only then do you
@@ -88,12 +88,12 @@ Write `docs/games/walkthroughs/<game>.cmds.txt`: one parser command per line.
   art pipeline can't recover from text alone — note it for `mold`; per-room observation *probing*
   in the builder is the heavier fallback, not built yet.)
 - **Branching endgames**: pick one **linear trunk** (usually the shortest completion), stop the cmds at or just past the final progress gate, and note the branches in the report. Don't try to encode every branch.
-- **Map sections to the notes file with SLUG ANCHORS — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## [slug]"` from a probe point)*: group the list into acts/puzzles with marker lines of the exact form `## [slug] Human label`, **front to back**. The `slug` is lowercase-kebab (`[a-z0-9-]+`), unique in the file, and is placed **immediately after the `##`** in square brackets — it is the **canonical, drift-proof link** to the matching `## [slug]` (or `### [slug]`) heading in `<game>.notes.md`. Because the slug is bracketed, `--snapshot-at "## [slug]"` resolves unambiguously (the closing `]` means one slug is never a prefix of another). Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. Day/act banner comments (`# ==== DAY 2 ====`) are fine for orientation but are **not** anchors — only `## [slug]` lines are. See `anchorhead.cmds.txt` for the canonical pattern. **Validate the mapping after writing both files** (Step 5):
+- **Map sections to the notes file with SLUG ANCHORS — cover the WHOLE list, not just the hard parts** *(do this so a "why does this command do X?" question is one grep away, and so any puzzle is one `--snapshot-at "## [slug]"` from a probe point)*: group the list into acts/puzzles with marker lines of the exact form `## [slug] Human label`, **front to back**. The `slug` is lowercase-kebab (`[a-z0-9-]+`), unique in the file, and is placed **immediately after the `##`** in square brackets — it is the **canonical, drift-proof link** to the matching `## [slug]` (or `### [slug]`) heading in `<game>.puzzle-notes.md`. Because the slug is bracketed, `--snapshot-at "## [slug]"` resolves unambiguously (the closing `]` means one slug is never a prefix of another). Every puzzle/act in the trunk gets a marker — not only the segments where *deriving* the commands was tricky. A partially-marked list (markers only on the back half, as Wishbringer originally shipped) leaves the unmarked span un-grep-able and un-snapshot-addressable for the hint author, which is exactly when probing is most needed. Day/act banner comments (`# ==== DAY 2 ====`) are fine for orientation but are **not** anchors — only `## [slug]` lines are. See `anchorhead.cmds.txt` for the canonical pattern. **Validate the mapping after writing both files** (Step 5):
   ```bash
   node tools/_check_walkthrough_map.cjs <game>      # errors → exit 1; add --strict to fail on warnings too
   ```
   It asserts every cmds `## [slug]` has a matching notes `[slug]` heading and vice-versa (so no probe path dead-ends), flags duplicate slugs, and warns on long unmarked command spans (the "back-half-only" failure). Errors must be fixed; the unmarked-span warnings are a judgment call (a single coherent long puzzle is fine — a buried sub-puzzle that you'd want to probe is not).
-- **Seeded randomized values are allowed in the trunk, but flag them in the header**: if a step needs an `@random` value (a power word, safe combo), the harness seeds RNG (`--seed 1`) so the fixed value replays clean — hard-code it, but add a header note that it's a *test-determinism artifact, not a player value*, and point to the notes.md randomization section. Verify the whole list with `--strict --seed 1`.
+- **Seeded randomized values are allowed in the trunk, but flag them in the header**: if a step needs an `@random` value (a power word, safe combo), the harness seeds RNG (`--seed 1`) so the fixed value replays clean — hard-code it, but add a header note that it's a *test-determinism artifact, not a player value*, and point to the puzzle-notes.md randomization section. Verify the whole list with `--strict --seed 1`.
 
 ---
 
@@ -139,7 +139,7 @@ Iterate until `exit=0` (or only documented char-input residual gates remain).
 ## Step 5 — Write the analysis notes (required for any non-trivial game)
 
 **Trigger on the *game's* complexity, not on how hard the commands were to derive.** Write
-`docs/games/walkthroughs/<game>.notes.md` for any game with more than a couple of real puzzles
+`docs/games/walkthroughs/<game>.puzzle-notes.md` for any game with more than a couple of real puzzles
 — *even if the published commands replayed `--strict`-clean on the first try*. A clean replay
 proves the command list is correct; it tells you nothing about whether the puzzles are obvious.
 The deliverable is a puzzle-logic analysis: the game's **core mechanic(s)**, the *why* behind
@@ -193,7 +193,7 @@ full notes). But still state randomization status.
 
 These three files together are the `generate-hints` feedstock: the **sourced walkthrough**
 (`.txt`, with retrieval URLs + build + corrections), the **verified command list** (`.cmds.txt`,
-slug-anchored), and the **mapped analysis** (`.notes.md`). The mapping (shared `[slug]` anchors,
+slug-anchored), and the **mapped analysis** (`.puzzle-notes.md`). The mapping (shared `[slug]` anchors,
 enforced by `tools/_check_walkthrough_map.cjs`) lets a hint author jump from any command to the
 reasoning behind it and back, and `--snapshot-at "## [slug]"` straight to the VM state for probing.
 
@@ -202,7 +202,7 @@ reasoning behind it and back, and `--snapshot-at "## [slug]"` straight to the VM
 Output to the caller / user:
 - Build match: our release/serial vs the walkthrough's targeted version (confident / risk noted).
 - `<game>.cmds.txt`: command count, and whether it passes `--strict` clean (or where it stops + why).
-- `<game>.notes.md`: written (and what it covers) or skipped-as-trivial.
+- `<game>.puzzle-notes.md`: written (and what it covers) or skipped-as-trivial.
 - Anchor-map lint: `node tools/_check_walkthrough_map.cjs <game>` result (paired count; any warnings).
 - Residual unverified gates (randomized puzzles, branch points) the caller must handle.
 - All source URLs used (for the caller's `meta.sources`), each with the local `"file"` path.

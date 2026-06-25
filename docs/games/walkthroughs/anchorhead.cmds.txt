@@ -9,7 +9,7 @@
 # Build divergences vs the raw walkthrough are commented inline below (lantern-in-pocket, cell key, mirror swap).
 #
 # ANCHOR MAP: each `## [slug] label` marker maps to the matching `## [slug]` section in
-# anchorhead.notes.md (validate: node tools/_check_walkthrough_map.cjs anchorhead). Jump the VM to
+# anchorhead.puzzle-notes.md (validate: node tools/_check_walkthrough_map.cjs anchorhead). Jump the VM to
 # any puzzle to probe it: node tools/play.cjs anchorhead --seed 1 --file <this> \
 #   --snapshot-at "## [d3-mirror]" --snapshot-out /tmp/s.json --quiet   (then --snapshot-in /tmp/s.json).
 

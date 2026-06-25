@@ -48,7 +48,7 @@ Report the count up front, e.g. "6 unresolved: 4 art (2 player) across 2 games, 
 | `game:<g>:<slug>:aud:<file>` | an audition piece | `<g>/_audition/<file>` |
 
 Pull all three context sources (the note can be about any): **the image** (Read the PNG), **the
-composed prompt** (sidecar `.txt`), and **the canon** (`prompts.json` → room `description`, plus
+composed prompt** (sidecar `.txt`), and **the canon** (`room-facts.json` → room `description`, plus
 the walkthrough for spatial/quantity/object claims). Verify spatial/quantity claims against canon —
 don't eyeball the picture (location-art SKILL.md step 5).
 

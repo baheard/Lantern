@@ -5,7 +5,7 @@
  * Three-pane reviewer:
  *   NAV rail  →  ITEM list (+ topic notes)  →  DETAIL (+ item notes + actions).
  *
- * The rail lists every GAME that has art (a docs/games/images/<game>/prompts.json),
+ * The rail lists every GAME that has art (a docs/games/images/<game>/room-facts.json),
  * then two global topics: Placeholders and Artist.
  *   - <game>:       locations → candidate images in _review/, 3 sections
  *                   (in-game / style / full prompt), Promote/Reject/Regenerate.
@@ -49,17 +49,17 @@ const appPromptPath = path.join(appDir, 'app.json');
 
 const readJSON = (p, fallback) => (fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : fallback);
 
-// Games = image dirs (not "_artists" etc.) that have a prompts.json.
+// Games = image dirs (not "_artists" etc.) that have a room-facts.json.
 function listGames() {
   if (!fs.existsSync(IMAGES_ROOT)) return [];
   return fs.readdirSync(IMAGES_ROOT).filter((n) => {
     const p = path.join(IMAGES_ROOT, n);
-    return !n.startsWith('_') && fs.existsSync(path.join(p, 'prompts.json'));
+    return !n.startsWith('_') && fs.existsSync(path.join(p, 'room-facts.json'));
   }).sort();
 }
 function gamePaths(slug) {
   const dir = path.join(IMAGES_ROOT, slug);
-  return { dir, review: path.join(dir, '_review'), pack: path.join(dir, 'prompts.json'),
+  return { dir, review: path.join(dir, '_review'), pack: path.join(dir, 'room-facts.json'),
     manifest: path.join(dir, 'manifest.json'), selArtist: path.join(dir, 'selected-artist.json'),
     audition: path.join(dir, '_audition'), auditionCfg: path.join(dir, 'audition.json'),
     sandbox: path.join(dir, '_sandbox'), blockout: path.join(dir, '_blockout') };
@@ -119,7 +119,7 @@ const ROLE_LEGEND = {
   chandelier: 'the pale-gold cluster hanging from the ceiling is the CHANDELIER',
   rail: 'the warm-brown rails are carved WOODEN balustrades/railings (timber, not fabric or upholstery)',
   brick: 'the brick-red panel set into a wall is a BRICKED-UP DOORWAY — an old doorway filled in with bricks',
-  hole: 'the dark ragged recess in a wall is a HOLE broken through the wall, opening onto darkness beyond',
+  hole: 'the dark recess in a wall is a HOLE smashed through the wall, opening onto darkness beyond — render it with a rough, irregular, broken outline (crumbled masonry, jagged cracked edges, loose rubble at its lip); the block only marks its rough position and size, so do NOT reproduce its straight rectangular edges — a busted-through hole is never a clean rectangle',
   wall: 'the cool-grey planes are WALLS', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
@@ -192,6 +192,43 @@ function saveBlockoutCamera({ game, volume, view, pos, look, fov }) {
   fs.writeFileSync(f, JSON.stringify(def, null, 2) + '\n');
   return { view };
 }
+// Add / update / delete a single block (scene-def `part`), located by its unique `name`.
+// Powers the renderer's click-to-edit + add-block editor. The blockout image is the spatial
+// authority, so editing geometry here is exactly editing what the model will see.
+function saveBlockoutPart({ game, volume, op, name, part }) {
+  const f = path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json');
+  if (!fs.existsSync(f)) throw new Error('no such blockout');
+  const def = readJSON(f, {});
+  def.parts = def.parts || [];
+  if (op === 'add') {
+    if (!part || !part.name) throw new Error('part needs a name');
+    if (def.parts.some((p) => p.name === part.name)) throw new Error('name already exists: ' + part.name);
+    def.parts.push(part);
+  } else if (op === 'delete') {
+    const i = def.parts.findIndex((p) => p.name === name);
+    if (i < 0) throw new Error('no such part: ' + name);
+    def.parts.splice(i, 1);
+  } else { // update (replace the matched part wholesale)
+    if (!part || !part.name) throw new Error('part needs a name');
+    const i = def.parts.findIndex((p) => p.name === name);
+    if (i < 0) throw new Error('no such part: ' + name);
+    if (part.name !== name && def.parts.some((p) => p.name === part.name)) throw new Error('name already exists: ' + part.name);
+    def.parts[i] = part;
+  }
+  fs.writeFileSync(f, JSON.stringify(def, null, 2) + '\n');
+  return { op, name: (part && part.name) || name };
+}
+// Delete a generated shot: its .png, its sidecar .txt prompt, and its image-note key.
+function deleteBlockoutGen({ game, volume, file }) {
+  const dir = blockoutGenDir(game, volume), f = path.basename(file || '');
+  if (!f || !/-r\d+\.png$/i.test(f)) throw new Error('bad file');
+  const png = path.join(dir, f); if (!fs.existsSync(png)) throw new Error('no such shot');
+  fs.unlinkSync(png);
+  const txt = path.join(dir, f.replace(/\.png$/i, '.txt')); if (fs.existsSync(txt)) fs.unlinkSync(txt);
+  const view = f.split('__')[0], key = `game:${game}:${view}:${f}`;
+  const n = readJSON(notesPath, {}); if (n[key]) { delete n[key]; fs.writeFileSync(notesPath, JSON.stringify(n, null, 2)); }
+  return { file: f };
+}
 // Per-vantage note (appended to the next render as an Adjustments line). Stored in the scene-def's `notes` map.
 function saveBlockoutNote({ game, volume, view, text }) {
   const f = path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json');
@@ -241,7 +278,7 @@ function saveScene(slug, room, tail) {
   if (tail && tail.trim()) d.scenes[room] = tail; else delete d.scenes[room];
   fs.writeFileSync(p, JSON.stringify(d, null, 2)); return { ok: true };
 }
-// Edit the canonical in-game room prose. Persists back to the game's prompts.json
+// Edit the canonical in-game room prose. Persists back to the game's room-facts.json
 // (rooms[].description) so it survives a server restart and feeds future composes.
 function saveDescription(slug, room, text) {
   const p = gamePaths(slug).pack;
@@ -966,6 +1003,8 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/artist-style') return wrap(() => saveArtistStyle(body.game, body.style));
       if (u.pathname === '/api/artist-style-by-id') return wrap(() => saveArtistStyleById(body.id, body.style));
       if (u.pathname === '/api/blockout-camera') return wrap(() => saveBlockoutCamera(body));
+      if (u.pathname === '/api/blockout-part') return wrap(() => saveBlockoutPart(body));
+      if (u.pathname === '/api/blockout-gen-delete') return wrap(() => deleteBlockoutGen(body));
       if (u.pathname === '/api/blockout-note') return wrap(() => saveBlockoutNote(body));
       if (u.pathname === '/api/blockout-gen') {
         try { const r = await blockoutGen(body); return sendJSON(res, 200, { ok: true, ...r }); }

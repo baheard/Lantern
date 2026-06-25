@@ -9,7 +9,7 @@ aliases: [slug anchors, cmds-notes mapping, _check_walkthrough_map]
 # Walkthrough cmds ↔ notes anchor mapping (slug standard)
 
 **Problem it solves.** A game's three walkthrough artifacts —
-`docs/games/walkthroughs/<game>.{txt,cmds.txt,notes.md}` — are the feedstock for `generate-hints`.
+`docs/games/walkthroughs/<game>.{txt,cmds.txt,puzzle-notes.md}` — are the feedstock for `generate-hints`.
 The hint author constantly needs to jump from "this puzzle in the notes" to "the VM state right
 before it" to branch-probe a mechanic. That jump uses `tools/play.cjs --snapshot-at "## [slug]"`.
 For it to work, the cmds file and the notes file must agree on **where each puzzle is**, and that
@@ -18,7 +18,7 @@ agreement must not silently drift.
 **The contract (stable slug anchor).**
 - `cmds.txt`: each probe-worthy puzzle starts with a marker line `## [slug] Human label`. The
   `slug` is lowercase-kebab, unique in the file, and sits **immediately after `##`** in brackets.
-- `notes.md`: the matching puzzle heading carries the **same `[slug]`** as its first token
+- `puzzle-notes.md`: the matching puzzle heading carries the **same `[slug]`** as its first token
   (`## [slug] …` or `### [slug] …`).
 - The slug — not the free-text label — is the canonical link. Rename a label freely; the slug
   binds. Because the slug is bracketed, `--snapshot-at "## [slug]"` is prefix-safe (the closing `]`

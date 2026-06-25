@@ -33,8 +33,8 @@ function main() {
   const reviewDir = path.join(gameDir, '_review');
   fs.mkdirSync(reviewDir, { recursive: true });
 
-  const pack = fs.existsSync(path.join(gameDir, 'prompts.json'))
-    ? JSON.parse(fs.readFileSync(path.join(gameDir, 'prompts.json'), 'utf8')) : { rooms: [] };
+  const pack = fs.existsSync(path.join(gameDir, 'room-facts.json'))
+    ? JSON.parse(fs.readFileSync(path.join(gameDir, 'room-facts.json'), 'utf8')) : { rooms: [] };
   const manifest = fs.existsSync(path.join(gameDir, 'manifest.json'))
     ? JSON.parse(fs.readFileSync(path.join(gameDir, 'manifest.json'), 'utf8')) : { images: {} };
   const approvedNames = new Set(Object.keys(manifest.images || {}));

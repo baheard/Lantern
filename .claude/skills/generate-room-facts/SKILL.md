@@ -1,12 +1,12 @@
 ---
-name: generate-location-prompts
-description: Build the per-location scene prompt pack (prompts.json) for a Lantern game's art pipeline by replaying its verified walkthrough. Triggered when the user says "generate location prompts for <game>", "build the prompt pack for <game>", "/generate-location-prompts <game>", or "make room prompts for <game>". Prerequisite: generate-hints (which produces the verified walkthrough the pack is built from).
+name: generate-room-facts
+description: Build the per-room facts pack (room-facts.json) for a Lantern game's art pipeline by replaying its verified walkthrough. Triggered when the user says "generate room facts for <game>", "build the room-facts pack for <game>", "/generate-room-facts <game>", "make room facts for <game>", or (legacy) "generate location prompts for <game>" / "build the prompt pack for <game>". Prerequisite: generate-hints (which produces the verified walkthrough the pack is built from).
 ---
 
-# generate-location-prompts skill
+# generate-room-facts skill
 
-Produces the **scene prompt pack** for a game — `docs/games/images/<game>/prompts.json`
-(machine) + `prompts.md` (human) — by replaying the game's verified walkthrough once and
+Produces the **room-facts pack** for a game — `docs/games/images/<game>/room-facts.json`
+(machine) + `room-facts.md` (human) — by replaying the game's verified walkthrough once and
 capturing, per distinct room: the canonical `locationName` (the same string the auto-mapper
 records, so images bind to map nodes by name), the room's description prose, and its real
 exits derived from the walkthrough's movement edges.
@@ -16,8 +16,8 @@ walkthrough/hints work and image generation. It emits **scene-only** prompts —
 Artist/Aesthetic layers are composed in later by `location-art`, NOT baked here.
 
 ```
-trace-walkthrough → generate-hints → [generate-location-prompts] → location-art (images)
-        (.cmds.txt)     (hints.json)        (prompts.json)            (_review/*.png)
+trace-walkthrough → generate-hints → [generate-room-facts] → location-art (images)
+        (.cmds.txt)     (hints.json)        (room-facts.json)            (_review/*.png)
 ```
 
 ## Prerequisite: generate-hints
@@ -39,11 +39,11 @@ The **corresponding artifact** that signals hints have been run is
      `generate-hints` is the prerequisite and hasn't been run for this game, and **ask whether
      to run `/generate-hints <game>` first** (use `AskUserQuestion`). On yes, invoke the
      `generate-hints` skill, let it complete (it will produce/verify `<game>.cmds.txt`,
-     `<game>.notes.md`, and `<game>.json`), then return here and proceed. On no, fall through to
+     `<game>.puzzle-notes.md`, and `<game>.json`), then return here and proceed. On no, fall through to
      the walkthrough check and proceed only if the user explicitly opts to build prompts without
      hints.
 3. **Check the technical input** `docs/games/walkthroughs/<game>.cmds.txt` (the file
-   `gen-room-prompts.cjs` actually reads):
+   `gen-room-facts.cjs` actually reads):
    - **Exists** → ready to generate.
    - **Missing** → the pack can't be built. This means even the walkthrough hasn't been traced;
      invoke the `trace-walkthrough` skill (or `generate-hints`, which calls it) to produce it
@@ -57,17 +57,17 @@ first, then generate.
 Run the builder (creates `docs/games/images/<game>/` if needed):
 
 ```bash
-node tools/gen-room-prompts.cjs <game>
+node tools/gen-room-facts.cjs <game>
 ```
 
 Useful flags (match the verified walkthrough's seed if it isn't the default):
 - `--seed <n>` — replay seed; use the same one noted at the top of `<game>.cmds.txt`
   (default `1`) so a randomized gate doesn't wedge the replay.
-- `--out <path>` — override the output location (default `docs/games/images/<game>/prompts.json`).
+- `--out <path>` — override the output location (default `docs/games/images/<game>/room-facts.json`).
 
 It writes:
-- `docs/games/images/<game>/prompts.json` — machine pack consumed by `tools/gen-room-images.cjs`.
-- `docs/games/images/<game>/prompts.md` — human-readable companion.
+- `docs/games/images/<game>/room-facts.json` — machine pack consumed by `tools/gen-room-images.cjs`.
+- `docs/games/images/<game>/room-facts.md` — human-readable companion.
 
 ## After generating
 
@@ -96,11 +96,11 @@ It writes:
   eye-sockets) while skipping objects the walkthrough later TAKES (removables stay out of a fixed
   backdrop). This is the deterministic baseline; the *considered* molding (curation, exit
   reconciliation, framing, canonical-state) is `mold`'s judgment job. See `.tome/art-direction-model.md`.
-- The pack is **scene-only by design** — do not edit `prompts.json` to bake in palette/mood/
+- The pack is **scene-only by design** — do not edit `room-facts.json` to bake in palette/mood/
   artist style. Per-room literal fixes, per-game aesthetic, and global artist style all live in
   the three-layer files `location-art` owns (`<game>/style.json`, `_artists/artists.json`). See
   `.tome/art-direction-model.md`.
-- Regenerating the pack later (e.g. after the walkthrough changes) overwrites `prompts.json`.
+- Regenerating the pack later (e.g. after the walkthrough changes) overwrites `room-facts.json`.
   Any per-room art direction the user added lives in `style.json` → `scenes[slug]` overrides,
   which are separate and survive a pack regen.
 - Headless replay mechanics (seeds, snapshots): `.tome/headless-replay-harness.md`.

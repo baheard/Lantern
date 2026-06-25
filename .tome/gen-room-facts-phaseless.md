@@ -1,19 +1,19 @@
 ---
-title: gen-room-prompts phase-less games + phantom location names
+title: gen-room-facts phase-less games + phantom location names
 tags: [location-art, prompts, tooling, gotcha, theatre]
 created: 2026-06-18
 updated: 2026-06-22
-aliases: [gen-room-prompts bug, prompts.json 0 rooms, exit tracking bug]
+aliases: [gen-room-facts bug, room-facts.json 0 rooms, exit tracking bug]
 ---
 
-# gen-room-prompts.cjs: phase-less games and phantom locations
+# gen-room-facts.cjs: phase-less games and phantom locations
 
 Two gotchas surfaced building the **Theatre** prompt pack (the first phase-LESS game to get
 location art; Anchorhead and Dreamhold both emit a `phase:` status segment).
 
 ## 1. The `[@ … | phase: …]` header regex silently dropped phase-less games
 
-`gen-room-prompts.cjs` parses the `play.cjs --status` transcript by matching a per-turn
+`gen-room-facts.cjs` parses the `play.cjs --status` transcript by matching a per-turn
 header. The original regex **required** the phase segment:
 
 ```js
@@ -39,7 +39,7 @@ This is the same `getCurrentLocation()` the auto-mapper uses, so the live map wo
 node them too — an app-level quirk, not introduced by the builder. For the prompt pack they're
 harmless empty-scene entries; drop them (or filter empty-scene rooms) before generating images.
 
-Pipeline ordering and the prerequisite gate live in the `generate-location-prompts` skill.
+Pipeline ordering and the prerequisite gate live in the `generate-room-facts` skill.
 
 ## 3. Exit tracking was off-by-one: attributed arrival direction to wrong location
 
@@ -75,4 +75,4 @@ if (i > 0 && MOVES.has(cmd)) {
 
 After the fix, Theatre Lobby exits are: `northwest → Manager's Office`, `northeast →
 Cloakroom`, `south → Outside The Theatre`, `up → Staircase Landing` — matching the game's
-actual geometry. Re-run `gen-room-prompts.cjs` for any game to get corrected exit data.
+actual geometry. Re-run `gen-room-facts.cjs` for any game to get corrected exit data.

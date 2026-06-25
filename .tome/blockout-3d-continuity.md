@@ -84,7 +84,7 @@ get the work-list for free.
   renderer (dropped to ship); standalone auto-author from framing.
 - **Skill home (open question)**: likely its OWN skill (`/blockout`-ish) that `studio`
   orchestrates as an optional phase for volumes needing continuity — mirrors how
-  generate-location-prompts / mold / render-rooms are discrete skills under studio. Decide
+  generate-room-facts / mold / render-rooms are discrete skills under studio. Decide
   when building; don't fold it inline into studio.
 
 ## Compass is the enemy; the image is the spatial authority (2026-06-24)

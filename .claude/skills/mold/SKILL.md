@@ -1,6 +1,6 @@
 ---
 name: mold
-description: Author or review the per-room Scene OVERRIDES for a Lantern game's art (the editable Scene box in artview). Author mode molds each room's scraped facts into a finished, probed, considered scene override written to <game>/style.json so artview opens render-ready; review mode audits existing overrides against the molding checklist and reports (optionally fixes) violations. Triggered when the user says "/mold <game>", "mold scenes for <game>", "populate scene overrides", "mold review <game>", or "review scene overrides for <game>". Prerequisite: generate-location-prompts (facts). Phase 2 of the art pipeline; phase 3 is the render skill.
+description: Author or review the per-room Scene OVERRIDES for a Lantern game's art (the editable Scene box in artview). Author mode molds each room's scraped facts into a finished, probed, considered scene override written to <game>/style.json so artview opens render-ready; review mode audits existing overrides against the molding checklist and reports (optionally fixes) violations. Triggered when the user says "/mold <game>", "mold scenes for <game>", "populate scene overrides", "mold review <game>", or "review scene overrides for <game>". Prerequisite: generate-room-facts (facts). Phase 2 of the art pipeline; phase 3 is the render skill.
 ---
 
 # mold skill
@@ -12,8 +12,8 @@ render-ready: App / Artist / Aesthetic / **Scene-override** all sit composed, so
 (phase 3, the render skill) has nothing left to decide.
 
 ```
-generate-location-prompts → [ mold:  facts → framing → scene ] → render
-   prompts.json (FACTS)        location-framing.md   style.json     images
+generate-room-facts → [ mold:  facts → framing → scene ] → render
+   room-facts.json (FACTS)        location-framing.md   style.json     images
                                (JUDGMENT/why)        scenes{} (prose)
 ```
 
@@ -37,7 +37,7 @@ room. (Architecture: `.tome/art-direction-model.md` "dossier → framing → sce
 
 **The split, stated as a litmus:** framing holds the **decision + why**; the scene holds the
 **imperative the model renders**. One explains, one commands. If a framing entry reads like finished
-render-prose, it has drifted into the scene's job. If it merely restates a `prompts.json` fact, it
+render-prose, it has drifted into the scene's job. If it merely restates a `room-facts.json` fact, it
 belongs in the dossier (fix the engine, not here).
 
 Authoring is **judgment** work (curate, probe, reconcile, constrain) — that's why it's a skill,
@@ -55,17 +55,17 @@ Both modes run the **same checklist below** — it is the single source of truth
 
 ## Inputs (per room)
 
-- **Facts** — `prompts.json` → the room's `scene` (already scrape-cleaned + walkthrough-`examine`
+- **Facts** — `room-facts.json` → the room's `scene` (already scrape-cleaned + walkthrough-`examine`
   enriched by phase 1: chrome/takeables stripped, fixture detail like the statue's sockets folded in).
-- **Exit graph** — `prompts.json` → the room's `exits` (`dir → DestinationRoom`). The recorded
+- **Exit graph** — `room-facts.json` → the room's `exits` (`dir → DestinationRoom`). The recorded
   *destination* is the spatial sanity-check (factor 5).
-- **`unprobed` gap flags** — `prompts.json` → the room's `unprobed: [...]` list (phase 1 fills it):
+- **`unprobed` gap flags** — `room-facts.json` → the room's `unprobed: [...]` list (phase 1 fills it):
   fixture-class nouns the prose NAMES but no `examine` ever captured (a "portrait"/"chandelier"/
   "window" with no recorded appearance). These are the factor-1 probe candidates — examine each
   salient one, or consciously let it render indistinct (the app layer now renders un-described
   surfaces as vague/illegible by default, so an un-probed fixture degrades gracefully rather than
   rendering wrong).
-- **`landmarks` glossary** — `prompts.json` → top-level `landmarks: { noun: {room, detail} }`: every
+- **`landmarks` glossary** — `room-facts.json` → top-level `landmarks: { noun: {room, detail} }`: every
   fixture examined ANYWHERE in the game, with its content + owning room. Use it for **shared
   landmarks visible across rooms** (factor 7): a portrait examined in the Staircase Landing is in
   the glossary, so when you mold the Lobby below — whose own facts never name the portrait but whose
@@ -316,7 +316,7 @@ absence of them.
 
 ## Author mode — procedure
 
-1. Resolve `<game>`; require `prompts.json` (run `generate-location-prompts` first if missing). With
+1. Resolve `<game>`; require `room-facts.json` (run `generate-room-facts` first if missing). With
    `--only a,b,c`, restrict to that subset; else all rooms.
 2. **Cross-cutting first.** Scan the pack for multi-room shared volumes (rooms whose prose/`up`/`down`
    exits describe one open space — atrium, auditorium, dome). Author each `## Cross-cutting` →
@@ -362,12 +362,12 @@ Review grades **two surfaces**: the framing decisions, and whether the scene fai
    without showing the before→after.
 
 ## Notes
-- Dev-only data (`style.json`, `prompts.json`, `location-framing.md`) — do NOT bump the app version.
-- Don't touch `prompts.json` here (that's phase 1's artifact); mold writes `location-framing.md`
+- Dev-only data (`style.json`, `room-facts.json`, `location-framing.md`) — do NOT bump the app version.
+- Don't touch `room-facts.json` here (that's phase 1's artifact); mold writes `location-framing.md`
   (judgment) and `style.json` scenes{} (distilled prose) — nothing else.
 - `location-framing.md` is the regenerable cache; `_review-notes.json` is the human record. Never
   store feedback in framing.md, and never hand-edit framing.md — change the inputs and re-mold.
-- Sibling skills: `generate-location-prompts` (facts, phase 1), the render skill (phase 3),
+- Sibling skills: `generate-room-facts` (facts, phase 1), the render skill (phase 3),
   `build-scenes` (wrapper = facts + mold author in one call), `/review-notes` (reviews rendered
   *images*; mold-review audits the scene *text*). `location-art` still owns audition / promote /
   open-reviewer.

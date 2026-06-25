@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Lantern location-art prompt builder.
+ * Lantern room-facts builder (location-art pipeline, phase 1).
  *
  * Replays a game's VERIFIED walkthrough once through tools/play.cjs (--status), then
  * for every distinct location captures:
@@ -10,16 +10,16 @@
  *   - its real exits, derived from the walkthrough's own movement edges
  *     (from-location --<dir>--> to-location) — accurate game geometry, not prose-guessing.
  *
- * Emits a prompt pack: a shared STYLE PREAMBLE (the agreed "low-res gothic illustration"
+ * Emits a room-facts pack: a shared STYLE PREAMBLE (the agreed "low-res gothic illustration"
  * recipe) + one ready-to-generate prompt per room, with scene + exits baked in. The pack
  * feeds tools/gen-room-images.cjs.
  *
  * USAGE
- *   node tools/gen-room-prompts.cjs anchorhead
- *   node tools/gen-room-prompts.cjs anchorhead --seed 1 --style gothic
- *   node tools/gen-room-prompts.cjs anchorhead --out docs/games/images/anchorhead/prompts.json
+ *   node tools/gen-room-facts.cjs anchorhead
+ *   node tools/gen-room-facts.cjs anchorhead --seed 1 --style gothic
+ *   node tools/gen-room-facts.cjs anchorhead --out docs/games/images/anchorhead/room-facts.json
  *
- * Writes <gamedir>/prompts.json (machine, for gen-room-images.cjs) and prompts.md (human).
+ * Writes <gamedir>/room-facts.json (machine, for gen-room-images.cjs) and room-facts.md (human).
  */
 
 const fs = require('fs');
@@ -559,7 +559,7 @@ async function exploreChronological(game, seed, cmdsPath, locs, seedIdxOverride)
 //   • go through <noun>                                 → confirm hidden exits + reciprocal
 //   • look up / look down                               → vertical form/visibility
 //   • graph-exit reciprocals from known destinations    → cross-room form (free, no probe)
-// Stored on L.exitFacts / L.lookFacts → folded into prompts.json for the mold. Spine-only in
+// Stored on L.exitFacts / L.lookFacts → folded into room-facts.json for the mold. Spine-only in
 // v1 (rooms with a first-visit index); explored/state-variant rooms are a follow-up.
 const EXIT_LEXICON = ['door', 'doorway', 'gate', 'window', 'archway', 'arch', 'passage', 'passageway',
   'corridor', 'hallway', 'staircase', 'stairway', 'stairs', 'steps', 'tunnel', 'trapdoor', 'hatch',
@@ -684,7 +684,7 @@ async function exitProbe(game, seed, cmdsPath, locs) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const game = args._[0];
-  if (!game) { console.error('Usage: node tools/gen-room-prompts.cjs <game> [--seed N] [--style gothic]'); process.exit(2); }
+  if (!game) { console.error('Usage: node tools/gen-room-facts.cjs <game> [--seed N] [--style gothic]'); process.exit(2); }
   const seed = args.seed || 1;
   const styleKey = args.style || 'gothic';   // recorded in pack metadata; style text now lives in <game>/style.json
 
@@ -917,11 +917,11 @@ async function main() {
   const gameDir = path.join(REPO, 'docs/games/images', game);
   fs.mkdirSync(gameDir, { recursive: true });
   const pack = { game, seed, style: styleKey, generatedFrom: path.relative(REPO, cmdsPath), landmarks, rooms };
-  const jsonOut = args.out || path.join(gameDir, 'prompts.json');
+  const jsonOut = args.out || path.join(gameDir, 'room-facts.json');
   fs.writeFileSync(jsonOut, JSON.stringify(pack, null, 2));
 
   // Human-readable companion.
-  const md = [`# ${game} — location art prompt pack`, '',
+  const md = [`# ${game} — room-facts pack`, '',
     `Style: **${styleKey}** · ${rooms.length} locations · from \`${pack.generatedFrom}\` (seed ${seed})`, '',
     '---', ''];
   for (const r of rooms) {
@@ -933,11 +933,11 @@ async function main() {
     if (r.lookFacts) md.push(`**Look:** ${[r.lookFacts.up && 'up: ' + r.lookFacts.up.slice(0, 60), r.lookFacts.down && 'down: ' + r.lookFacts.down.slice(0, 60)].filter(Boolean).join('  ·  ')}`);
     md.push('', '```', r.prompt, '```', '');
   }
-  fs.writeFileSync(path.join(gameDir, 'prompts.md'), md.join('\n'));
+  fs.writeFileSync(path.join(gameDir, 'room-facts.md'), md.join('\n'));
 
   console.error(`\nWrote ${rooms.length} room prompts:`);
   console.error(`  ${path.relative(REPO, jsonOut)}`);
-  console.error(`  ${path.relative(REPO, path.join(gameDir, 'prompts.md'))}`);
+  console.error(`  ${path.relative(REPO, path.join(gameDir, 'room-facts.md'))}`);
 
   // --- Coverage report (loud + classified; replaces the old silent skipped[] line) ---
   const c = report;

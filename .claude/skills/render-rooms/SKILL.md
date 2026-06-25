@@ -1,23 +1,23 @@
 ---
 name: render-rooms
-description: Make and commit the location art for a Lantern game. Batch-renders rooms (or a named subset) — the same as clicking "Generate" in artview, since by this phase the prompts are already built — and PROMOTES chosen candidates into the committed game image (the app's lookup). Triggered when the user says "/render-rooms <game>", "render all images for <game>", "generate the art for <game>", "render <room> [and <room>]", "render the missing rooms", "promote <room> for <game>", or "commit the art for <game>". Phase 3 of the art pipeline (after generate-location-prompts → mold).
+description: Make and commit the location art for a Lantern game. Batch-renders rooms (or a named subset) — the same as clicking "Generate" in artview, since by this phase the prompts are already built — and PROMOTES chosen candidates into the committed game image (the app's lookup). Triggered when the user says "/render-rooms <game>", "render all images for <game>", "generate the art for <game>", "render <room> [and <room>]", "render the missing rooms", "promote <room> for <game>", or "commit the art for <game>". Phase 3 of the art pipeline (after generate-room-facts → mold).
 ---
 
 # render-rooms skill
 
-**Phase 3 — make the pictures.** By now `generate-location-prompts` (facts) and `mold` (scene
+**Phase 3 — make the pictures.** By now `generate-room-facts` (facts) and `mold` (scene
 overrides) have done all the thinking; every room's prompt is composed and ready. This skill just
 **batch-runs the renderer** — identical to clicking artview's **Generate** on those rooms (both use
 the same compose path: App ▸ Artist ▸ Aesthetic ▸ Scene-override from the same files).
 
 ```
-generate-location-prompts → mold → [render-rooms]
+generate-room-facts → mold → [render-rooms]
                                      images into _review/
 ```
 
 ## Procedure
 
-1. Resolve `<game>`. Confirm `docs/games/images/<game>/prompts.json` exists (run the upstream
+1. Resolve `<game>`. Confirm `docs/games/images/<game>/room-facts.json` exists (run the upstream
    skills first if not).
 2. Decide the **subset**:
    - all rooms: `node tools/gen-room-images.cjs <game>`

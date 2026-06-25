@@ -37,7 +37,7 @@ function main() {
   if (!args.game) { console.error('Usage: node tools/promote-room-images.cjs <game> <slug...> [--reject <slug...>]'); process.exit(2); }
   const gameDir = path.join(REPO, 'docs/games/images', args.game);
   const reviewDir = path.join(gameDir, '_review');
-  const packPath = path.join(gameDir, 'prompts.json');
+  const packPath = path.join(gameDir, 'room-facts.json');
   const manifestPath = path.join(gameDir, 'manifest.json');
 
   const pack = fs.existsSync(packPath) ? JSON.parse(fs.readFileSync(packPath, 'utf8')) : { rooms: [] };

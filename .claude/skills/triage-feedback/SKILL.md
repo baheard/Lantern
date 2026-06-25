@@ -38,7 +38,7 @@ why old issues stop re-surfacing every run).
    - **Dedup defensively** — same target + same comment text + same device → one note.
    - **Write into the notes file** (committed to git; these ARE the system of record):
      - `[ART]` → `docs/games/images/_review-notes.json`, key `game:<g>:<slug>:<file>`. Resolve
-       `<slug>` from the game's `prompts.json`/manifest by `location`/`file`. Tag the note
+       `<slug>` from the game's `room-facts.json`/manifest by `location`/`file`. Tag the note
        `[player]`; store the `hash`. Entry: `{ note:"[player] <comment>", status:"open",
        source:"player", hash:"<hash>" }`. **If the key already exists** (an authored note, often
        `resolved`), do NOT clobber it — append to a `playerFeedback: [{ comment, hash,

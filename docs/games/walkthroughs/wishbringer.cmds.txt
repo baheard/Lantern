@@ -6,9 +6,9 @@
 # @random per real run. Under the harness's seeded RNG (--seed 1, the default) it is
 # deterministically "fratto", so this list hard-codes `say fratto` and verifies clean. A real
 # player in the app gets a different word — HINTS MUST TEACH "say the word the lighthouse
-# showed you", never the literal value. (See wishbringer.notes.md "power word".)
+# showed you", never the literal value. (See wishbringer.puzzle-notes.md "power word".)
 #
-# Section markers `## [slug] label` map to the same-[slug] headings in wishbringer.notes.md
+# Section markers `## [slug] label` map to the same-[slug] headings in wishbringer.puzzle-notes.md
 # (validate: node tools/_check_walkthrough_map.cjs wishbringer). Probe a puzzle with
 # --snapshot-at "## [slug]". NOTE: the pre-pelican front half is not yet slug-marked (the lint
 # warns on the unmarked span) — only the post-pelican endgame carries anchors so far.

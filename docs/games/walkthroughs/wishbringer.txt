@@ -6,7 +6,7 @@ Retrieved / assembled: 2026-06-14.
 
 Companion artifacts:
   - wishbringer.cmds.txt  — verified replayable command list (--strict --seed 1 clean, 95/100)
-  - wishbringer.notes.md  — our puzzle-logic analysis (the WHY; build divergences; randomness)
+  - wishbringer.puzzle-notes.md  — our puzzle-logic analysis (the WHY; build divergences; randomness)
 
 SOURCES (consult these for the full prose walkthroughs — reproduced here as command
 sequences + our corrections rather than verbatim copyrighted text):
@@ -18,7 +18,7 @@ sequences + our corrections rather than verbatim copyrighted text):
     https://dfabulich.github.io/infocom-hints-html/wishbringer.html
 
 BUILD-SPECIFIC CORRECTIONS we had to make (published sources are WRONG for release 69 —
-details + reasoning in wishbringer.notes.md):
+details + reasoning in wishbringer.puzzle-notes.md):
   1. Misty Island: after getting the hat, `wait` then `blow whistle` FROM the Throne Room.
      Published `e, blow whistle` strands you on the beach (the King's fanfare transports you).
   2. Cottage hellhound: the dog's name "Alexis" is only revealed by RE-READING the violet note
@@ -28,14 +28,14 @@ details + reasoning in wishbringer.notes.md):
   3. Tower exit: the drawbridge mechanism is hidden — `look behind paintings` (Round Chamber)
      reveals a crank; `turn crank` opens it. Published `n,n,e` assumes it's already open.
 
-RANDOMIZED PER PLAY (never put in a hint as a literal value — see notes.md):
+RANDOMIZED PER PLAY (never put in a hint as a literal value — see puzzle-notes.md):
   - The pelican's power word (lighthouse cloud word, used as `say <word>` at the Tower) is
     @random each real playthrough. The command list hard-codes `say fratto` only because the
     harness seeds RNG with --seed 1.
 
 ================================================================================
 WALKTHROUGH (command form — the verified trunk; see wishbringer.cmds.txt for the
-exact replayable file with section markers mapped to notes.md)
+exact replayable file with section markers mapped to puzzle-notes.md)
 ================================================================================
 
 ACT 1 — Festeron, deliver the envelope, gather items

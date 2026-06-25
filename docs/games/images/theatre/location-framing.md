@@ -4,12 +4,12 @@
 > occlusion, exit handling, state, shared-volume geometry) that the `style.json` scene prose is
 > distilled FROM. Reproducible: re-running the mold over the same inputs reproduces this file.
 >
-> **Inputs reasoned over:** `prompts.json` (mechanical facts — scene, exits, exitFacts, lookFacts,
+> **Inputs reasoned over:** `room-facts.json` (mechanical facts — scene, exits, exitFacts, lookFacts,
 > landmarks, unprobed) · `_review-notes.json` (the ONLY home for human feedback) · the verified
 > walkthrough + hints · `.tome/art-direction-model.md`.
 >
 > **Litmus:** a *derivable* fact belongs in the dossier (fix the engine, not here); a *non-derivable
-> judgment* belongs here. If an entry restates a `prompts.json` fact, it is in the wrong file. If it
+> judgment* belongs here. If an entry restates a `room-facts.json` fact, it is in the wrong file. If it
 > reads like finished render-prose, it has drifted INTO the scene's job — framing holds the
 > **decision + why**, the scene holds the **imperative the model renders**.
 

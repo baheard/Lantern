@@ -54,13 +54,13 @@ Then show Mode B filtered to the chosen goal.
 
 ## Mode B — Game dashboard
 
-Read these files for `<game>` and report status. Use the room count from `prompts.json` as `roomCount` for the downstream rows.
+Read these files for `<game>` and report status. Use the room count from `room-facts.json` as `roomCount` for the downstream rows.
 
 | Row | File to check | ✓ condition | Display |
 |---|---|---|---|
 | Walkthrough | `docs/games/walkthroughs/<game>.cmds.txt` | exists | "theatre.cmds.txt" |
 | Hints | `docs/games/hints/<game>.json` | exists | "theatre.json (N questions)" — top-level key count |
-| Image prompts | `docs/games/images/<game>/prompts.json` | exists | "prompts.json (N rooms)" — top-level key count = roomCount |
+| Image prompts | `docs/games/images/<game>/room-facts.json` | exists | "room-facts.json (N rooms)" — top-level key count = roomCount |
 | Artist | `docs/games/images/<game>/selected-artist.json` | exists, has `id` | show id value |
 | Aesthetic | `docs/games/images/<game>/style.json` → `aesthetic` | field non-empty | ✓ |
 | Scene overrides | `style.json` → `scenes` key count | compare to roomCount | "14 / 18 rooms" |
@@ -72,7 +72,7 @@ Theatre — content status
 ──────────────────────────────────────────────────
   Walkthrough    ✓   theatre.cmds.txt
   Hints          ✓   theatre.json (38 questions)
-  Image prompts  ✓   prompts.json (18 rooms)
+  Image prompts  ✓   room-facts.json (18 rooms)
   Artist         ✓   illustration-plate
   Aesthetic      ✓
   Scene overrides ~ 14 / 18 rooms
@@ -92,7 +92,7 @@ What's next: 4 rooms unmolded — /mold theatre
 | # | Goal | Action |
 |---|---|---|
 | 1 | Generate hints | invoke `generate-hints` skill |
-| 2 | Create image prompts | invoke `generate-location-prompts` skill |
+| 2 | Create image prompts | invoke `generate-room-facts` skill |
 | 3 | Author scene overrides | invoke `mold` skill |
 | 4 | Recommend an artist | run inline — see below |
 | 5 | Author aesthetic styling | run inline — see below |
@@ -108,7 +108,7 @@ What's next: 4 rooms unmolded — /mold theatre
 Read `.tome/artist-audition-design.md` for the full audition framework before proceeding.
 
 1. Read `docs/games/images/_artists/artists.json`. Use only artists whose `id` does **not** start with `"old-"` (those are retired and have empty `goodFor`).
-2. Read the game's `style.json` → `aesthetic` (if it exists) and 3–5 entries from `prompts.json` to understand the world and mood.
+2. Read the game's `style.json` → `aesthetic` (if it exists) and 3–5 entries from `room-facts.json` to understand the world and mood.
 3. Recommend 2–3 artists from the current roster. For each show:
    - `id`, `name`, `summary`
    - Which `goodFor` tags match this game's tone
@@ -127,7 +127,7 @@ Read `.tome/art-direction-model.md` (especially the "Layer discipline" factor) b
 
 The `aesthetic` field captures **world + mood in feeling-words only** — no medium, no color words, no technique (those belong to Artist). It should evoke setting, atmosphere, and tone.
 
-1. Read 5–10 entries from `prompts.json` to feel the world.
+1. Read 5–10 entries from `room-facts.json` to feel the world.
 2. Draft an `aesthetic` string: 20–40 words, feeling-words and world nouns. No color words, no medium words (not "sepia", "watercolor", "dark palette"). Good examples: `"damp Victorian cobblestones, salt air, paranoia under grey sky"` or `"vast halls of polished stone echoing with bureaucratic silence"`.
 3. Propose the draft. On approval, write it to `docs/games/images/<game>/style.json` → `aesthetic`. If `style.json` doesn't exist yet, create `{ "aesthetic": "..." }`.
 
@@ -136,4 +136,4 @@ The `aesthetic` field captures **world + mood in feeling-words only** — no med
 ## Notes
 
 - Dev-only data changes (walkthroughs, prompts, style.json, images) — do **not** bump the app version.
-- Full pipeline order: `trace-walkthrough` → `generate-hints` → `generate-location-prompts` → `mold` + artist + aesthetic → Artview prototype → `render-rooms`.
+- Full pipeline order: `trace-walkthrough` → `generate-hints` → `generate-room-facts` → `mold` + artist + aesthetic → Artview prototype → `render-rooms`.

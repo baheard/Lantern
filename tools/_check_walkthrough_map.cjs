@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * _check_walkthrough_map.cjs — lint the cmds.txt <-> notes.md anchor mapping for a walkthrough.
+ * _check_walkthrough_map.cjs — lint the cmds.txt <-> puzzle-notes.md anchor mapping for a walkthrough.
  *
  *   node tools/_check_walkthrough_map.cjs <game> [--strict]
  *
@@ -10,9 +10,9 @@
  *     `slug` is lowercase-kebab ([a-z0-9-]+), unique in the file, and is the CANONICAL link.
  *     Because the slug is bracketed, `--snapshot-at "## [slug]"` resolves unambiguously
  *     (the closing `]` makes one slug never a prefix of another).
- *   - docs/games/walkthroughs/<game>.notes.md carries a matching heading for each slug:
+ *   - docs/games/walkthroughs/<game>.puzzle-notes.md carries a matching heading for each slug:
  *     any heading line (## / ### / ####) whose text contains the same `[slug]` token.
- *     notes.md MAY also have heading sections with NO `[slug]` (e.g. the randomized-values
+ *     puzzle-notes.md MAY also have heading sections with NO `[slug]` (e.g. the randomized-values
  *     section, score-ceiling, OPEN PUZZLE meta) — those are ignored, not errored.
  *
  * Checks (errors -> exit 1; warnings -> exit 0 unless --strict):
@@ -40,7 +40,7 @@ if (!game) die('usage: node tools/_check_walkthrough_map.cjs <game> [--strict]',
 
 const dir = path.join('docs', 'games', 'walkthroughs');
 const cmdsPath = path.join(dir, game + '.cmds.txt');
-const notesPath = path.join(dir, game + '.notes.md');
+const notesPath = path.join(dir, game + '.puzzle-notes.md');
 if (!fs.existsSync(cmdsPath)) die('[map] no cmds file: ' + cmdsPath, 2);
 
 // A slug anchor must be the FIRST token right after the leading # / ## marker — both in cmds
@@ -91,7 +91,7 @@ if (markerCount === 0) {
   }
 }
 
-// ---- parse notes.md ----
+// ---- parse puzzle-notes.md ----
 const notesSlugs = new Map(); // slug -> {line, heading}
 if (fs.existsSync(notesPath)) {
   const notesLines = fs.readFileSync(notesPath, 'utf8').replace(/^﻿/, '').split(/\r?\n/);
@@ -104,7 +104,7 @@ if (fs.existsSync(notesPath)) {
     else notesSlugs.set(slug, { line: ln, heading: h[1].trim() });
   });
 } else {
-  warnings.push('note: no notes.md (' + notesPath + ') — pairing checks skipped');
+  warnings.push('note: no puzzle-notes.md (' + notesPath + ') — pairing checks skipped');
 }
 
 // ---- cross-check ----

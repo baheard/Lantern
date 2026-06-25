@@ -6,7 +6,7 @@
  * folder (docs/games/images/<game>/_review/) for review BEFORE they're promoted
  * into the game. This is the "generate without leaving the editor" half of the
  * generate-location-art workflow; the prompts themselves come from
- * tools/gen-room-prompts.cjs (which mines the verified walkthrough).
+ * tools/gen-room-facts.cjs (which mines the verified walkthrough).
  *
  * AUTH
  * ----
@@ -31,14 +31,14 @@
  *   node tools/gen-room-images.cjs --prompt "a gothic alley, old-school pixel art, 3:4 portrait" \
  *        --out docs/games/images/anchorhead/_review/_test.png
  *
- *   # batch from a prompt pack (produced by gen-room-prompts.cjs):
+ *   # batch from a prompt pack (produced by gen-room-facts.cjs):
  *   node tools/gen-room-images.cjs anchorhead
  *   node tools/gen-room-images.cjs anchorhead --only outside-the-real-estate-office
  *   node tools/gen-room-images.cjs anchorhead --ref <approved.png>   # style-reference chaining
  *
  * FLAGS
  *   --prompt <text> --out <file>  ad-hoc single-image mode
- *   --pack <file>                 prompt-pack JSON (default: docs/games/images/<game>/prompts.json)
+ *   --pack <file>                 prompt-pack JSON (default: docs/games/images/<game>/room-facts.json)
  *   --only <slug>                 generate just one room from the pack
  *   --ref <image>                 feed this image as a reference (see --ref-mode)
  *   --ref-mode <style|edit>       how --ref is used. style (default) = art-direction
@@ -325,9 +325,9 @@ async function main() {
     console.error('Usage: node tools/gen-room-images.cjs <game>   (or --prompt "..." --out file.png)');
     process.exit(2);
   }
-  const packPath = args.pack || path.join(REPO, 'docs/games/images', game, 'prompts.json');
+  const packPath = args.pack || path.join(REPO, 'docs/games/images', game, 'room-facts.json');
   if (!fs.existsSync(packPath)) {
-    console.error(`No prompt pack at ${path.relative(REPO, packPath)}.\nRun: node tools/gen-room-prompts.cjs ${game}`);
+    console.error(`No prompt pack at ${path.relative(REPO, packPath)}.\nRun: node tools/gen-room-facts.cjs ${game}`);
     process.exit(2);
   }
   const pack = JSON.parse(fs.readFileSync(packPath, 'utf8'));
