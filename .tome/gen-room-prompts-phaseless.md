@@ -2,8 +2,8 @@
 title: gen-room-prompts phase-less games + phantom location names
 tags: [location-art, prompts, tooling, gotcha, theatre]
 created: 2026-06-18
-updated: 2026-06-18
-aliases: [gen-room-prompts bug, prompts.json 0 rooms]
+updated: 2026-06-22
+aliases: [gen-room-prompts bug, prompts.json 0 rooms, exit tracking bug]
 ---
 
 # gen-room-prompts.cjs: phase-less games and phantom locations
@@ -40,3 +40,39 @@ node them too — an app-level quirk, not introduced by the builder. For the pro
 harmless empty-scene entries; drop them (or filter empty-scene rooms) before generating images.
 
 Pipeline ordering and the prerequisite gate live in the `generate-location-prompts` skill.
+
+## 3. Exit tracking was off-by-one: attributed arrival direction to wrong location
+
+`--status` mode re-echoes the movement command as the **first body line of the destination
+turn**, not the source turn. The original exit-recording code read:
+
+```js
+// WRONG: t.command is the arrival command; next.location is where we go AFTER settling here.
+if (next && next.location !== t.location && MOVES.has(cmd)) {
+  L.exits.set(DIR_LABEL[cmd], next.location);  // attributes cmd to t.location → wrong room
+}
+```
+
+Concretely, going `nw` from Theatre Lobby → Manager's Office produced a `[@ Manager's
+Office]` turn with `t.command = "nw"`. The next move from Manager's Office was `d` to
+Basement, so the code recorded **"northwest → Basement"** on Manager's Office — completely
+wrong. And for Theatre Lobby, a blocked `n` (failed, stays put) followed by a successful `nw`
+recorded **"north → Manager's Office"** — the failed command got credited for the next
+location change.
+
+**Fix (2026-06-22):** attribute the arrival command to the *previous* location instead:
+
+```js
+// CORRECT: t.command is the departure from prev.location that landed us at t.location.
+if (i > 0 && MOVES.has(cmd)) {
+  const prev = turns[i - 1];
+  if (prev.location !== t.location) {
+    const prevL = ensure(prev.location);
+    if (!prevL.exits.has(dir)) prevL.exits.set(dir, t.location);
+  }
+}
+```
+
+After the fix, Theatre Lobby exits are: `northwest → Manager's Office`, `northeast →
+Cloakroom`, `south → Outside The Theatre`, `up → Staircase Landing` — matching the game's
+actual geometry. Re-run `gen-room-prompts.cjs` for any game to get corrected exit data.

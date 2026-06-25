@@ -2,8 +2,8 @@
 title: artist-audition-design
 tags: [location-art, art-direction, artview, audition, portfolio, roster]
 created: 2026-06-18
-updated: 2026-06-19
-aliases: [artist development, audition flow, per-game artist selection, portfolio]
+updated: 2026-06-22
+aliases: [artist development, audition flow, per-game artist selection, portfolio, finalists, shortlist]
 ---
 
 # Artist development & audition (per-game artist selection)
@@ -151,3 +151,36 @@ trap on any other always-present `opacity:0` fixed overlay.
 
 Delete uses the native browser `confirm()` (a custom Enter/Space/X modal was built then
 reverted per user — "browser dialog for now is fine").
+
+## Iteration 2026-06-22 — finalists (the shortlist stage) + select all/none
+
+Adds a middle rung to the funnel: **roster → checked into the grid (cfg.artists) → finalists
+(cfg.finalists) → game artist (selected-artist.json)**.
+
+**Design fork (decided with user):** "finalist" is a **separate flag from the grid checkbox**,
+NOT a reuse of it. The checkbox is *grid membership* — unchecking deletes the row and hides
+that artist's images, which is destructive to a comparison task. The finalist ★ is
+non-destructive: a culled artist stays visible, just unstarred, so you can reconsider. The
+rejected alternative was "F in the lightbox just unchecks the artist" (simpler, but removing
+hides the images). Funnel narrows 18→3 by **promoting keepers** (finalists start empty) rather
+than eliminating losers — fewer keypresses.
+
+- **Server:** `auditionState` reads `cfg.finalists` (empty default) and adds `finalist:bool`
+  per artist. `toggleFinalist(slug, artistId, on)` (single-artist, lightweight — not a full
+  grid scrape) persists `audition.json` `finalists[]`. Endpoint `POST /api/audition-finalist`.
+  `saveAuditionCfg` unchanged (only touches `scenes`/`artists` arrays it's passed, so a
+  finalist toggle and a select-all post never clobber each other).
+- **Client:** row header ☆/★ **Finalist** toggle (`.finbtn`, gold when on) + ★ next to the
+  name + gold inset row stripe (`.aud-rowhead.finalist`; stacks with the green `.house`
+  stripe). A `.aud-tools` bar under the checkboxes: **Select all** / **Select none**
+  (`audSelectAll(on)` posts the full/empty `artists` list) + a **Finalists only** filter
+  (`audFinalistsOnly`, client-only state) that narrows the grid rows to starred artists.
+- **Lightbox (aud mode only):** top-centre ☆/★ button (`.lbfin`) + **F** hotkey toggle the
+  finalist for the image's artist. Artist id is parsed from the filename (`audArtistOf` =
+  `f.split('__')[0]` — relies on the load-bearing `__` convention above). Caption now shows
+  the **artist name** instead of the raw filename. Toggling re-renders the grid behind the
+  lightbox and re-paints the LB; `renderLB` clamps `lbIndex` because the "finalists only"
+  filter can shrink the list under an open lightbox.
+
+Dev-tool change (`tools/review-server.cjs` only) — no app version bump (consistent with other
+tools/skills-only commits).
