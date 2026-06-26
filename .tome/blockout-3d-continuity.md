@@ -121,6 +121,50 @@ far): read the framing, build the volume from the major masses PLUS any placemen
 named features (holes, doorways, fixtures), and set each member's camera from the recorded
 **Vantage**. It is the deterministic spec that the frame-relative scene prose then describes.
 
+### `/blockout <game>` skill — scope decided 2026-06-25 (autonomous, self-reviewing)
+
+Settled the autonomy fork: the skill is **fully autonomous through generation + a self-review
+pass, with human review as the final gate** — NOT a hard stop at scene.json. Flow:
+1. **Detect** volumes from `location-framing.md` (`### Volume:` blocks + mold "needs an anchor"
+   canaries) → work-list.
+2. **Build geometry maximally from framing** — extract every scene detail it can: major masses
+   as roled blocks, each placement-critical named feature (hole/brick/door/fixture) as its own
+   roled block, one camera per member from its **Vantage**. Apply the baked gotchas up front
+   (fill the frame, round geometry, cut floor around pits, head-on framing). Write
+   `<game>/_blockout/<volume>.scene.json`.
+3. **Take the shots** — headless-generate clay render + img2img restyle per member vantage.
+4. **Self-review for accuracy** — vision pass comparing each shot against the framing facts:
+   named features present and on the correct side? hallucinations (crypt-under-seats)? blocky
+   artifacts? grazing/flat vantages? Auto-fix where it can (nudge a block, add fill geometry,
+   steer the prompt) and re-shoot; otherwise flag.
+5. **Hand to user** — present shots + accuracy report; human review decides whether manual
+   editing in the renderer (gizmo / Save all / model-aware viewport, all shipped v1.5.679) is
+   needed.
+
+Studio orchestrates it as an optional phase. Renderer now has the interactive editor that makes
+the human-review touch-up step cheap — see renderer.html (gizmo, Save all, model-aware viewport).
+Not yet built; this is the agreed scope.
+
+**Above the skill: a studio-level "get all the pictures for `<game>`" orchestrator** (decided
+2026-06-25, not built). A completeness sweep that guarantees EVERY location ends with committed
+art: route volume members → `/blockout`, standalone rooms → render-rooms, self-review, then
+report a coverage map (X/Y have art, N from blockouts, M need review). Completeness, NOT a
+quality gate — rough shots are acceptable and get fixed later via review-notes + the renderer
+editor. This is why blockout shots needed in-renderer **promotion** (below): the sweep promotes
+a chosen blockout shot into the committed game image just like render-rooms does for normal rooms.
+
+### Renderer capabilities shipped (v1.5.679–680, 2026-06-25)
+
+- **Model-aware viewport aspect** — clay capture + viewport track the SELECTED model's true
+  output aspect (OpenAI→2:3, Gemini→3:4) so framing translates 1:1. (verified in browser)
+- **Save all** — top-bar button flushes all pending block edits in one pass, rename-safe.
+- **Blockout image promotion** — `/api/blockout-promote` (review-server `promoteBlockout()`)
+  copies a chosen `_gen/<volume>/<file>.png` to the committed `<slug>.png` + updates the manifest
+  by room name, exactly like the normal `promote()`. Renderer: "★ Promote → in game" button next
+  to Delete on the selected shot. The blockout `view` IS the member's location slug.
+- **Gallery scrollbar fix** — `#gallery` height bumped so the horizontal scrollbar no longer
+  clips the thumbnail bottoms.
+
 ## When NOT to use it
 
 Most rooms: skip. Players see one room at a time; text-layer consistency is enough. Reserve

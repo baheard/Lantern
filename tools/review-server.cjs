@@ -427,6 +427,23 @@ function promote(gameSlug, slug, candidate) {
   fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
   return { name, file: destFile };
 }
+// Promote a blockout shot (a _gen/<volume>/<file>.png) to the committed game image for its
+// member room. Mirrors promote(): copies to <slug>.png in the game image dir + updates the
+// manifest by room NAME. The blockout `view` IS the member's location slug.
+function promoteBlockout({ game, volume, view, file }) {
+  const g = gamePaths(game);
+  const src = path.join(blockoutGenDir(game, volume), path.basename(file || ''));
+  if (!view) throw new Error('no view');
+  if (!fs.existsSync(src)) throw new Error('shot not found');
+  const destFile = `${view}.png`;
+  fs.copyFileSync(src, path.join(g.dir, destFile));
+  const name = ((readJSON(g.pack, { rooms: [] }).rooms.find((r) => r.slug === view)) || {}).name || view;
+  const manifest = readJSON(g.manifest, { game, images: {} });
+  manifest.images = manifest.images || {};
+  manifest.images[name] = destFile;
+  fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
+  return { name, file: destFile };
+}
 function reject(gameSlug, candidate) {
   const g = gamePaths(gameSlug);
   // Audition pieces (aud:<file>) live in _audition/; native candidates in _review/.
@@ -1005,6 +1022,7 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/blockout-camera') return wrap(() => saveBlockoutCamera(body));
       if (u.pathname === '/api/blockout-part') return wrap(() => saveBlockoutPart(body));
       if (u.pathname === '/api/blockout-gen-delete') return wrap(() => deleteBlockoutGen(body));
+      if (u.pathname === '/api/blockout-promote') return wrap(() => promoteBlockout(body));
       if (u.pathname === '/api/blockout-note') return wrap(() => saveBlockoutNote(body));
       if (u.pathname === '/api/blockout-gen') {
         try { const r = await blockoutGen(body); return sendJSON(res, 200, { ok: true, ...r }); }
