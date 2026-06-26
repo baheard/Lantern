@@ -39,6 +39,11 @@
   #gallery{flex:0 0 auto;height:116px;display:flex;align-items:flex-start;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px}
   #gallery .thumb{flex:0 0 auto;height:96px;border:2px solid transparent;border-radius:5px;cursor:pointer;position:relative;background:#000}
   #gallery .thumb.on{border-color:#c4a35a}
+  #gallery .thumb.ingame{border-color:#3fae6a}
+  #gallery .thumb .ingame-tag{position:absolute;top:2px;left:2px;font-size:9px;font-weight:700;line-height:1;
+    padding:2px 4px;border-radius:3px;background:#1f7a45;color:#eafff0;letter-spacing:.3px;pointer-events:none}
+  .ingame-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;
+    background:#1f7a45;color:#eafff0;letter-spacing:.3px;vertical-align:middle}
   #gallery .thumb img{height:100%;display:block;border-radius:3px}
   #gallery .none{color:#6a6478;align-self:center;padding:0 10px}
   #colText{flex:2 1 0;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -491,8 +496,9 @@ function readNav() { try { return JSON.parse(localStorage.getItem(NAVKEY) || '{}
 function setResult(file) {
   lastFile = file || null;
   const name = (INFO[currentView] || {}).name || currentView || '';
+  const gInGame = !!(GENS.find((x) => x.file === file) || {}).inGame;
   document.getElementById('result').innerHTML = file
-    ? `<div id="resultCap">${name}</div><img src="${imgUrl(file)}" alt="gen">`
+    ? `<div id="resultCap">${name}${gInGame ? ' <span class="ingame-tag">★ in game</span>' : ''}</div><img src="${imgUrl(file)}" alt="gen">`
     : '<div class="ph">No shot yet from this vantage — Generate one.</div>';
   document.querySelectorAll('#gallery .thumb').forEach((t) => t.classList.toggle('on', t.dataset.f === file));
   // Image note (shared with the reviewer's _review-notes.json, keyed per shot).
@@ -574,7 +580,7 @@ function renderGallery() {
   const el = document.getElementById('gallery');
   const list = GENS.filter((g) => g.view === currentView);
   if (!list.length) { el.innerHTML = '<span class="none">No shots from this vantage yet — Generate one.</span>'; return; }
-  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}" data-f="${g.file}" title="${tag}"><img src="${imgUrl(g.file)}"></div>`; }).join('');
+  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}${g.inGame ? ' ingame' : ''}" data-f="${g.file}" title="${g.inGame ? 'IN GAME — ' : ''}${tag}"><img src="${imgUrl(g.file)}">${g.inGame ? '<span class="ingame-tag">★ in game</span>' : ''}</div>`; }).join('');
   el.querySelectorAll('.thumb').forEach((t) => t.onclick = () => setResult(t.dataset.f));
 }
 async function generate() {

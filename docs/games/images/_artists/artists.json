@@ -21,7 +21,7 @@
       "name": "Copperplate Etching",
       "summary": "Copper-plate drypoint etching — burr-edged lines, residual plate tone, velvet darks.",
       "goodFor": "Mystery, literary fiction, dark atmosphere, elegant horror",
-      "style": "Copper-plate drypoint etching: fine burr-edged lines with slight ink fray throughout, plate wiped but retaining a thin residual grey tone even in light areas — no true white, open areas carry a faint plate smear. Rich velvet darks where ink pools in the burr. Delicate, precise, slightly furred quality throughout.",
+      "style": "Copper-plate drypoint etching: fine burr-edged lines with slight ink fray throughout, plate wiped but retaining a thin residual grey tone even in light areas — no true white, open areas carry a faint plate smear. Rich velvet darks where ink pools in the burr. Delicate, precise, slightly furred quality throughout. Printed in a single warm brownish-black (sepia-black) ink on aged cream laid paper — the same ink and paper tone consistently, no colour beyond the ink, never a cool neutral grey-black.",
       "examples": []
     },
     {
@@ -77,7 +77,7 @@
       "name": "Pulp Magazine",
       "summary": "1930s pulp magazine linotype — black plus one warm press colour, halftone dot shadows.",
       "goodFor": "Pulp adventure, noir, hard-boiled mystery, 1930s–40s period",
-      "style": "1930s–40s pulp magazine interior illustration, linotype woodcut reproduction: bold black ink plus one warm press colour (rust, ochre, or brick red), halftone dot pattern in all shadow areas, slight ink bleed at block edges — the coarse result of fast commercial printing on cheap stock.",
+      "style": "1930s–40s pulp magazine interior illustration, linotype woodcut reproduction: bold black ink plus a single warm brick-red press colour throughout, halftone dot pattern in all shadow areas, slight ink bleed at block edges — the coarse result of fast commercial printing on cheap stock.",
       "examples": []
     },
     {
@@ -93,7 +93,7 @@
       "name": "Risograph Print",
       "summary": "Risograph print — misregistered colour layers, halftone grain, limited flat palette.",
       "goodFor": "Contemporary indie, wry comedy, lo-fi, modern horror",
-      "style": "Risograph print: two or three ink-colour layers with deliberate misregistration — each layer visibly offset so colours do not align — limited flat palette, visible halftone grain at layer edges, slightly overinked where layers overlap.",
+      "style": "Risograph print: exactly two ink-colour layers — fluorescent pink and federal blue — with deliberate misregistration so the two layers visibly offset and do not align, their overlap reading as a muddy purple. Visible halftone grain at layer edges, slightly overinked where layers overlap.",
       "examples": []
     },
     {
@@ -109,7 +109,7 @@
       "name": "Pastel on Black",
       "summary": "Pastel chalk on dark toned paper — light built from darkness, paper ground is the shadow.",
       "goodFor": "Night scenes, interior gloom, dream, noir, horror",
-      "style": "Soft pastel chalk on dark-toned paper (deep charcoal or midnight blue): chalk strokes build light from darkness — the paper ground is the shadow everywhere the chalk does not reach. Blended, slightly smudged chalk marks, no outlines, light sculpted from dark.",
+      "style": "Soft pastel chalk on deep charcoal-black toned paper: chalk strokes build light from darkness — the paper ground is the shadow everywhere the chalk does not reach. Blended, slightly smudged chalk marks, no outlines, light sculpted from dark.",
       "examples": []
     },
     {
@@ -141,7 +141,7 @@
       "name": "Antique Photograph",
       "summary": "Large-format view-camera photograph — silver-gelatin black-and-white or faded sepia, period grain.",
       "goodFor": "Victorian, historical, gothic, period documentary",
-      "style": "A large-format view-camera photograph in the manner of an early silver-gelatin or albumen print: monochrome — neutral black-and-white or faded warm sepia — with fine large-format sharpness, a long tonal range, slight vignetting, visible period photographic grain, and a touch of age-fade and emulsion mottling at the edges. Photographic realism, never engraved, crosshatched or drawn.",
+      "style": "A large-format view-camera photograph in the manner of an early albumen print: monochrome in a faded warm sepia tone consistently (never neutral black-and-white, never cool-toned) — with fine large-format sharpness, a long tonal range, slight vignetting, visible period photographic grain, and a touch of age-fade and emulsion mottling at the edges. Photographic realism, never engraved, crosshatched or drawn.",
       "examples": []
     },
     {

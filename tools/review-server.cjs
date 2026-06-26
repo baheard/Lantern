@@ -25,6 +25,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
+const crypto = require('crypto');
 
 const REPO = path.resolve(__dirname, '..');
 // Unique per server process. The client polls it and reloads itself when it changes,
@@ -339,7 +340,10 @@ function locationsFor(gameSlug) {
   }
   // Resolve a candidate id (native or aud:) to its on-disk path.
   const candPath = (f) => (f.indexOf('aud:') === 0 ? path.join(g.audition, f.slice(4)) : path.join(g.review, f));
-  return pack.rooms.map((r) => {
+  // Locations nav + audition dropdowns list rooms ALPHABETICALLY (by display name), not game
+  // order — game order is hard to scan when you don't already know the map.
+  const orderedRooms = pack.rooms.slice().sort((a, b) => (a.name || a.slug || '').localeCompare(b.name || b.slug || ''));
+  return orderedRooms.map((r) => {
     const at = (r.prompt || '').indexOf(' Scene:');
     // Scene default = the visual-core scene the pack already scraped (text after "Scene:").
     const sceneDefault = at >= 0 ? r.prompt.slice(at + ' Scene:'.length).trim() : (r.description || '');
@@ -579,7 +583,8 @@ function selectGlyph(id) {
 function listArtists(gameSlug) {
   const d = readJSON(artistsPath, { artists: [] });
   const selected = gameSlug ? ((readJSON(gamePaths(gameSlug).selArtist, {}) || {}).id || null) : null;
-  return { selected, artists: d.artists || [] };
+  const artists = (d.artists || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  return { selected, artists };
 }
 // Create a new artist persona in the shared artists.json. id is slugified from the name
 // (or supplied); name is required; summary/style optional. Returns the created artist.
@@ -689,7 +694,8 @@ function auditionState(slug) {
   const rooms = (readJSON(gamePaths(slug).pack, { rooms: [] }).rooms) || [];
   const roomName = (s) => { const r = rooms.find((x) => x.slug === s); return r ? r.name : s; };
   const scenes = (cfg.scenes && cfg.scenes.length ? cfg.scenes : suggestScenes(slug)).slice(0, 4);
-  const arts = (readJSON(artistsPath, { artists: [] }).artists) || [];
+  const arts = ((readJSON(artistsPath, { artists: [] }).artists) || [])
+    .slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   // Absent cfg.artists → default to all; an explicit [] (user clicked "Select none") → none.
   // Don't collapse empty-vs-absent with .length, or "Select none" reads back as "Select all".
   const selArtists = Array.isArray(cfg.artists) ? cfg.artists : arts.map((a) => a.id);
@@ -705,7 +711,7 @@ function auditionState(slug) {
   return {
     slug,
     scenes: scenes.map((s) => ({ slug: s, name: roomName(s) })),
-    allScenes: rooms.map((r) => ({ slug: r.slug, name: r.name })),
+    allScenes: rooms.slice().sort((a, b) => (a.name || a.slug || '').localeCompare(b.name || b.slug || '')).map((r) => ({ slug: r.slug, name: r.name })),
     artists: arts.map((a) => ({ id: a.id, name: a.name, summary: a.summary || '', goodFor: a.goodFor || '', style: a.style || '', selected: selArtists.includes(a.id), finalist: finalists.includes(a.id) })),
     houseArtist: (readJSON(gamePaths(slug).selArtist, {}) || {}).id || null,
     images: native,
@@ -980,10 +986,20 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/blockout-gens') {
       const game = q.get('game') || '', dir = blockoutGenDir(game, q.get('volume') || ''); const out = [];
       const notes = readJSON(notesPath, {});   // image notes share the reviewer's _review-notes.json
+      // Hash the committed in-game image per view (<view>.png in the game dir) so the gallery can
+      // tag the gen a room's current picture was promoted from — byte-identical since promote copies.
+      const gdir = gamePaths(game).dir, _hashCache = {};
+      const committedHash = (view) => {
+        if (!(view in _hashCache)) { const p = path.join(gdir, `${view}.png`);
+          _hashCache[view] = fs.existsSync(p) ? crypto.createHash('md5').update(fs.readFileSync(p)).digest('hex') : null; }
+        return _hashCache[view];
+      };
       if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter((n) => /-r\d+\.png$/i.test(n))) {
         const view = f.split('__')[0], key = `game:${game}:${view}:${f}`;
         let prompt = ''; try { prompt = fs.readFileSync(path.join(dir, f.replace(/\.png$/i, '.txt')), 'utf8'); } catch (e) {}
-        out.push({ file: f, view, mtime: fs.statSync(path.join(dir, f)).mtimeMs, key, note: noteText(notes[key]), status: noteStatus(notes[key]), prompt }); }
+        const ch = committedHash(view);
+        const inGame = !!ch && crypto.createHash('md5').update(fs.readFileSync(path.join(dir, f))).digest('hex') === ch;
+        out.push({ file: f, view, mtime: fs.statSync(path.join(dir, f)).mtimeMs, key, note: noteText(notes[key]), status: noteStatus(notes[key]), prompt, inGame }); }
       out.sort((a, b) => b.mtime - a.mtime);
       return sendJSON(res, 200, { gens: out });
     }
@@ -2334,7 +2350,7 @@ function audEditArtist(id){
 }
 async function audMakeHouse(id){
   const r=await (await postJSON('/api/select-artist',{game:curGame,id})).json();
-  if(r.ok){ AUD.houseArtist=id; toast('Game artist for '+curGame+' → '+id); renderAudition(); }
+  if(r.ok){ AUD.houseArtist=id; toast('Game artist for '+curGame+' → '+rosterName(id)); renderAudition(); }
   else toast('Error: '+(r.error||'failed'));
 }
 function audCellGen(artist,scene){
@@ -2342,7 +2358,7 @@ function audCellGen(artist,scene){
   const {provider,quality,model}=genParams();
   postJSON('/api/audition-gen',{game:curGame,scene,artist,provider,quality,model})
     .then(r=>r.json()).then(r=>{ if(r&&!r.ok&&r.error) toast('Error: '+r.error); }).catch(e=>toast('Error: '+e.message));
-  toast('Generating '+artist+' × '+scene+'… (tracked bottom-right)');
+  toast('Generating '+rosterName(artist)+' × '+scene+'… (tracked bottom-right)');
   setTimeout(pollGens,500);
 }
 // Audition one artist: render them across ALL selected scenes at the current model,
