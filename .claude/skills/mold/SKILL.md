@@ -43,6 +43,19 @@ belongs in the dossier (fix the engine, not here).
 Authoring is **judgment** work (curate, probe, reconcile, constrain) — that's why it's a skill,
 not a `.cjs`. The *why* behind the rules lives in `.tome/art-direction-model.md`; **read it first.**
 
+**Mold is the ACCURACY layer — appeal/creativity is delegated, not mold's job.** By the four-layer
+split, *medium/palette/contrast* belong to the Artist and *world/mood* to the Aesthetic. The Scene
+mold writes is deliberately literal. So a render that is faithful but flat/grim/boring is fixed by
+**recasting the artist** (the casting principle, [[art-direction-model]]), NOT by loosening mold —
+loosening mold only makes renders *inaccurate*. Mold's own failure mode is the opposite: over-
+constraining into empty/dead scenes. Apply the rules below at face value; don't pile on extra
+negatives chasing a single bad render.
+
+**Worked examples live in the tome, not here.** Every rule below is stated crisply; the rejected-pass
+histories that justify it (Orchestra Pit, Theatre lobby/stage, the dusty-tag sweep) are in
+`.tome/art-direction-model.md` (the "Mold-skill hardening", "Theatre recast", and "examine-miss"
+sections). When a rule's intent is unclear, read the case study there rather than expecting it inline.
+
 ## Two modes (one checklist)
 
 - **Author** (default — `/mold <game>` [optional `--only a,b,c`]): write/refresh overrides.
@@ -130,154 +143,80 @@ each as it writes.) Grouped:
    artist — keep it out of the Scene. Stay consistent with time-of-day and neighbors (stormy night
    outdoors, dry interiors).
 
-**Composition**
-10. **State the camera/vantage explicitly — don't leave the angle to the model.** Every override
-    names one plausible camera: where the viewer stands and what they look toward ("viewed from the
-    doorway, looking across the room toward the far hearth").
-    - **The camera stands INSIDE the location, first-person, at standing eye-level — almost always.**
-      The player *is* in this room; the vantage is the place they're standing, looking out / across /
-      up from within it. Do NOT step the camera outside the room to look *at* it as an object — that
-      turns the location into a thing seen from elsewhere and the model renders it as a feature, not a
-      space you occupy. (Orchestra Pit: an earlier pass framed it "from the auditorium side looking
-      north, the sunken well in the foreground" — so the model drew a hole in the floor seen from
-      outside. The player is standing *down in the pit*; the correct vantage is on the pit floor
-      looking up at the stage lip looming above, music stands around, the rail overhead.) Break this
-      only with a strong, stated reason, and even then keep the camera *within* the room's footprint.
-    - **Entry-facing heuristic — the default vantage when the prose covers multiple directions.**
-      The player arrives in a room looking the direction they traveled. **Camera facing = direction of
-      travel into the room.** The entry side is then naturally behind the camera. Find the primary
-      entry by scanning neighboring rooms' exits for one that leads here: the neighbor's exit direction
-      is the travel direction → camera faces that way. Example: if the eastern auditorium has exit
-      `west → Western Balcony`, the player traveled west, so the camera faces west — the western wall
-      (bricked doorway + crawl hole) is in frame; the auditorium void is behind the camera.
-      **This is the conservative default, not an override trigger.** You need a stated reason to
-      depart from it — e.g. "the entry wall is blank; the panoramic east view is the room's identity"
-      — and that reason goes in the framing bullet. When a feature on the entry-facing wall is
-      interesting, the heuristic and the content align naturally; only override when they don't.
-      (This also explains when to screen the entry passage: it is behind the camera by default.)
-    Choose the vantage that frames the
-    room's signature feature and puts unwanted features *behind the camera* — state it ("the main
-    entrance is behind the viewpoint, out of frame") rather than fighting to exclude them in-frame.
-    Don't cram every exit in (unnatural layouts — the junction-art note). **An exit has NO default
-    form** — it's *movement to another place*, not inherently a door. For each exit the vantage would
-    include, decide deliberately: **screen it** (off-frame / behind the camera / lost in shadow — the
-    conservative default; a recessive backdrop needn't advertise its exits), or **show it minimally in
-    its true form**, taken from the room's *own prose first* and its destination second (the grand
-    staircase that "splits east and west" → flights rising off-frame, *not* doorways; an arch → an arch;
-    a passage → a dim opening). Never a reflexive dark doorway, and never the room beyond. (The old
-    global "exits are mere THRESHOLDS / dim doorway" rule was REMOVED from App 2026-06-23 — it stamped
-    literal doorways onto exits that were really stairs; form is now wholly the mold's call.)
-    - **HARD RULE: the finished SCENE prose contains ZERO compass terms.** Not "prefer" — *zero*.
-      No "north/south/east/west", no "northeast", no "to the west", no "western wall". The image
-      generator (and the 3D-blockout pipeline that may render this scene — see
-      `.tome/blockout-3d-continuity.md`) has NO idea which way is south; a compass word is noise it
-      mis-applies, which mislocates features and even mirror-flips the frame. Compass lives ONLY in the
-      framing dossier (the facts you reason over), never in the scene the model reads.
-    - **Describe the scene the way a person describes a view: vantage first, then everything relative
-      to it.** Lead with where the camera stands and what it looks at, then place each thing by IMAGE
-      POSITION — "on the right", "in the foreground", "overhead", "off to the left", "ahead and above".
-      To get there, fix the camera + facing and build a quick facing→frame map: facing **north**, N =
-      ahead/background, S = behind (out of frame), **E = right, W = left**, up = above, down = below
-      (rotate for any other facing). Apply it to fixtures, walls, light sources, AND exits — anything
-      with a direction. (Orchestra Pit: "door in the *east* side wall" rendered on the LEFT; facing
-      north, east is the RIGHT wall — "right-hand wall" fixed it.)
-    - **Check before you write the override: scan your draft for any compass word and replace it with
-      its frame-relative equivalent. A compass word surviving into a scene is a defect.**
-    - **Then reason about DEPTH + OCCLUSION — can the camera even SEE it?** Place each feature in
-      foreground/midground/background, use up/down as ELEVATION cues, and DROP whatever is occluded.
-      (Theatre Stage: the exit graph shows the orchestra pit is "down" from the stage ⇒ the stage is
-      RAISED ⇒ from a vantage on the elevated stage the pit, below and in front, is hidden behind the
-      stage lip — so omit it. An earlier pass forced it into frame as a trench and it read as a hole cut
-      in the stage; the correct call was not to show it.)
-    - **Cap and place visible exits (doors especially multiply).** Loose wording ("doorways open off
-      the hall", "doors around the gallery") studs every wall with doors. Name the EXACT doors, on
-      which walls, and add "no other doors/openings". (Theatre Lobby: "doors open off the gallery"
-      produced 3+; truth = two small private doors at ground level + ONE set of double doors visible up
-      on the gallery.)
-    - **Render a named real-world feature with its CANONICAL geometry/orientation — state it.** When
-      a thing has a real-world shape and placement, the model will otherwise default to a generic box;
-      spell out the true geometry — including PROPORTION (wide vs narrow vs deep) and, for a recessed
-      space, how the SURROUNDING volume relates to it. Likewise: a staircase landing turns, a corridor
-      is long and narrow, a well is round and deep. Don't let a distinctive shape collapse into "a
-      room".
-      **A SUNKEN/RECESSED space (pit, trench, sunken garden, foxhole) has LOW walls + an OPEN space
-      above the rim — never full-height room walls.** Standing down in a recess, the walls around you
-      are only as tall as the recess is DEEP (a low parapet at chest/shoulder height); ABOVE that rim
-      the larger space opens up and is visible. Render that contrast — close+low below, open+wide above
-      — or "standing in a pit" collapses into "standing in a small enclosed room with tall walls".
-      (Orchestra Pit, learned over MANY rejected passes: it's a NARROW sunken depression with LOW pit
-      walls on the sides and behind, while the WIDE TALL theatre opens up over the rim — the broad
-      stage rising directly ahead, the auditorium beyond the rear rim. Mistakes made along the way:
-      tall side walls → "a small room with a stage"; a wide trough with distant walls → lost the
-      sunken feel; the floor receding away from the stage → a generic box. The narrow-floor /
-      open-theatre-above contrast is the whole identity. Note "small/too small" described the PIT, not
-      the theatre — don't widen the pit itself to fix narrowness; open up the theatre ABOVE it.)
-    - **Don't invent props the prose never names — empty is a faithful render.** Check the source
-      actually describes furniture before adding it; a derelict / "empty" / bare room should be
-      rendered EMPTY, not dressed from the room's NAME. And never quantify ("crowding the space", "a
-      sea of", "rows and rows of") — that multiplies the prop into a cluttered forest. (Orchestra Pit:
-      the LOOK text names NO furniture, yet two passes invented music stands from the word "orchestra"
-      — first a forest, then a couple; the faithful answer was an empty pit, identity carried by the
-      shape, not props.)
-10b. **Multi-level coherence (assemble vertical spaces from the connected rooms).** For a room that
-    is part of a vertical volume — an atrium with a wraparound gallery, an auditorium with balconies,
-    a pit — read the `up`/`down` neighbor rooms and build the WHOLE structure before you write, then
-    keep it physically self-consistent: **if a feature is visible, whatever reaches it must be too.**
-    - **Cross-check `look up`/directional probe text across sibling rooms to tell OWN features from
-      SHARED ones.** If the *same* look-up sentence appears in several rooms, that overhead belongs to
-      a shared volume they all sit under — render it as a DISTANT, shared structure ("far above"), not
-      as each room's own ceiling. Divergent text = the room's own ceiling, render it close. (Theatre:
-      the identical "far above… endless rows of lighting and girders" appears in BOTH `stage` and
-      `orchestra-pit` ⇒ it's the stage's tall FLY TOWER they share at the front, drawn far/high/small;
-      the auditorium rooms instead report a "finely-sculptured plaster ceiling" — their own, drawn
-      close. An early pit pass drew the girders as a low grid pressing down on the pit — wrong owner.)
-    (Theatre Lobby, learned over several rejected passes: the grand staircase rises to a *mid-landing*
-    then SPLITS east/west up to a *single continuous* encircling gallery — an imperial/double-return
-    stair. Rendering the gallery without the split, or two galleries, or a couch the prose never
-    names, were all failures. State the level count explicitly — "two storeys, one upper gallery, no
-    higher tiers" — so the model neither flattens nor stacks extra levels.)
-    **Horizontal shared volumes too — assemble a hall from the rooms that open onto it.** A single
-    auditorium / great hall / cavern is often ONE open volume spanning several rooms, and any room's
-    establishing shot sees ACROSS all of it. Pull the visible far features — rear exits, side
-    balconies/boxes, a hanging chandelier — from the sibling rooms' prose + exits, not just this room's
-    own facts. (Theatre Stage looks out over the auditorium: the rear double-doors are in the *Eastern
-    Aisle*'s exits; the balcony boxes are their own rooms; the chandelier is named in those rooms' PROSE
-    — NOT the `landmarks` glossary, since it was never examined. A stage scene built from the stage's
-    facts alone missed all three.) **Boundary:** include such features because they are genuinely VISIBLE
-    parts of the shared volume — NOT by reverse-engineering puzzles. The art is a recessive mood backdrop,
-    not a puzzle diagram; a fixture earns its place by being seen from the vantage, not by being
-    puzzle-load-bearing (the box seats belong because the auditorium HAS boxes, not because a
-    chandelier-swing puzzle needs them).
+**Composition** — factor 10 is the big one; it has six named sub-factors, each graded independently.
+Worked examples for all of them: tome "Mold-skill hardening" + "examine-miss" sections.
+
+10. **Composition (state the frame; don't leave it to the model).** Every override names one plausible
+    camera and places everything relative to it. Six sub-factors:
+    - **10a Vantage — INSIDE the room, first-person, eye-level.** The player *is* here; the camera is
+      where they stand, looking out/across/up from within. Never step outside to look *at* the room (it
+      renders as an object, not a space you occupy). Default facing = **direction of travel into the
+      room** (find it from a neighbor's exit that leads here); the entry side is then behind the camera.
+      Departing from entry-facing needs a stated reason in the framing bullet. Frame the signature
+      feature; put unwanted features behind the camera and *state* that ("main entrance behind the
+      viewpoint, out of frame") rather than fighting to exclude them in-frame.
+    - **10b Compass-ban — the finished SCENE prose contains ZERO compass terms.** Not "prefer" — zero.
+      No "north/west/northeast/to the west/western wall". The generator (and the 3D-blockout pipeline,
+      `.tome/blockout-3d-continuity.md`) has no idea which way is south; a compass word mislocates
+      features and can mirror-flip the frame. Reason in compass internally, then convert via a
+      facing→frame map (facing a direction: ahead = background, behind = out of frame, **E=right,
+      W=left** when facing north — rotate for other facings; up=above, down=below) and write
+      image-relative position only ("on the right", "in the foreground", "overhead"). **Scan the draft
+      for any compass word before saving — one surviving is a defect.**
+    - **10c Depth + occlusion — can the camera even SEE it?** Place each feature foreground/midground/
+      background, use up/down as elevation, and DROP whatever is occluded (a raised stage hides the pit
+      below its front lip — omit it, don't force it in as a trench).
+    - **10d Exits — screen or show, never a reflexive doorway.** An exit has NO default form; it's
+      movement to another place. Don't cram every exit in (the junction-art note). Per exit, decide:
+      **screen it** (off-frame/behind camera/lost in shadow — the conservative default) or **show it
+      minimally in its true form**, from the room's own prose first, destination second (split stair →
+      flights rising off-frame, not doorways; arch → arch; passage → dim opening). **Cap & place doors —
+      they multiply:** loose wording ("doors open off the gallery") studs every wall; name the EXACT
+      doors on which walls + "no other doors/openings". (Old App THRESHOLDS rule removed 2026-06-23 —
+      form is wholly the mold's call now.)
+    - **10e Canonical geometry — give a named real-world feature its true shape, stated.** Otherwise the
+      model defaults to a generic box. Spell out PROPORTION (wide/narrow/deep) and, for a recessed space,
+      how the surrounding volume relates to it. A **sunken/recessed space** (pit, trench, sunken garden)
+      has LOW walls + OPEN space above the rim — never full-height room walls: close+low below,
+      open+wide above. Fix narrowness by opening the volume ABOVE, not by widening the recess itself.
+    - **10f No invented props — empty is faithful.** Add furniture only if the source describes it; a
+      derelict/"empty"/bare room renders EMPTY, identity carried by shape, not props dressed from the
+      room's NAME. Never quantify ("a sea of", "rows and rows of") — it multiplies into a cluttered
+      forest.
+
+10g. **Multi-level & shared-volume coherence — assemble the whole volume from connected rooms.** For a
+    room in a vertical volume (atrium+gallery, auditorium+balconies, pit) read the `up`/`down` neighbors
+    and build the full structure first, kept self-consistent: **if a feature is visible, whatever
+    reaches it must be too.** Distinguish OWN vs SHARED overheads by cross-checking `look up` text across
+    siblings — identical text = a shared volume above (render far/distant); divergent = the room's own
+    ceiling (render close). State the level count explicitly ("two storeys, one upper gallery, no higher
+    tiers") so the model neither flattens nor stacks extra levels. **Horizontal volumes too:** a single
+    hall/auditorium/cavern spanning several rooms is seen ACROSS in any room's establishing shot — pull
+    visible far features (rear exits, side boxes, a chandelier) from the *sibling rooms'* prose+exits,
+    not just this room's facts. **Boundary:** include a feature because it's genuinely VISIBLE in the
+    volume, never by reverse-engineering a puzzle — the art is a recessive backdrop, not a puzzle map.
 11. **Scale cues.** "cramped" / "vast" so the model doesn't render a cathedral for a closet.
 12. **Layer discipline (per [[art-direction-model]]'s split).** Scene = literal, source-grounded
-    facts ONLY. The **world + mood** belong to the Aesthetic; **medium, palette, contrast and tonal
-    rendering** belong to the Artist (whose identity is sovereign — a colour-forward artist won't be
-    forced grim by a game). Don't bake style, palette, contrast, or invented mood adjectives into the
-    Scene — and a trailing "Dim, dusty, eerie" mood tag is exactly that. A room's *physical* light
-    situation (a named lamp; darkness because it's unlit) is fine; its *tonal mood* is not.
-    **This also bans condition/atmosphere adjectives that merely SOUND physical — "dusty", "bare",
-    "faded", "neglected", "grimy", "cobwebbed", "decaying".** Do NOT append them unless the SOURCE room
-    text uses that exact word. The game Aesthetic already establishes the global condition (an abandoned,
-    dusty theatre) ONCE; restating it in every room's tail over-hammers it. (Theatre: the molder appended
-    a "Dusty."/"Bare, dusty." tail to 31 of 60 rooms whose source never said it — renders came out
-    uniformly "dusty and bare".) Specific physical uses stay fine ("bare bulbs", "bare crossbeams" =
-    exposed, a real visible thing); blanket condition tags do not.
+    facts ONLY. World+mood → Aesthetic; medium/palette/contrast/tonal rendering → Artist (sovereign —
+    a colour-forward artist won't be forced grim). Don't bake style, palette, contrast, or invented mood
+    into the Scene — a trailing "Dim, dusty, eerie" tag is exactly that. A room's *physical* light
+    situation (a named lamp; darkness because unlit) is fine; its *tonal mood* is not.
+    **Don't re-tag the global condition per room.** The Aesthetic states the world's condition (an
+    abandoned, dusty theatre) ONCE; appending "dusty/bare/faded/neglected/grimy/cobwebbed" to every
+    room's tail over-hammers it into a uniform render (Theatre: 31/60 rooms got an unsourced "Dusty."
+    tail). Use such a word only when the room is *specifically* that way beyond the global condition —
+    not as a reflexive atmosphere tag. Specific physical uses stay fine ("bare bulbs/crossbeams" =
+    exposed, a real visible thing).
 
 **Conservative defaults for unavoidable surfaces (floors / walls / materials).** A few surfaces ALWAYS
-render even when the prose omits them — chiefly the FLOOR. Left unnamed they degrade to dirt/void (the
-App "invent nothing" rule makes unspecified = generic/absent). For these unavoidable surfaces ONLY you
-MAY name a plain, period-plausible material so the render has substance — but keep it UNDERSTATED and
-muted, never bold, ornate or decorative (Theatre Lobby: a "grand geometric mosaic-tile" floor rendered
-garish under a colour-forward artist; a plain worn-marble/stone floor is the conservative call). Name
-the material PER ZONE so one surface doesn't bleed across distinct areas (Theatre Stage: the wooden
-stage flowed straight into the seating — the aisles should read as worn CARPET, separate from the stage
-boards). This is the ONE sanctioned exception to "depict only what's named": it picks a default for a
-surface that cannot be absent, NOT new furniture/objects/figures, which stay forbidden.
-**Pick the default from the room's CONTEXT, never by keyword analogy.** The plausible material follows
-the room's *zone* (theatre interior, cellar, sewer), not a noun in its name. (Theatre: the *orchestra
-pit* is a front-of-house theatre feature → plain WOOD + plaster like the stage; rendering it "stone"
-wrongly conflated it with the *underground* pits — `above-the-pit`/`inside-pit`, genuinely rough-stone
-caverns. Same word "pit", opposite material — the zone decides, not the word.)
+render even when the prose omits them — chiefly the FLOOR; unnamed it degrades to dirt/void (the App
+"invent nothing" rule makes unspecified = generic/absent). For these ONLY you MAY name a plain,
+period-plausible material — but UNDERSTATED and muted, never bold/ornate/decorative (a "grand mosaic-
+tile" floor goes garish; plain worn marble/stone is the call). Name it PER ZONE so one surface doesn't
+bleed across distinct areas (stage boards vs worn-carpet aisles). **Pick the default from the room's
+CONTEXT/zone, never by keyword analogy** (a front-of-house orchestra *pit* → theatre wood+plaster, NOT
+"stone" from the word "pit" — the underground pits are the rough-stone ones). This is the ONE sanctioned
+exception to "depict only what's named": a surface default, NOT new furniture/objects/figures.
 
 **Out of scope (don't over-think):** weather/season beyond what the prose states; implied
 sound/motion (it's a still).
@@ -294,7 +233,7 @@ the inputs reasoned over, and the litmus.
   reminder of its medium quirk, so per-room scenes don't fight it) and the global condition the
   aesthetic already states once (so you don't re-tag it per room — factor 12).
 - **`### Volume: <Name> — anchor <slug>`** — one block per multi-room shared space (atrium,
-  auditorium, dome, cistern — factors 7 & 10b). Holds: **Members** (slugs), **Geometry** (the whole
+  auditorium, dome, cistern — factors 7 & 10g). Holds: **Members** (slugs), **Geometry** (the whole
   assembled structure + level count), **Shared landmarks** visible across it (with where each is
   *owned* vs *seen*), **Canonical state** (+ any post-puzzle-contamination warning), and a
   **Vantage convention** if the volume has a recurring framing trap. The `anchor` is the designated
@@ -302,10 +241,10 @@ the inputs reasoned over, and the litmus.
 
 **Part 2 — `## Rooms`** (one `### <slug>` per room, tagged `— member: <Volume>` when it belongs to
 one). Each carries only the bullets that apply — most rooms are short; a plain room is 2–3 lines:
-- **Vantage** (factor 10) — where the camera stands, what it looks toward, what's behind it.
-- **Occlusion / depth** (factor 10) — what's hidden by elevation/walls **+ why**, therefore omitted.
-- **Exits** (factor 10) — per exit: **screen** or **show** (+ the form), reasoned from exitFacts.
-- **Shared volume** (factors 7, 10b) — which volume features this room sees and must pull in.
+- **Vantage** (factor 10a) — where the camera stands, what it looks toward, what's behind it.
+- **Occlusion / depth** (factor 10c) — what's hidden by elevation/walls **+ why**, therefore omitted.
+- **Exits** (factor 10d) — per exit: **screen** or **show** (+ the form), reasoned from exitFacts.
+- **Shared volume** (factors 7, 10g) — which volume features this room sees and must pull in.
 - **State** (factor 8) — which moment we paint; **Provenance** flags a dossier-captured post-puzzle
   state the override had to force (the "discovered at high turn → eyeball" case).
 - **Surfaces** — any conservative floor/wall default chosen + why (per-zone so it doesn't bleed).

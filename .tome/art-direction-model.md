@@ -531,6 +531,20 @@ entrance wall." Geometry needs the connection made vivid, not just asserted.
   negatives (no gradients/soft shading/blending/painterly/3D look), "printed flat like a vintage comic
   page". gpt-image-low defaults to *rendering*; the fix is forbidding the rendered look outright.
 
+## Mold skill de-bloated — case studies live HERE now, not inline (2026-06-25)
+The SKILL.md had accreted one game's rejected-pass war stories inline (Orchestra Pit ~10×, Theatre
+lobby/stage), bloating factor 10 to ~90 lines and biasing the checklist toward theatre-shaped rooms.
+Refactored 2026-06-25 (373→~312 lines): every rule kept at face value, but the narrated histories
+were stripped out and now point HERE (the "Mold-skill hardening", "Theatre recast", "examine-miss"
+sections below/above are the canonical worked examples). Two structural changes: **factor 10 split
+into named sub-factors 10a–10g** (Vantage / Compass-ban / Depth-occlusion / Exits / Geometry /
+Props / Multi-level-coherence) so each is applied and graded independently; **factor 12's adjective
+rule retuned** from a verbatim-only gate ("only if the source uses that exact word") to intent
+("don't *re-tag* the global condition per room") — the exact-word gate was an over-broad blunt
+instrument. Added a top note: **mold is the ACCURACY layer; appeal is delegated to Artist/Aesthetic**
+— a flat/grim render is fixed by recasting the artist, never by loosening mold. When editing the
+checklist, resist re-inlining case studies — add them as dated sections here and leave a pointer.
+
 ## Mold-skill hardening from the Theatre lobby/stage pass (2026-06-23)
 Four recurring scene-craft failures surfaced reviewing Theatre renders; all codified into
 `.claude/skills/mold/SKILL.md` (factors 10 + 12 + a new "conservative defaults" paragraph):
