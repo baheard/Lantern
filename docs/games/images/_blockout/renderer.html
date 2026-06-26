@@ -34,13 +34,12 @@
   #resultCap{position:absolute;top:0;left:0;right:0;padding:6px 10px;font-size:13px;font-weight:600;
        color:#f0e6d0;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));border-radius:8px 8px 0 0;pointer-events:none;z-index:2}
   #result .ph{color:#6a6478;text-align:center;padding:24px;line-height:1.6}
-  /* height = thumb (96) + caption slack + room for the horizontal scrollbar, so the scrollbar
-     never overlaps the thumbnails' bottoms. align-items:flex-start keeps thumbs pinned to top. */
-  #gallery{flex:0 0 auto;height:122px;display:flex;align-items:flex-start;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px}
+  /* height = thumb (96) + room for the horizontal scrollbar, so the scrollbar never overlaps
+     the thumbnails. align-items:flex-start keeps thumbs pinned to top. */
+  #gallery{flex:0 0 auto;height:116px;display:flex;align-items:flex-start;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px}
   #gallery .thumb{flex:0 0 auto;height:96px;border:2px solid transparent;border-radius:5px;cursor:pointer;position:relative;background:#000}
   #gallery .thumb.on{border-color:#c4a35a}
   #gallery .thumb img{height:100%;display:block;border-radius:3px}
-  #gallery .thumb .cap{position:absolute;left:0;right:0;bottom:0;font-size:9px;background:rgba(0,0,0,.6);color:#ddd;padding:1px 3px;border-radius:0 0 3px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #gallery .none{color:#6a6478;align-self:center;padding:0 10px}
   #colText{flex:2 1 0;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:10px;min-height:0}
   #colText .panel{background:#17151d;border:1px solid #2a2536;border-radius:8px;padding:10px 12px}
@@ -575,7 +574,7 @@ function renderGallery() {
   const el = document.getElementById('gallery');
   const list = GENS.filter((g) => g.view === currentView);
   if (!list.length) { el.innerHTML = '<span class="none">No shots from this vantage yet — Generate one.</span>'; return; }
-  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}" data-f="${g.file}" title="${tag}"><img src="${imgUrl(g.file)}"><div class="cap">${tag}</div></div>`; }).join('');
+  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}" data-f="${g.file}" title="${tag}"><img src="${imgUrl(g.file)}"></div>`; }).join('');
   el.querySelectorAll('.thumb').forEach((t) => t.onclick = () => setResult(t.dataset.f));
 }
 async function generate() {
