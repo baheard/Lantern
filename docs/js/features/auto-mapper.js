@@ -72,6 +72,33 @@ export function getCurrentLocation(statusBarText) {
 }
 
 /**
+ * Map-node identity for a location name: strip a trailing parenthetical SUB-STATE
+ * like "(on the chair)" / "(on the settee)" / "(in the bed)" so a transient posture/
+ * position state collapses onto its base room and doesn't spawn a phantom map node
+ * when the player merely sits/lies/mounts.
+ *
+ * IMPORTANT — map identity ONLY. The FULL name still rides `getCurrentLocation()` and
+ * the `locationChanged` event, because location art keys on it to show the distinct
+ * seated view (e.g. "Curtained Room (on the chair)" → the mirror-reflection image).
+ * Only the map's node identity is stripped, so the two consumers stay independent
+ * (route-by-consumer, same as the live-vs-replay parity rule).
+ *
+ * Conservative: only collapses a trailing paren that opens with a positional
+ * preposition/gerund — arbitrary parentheticals are left intact.
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+export function mapNodeName(name) {
+  if (!name || typeof name !== 'string') return name;
+  const stripped = name.replace(
+    /\s*\((?:on|in|at|atop|under|behind|astride|aboard|sitting|seated|lying|lain|riding|standing|kneeling|perched)\b[^)]*\)\s*$/i,
+    ''
+  ).trim();
+  return stripped || name; // never collapse a name that is ENTIRELY a parenthetical
+}
+
+/**
  * Get the secondary "phase" context from the status bar — the right-aligned region
  * the location parser discards (e.g. "day one, evening", "Chapter 2", "Score: 10").
  * This is the game-agnostic signal hint sections can scope to via an optional `phase`

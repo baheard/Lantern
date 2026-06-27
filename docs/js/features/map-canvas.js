@@ -15,7 +15,7 @@
  * - map-canvas.js   : Core orchestrator (this file)
  */
 
-import { getCurrentLocation, getLastLocationName, getMapData, clearJourney, setSuppressJourneyClear } from './auto-mapper.js';
+import { getCurrentLocation, getLastLocationName, getMapData, clearJourney, setSuppressJourneyClear, mapNodeName } from './auto-mapper.js';
 import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
@@ -572,13 +572,13 @@ function seedCurrentLocation() {
   const leftEl = statusBarEl?.querySelector('.status-left');
   const statusText = (leftEl ?? statusBarEl)?.textContent?.trim();
 
-  let currentLocationName = getLastLocationName();
+  let currentLocationName = mapNodeName(getLastLocationName());
 
   // If we have status bar text, try to extract the current location from it
   if (statusText && statusText.length > 0) {
     const location = getCurrentLocation(statusText);
     if (location?.name) {
-      currentLocationName = location.name;
+      currentLocationName = mapNodeName(location.name);
     }
   }
 
@@ -662,10 +662,27 @@ function handleGameLoaded(e) {
 
 function handleLocationChange(e) {
   if (!mapState.autoMapEnabled) return;
-  const { locationId, locationName, previousLocationId, command } = e.detail;
+  const { locationId, locationName: rawLocationName, previousLocationId: rawPreviousLocationId, command } = e.detail;
 
   // Validate location name - reject empty or invalid names
-  if (!locationName || typeof locationName !== 'string' || !locationName.trim()) {
+  if (!rawLocationName || typeof rawLocationName !== 'string' || !rawLocationName.trim()) {
+    return;
+  }
+
+  // Map-node identity strips trailing sub-states ("(on the chair)") so sitting/lying
+  // doesn't spawn a phantom node. The raw name still drives location art via the event.
+  const locationName = mapNodeName(rawLocationName);
+  const previousLocationId = mapNodeName(rawPreviousLocationId);
+
+  // Sub-state transition within the SAME room (e.g. sit down → "(on the chair)"): the
+  // stripped node identity is unchanged, so don't create a phantom node or self-edge —
+  // just keep the current node selected.
+  if (locationName === previousLocationId) {
+    if (mapState.nodes.has(locationName)) {
+      mapState.currentNodeId = locationName;
+      mapState.selectedNode = locationName;
+      if (isVisible) { render(); centerOnCurrentLocation(); }
+    }
     return;
   }
 
@@ -2147,7 +2164,10 @@ function syncFromAutoMapper() {
 
   for (let i = 0; i < journey.length; i++) {
     const visit = journey[i];
-    const locationName = visit.locationName;
+    // Strip trailing sub-states ("(on the chair)") to the base map-node identity, so a
+    // sit/lie entry collapses into a revisit of its room rather than a phantom node.
+    // Parity with the live handleLocationChange path, which strips the same way.
+    const locationName = mapNodeName(visit.locationName);
 
     // Skip if location was deleted by user
     if (mapState.deletedNodes.has(locationName)) {
@@ -2162,7 +2182,7 @@ function syncFromAutoMapper() {
     let navCommand = visit.positionCommand || visit.command;
     if (!navCommand && previousNode) {
       const next = journey[i + 1];
-      if (next && next.locationName === previousNode.id) {
+      if (next && mapNodeName(next.locationName) === previousNode.id) {
         const returnDir = getDirectionFromCommand(next.positionCommand || next.command);
         if (returnDir && DIRECTION_OPPOSITES[returnDir]) {
           navCommand = DIRECTION_OPPOSITES[returnDir];
@@ -2277,8 +2297,8 @@ function syncFromAutoMapper() {
     mapState.recentDirections = recentDirections.slice(-10);
   }
 
-  // Set current location (last in journey)
-  const currentLocation = getLastLocationName();
+  // Set current location (last in journey) — strip sub-state to the base node id.
+  const currentLocation = mapNodeName(getLastLocationName());
   if (currentLocation) {
     mapState.currentNodeId = currentLocation;
   }
