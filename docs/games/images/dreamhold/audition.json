@@ -1,24 +1,14 @@
 {
   "scenes": [
-    "sitting-room",
-    "curving-hall",
-    "green-bower-possibly"
+    "cistern-west",
+    "orrery",
+    "laboratory",
+    "translucent-dome"
   ],
   "artists": [
-    "illustration-plate",
-    "broadsheet",
-    "drypoint",
-    "expedition-log",
-    "lantern-slide",
-    "casein-board",
-    "plein-air",
     "picture-book",
-    "comic-panel",
-    "pulp-press",
-    "spirit-copy",
-    "risograph",
-    "sumi-rubbing",
-    "pastel-nocturne",
-    "travel-lithograph"
+    "plein-air",
+    "illustration-plate",
+    "lantern-slide"
   ]
 }

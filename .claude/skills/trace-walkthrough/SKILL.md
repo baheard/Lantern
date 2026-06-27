@@ -208,3 +208,11 @@ Output to the caller / user:
 - All source URLs used (for the caller's `meta.sources`), each with the local `"file"` path.
 
 Optionally also save the full `--status` trace (`node tools/play.cjs <game> --status --file …`) if the caller wants per-turn locations — but generate-hints re-runs that itself during harvesting, so it's not required.
+
+## On completion — stamp provenance
+After the verified `<game>.cmds.txt` is written, record the step so `/studio` can detect staleness:
+```
+node tools/stamp-pipeline.cjs <game> walkthrough
+```
+(Writes `docs/games/images/<game>/pipeline.json`. Dev-only — no app version bump. See
+`.tome/pipeline-provenance-stamps.md`.) Skip only if no `docs/games/images/<game>/` dir exists yet.

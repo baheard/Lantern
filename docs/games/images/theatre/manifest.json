@@ -1,6 +1,7 @@
 {
   "game": "theatre",
   "images": {
-    "Theatre Lobby": "theatre-lobby.png"
+    "Theatre Lobby": "theatre-lobby.png",
+    "Western Balcony": "western-balcony.png"
   }
 }

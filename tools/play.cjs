@@ -138,43 +138,60 @@ function makeInterpreterContext(seed) {
   sandbox.dispatchEvent = () => {};
   sandbox.addEventListener = () => {};
   const ctx = vmMod.createContext(sandbox);
-  for (const f of ['docs/lib/zvm.js', 'docs/lib/glkapi.js', 'docs/lib/dialog-stub.js']) {
-    vmMod.runInContext(fs.readFileSync(path.join(REPO, f), 'utf8'), ctx, { filename: f });
-  }
-  // Minimal GiDispa — only the methods glkapi's save_allstate/restore_allstate touch.
-  // The browser app runs WITHOUT a GiDispa (do_vm_autosave:false), so this whole-VM
-  // snapshot path is otherwise unexercised; we supply just enough dispatch bookkeeping
-  // for Glk.save_allstate()/restore_allstate() to round-trip. For the Z-machine, the
-  // retained-array addr/arg are never read back by do_autorestore (it relinks linebuf via
-  // read_data.buffer and streams by rock), so synthesizing them is safe.  Defined IN the
-  // sandbox realm so the arrays it holds are same-realm as the VM.
-  vmMod.runInContext(
-    '(function(){' +
-    '  var byClass = { window:{}, stream:{}, fileref:{} };' +
-    '  var arrInfo = new Map();' +
-    '  var rockCounter = 1000;' +
-    '  globalThis.__GiDispa = {' +
-    '    set_vm: function(){}, init: function(){}, check_autosave: function(){ return null; },' +
-    '    prepare_resume: function(){}, get_vm: function(){},' +
-    '    class_register: function(cls, obj, usedisprock){' +
-    '      if (usedisprock === undefined || usedisprock === null) usedisprock = rockCounter++;' +
-    '      obj.disprock = usedisprock; byClass[cls][usedisprock] = obj; return usedisprock;' +
-    '    },' +
-    '    class_unregister: function(cls, obj){ if (obj && obj.disprock != null) delete byClass[cls][obj.disprock]; },' +
-    '    class_obj_from_id: function(cls, id){ return (id === undefined || id === null) ? null : (byClass[cls][id] || null); },' +
-    '    class_id_from_obj: function(cls, obj){ return obj ? obj.disprock : null; },' +
-    '    retain_array: function(arr, info){ arrInfo.set(arr, info || { addr: 0, len: (arr && arr.length) || 0 }); },' +
-    '    unretain_array: function(arr){ arrInfo.delete(arr); },' +
-    '    get_retained_array: function(arr){' +
-    '      var info = arrInfo.get(arr) || {};' +
-    '      return { addr: info.addr || 0, len: (info.len != null ? info.len : (arr ? arr.length : 0)),' +
-    '               arr: arr, arg: { serialize: function(){ return null; } } };' +
-    '    },' +
-    '  };' +
-    '})();',
-    ctx, { filename: 'harness-gidispa' }
-  );
+  // Run the PRECOMPILED lib + GiDispa scripts into this fresh realm. Compiling the ~328 KB of
+  // zvm.js+glkapi.js is done ONCE (getLibScripts cache) and reused across every context — this is
+  // what makes the in-process `--probe-exits` batch (12 fresh contexts per call) cheap: each
+  // context still re-runs the scripts to initialise its own globals, but never re-parses them.
+  for (const script of getLibScripts()) script.runInContext(ctx);
   return ctx;
+}
+
+// Minimal GiDispa — only the methods glkapi's save_allstate/restore_allstate touch. The browser app
+// runs WITHOUT a GiDispa (do_vm_autosave:false), so this whole-VM snapshot path is otherwise
+// unexercised; we supply just enough dispatch bookkeeping for Glk.save_allstate()/restore_allstate()
+// to round-trip. For the Z-machine, the retained-array addr/arg are never read back by do_autorestore
+// (it relinks linebuf via read_data.buffer and streams by rock), so synthesizing them is safe. Defined
+// IN the sandbox realm so the arrays it holds are same-realm as the VM.
+const GIDISPA_SRC =
+  '(function(){' +
+  '  var byClass = { window:{}, stream:{}, fileref:{} };' +
+  '  var arrInfo = new Map();' +
+  '  var rockCounter = 1000;' +
+  '  globalThis.__GiDispa = {' +
+  '    set_vm: function(){}, init: function(){}, check_autosave: function(){ return null; },' +
+  '    prepare_resume: function(){}, get_vm: function(){},' +
+  '    class_register: function(cls, obj, usedisprock){' +
+  '      if (usedisprock === undefined || usedisprock === null) usedisprock = rockCounter++;' +
+  '      obj.disprock = usedisprock; byClass[cls][usedisprock] = obj; return usedisprock;' +
+  '    },' +
+  '    class_unregister: function(cls, obj){ if (obj && obj.disprock != null) delete byClass[cls][obj.disprock]; },' +
+  '    class_obj_from_id: function(cls, id){ return (id === undefined || id === null) ? null : (byClass[cls][id] || null); },' +
+  '    class_id_from_obj: function(cls, obj){ return obj ? obj.disprock : null; },' +
+  '    retain_array: function(arr, info){ arrInfo.set(arr, info || { addr: 0, len: (arr && arr.length) || 0 }); },' +
+  '    unretain_array: function(arr){ arrInfo.delete(arr); },' +
+  '    get_retained_array: function(arr){' +
+  '      var info = arrInfo.get(arr) || {};' +
+  '      return { addr: info.addr || 0, len: (info.len != null ? info.len : (arr ? arr.length : 0)),' +
+  '               arr: arr, arg: { serialize: function(){ return null; } } };' +
+  '    },' +
+  '  };' +
+  '})();';
+
+// Precompile the interpreter stack ONCE (lazy, cached). Returns [{code, filename}, …] of vm.Script
+// objects whose .runInContext(ctx) initialises a fresh realm's ZVM/Glk/Dialog globals without
+// re-parsing the source. The big win for --probe-exits, which builds many short-lived contexts.
+let _libScripts = null;
+function getLibScripts() {
+  if (_libScripts) return _libScripts;
+  const specs = [
+    ['docs/lib/zvm.js', null], ['docs/lib/glkapi.js', null], ['docs/lib/dialog-stub.js', null],
+    ['harness-gidispa', GIDISPA_SRC],
+  ];
+  _libScripts = specs.map(([filename, src]) => {
+    const code = src != null ? src : fs.readFileSync(path.join(REPO, filename), 'utf8');
+    return new vmMod.Script(code, { filename });
+  });
+  return _libScripts;
 }
 
 // ---------------------------------------------------------------------------
@@ -619,7 +636,7 @@ function resolveStory(arg) {
 }
 
 function parseArgs(argv) {
-  const opts = { quiet: false, status: false, statusraw: false, raw: false, file: null, stdin: false, key: ' ', strict: false, stopOnDeath: false, summary: false, seed: 1, xorshift: null, snapshotOut: null, snapshotIn: null, snapshotAt: null, snapshotAtIndex: null };
+  const opts = { quiet: false, status: false, statusraw: false, raw: false, file: null, stdin: false, key: ' ', strict: false, stopOnDeath: false, summary: false, seed: 1, xorshift: null, snapshotOut: null, snapshotIn: null, snapshotAt: null, snapshotAtIndex: null, probeExits: false, dirs: null };
   const commands = [];
   const inlineCmds = [];   // from --cmds "a ; b ; c" — appended like a tiny file (after --)
   let game = null, afterDashDash = false;
@@ -644,6 +661,8 @@ function parseArgs(argv) {
     else if (a === '--snapshot-in') opts.snapshotIn = argv[++i];
     else if (a === '--snapshot-at') opts.snapshotAt = argv[++i];
     else if (a === '--cmds') { for (const c of argv[++i].split(';').map((s) => s.trim()).filter(Boolean)) inlineCmds.push(c); }
+    else if (a === '--probe-exits') opts.probeExits = true;
+    else if (a === '--dirs') opts.dirs = argv[++i].split(';').map((s) => s.trim()).filter(Boolean);
     else if (a.startsWith('--')) { /* ignore unknown */ }
     else if (game === null) game = a;
     else commands.push(a);
@@ -709,6 +728,25 @@ async function main() {
   const { getCurrentLocation, getStatusContext } = await import(amUrl);
 
   const storyPath = resolveStory(game);
+
+  // --probe-exits: restore the SAME base snapshot once per direction (each in its own fresh realm,
+  // so the singleton Glk state never carries between probes) and emit each landing's transcript,
+  // delimited by `@@PROBE-EXIT dir=<dir>`. Collapses what used to be 12 separate `node` spawns
+  // (one per compass dir) in gen-room-facts' probeFromSnap into ONE process — the lib source is
+  // compiled once (getLibScripts) and only re-run per realm. Requires --snapshot-in <base>.
+  if (opts.probeExits) {
+    if (!opts.snapshotIn) { process.stderr.write('[probe-exits] requires --snapshot-in <base snapshot>\n'); process.exit(2); }
+    const dirs = opts.dirs || ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'u', 'd', 'in', 'out'];
+    const out = [];
+    for (const dir of dirs) {
+      const turns = play(storyPath, [dir], opts, getCurrentLocation, getStatusContext);
+      out.push('@@PROBE-EXIT dir=' + dir);
+      out.push(render(turns, opts));
+    }
+    process.stdout.write(out.join('\n') + '\n');
+    return;
+  }
+
   const turns = play(storyPath, cmds, opts, getCurrentLocation, getStatusContext);
   process.stdout.write(render(turns, opts) + '\n');
 

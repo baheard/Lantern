@@ -56,7 +56,7 @@
           "locations": ["Cool Bower", "Warm Bower"],
           "hints": [
             "Bare hands are no match for that cold and heat. You need something to shield your hand.",
-            "A gardener's glove would do. Have you searched the shed at the foot of the mountain stairs?",
+            "A gardener's glove would do the job.",
             "Answer: WEAR GLOVE (it's in the Dim Shed), then TAKE BERRIES. The Cool Bower's bush gives frost-cold white berries; the Warm Bower's gives fire-hot orange berries. Gather a handful of each."
           ]
         },
@@ -95,7 +95,7 @@
           "locations": ["Atelier", "Red Desert", "Sea of White"],
           "hints": [
             "The desert world holds only an old letter — atmosphere, nothing you need. The trick is to display something other than a painting.",
-            "Answer: Put the PALETTE on the easel and LOOK IN TELESCOPE to reach a white sea, where a knotted string floats. TAKE STRING — an optional discovery; its knots spell PORTRAIT, and it's one of several oddments worth keeping."
+            "Answer: Put the PALETTE on the easel and LOOK IN TELESCOPE to reach a white sea, where a knotted string floats. TAKE STRING — an optional discovery; its knots spell PORTRAIT."
           ]
         },
         {
@@ -150,7 +150,8 @@
           "locations": ["Catwalk, North", "Catwalk, North; Night", "Ledge; Night"],
           "hints": [
             "You won't leap it, and climbing is no better. But a bridge of some kind might be possible — just not a conventional one.",
-            "A shadow, with a strong enough light behind it, can be solid as a plank in this house. And there's a dome at the top of the stairs with a pile of wood and a tall copper \"sail\".",
+            "A shadow, with a strong enough light behind it, can be solid as a plank in this house.",
+            "There's a dome at the top of the stairs with a pile of wood and a tall copper \"sail\" — get a real blaze going beneath it.",
             "Once the fire is roaring, climb to the catwalk outside (it's night up there) and find where the sail's shadow stretches out across the ravine.",
             "Answer: PUT ORANGE BERRY IN WOOD to light the bonfire, go UP to the catwalk, walk round to Catwalk North, and go N out onto the band of shadow. It bears your weight across to the ledge — TAKE BLACK MASK."
           ]
@@ -180,7 +181,7 @@
           "locations": ["Orrery"],
           "hints": [
             "Higher up, something dangles above the very top of the great tilted disk.",
-            "Answer: Ride the wheels upward (grab a globe and wait as it climbs); near the ceiling a grey leather strip hangs in reach — TAKE STRIP. It's a belt, an optional discovery and one of the oddments worth keeping. DON BELT."
+            "Answer: Ride the wheels upward (grab a globe and wait as it climbs); near the ceiling a grey leather strip hangs in reach — TAKE STRIP. It's a belt, an optional discovery. DON BELT."
           ]
         },
         {
@@ -279,7 +280,7 @@
         },
         {
           "id": "cistern-red-mask",
-          "q": "Where is the seventh — the red — mask?",
+          "q": "Where is the red mask?",
           "locations": ["Cistern Catwalk, East"],
           "hints": [
             "It's here in the cistern, lying in the glass trough of the catwalk that rings the room. You'll pass it while solving the place.",
@@ -377,7 +378,7 @@
       "id": "general",
       "title": "Odds, Ends & Discoveries",
       "verified": true,
-      "locations": ["Harp Chamber", "Curving Hall at Pedestal"],
+      "locations": ["Harp Chamber"],
       "questions": [
         {
           "id": "general-harp",
@@ -386,15 +387,6 @@
           "hints": [
             "It's a sad, scorched wreck — the game itself wonders aloud what destroyed it.",
             "Answer: Nothing to be done. The harp is pure atmosphere — a mystery with no solution and no use. (The bundle of straw on the floor, on the other hand, is worth taking.)"
-          ]
-        },
-        {
-          "id": "general-pedestal",
-          "q": "There's a black marble pedestal in the curving hall. What am I supposed to put on it?",
-          "locations": ["Curving Hall at Pedestal"],
-          "hints": [
-            "Nothing. It simply stands there.",
-            "Answer: The pedestal is bare decoration — there's no puzzle here at all. Don't read importance into it just because it's described; in this house, the presence of an oddity is no promise that it matters."
           ]
         },
         {

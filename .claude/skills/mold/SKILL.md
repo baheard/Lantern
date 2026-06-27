@@ -155,6 +155,14 @@ Worked examples for all of them: tome "Mold-skill hardening" + "examine-miss" se
       Departing from entry-facing needs a stated reason in the framing bullet. Frame the signature
       feature; put unwanted features behind the camera and *state* that ("main entrance behind the
       viewpoint, out of frame") rather than fighting to exclude them in-frame.
+      **Furniture the player OCCUPIES is the vantage, not a prop — OMIT it.** A *seated-/lying-/
+      riding-on-X* state room (`…-on-the-chair`, `…-on-the-settee`, on a bed/horse) puts X *beneath or
+      behind the camera*: drop it from the frame and say so ("the chair is beneath the viewpoint, out
+      of frame"). Naming the occupied furniture as an in-frame object makes the model render it
+      EMPTY (no-people rule) — the very "why is there an empty chair?" defect. Only its **reflection
+      or shadow** may appear (Dreamhold `curtained-room-on-the-chair`: the real chair is the seat you
+      occupy → omit; the chair that shows is the one *reflected in the mirror*, with the blurred
+      faceless figure in it).
     - **10b Compass-ban — the finished SCENE prose contains ZERO compass terms.** Not "prefer" — zero.
       No "north/west/northeast/to the west/western wall". The generator (and the 3D-blockout pipeline,
       `.tome/blockout-3d-continuity.md`) has no idea which way is south; a compass word mislocates
@@ -270,8 +278,24 @@ absence of them.
      scene is downstream of the framing: it says nothing the framing+facts don't justify, and adds
      no new judgment (if you find yourself deciding something while writing the scene, that decision
      belongs back up in the framing).
-4. Keep scenes tight and literal (factor 12). A scene may closely resemble the scraped facts — fine;
-   the point is every room ends up with a *considered, render-ready* Scene backed by a recorded *why*.
+   - **Distillation is REDACT + RE-ANCHOR, not rewrite (the noun-preservation rule).** Keep the
+     source's **concrete visual nouns and spatial grades VERBATIM** — "mossy boulders", "down a
+     grassy slope and up", "knotted paths", "split soundbox", "iron-strapped door". These are the
+     exact tokens the image model renders; paraphrasing them into a generic category ("garden
+     paths", "old door") throws away the only information that makes the picture specific, and
+     silently drops detail (spike 2026-06-26: "a wider path curves west, down a grassy slope, and up
+     to the east" got collapsed to "knotted paths curve off" — the whole west arm vanished from
+     every render; the raw text rendered it faithfully). So distillation only ever: (a) **transforms
+     compass facings** to image-relative position (factor 10b); (b) **drops** behind-vantage /
+     takeable / lore / narration / state-wrong material; (c) **adds anchors a bare noun lacks** that
+     the framing decided (scale/distance — "small, distant white dome", not just "a white dome",
+     which renders huge). It does NOT swap the source's nouns for synonyms or summaries. When in
+     doubt, quote the source clause and re-anchor it in place. See [[shot-type-establishing-vs-first-person]].
+4. Keep scenes tight and literal (factor 12). A scene may — and often SHOULD — closely echo the
+   scraped facts almost word-for-word (the noun-preservation rule above): the win is not fresh prose
+   but a *considered, render-ready* Scene where the only edits to the source are the three sanctioned
+   ones (transform compass · drop behind-vantage/takeable/lore/state · add the scale/distance anchor),
+   each backed by a recorded *why* in the framing.
 5. Report a one-line summary per room (flag rooms where you live-probed, reconciled an exit, or
    forced a state, so the user can spot-check), and list the volumes authored.
 
@@ -310,3 +334,13 @@ Review grades **two surfaces**: the framing decisions, and whether the scene fai
   `build-scenes` (wrapper = facts + mold author in one call), `/review-notes` (reviews rendered
   *images*; mold-review audits the scene *text*). `location-art` still owns audition / promote /
   open-reviewer.
+
+## On completion — stamp provenance
+After scene overrides + `location-framing.md` are written (author mode), record the step so
+`/studio` can detect staleness:
+```
+node tools/stamp-pipeline.cjs <game> mold
+```
+(Writes `docs/games/images/<game>/pipeline.json`. Dev-only — no app version bump. See
+`.tome/pipeline-provenance-stamps.md`.) Review mode (`--fix`) that materially rewrites overrides
+should also re-stamp; a no-change audit need not.

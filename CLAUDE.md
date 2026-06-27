@@ -143,7 +143,7 @@ snapshot), and the snapshot pair:
    - Minor (v1.5.0): New features, significant improvements
    - Patch (v1.5.105): Bug fixes, small tweaks
 
-**Current Version:** v1.5.687
+**Current Version:** v1.5.688
 
 ## Third-Party Libraries
 

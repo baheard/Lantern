@@ -390,3 +390,11 @@ node -e "JSON.parse(require('fs').readFileSync('docs/games/hints/<gameName>.json
 ## ID stability note
 
 Hint reveal state is keyed by `questionId` in localStorage. If you regenerate a hint file for an existing game, **preserve all existing `id` values**. Changing an ID silently resets that question's reveals for all users.
+
+## On completion — stamp provenance
+After the hint JSON is written/updated, record the step so `/studio` can detect staleness:
+```
+node tools/stamp-pipeline.cjs <game> hints
+```
+(Writes `docs/games/images/<game>/pipeline.json`. Dev-only — no app version bump. See
+`.tome/pipeline-provenance-stamps.md`.) Skip only if no `docs/games/images/<game>/` dir exists yet.

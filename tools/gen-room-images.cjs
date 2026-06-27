@@ -38,8 +38,18 @@
  *
  * FLAGS
  *   --prompt <text> --out <file>  ad-hoc single-image mode
+ *   --sbx <game>                  ad-hoc render straight into <game>/_sandbox as the next sbx-rN
+ *                                 (+ .txt/.json sidecar, exact prompt inlined) so it shows in
+ *                                 artview's Sandbox panel. Supply the prompt either as raw
+ *                                 --prompt <text>, OR as layer flags --artist/--scene/--aesthetic/
+ *                                 --app which are composed in the labeled ARTIST:/SCENE:/GAME:/APP:
+ *                                 format (ARTIST_LEAD auto-appended) and stored as editable fields.
+ *                                 Optional meta: --loc <slug> --loc-name <name> --artist-name <name>
  *   --pack <file>                 prompt-pack JSON (default: docs/games/images/<game>/room-facts.json)
  *   --only <slug>                 generate just one room from the pack
+ *   --sandbox                     PROTOTYPE target: route batch renders into <game>/_sandbox as
+ *                                 sbx-rN (artview Sandbox panel) instead of _review/<slug>.png.
+ *                                 Full layer composition + auto-relight preserved; never overwrites.
  *   --ref <image>                 feed this image as a reference (see --ref-mode)
  *   --ref-mode <style|edit>       how --ref is used. style (default) = art-direction
  *                                 reference, render a NEW scene from the prompt. edit =
@@ -106,14 +116,14 @@ function appPromptText() {
 // riso as riso, photo as photo). Aesthetics describe WORLD content only — lighting/palette
 // directives belong to the artist. Order: Artist ▸ Scene ▸ Aesthetic ▸ App. Kept identical to
 // review-server.cjs composedFor()/composedPrompt() so batch == reviewer.
-const ARTIST_LEAD = 'This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
+const ARTIST_LEAD = 'This medium is the PRIMARY instruction for STYLE: render the entire image in this medium and let it govern the linework, palette, colour treatment and finish. But the SCENE itself sets the overall brightness and value key: when the scene describes a dim, dark, or barely-lit space, render it genuinely low-key and shadow-dominated, mostly dark with only the light the scene names, and do NOT add light sources, glow, bright skies or bright reflective surfaces the scene does not mention in order to manufacture contrast.';
 function composeRoomPrompt(room, layers) {
   const scene = sceneFor(room, layers.scenes);
   return [
     layers.artist ? `${layers.artist} ${ARTIST_LEAD}` : '',
     scene ? `Scene: ${scene}` : '',
     layers.aesthetic ? `Aesthetic: ${layers.aesthetic}` : '',
-    appPromptText(),
+    appPromptText() ? `App: ${appPromptText()}` : '',
   ].filter(Boolean).join(' ');
 }
 
@@ -124,7 +134,7 @@ function parseArgs(argv) {
     const t = argv[i];
     if (t.startsWith('--')) {
       const key = t.slice(2);
-      const flagsNoVal = ['force', 'regen'];
+      const flagsNoVal = ['force', 'regen', 'sandbox'];
       if (flagsNoVal.includes(key)) { a[key] = true; }
       else { a[key] = argv[++i]; }
     } else {
@@ -307,6 +317,49 @@ async function main() {
     process.exit(2);
   }
 
+  // --sbx <game>: drop an ad-hoc render straight into that game's _sandbox as the next sbx-rN,
+  // with the full .txt + .json sidecar the artview Sandbox panel reads — so ANY image made from
+  // the CLI is immediately viewable in artview. Two ways to supply the prompt:
+  //   (a) layer flags --artist/--scene/--aesthetic/--app → composed in the SAME labeled, blank-
+  //       line-separated ARTIST:/SCENE:/GAME:/APP: format as review-server composeForRoom(), with
+  //       ARTIST_LEAD appended to the artist layer. The structured fields are stored too, so
+  //       clicking the render in artview repopulates every editable layer box.
+  //   (b) --prompt <text> → stored verbatim (raw), fields left blank.
+  // Optional meta: --loc <slug> --loc-name <name> --artist-name <name> --artist-id <id>.
+  if (args.sbx) {
+    const hasLayers = args.artist || args.scene || args.aesthetic || args.app;
+    if (!hasLayers && !args.prompt) { console.error('ERROR: --sbx needs either --prompt or layer flags (--artist/--scene/--aesthetic/--app).'); process.exit(2); }
+    const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+    const fields = { artist: args.artist || '', scene: args.scene || '', aesthetic: args.aesthetic || '', app: args.app || '' };
+    // Labelled, line-broken layers — identical shape to review-server composeForRoom() so the
+    // sidecar prompt reads the same as a live artview render (ARTIST: / SCENE: / GAME: / APP:).
+    const composed = hasLayers ? [
+      fields.artist ? `ARTIST: ${fields.artist} ${ARTIST_LEAD}` : '',
+      fields.scene ? `SCENE: ${fields.scene}` : '',
+      fields.aesthetic ? `GAME: ${capFirst(fields.aesthetic)}` : '',
+      fields.app ? `APP: ${fields.app}` : '',
+    ].filter(Boolean).join('\n\n') : args.prompt;
+    const sbxDir = path.join(REPO, 'docs/games/images', args.sbx, '_sandbox');
+    fs.mkdirSync(sbxDir, { recursive: true });
+    let max = 0;
+    for (const f of fs.readdirSync(sbxDir)) { const m = f.match(/^sbx-r(\d+)\.png$/i); if (m) max = Math.max(max, parseInt(m[1], 10)); }
+    const name = `sbx-r${max + 1}`;
+    const out = path.join(sbxDir, `${name}.png`);
+    process.stdout.write(`Generating → ${path.relative(REPO, out)} ... `);
+    const buf = await generateImage({ prompt: composed, refImagePath: args.ref, refMode: args['ref-mode'], apiKey, model, aspect, provider, quality });
+    fs.writeFileSync(out, buf);
+    fs.writeFileSync(path.join(sbxDir, `${name}.txt`), composed);
+    fs.writeFileSync(path.join(sbxDir, `${name}.json`), JSON.stringify({
+      artistId: args['artist-id'] || 'cli', artistName: args['artist-name'] || '(CLI)', edited: true,
+      locSlug: args.loc || '', locName: args['loc-name'] || args.loc || '',
+      ...fields,                       // app/artist/aesthetic/scene → repopulate the editable boxes
+      provider, quality, model,
+      prompt: composed,                // the EXACT sent prompt, shown inline in the Sandbox panel
+    }, null, 2));
+    console.log(`OK (${(buf.length / 1024).toFixed(0)} KB) → Sandbox ${name}`);
+    return;
+  }
+
   // --- ad-hoc single image ---
   if (args.prompt) {
     const out = args.out || path.join(REPO, 'docs/games/images/_adhoc.png');
@@ -369,6 +422,7 @@ async function main() {
   // and only the lighting/atmosphere changes (the validated shared-volume approach). Looks for the
   // committed image first, then the _review staging copy; null if the base isn't rendered yet.
   const anchorImageFor = (slug) => {
+    if (sbxRendered.has(slug)) return sbxRendered.get(slug);   // rendered into the sandbox this run
     const committed = path.join(gameDir, `${slug}.png`);
     if (fs.existsSync(committed)) return committed;
     const staged = path.join(reviewDir, `${slug}.png`);
@@ -377,12 +431,28 @@ async function main() {
   // Render anchors before the variants that depend on them, so a single full batch "just works".
   rooms = rooms.slice().sort((a, b) => (a.anchorRoom ? 1 : 0) - (b.anchorRoom ? 1 : 0));
 
+  // --sandbox: route batch renders into <game>/_sandbox as sbx-rN (artview Sandbox panel) instead
+  // of _review/<slug>.png. This is the PROTOTYPE target — full layer composition + auto-relight are
+  // preserved (unlike the ad-hoc --sbx path), but the output is a throwaway numbered take that never
+  // shadows a committed image. Default prototyping path; promote a keeper out of the sandbox later.
+  const toSandbox = !!args.sandbox;
+  const sbxDir = path.join(gameDir, '_sandbox');
+  let sbxMax = 0;
+  if (toSandbox) {
+    fs.mkdirSync(sbxDir, { recursive: true });
+    for (const f of fs.readdirSync(sbxDir)) { const m = f.match(/^sbx-r(\d+)\.png$/i); if (m) sbxMax = Math.max(sbxMax, parseInt(m[1], 10)); }
+  }
+  const sbxRendered = new Map(); // slug -> sandbox png path rendered THIS run (so a variant can relight off an anchor we just put in the sandbox)
+
   const qualNote = provider === 'openai' ? `, ${quality}` : '';
-  console.log(`Generating ${rooms.length} image(s) for ${game} → _review/  (${provider}: ${model}, ${aspect}${qualNote})${regen ? ' [regen]' : ''}`);
+  console.log(`Generating ${rooms.length} image(s) for ${game} → ${toSandbox ? '_sandbox/' : '_review/'}  (${provider}: ${model}, ${aspect}${qualNote})${regen ? ' [regen]' : ''}`);
   let ok = 0, skip = 0, fail = 0;
   for (const room of rooms) {
-    const out = path.join(reviewDir, `${room.slug}.png`);
-    if (fs.existsSync(out) && !args.force && !regen) { console.log(`  skip  ${room.slug} (exists; --force or --regen to replace)`); skip++; continue; }
+    // Sandbox renders are always-new numbered takes (never overwrite, no exists-skip); review
+    // renders write the canonical <slug>.png and respect --force/--regen.
+    const sbxName = toSandbox ? `sbx-r${++sbxMax}` : null;
+    const out = toSandbox ? path.join(sbxDir, `${sbxName}.png`) : path.join(reviewDir, `${room.slug}.png`);
+    if (!toSandbox && fs.existsSync(out) && !args.force && !regen) { console.log(`  skip  ${room.slug} (exists; --force or --regen to replace)`); skip++; continue; }
     // Default render: prompt-only (or whatever --ref the user passed explicitly).
     let composed = composeRoomPrompt(room, layers) + steer;
     let refImagePath = args.ref, refMode = args['ref-mode'];
@@ -398,19 +468,30 @@ async function main() {
     process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug}${refMode === 'edit' && room.anchorRoom ? ` (relight ← ${room.anchorRoom})` : ''} ... `);
     try {
       const buf = await generateImage({ prompt: composed, refImagePath, refMode, apiKey, model, aspect, provider, quality });
-      if (regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare
+      if (!toSandbox && regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare
       fs.writeFileSync(out, buf);
       fs.writeFileSync(out.replace(/\.png$/i, '.txt'), composed); // sidecar: exact prompt used
-      fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId: provId, artistName: provArtName, provider, quality, model }, null, 2)); // provenance sidecar (reviewer thumbnail chip)
-      console.log(`OK (${(buf.length / 1024).toFixed(0)} KB)${regen ? ' — prev kept' : ''}`);
+      if (toSandbox) {
+        // artview Sandbox panel sidecar: loc metadata + the exact prompt, shown inline.
+        fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({
+          artistId: provId || 'cli', artistName: provArtName || '(CLI)', edited: false,
+          locSlug: room.slug, locName: room.name || room.slug,
+          provider, quality, model, prompt: composed,
+        }, null, 2));
+        sbxRendered.set(room.slug, out);
+        console.log(`OK (${(buf.length / 1024).toFixed(0)} KB) → Sandbox ${sbxName}`);
+      } else {
+        fs.writeFileSync(out.replace(/\.png$/i, '.json'), JSON.stringify({ artistId: provId, artistName: provArtName, provider, quality, model }, null, 2)); // provenance sidecar (reviewer thumbnail chip)
+        console.log(`OK (${(buf.length / 1024).toFixed(0)} KB)${regen ? ' — prev kept' : ''}`);
+      }
       ok++;
     } catch (e) {
       console.log(`FAIL — ${e.message}`);
       fail++;
     }
   }
-  console.log(`\nDone: ${ok} ok, ${skip} skipped, ${fail} failed. Review: docs/games/images/${game}/_review/`);
-  if (ok) console.log(`Build a contact sheet: node tools/gen-room-review.cjs ${game}`);
+  console.log(`\nDone: ${ok} ok, ${skip} skipped, ${fail} failed. ${toSandbox ? `Sandbox: docs/games/images/${game}/_sandbox/ (view in artview)` : `Review: docs/games/images/${game}/_review/`}`);
+  if (ok && !toSandbox) console.log(`Build a contact sheet: node tools/gen-room-review.cjs ${game}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

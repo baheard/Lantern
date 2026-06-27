@@ -1,9 +1,18 @@
-﻿# The Dreamhold (Andrew Plotkin, 2004) -- canonical command list for headless replay
-# Source: IF Archive standard-mode walkthrough (Dreamhold-WalkthroughStandard.log)
-# Achieves maximum score 7 + 7 in standard mode (no expert mode). 438 turns.
-# No @random elements identified -- full walkthrough to end-game is included.
+﻿# The Dreamhold (Andrew Plotkin, 2004) -- verified command list for headless replay
+# Build: Release 5 / Serial 041231 (our docs/games/dreamhold.z8). Standard (tutorial) mode.
+# Source: IF Archive standard-mode walkthrough (Dreamhold-WalkthroughStandard.log); see dreamhold.txt header.
+# Reaches the true "portal" completion (Andrew Plotkin credits ending), 438 turns, max score 7 + 7.
 #
-# Verify: node tools/play.cjs dreamhold --file docs/games/walkthroughs/dreamhold.cmds.txt --strict
+# RANDOMIZATION: none. No @random gates; fully deterministic. Replays clean with the default seed.
+# Slug anchors (## [slug]) map front-to-back to dreamhold.puzzle-notes.md headings of the same slug.
+#
+# NOTE: near the end "put shred on mirror" then "undo" deliberately PEEKS an ending and backs out;
+#       the trunk then continues to the true portal ending. Likewise the [alt-ending] block walks the
+#       blue-flame west-shadow ending and "undo"s back. Verify with --strict (NOT --stop-on-death,
+#       which would halt at the first intentional ending peek).
+#
+# Verify: node tools/play.cjs dreamhold --strict --file docs/games/walkthroughs/dreamhold.cmds.txt
+## [cell-study] Cell + Crowded Study: white mask (1/7), copper key, study door
 inventory
 examine pen
 e
@@ -24,12 +33,14 @@ examine painting
 take painting
 examine door
 unlock door with copper key
+## [shed-glove] Dim Shed: the frost/fire glove (needed to pick berries bare-handed picking is refused)
 e
 s
 examine window
 e
 take glove
 examine glove
+## [mountain-gold] Mountain garden: white + orange berries, push the statue for gold mask (2/7)
 u
 u
 u
@@ -52,6 +63,7 @@ push statue
 take gold mask
 examine gold mask
 don gold mask
+## [mosaic-apple] Mosaic Room cage: the aging-apple red herring (the game's undo lesson)
 n
 n
 n
@@ -62,6 +74,7 @@ examine cage
 examine apple
 open cage
 w
+## [atelier-brown] Atelier telescope: travel into the painting on the easel — brown mask (3/7), string
 ne
 look in telescope
 n
@@ -87,6 +100,7 @@ n
 take string
 examine string
 s
+## [subterrane-dagger] Subterrane: "go away from light" through Darkness to the dagger; enter rent home
 sw
 nw
 n
@@ -105,6 +119,7 @@ enter rent
 stand
 examine fire
 take sphere
+## [domes-stars] Glowing sphere into the metal pyramid: light the Dark Dome -> Starry Dome; Cloak of Night
 e
 s
 w
@@ -138,7 +153,7 @@ examine doorstep
 n
 examine moth
 u
-## [before-catwalk] At Translucent Dome — about to climb out to the catwalk (daytime)
+## [shadow-bridge-day] Translucent Dome — climb out to the catwalk (daytime), light the wood pile
 u
 # → Catwalk, South
 w
@@ -155,7 +170,7 @@ examine copper triangle
 examine track
 examine wood
 put orange berry in wood
-## [before-catwalk-night] At Translucent Dome, fire lit — u goes directly to Catwalk, South; Night
+## [shadow-bridge-black] Night: walk the copper sail's shadow north to the Ledge — black mask (4/7)
 u
 # → Catwalk, South; Night  [night-variant node — same place as Catwalk, South above]
 w
@@ -179,6 +194,7 @@ d
 # → Translucent Dome
 d
 # → Starry Dome, North
+## [orrery-blue] Ride the orrery: catch the tan globe, drop to the floor — blue mask (5/7), belt, gauze
 d
 # → South Alcove
 n
@@ -239,6 +255,7 @@ don blue mask
 n
 take rag
 examine rag
+## [arboretum-key] Arboretum: smell the golden flower (memory), take the iron key for the study's south door
 u
 examine window
 n
@@ -246,6 +263,7 @@ take iron key
 smell flower
 stand
 s
+## [harp-river-green] Harp Chamber torch; freeze the black river into an ice bridge — green mask (6/7)
 e
 ne
 examine harp
@@ -263,6 +281,7 @@ w
 take green mask
 examine green mask
 don green mask
+## [pit-bracelet] Steam pit: freeze the rising heat with a white berry, climb down for the bracelet
 sw
 d
 put white berry in pit
@@ -273,6 +292,7 @@ wait
 wait
 d
 take bracelet
+## [cistern-red] The Cistern: drain/refill the black tide, plug the trough — red mask (7/7), buckler
 u
 u
 u
@@ -352,6 +372,7 @@ wait
 wait
 wait
 take buckler
+## [mirror] Curtained Room mirror: put all seven masks on it to restore the wizard's memory
 w
 sw
 s
@@ -372,6 +393,7 @@ put blue mask on mirror
 put black mask on mirror
 examine mirror
 stand
+## [laboratory-ink] Open the south door + break the privacy spell; mix the portal ink in the Laboratory
 w
 read book
 turn page
@@ -398,6 +420,7 @@ pull chain
 again
 take flask
 examine mural
+## [regalia-mural] Complete the mirror (black shred), don the regalia the mural names
 inventory
 don bracelet
 examine mural
@@ -417,6 +440,7 @@ e
 s
 w
 n
+## [alt-ending] Optional: rotate the copper sail west + cold blue flame, peek the "stars" ending, undo back
 u
 push copper triangle
 push copper triangle
@@ -442,6 +466,7 @@ e
 s
 d
 d
+## [draw-portal] Down to the Cell: dip pen in ink, draw the portal diagram, enter it — the true ending
 e
 e
 n

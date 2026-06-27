@@ -8,6 +8,50 @@ aliases: [artist persona, style layers, art prompt structure, app layer]
 
 # Art-direction model: App / Artist / Aesthetic / Scene
 
+## 2026-06-26 — value-key belongs to the SCENE; palette/colour belongs to the ARTIST
+**Symptom (user, Dreamhold dark domes):** rooms whose scene text explicitly says "dim under a diffuse
+colourless light" rendered as bright overcast cathedrals — a luminous floor + an invented back-wall
+glow. Confirmed by eye (`illustration-plate__dark-dome-center` audition).
+
+**Cause — two layers both pushing bright, neither the scene's fault:**
+1. The old `ARTIST_LEAD` told the model the medium governs **lighting** "over any atmospheric notes
+   that follow." The scene's "dim" IS such a note, so it was demoted.
+2. gpt-image-2 has a strong **"manufacture contrast"** reflex: told a medium must have "real contrast,
+   never flat/washed-out" (the house ink style's wording) in a dark room, it INVENTS a light source
+   (bright floor, glow) to satisfy the quota — making a *bright image with a dark silhouette* instead
+   of a *dark image*. The problem is the **overall value KEY**, not local contrast.
+3. The Dreamhold aesthetic ("luminous wonder, sunlit, glowing") added a third bright push onto every
+   scene including the dark ones.
+
+**Fix — three changes, all engine-level (not per-room):**
+- **Reworded `ARTIST_LEAD`** (×3 copies): the medium governs *linework/palette/colour-treatment/finish*,
+  but the **SCENE sets brightness/value-key** — dim scenes render genuinely low-key/shadow-dominated,
+  and explicitly "do NOT add light sources, glow, bright skies or bright reflective surfaces the scene
+  does not mention to manufacture contrast." The **enumerated prohibition is the heavy lifter** — vague
+  "render it dim" does NOT stop gpt-image-2; the explicit list does.
+- **Exterior-scoped the Dreamhold aesthetic**: "open-air exteriors radiant and sunlit … deep interiors
+  and vast caverns dim and hushed, each lit only as its own sources allow." Keeps sunny exteriors,
+  stops the brightness bleeding onto interiors.
+- Verified at OpenAI-low across three scenes: dark-dome-center (ink) → genuinely dim; mountain-garden
+  (ink) → still fully sunlit (bright survives off scene text alone); **dark-dome-center rendered by the
+  cheerful `picture-book` medium → went dark too** (the lead drags even a bright-leaning artist into the
+  dark). Renders live in `dreamhold/_sandbox/` (sbx-r3..r6).
+
+**The crucial boundary — why the lead stops at value-key and does NOT hand HUE to the scene:**
+colour is the **medium's** domain so **monochrome media keep working**. A scene "red glow" →
+*copperplate/broadsheet/drypoint* render it as a bright tonal area in sepia (hue lost, glow kept);
+*ink-watercolour* renders it as actual red (full-colour medium). If the lead forced "render the colours
+the scene names faithfully," it would BREAK every monochrome artist. So: **brightness = scene, colour =
+artist.** This narrows the older "artist is SOVEREIGN over lighting" rule (below) — the artist is
+sovereign over *how* light/colour is depicted (medium treatment), not over *how bright* the room is.
+
+**Tooling:** added `gen-room-images.cjs --sbx <game>` so any CLI render lands in artview's Sandbox with
+a full labeled sidecar (composes `--artist/--scene/--aesthetic/--app` in the `ARTIST:/SCENE:/GAME:/APP:`
+format + fills editable fields; or stores raw `--prompt`). Standard now: images Claude generates ad-hoc
+go to `_sandbox` so the user can always view them, with the exact sent prompt inlined (never a file
+pointer).
+
+
 Location-art prompts compose **four independent layers** (App added 2026-06-18; was three).
 Keeping them separate is what lets one art identity span every game without per-game restyling.
 
@@ -37,11 +81,12 @@ Keeping them separate is what lets one art identity span every game without per-
 
 Composed prompt — **order matters, the artist LEADS so the medium isn't drowned**:
 `Artist + " " + ARTIST_LEAD + " Scene: …" + " Aesthetic: …" + " " + App`. The `ARTIST_LEAD` clause
-tells the model the medium governs lighting/colour/finish over the atmospheric notes that follow —
-that's artist-sovereignty in code. Defined identically in `gen-room-images.cjs`, `review-server.cjs`
-server (`composedFor`) and client (`composedPrompt`); keep all three in sync. (Was `App ▸ Artist ▸
-Aesthetic ▸ Scene` before 2026-06-22 — that order buried the artist and collapsed every medium into
-one dark render; see the 2026-06-22 section.)
+tells the model the medium governs **palette/colour-treatment/finish**, but the **SCENE sets the
+brightness/value-key** (the 2026-06-26 refinement below — earlier the lead said the artist governs
+*lighting* too, which washed dim rooms bright). Defined identically in `gen-room-images.cjs`,
+`review-server.cjs` server (`composedFor`) and client (`composedPrompt`); keep all three in sync.
+(Was `App ▸ Artist ▸ Aesthetic ▸ Scene` before 2026-06-22 — that order buried the artist and
+collapsed every medium into one dark render; see the 2026-06-22 section.)
 
 ## Authoring a game aesthetic — the rules (codified 2026-06-22)
 There was no rule for this before — aesthetics were typed ad-hoc into the artview "Style · this

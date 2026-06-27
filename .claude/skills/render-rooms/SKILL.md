@@ -24,6 +24,12 @@ generate-room-facts → mold → [render-rooms]
    - a named subset (comma-separated slugs): `node tools/gen-room-images.cjs <game> --only a,b,c`
    - The renderer **skips rooms that already have a `_review/<slug>.png`** unless `--force`/`--regen`,
      so "render the missing ones" is just the plain all-rooms call.
+   - **PROTOTYPES / "render X again to see" / iteration → `--sandbox --provider openai --quality low`.**
+     Always both: route into `<game>/_sandbox` as `sbx-rN` (artview Sandbox panel, full layer
+     composition + auto-relight preserved, never overwrites) AND use the cheapest OpenAI model —
+     including relights (do NOT fall back to Gemini for prototype relights). `_review` is the
+     promote-candidate slot — never a scratchpad. Only target `_review` (and reserve Gemini /
+     `--quality high`) when the user is choosing/committing a take headed for promotion.
 3. Pick the provider (cost — see `.tome/art-generation-providers.md`):
    - default/cheap prototyping: `--provider openai --quality low` (~$0.006/img) — the art default.
    - finals: `--provider gemini` (Nano Banana, native 3:4) or `--quality high` (OpenAI, ~$0.21).
@@ -57,3 +63,12 @@ candidate yet, render it first (above).
 - Dev-only output — do NOT bump the app version.
 - If a room looks wrong, the fix belongs upstream: scene/geometry → `mold`; palette/mood →
   Aesthetic; medium/edges → Artist. Re-render after. Don't hand-tweak prompts here.
+
+## On completion — stamp provenance
+After promoting committed art (a render+promote pass that meaningfully advances the rendered count),
+record the step so `/studio` can detect staleness:
+```
+node tools/stamp-pipeline.cjs <game> render
+```
+(Writes `docs/games/images/<game>/pipeline.json`. Dev-only — no app version bump. See
+`.tome/pipeline-provenance-stamps.md`.)

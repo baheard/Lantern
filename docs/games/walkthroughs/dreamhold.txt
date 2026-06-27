@@ -1,4 +1,17 @@
-﻿The following is a transcript of a walk through the interactive fiction
+﻿=== TRACE-WALKTHROUGH SOURCE HEADER =========================================
+Game:      The Dreamhold (Andrew Plotkin, 2004)
+Build:     Release 5 / Serial 041231 / Inform v6.21 Lib 6/10  (our docs/games/dreamhold.z8 — exact match)
+Mode:      Standard (tutorial) mode; final score 7 + 7 in 438 turns
+Source:    IF Archive standard-mode walkthrough transcript "Dreamhold-WalkthroughStandard.log"
+           https://unbox.ifarchive.org/0uw2o1bsay/Dreamhold-WalkthroughStandard.log
+Secondary: David Welbourn solution (based on Release 4) https://www.plover.net/~davidw/sol/dreamhold.html
+           IFDB game page https://ifdb.org/viewgame?id=3myqnrs64nbtwdaz
+Retrieved: 2026-06-25
+Note:      The standard-mode transcript below targets our exact Release 5 build (banner confirms
+           "Release 5 / Serial number 041231"). Full raw transcript preserved verbatim.
+=============================================================================
+
+The following is a transcript of a walk through the interactive fiction
 title "The Dreamhold" in standard mode.  As far as practical, it relies on
 logical actions as determined from information already revealed in the
 current session and the reasonable expectations of a player familiar with

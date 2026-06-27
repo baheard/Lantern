@@ -244,11 +244,13 @@ function saveBlockoutNote({ game, volume, view, text }) {
 // Capitalize first letter (mirrors the client's cap() so server-composed audition
 // prompts match the reviewer's Composed prompt exactly).
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-// Artist medium leads the composed prompt and is told to govern lighting/finish, so the
-// chosen medium actually renders instead of collapsing into the aesthetic's tone. Aesthetics
-// describe WORLD content only; lighting/palette belongs to the artist. Must match the same
-// constant in gen-room-images.cjs and the client composedPrompt() so all three agree.
-const ARTIST_LEAD = 'This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
+// Artist medium leads the composed prompt and governs STYLE (linework/palette/finish) so the
+// chosen medium actually renders instead of collapsing into the aesthetic's tone — but the SCENE,
+// not the artist, sets the brightness/value-key, so source-grounded dim scenes stay genuinely dark
+// instead of being washed bright to satisfy the medium's contrast/cheer. Aesthetics describe WORLD
+// content (with at most an exterior/interior light *tendency*); per-scene light is the authority.
+// Must match the same constant in gen-room-images.cjs and the client composedPrompt() so all three agree.
+const ARTIST_LEAD = 'This medium is the PRIMARY instruction for STYLE: render the entire image in this medium and let it govern the linework, palette, colour treatment and finish. But the SCENE itself sets the overall brightness and value key: when the scene describes a dim, dark, or barely-lit space, render it genuinely low-key and shadow-dominated, mostly dark with only the light the scene names, and do NOT add light sources, glow, bright skies or bright reflective surfaces the scene does not mention in order to manufacture contrast.';
 
 function candidatesFor(g, slug) {
   if (!fs.existsSync(g.review)) return [];
@@ -627,7 +629,7 @@ function composedFor(slug, artistId, sceneSlug) {
   const sc = (style.scenes[sceneSlug] && style.scenes[sceneSlug].trim()) || room.description || sceneDefault || '';
   // Artist LEADS + governs lighting (see ARTIST_LEAD). Order: Artist ▸ Scene ▸ Aesthetic ▸ App.
   return [a && a.style ? (a.style + ' ' + ARTIST_LEAD) : '', sc ? ('Scene: ' + sc) : '',
-    style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '', appPrompt()].filter(Boolean).join(' ');
+    style.aesthetic ? ('Aesthetic: ' + cap(style.aesthetic)) : '', appPrompt() ? ('App: ' + appPrompt()) : ''].filter(Boolean).join(' ');
 }
 // Heuristic scene classifier so we can auto-suggest a stress-test trio: one exterior
 // (weather/light), one dim interior (chiaroscuro/darks), one signature room. Best-effort
@@ -1022,6 +1024,14 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/img/review') return sendImg(res, path.join(gamePaths(q.get('game') || '').review, path.basename(q.get('f') || '')));
     if (u.pathname === '/img/committed') return sendImg(res, path.join(gamePaths(q.get('game') || '').dir, path.basename(q.get('f') || '')));
     if (u.pathname === '/img/artist') return sendImg(res, path.join(artistsDir, path.basename(q.get('f') || '')));
+    // Actual prompt for an audition cell, from its _audition/<f>.txt sidecar (the lightbox shows
+    // it under the notes; loc-mode reads candidatePrompts client-side, so this is aud-only).
+    if (u.pathname === '/api/aud-prompt') {
+      const g = gamePaths(q.get('game') || '');
+      const tp = path.join(g.audition, path.basename(q.get('f') || '').replace(/\.png$/i, '') + '.txt');
+      let prompt = ''; try { prompt = fs.readFileSync(tp, 'utf8'); } catch (e) {}
+      return sendJSON(res, 200, { prompt });
+    }
 
     if (req.method === 'POST') {
       const body = await readBody(req);
@@ -1238,7 +1248,13 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
   #lb.notes .lbnext{right:360px}
   #lb .lbnotes label.ed{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#e0b766;margin-bottom:2px}
   #lb .lbnotefor{font-size:11.5px;color:#8a8398;word-break:break-word;line-height:1.4}
-  #lb .lbnotes textarea.edit{flex:1;width:100%;box-sizing:border-box;min-height:120px;resize:none}
+  #lb .lbnotes textarea.edit{flex:0 0 auto;height:150px;width:100%;box-sizing:border-box;min-height:90px;resize:vertical}
+  /* Lower half of the lightbox notes column: the actual prompt that made the zoomed image. */
+  #lb .lbnotes label.edp{margin-top:8px}
+  #lb .lbprompt{flex:1;min-height:0;width:100%;box-sizing:border-box;overflow:auto;font-size:11px;line-height:1.45;
+    color:#7fd4c8;white-space:pre-wrap;word-break:break-word;background:#0f1418;border:1px solid #234;border-radius:7px;
+    padding:8px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  #lb .lbprompt.empty{color:#5a5568;font-style:italic;font-family:inherit}
   /* Note flag chip + status actions. Resolved/wontfix grey the note so it reads as handled. */
   .noteflag:empty{display:none}
   .noteflag{font-size:10px;font-weight:700;letter-spacing:.04em;padding:1px 7px;border-radius:5px;margin-left:8px;vertical-align:1px}
@@ -1379,7 +1395,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Art Review
 <div id="items"><div id="itemhead"></div><input id="itemfilter" placeholder="Filter locations…" autocomplete="off" spellcheck="false" style="display:none"><div id="itemlist"></div></div>
 <div id="detail"><p class="none">Loading…</p></div>
 <div id="lb"><button class="lbnav lbprev" title="Previous">‹</button><img alt=""><button class="lbnav lbnext" title="Next">›</button><button class="lbfin" title="Toggle finalist (F)">☆ Finalist</button><div class="lbcap"></div>
-  <div class="lbnotes" id="lbNotes"><label class="ed">Notes / feedback<span class="noteflag" id="lbNoteFlag"></span></label><div class="lbnotefor" id="lbNoteFor"></div><textarea class="edit" id="lbNote" placeholder="What you think of THIS image — Claude reads these to tune the artist. Saved to the same notes as the location screen."></textarea><div class="noteacts" id="lbNoteActs"></div></div></div>
+  <div class="lbnotes" id="lbNotes"><label class="ed">Notes / feedback<span class="noteflag" id="lbNoteFlag"></span></label><div class="lbnotefor" id="lbNoteFor"></div><textarea class="edit" id="lbNote" placeholder="What you think of THIS image — Claude reads these to tune the artist. Saved to the same notes as the location screen."></textarea><div class="noteacts" id="lbNoteActs"></div><label class="ed edp">Actual prompt used</label><div class="lbprompt empty" id="lbPrompt">(none)</div></div></div>
 <div id="modal"></div>
 <div id="gens"></div>
 <button id="logsBtn" title="Generation logs (this server)" onclick="toggleLogs()"><span class="dot"></span>Logs</button>
@@ -1850,7 +1866,7 @@ function renderNoteStatus(k){
 // Scene box or the In-game prose updates the Composed prompt in real time).
 // Artist medium leads + governs lighting (keep in sync with ARTIST_LEAD in review-server.cjs
 // server scope and gen-room-images.cjs).
-const ARTIST_LEAD='This medium and its rendering are the PRIMARY instruction: render the entire image in this style, and let it govern the lighting, colour and finish over any atmospheric notes that follow.';
+const ARTIST_LEAD='This medium is the PRIMARY instruction for STYLE: render the entire image in this medium and let it govern the linework, palette, colour treatment and finish. But the SCENE itself sets the overall brightness and value key: when the scene describes a dim, dark, or barely-lit space, render it genuinely low-key and shadow-dominated, mostly dark with only the light the scene names, and do NOT add light sources, glow, bright skies or bright reflective surfaces the scene does not mention in order to manufacture contrast.';
 function composedPrompt(){
   const gi=GAMEINFO[curGame]||{}; const l=curLoc||{};
   const app=gi.app||'';
@@ -1858,7 +1874,7 @@ function composedPrompt(){
   const aes=gi.aesthetic||'';
   const sc=(l.sceneOverride&&l.sceneOverride.trim())||l.description||l.sceneDefault||'';
   // SENT order: Artist (leads, governs lighting) ▸ Scene ▸ Aesthetic ▸ App.
-  return [art?(art+' '+ARTIST_LEAD):'', sc?('Scene: '+sc):'', aes?('Aesthetic: '+cap(aes)):'', app].filter(Boolean).join(' ');
+  return [art?(art+' '+ARTIST_LEAD):'', sc?('Scene: '+sc):'', aes?('Aesthetic: '+cap(aes)):'', app?('App: '+app):''].filter(Boolean).join(' ');
 }
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 // DISPLAY ONLY: split a composed prompt into Artist / Aesthetic / Scene paragraphs at the
@@ -1866,7 +1882,7 @@ const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 // What's SENT to the generator is unchanged — this only formats the on-screen text.
 // NOTE: this lives inside the PAGE template literal, so a literal backslash-n must be written
 // as a double backslash escape, or it becomes a real newline and breaks the client JS.
-function breakPrompt(t){ return (t||'').replace(/\\s*(Artist:|Aesthetic:|Scene:)/g,'\\n\\n$1'); }
+function breakPrompt(t){ return (t||'').replace(/\\s*(Artist:|Aesthetic:|Scene:|App:)/g,'\\n\\n$1'); }
 function updateComposed(){ const c=$('#composed'); if(c) c.textContent=breakPrompt(composedPrompt()); }
 async function doRegen(l){
   // Build the prompt + (optional) image reference from the selected mode:
@@ -2442,6 +2458,20 @@ function loadLBNote(f){
     if(lbMode==='loc'){ const di=$('#inote'); if(di){ di.value=ta.value; renderNoteStatus(k); } } };
   renderLBNoteStatus(k);
 }
+// Fill the lower half of the notes column with the ACTUAL prompt that made the zoomed image.
+// loc mode reads the in-memory candidatePrompts; aud mode fetches the _audition/<f>.txt sidecar.
+function loadLBPrompt(f){
+  const el=$('#lbPrompt'); if(!el) return;
+  const set=t=>{ const s=(t||'').trim();
+    if(s){ el.textContent=breakPrompt(s); el.classList.remove('empty'); }
+    else { el.textContent='(no recorded prompt for this image)'; el.classList.add('empty'); } };
+  if(!f){ set(''); return; }
+  if(lbMode==='loc'){ const l=(GAMES[curGame]||[]).find(x=>x.slug===curItem); set(l&&(l.candidatePrompts||{})[f]); return; }
+  if(lbMode==='aud'){ el.textContent='loading…'; el.classList.add('empty');
+    fetch('/api/aud-prompt?game='+encodeURIComponent(curGame)+'&f='+encodeURIComponent(f))
+      .then(r=>r.json()).then(d=>{ if(lbOpen&&lbList()[lbIndex]===f) set(d&&d.prompt); }).catch(()=>set('')); return; }
+  set('');   // artist examples have no per-image prompt provenance
+}
 const lbList=()=>{
   if(lbMode==='artist') return (curArtist&&curArtist.examples||[]).map(e=>e.file);
   if(lbMode==='aud') return audLBList;
@@ -2471,6 +2501,7 @@ function renderLB(){
     sel=f; updateSelUI();   // keep the main view in sync with what's shown full screen
   }
   loadLBNote(f);
+  loadLBPrompt(f);
 }
 // Single arbitrary-URL lightbox (borrowed audition images live in sandbox/review dirs, not
 // the audition list — so they get a one-off view with no prev/next stepping).

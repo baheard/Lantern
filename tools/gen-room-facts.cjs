@@ -19,7 +19,7 @@
  *   node tools/gen-room-facts.cjs anchorhead --seed 1 --style gothic
  *   node tools/gen-room-facts.cjs anchorhead --out docs/games/images/anchorhead/room-facts.json
  *
- * Writes <gamedir>/room-facts.json (machine, for gen-room-images.cjs) and room-facts.md (human).
+ * Writes <gamedir>/room-facts.json (machine, for gen-room-images.cjs).
  */
 
 const fs = require('fs');
@@ -218,6 +218,17 @@ const LOOK_DIR_RE = /^look\s+(up|down|behind|under|through|out|inside|in)\b/i;
 const TAKE_RE = /^(?:get|take|grab|pick up)\s+(.+)/i;
 const OBJ_STOP = new Set(['the','a','an','my','your','his','her','some','that','this']);
 const EXAMINE_SKIP = new Set(['me','self','myself','around','room','it','them','here']);
+// Pristine-state tracking: a room is "pristine" until the walkthrough MUTATES it (opens a
+// container, pushes/pulls a fixture, drops/puts an item, etc.). Examines captured AFTER a
+// mutation describe a state a first-time visitor never sees — most damagingly, container
+// contents (Dreamhold's `examine wire` after `open pyramid` reveals the spiralled-cone basket
+// that lives INSIDE the closed pyramid). Folding those into the establishing scene puts the
+// spiral on the floor beside the pyramid. These verbs do NOT break pristine: pure inspection
+// and meta/no-op commands. Everything else (open/close/push/pull/move/turn/drop/put/take/…)
+// does — so mergeExamines can drop non-pristine examines and let mold judge from a clean view.
+const PRISTINE_INERT = new Set(['look','l','examine','x','search','read','consult','inventory','i',
+  'wait','z','score','about','help','verbose','brief','undo','again','g','save','restore']);
+function breaksPristine(verb) { return !!verb && !MOVES.has(verb) && !PRISTINE_INERT.has(verb); }
 // Visually load-bearing fixture classes whose APPEARANCE usually lives in an EXAMINE, not the
 // room summary (a "portrait" in the prose, but the gentleman/fireplace/door only in `examine
 // portrait`). Walkthroughs examine for PUZZLE reasons, not visual ones, so these are routinely
@@ -253,6 +264,7 @@ function mergeExamines(baseScene, examines, takenHeads) {
   const adds = [];
   for (const e of examines) {
     if (!e.obj || takenHeads.has(e.obj)) continue;   // takeable → leave to the room text
+    if (e.pristine === false) continue;              // captured after a room mutation (e.g. container contents) → not a first-entry view
     for (const s of splitSentences(visualCore(e.resp))) {
       const k = normSent(s);
       if (!k || seen.has(k)) continue;
@@ -331,19 +343,23 @@ async function buildSnapshotsIncremental(game, seed, cmdsPath, firstVisitIdx) {
 
 // Probe all 12 directions from a snapshot. Returns found[] = { dir, location, description }.
 // knownNames is checked (not mutated here) so callers de-dup before registering.
+// ONE spawn via play.cjs --probe-exits (restores the base in a fresh realm per direction inside a
+// single process), not 12 — the lib source compiles once and only re-runs per realm. Output is the
+// 12 per-direction transcripts delimited by `@@PROBE-EXIT dir=<dir>`; each chunk parses exactly like
+// a standalone `--snapshot-in … --cmds <dir> --status` run did, so parseProbeResult is unchanged.
 const PROBE_DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'u', 'd', 'in', 'out'];
 async function probeFromSnap(game, seed, snapPath, knownNames, parentRoom) {
-  const results = await Promise.all(PROBE_DIRS.map((dir) =>
-    execAsync([
-      path.join(REPO, 'tools/play.cjs'), game,
-      '--snapshot-in', snapPath, '--cmds', dir,
-      '--status', '--seed', String(seed),
-    ], { maxBuffer: 16 * 1024 * 1024, cwd: REPO, timeout: 15000 })
-    .then((out) => ({ dir, out }))
-  ));
+  const out = await execAsync([
+    path.join(REPO, 'tools/play.cjs'), game,
+    '--snapshot-in', snapPath, '--probe-exits', '--dirs', PROBE_DIRS.join(';'),
+    '--status', '--seed', String(seed),
+  ], { maxBuffer: 64 * 1024 * 1024, cwd: REPO, timeout: 60000 });
   const found = [];
-  for (const { dir, out } of results) {
-    const r = parseProbeResult(out, parentRoom, knownNames);
+  for (const part of out.split(/@@PROBE-EXIT dir=/).slice(1)) {
+    const nl = part.indexOf('\n');
+    const dir = (nl === -1 ? part : part.slice(0, nl)).trim();
+    const transcript = nl === -1 ? '' : part.slice(nl + 1);
+    const r = parseProbeResult(transcript, parentRoom, knownNames);
     if (r) found.push({ dir, location: r.location, description: r.description });
   }
   return found;
@@ -411,10 +427,11 @@ async function exploreChronological(game, seed, cmdsPath, locs, seedIdxOverride)
   const firstVisitIdx = new Map();
   for (const L of locs.values()) { if (L.firstVisitIdx !== null) firstVisitIdx.set(L.name, L.firstVisitIdx); }
 
-  // Seed 2 — the SEED set for exploration. Default: every spine room's first-visit snapshot.
-  // `seedIdxOverride` (e.g. aggressive action-boundary seeding) swaps in a smaller set to cut cost.
+  // Seed 2 — the SEED set for exploration. Default: action-boundary seeding (the caller-supplied
+  // `seedIdxOverride`, a small set keyed on post-action room entries). `--full-seeds` passes null,
+  // falling back to every spine room's first-visit snapshot (exhaustive but ~3–4× costlier).
   const seedIdx = seedIdxOverride || firstVisitIdx;
-  process.stderr.write(`\n[explore] Building ${seedIdx.size} seed snapshots${seedIdxOverride ? ' (aggressive action-boundary)' : ''}…\n`);
+  process.stderr.write(`\n[explore] Building ${seedIdx.size} seed snapshots${seedIdxOverride ? ' (action-boundary)' : ' (per-room / --full-seeds)'}…\n`);
   let spineSnaps;
   try {
     spineSnaps = await buildSnapshotsIncremental(game, seed, cmdsPath, seedIdx);
@@ -696,7 +713,7 @@ async function main() {
   // Build per-location data: first-seen description + exit edges from movement.
   const locs = new Map(); // name -> { name, slug, description, exits: Map<dir,dest>, examines: [], firstVisitIdx }
   function ensure(name) {
-    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, transition: null, exits: new Map(), examines: [], firstVisitIdx: null });
+    if (!locs.has(name)) locs.set(name, { name, slug: slugify(name), description: null, transition: null, exits: new Map(), examines: [], firstVisitIdx: null, pristine: true });
     return locs.get(name);
   }
   // Objects the walkthrough TAKES anywhere = removable; their EXAMINE detail is kept out of the
@@ -714,18 +731,22 @@ async function main() {
       else if (!L.transition) { const tr = extractTransition(t); if (tr) L.transition = tr; }
     }
     const fullCmd = (t.command || '').trim();
+    const verb = fullCmd.toLowerCase().split(/\s+/)[0];
     let mm;
     if ((mm = fullCmd.match(TAKE_RE))) { const h = objectHead(mm[1]); if (h) takenHeads.add(h); }
     if ((mm = fullCmd.match(EXAMINE_RE))) {
       const obj = objectHead(mm[1]);
       if (obj && !EXAMINE_SKIP.has(obj)) {
         const resp = extractResponse(t);
-        if (resp) L.examines.push({ obj, resp });
+        if (resp) L.examines.push({ obj, resp, pristine: L.pristine });
       }
     } else if ((mm = fullCmd.match(LOOK_DIR_RE))) {
       const resp = extractResponse(t);
-      if (resp) L.examines.push({ obj: 'look-' + mm[1].toLowerCase(), resp });
+      if (resp) L.examines.push({ obj: 'look-' + mm[1].toLowerCase(), resp, pristine: L.pristine });
     }
+    // Latch this room non-pristine once the walkthrough mutates it (open/push/drop/put/…), so any
+    // LATER examine here is recognized as a post-mutation view and dropped by mergeExamines.
+    if (breaksPristine(verb)) L.pristine = false;
     // Exit edge: t.command is the command that ARRIVED at t.location from the previous turn.
     // Record the exit on the SOURCE (previous) location so the direction matches the actual
     // movement command used, not a stale command from a prior blocked attempt.
@@ -743,15 +764,28 @@ async function main() {
   // Chronological exploration: discover every reachable room (spine, optional, puzzle-locked) and
   // capture each in the earliest pre-puzzle state we can reach it. Subsumes the old game-start BFS
   // and spine branch-probe in one priority-ordered pass.
-  // --aggressive-seeds (experimental): instead of one seed per room (first-visit), seed only the
-  // first room entered AFTER each state-changing action, treating ALL inventory verbs — including
-  // get/take — as inert. Fewer distinct seed timestamps → less room@ts overlap → faster, but risks
-  // dropping a seed in a pristine window whose ONLY opening action is an inventory verb. (Theatre is
-  // safe: its gate is a `wait` for a thug to clear, not a `get`.) Measures the cost/coverage trade-off.
+  // SEEDING (default = action-boundary): seed the BFS only at the first room entered AFTER each
+  // state-changing action, treating inspection AND inventory verbs (get/take/drop/…) as inert.
+  // Far fewer distinct seed timestamps than one-seed-per-room → much less `room@ts` overlap → the
+  // exploration cost drops ~3–4× (Dreamhold: 26 seeds / 863 room-states vs 95 seeds / 2939).
+  //
+  // Coverage vs the old per-room path is byte-identical EXCEPT for rooms whose ONLY pre-mutation
+  // (pristine) window is reached via a verb this heuristic treats as inert — those get captured in
+  // a slightly later state. Validated on Dreamhold: 94/96 rooms identical; the 2 that differ are the
+  // pit pair (Ledge/Deep in Pit), captured post-warming / with the dropped torch instead of pristine.
+  // Such cases are a `mold` scene-override fix, not a coverage loss (the room is still in the pack).
+  //
+  // --full-seeds restores the exhaustive per-room seeding (one seed per room's first-visit) for the
+  // rare game where the pristine-window difference matters across many rooms — slow but maximal.
   let seedIdxOverride = null;
-  if (args['aggressive-seeds']) {
+  if (!args['full-seeds']) {
     const INSPECT = new Set(['look', 'l', 'examine', 'x', 'search', 'read']);
-    const IGNORE = new Set(['get', 'take', 'drop', 'put', 'wear', 'remove', 'show', 'give', 'pick', 'eat', 'drink']);
+    // Manipulation verbs that DEMONSTRABLY mutate room appearance stay armed (take/get/put):
+    // `take torch` (→ later auto-drop lands it on the Ledge) and `put white berry in pit`
+    // (→ Deep in Pit freezes) each gated a pristine window the old IGNORE set silently lost.
+    // Costs ~+14 seeds on Dreamhold (39 vs 25) — still ~2.4× under full per-room seeding.
+    // drop/wear/remove/etc. stay inert (no observed room-appearance effect; cheap to assume).
+    const IGNORE = new Set(['drop', 'wear', 'remove', 'show', 'give', 'pick', 'eat', 'drink']);
     seedIdxOverride = new Map();
     let armed = false;
     for (let i = 1; i < turns.length; i++) {
@@ -760,7 +794,7 @@ async function main() {
       else if (INSPECT.has(verb)) { /* inert */ }
       else if (!IGNORE.has(verb)) armed = true;
     }
-    console.error(`[aggressive] ${seedIdxOverride.size} action-boundary seeds (vs ${[...locs.values()].filter((L) => L.firstVisitIdx !== null).length} per-room)`);
+    console.error(`[seeds] ${seedIdxOverride.size} action-boundary seeds (vs ${[...locs.values()].filter((L) => L.firstVisitIdx !== null).length} per-room; --full-seeds to force per-room)`);
   }
 
   // Chronological exploration: discover every reachable room (spine, optional, puzzle-locked) and
@@ -920,24 +954,8 @@ async function main() {
   const jsonOut = args.out || path.join(gameDir, 'room-facts.json');
   fs.writeFileSync(jsonOut, JSON.stringify(pack, null, 2));
 
-  // Human-readable companion.
-  const md = [`# ${game} — room-facts pack`, '',
-    `Style: **${styleKey}** · ${rooms.length} locations · from \`${pack.generatedFrom}\` (seed ${seed})`, '',
-    '---', ''];
-  for (const r of rooms) {
-    md.push(`## ${r.name}  \`${r.slug}\``);
-    if (r.exits.length) md.push(`**Exits:** ${r.exits.join(' · ')}`);
-    if (r.exitFacts) md.push(`**Exit form:** ${r.exitFacts.map((f) => f.kind === 'noun'
-      ? (f.ref + (f.traverse ? ' →' + f.traverse.destination : '') + (f.examine ? ': ' + f.examine.slice(0, 60) : ''))
-      : (f.ref + '→' + f.destination)).join('  ·  ')}`);
-    if (r.lookFacts) md.push(`**Look:** ${[r.lookFacts.up && 'up: ' + r.lookFacts.up.slice(0, 60), r.lookFacts.down && 'down: ' + r.lookFacts.down.slice(0, 60)].filter(Boolean).join('  ·  ')}`);
-    md.push('', '```', r.prompt, '```', '');
-  }
-  fs.writeFileSync(path.join(gameDir, 'room-facts.md'), md.join('\n'));
-
   console.error(`\nWrote ${rooms.length} room prompts:`);
   console.error(`  ${path.relative(REPO, jsonOut)}`);
-  console.error(`  ${path.relative(REPO, path.join(gameDir, 'room-facts.md'))}`);
 
   // --- Coverage report (loud + classified; replaces the old silent skipped[] line) ---
   const c = report;

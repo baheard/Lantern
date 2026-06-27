@@ -6,7 +6,7 @@ description: Build the per-room facts pack (room-facts.json) for a Lantern game'
 # generate-room-facts skill
 
 Produces the **room-facts pack** for a game — `docs/games/images/<game>/room-facts.json`
-(machine) + `room-facts.md` (human) — by replaying the game's verified walkthrough once and
+(machine; single source of truth, no `.md` mirror) — by replaying the game's verified walkthrough once and
 capturing, per distinct room: the canonical `locationName` (the same string the auto-mapper
 records, so images bind to map nodes by name), the room's description prose, and its real
 exits derived from the walkthrough's movement edges.
@@ -66,8 +66,9 @@ Useful flags (match the verified walkthrough's seed if it isn't the default):
 - `--out <path>` — override the output location (default `docs/games/images/<game>/room-facts.json`).
 
 It writes:
-- `docs/games/images/<game>/room-facts.json` — machine pack consumed by `tools/gen-room-images.cjs`.
-- `docs/games/images/<game>/room-facts.md` — human-readable companion.
+- `docs/games/images/<game>/room-facts.json` — machine pack consumed by `tools/gen-room-images.cjs`
+  (and reasoned over by mold, render-rooms, studio, etc.). This JSON is the single source of truth;
+  there is no `.md` mirror (dropped 2026-06-26 — nothing read it; ask Claude to read the JSON instead).
 
 ## After generating
 
@@ -104,3 +105,12 @@ It writes:
   Any per-room art direction the user added lives in `style.json` → `scenes[slug]` overrides,
   which are separate and survive a pack regen.
 - Headless replay mechanics (seeds, snapshots): `.tome/headless-replay-harness.md`.
+
+## On completion — stamp provenance
+After `room-facts.json` is (re)written, record the step so `/studio` can detect staleness:
+```
+node tools/stamp-pipeline.cjs <game> room-facts
+```
+(Writes `docs/games/images/<game>/pipeline.json`. Dev-only — no app version bump. See
+`.tome/pipeline-provenance-stamps.md`.) This is what lets `/studio` flag a `mold` done against an
+older pack as stale.
