@@ -200,8 +200,12 @@ console.log(`Snapshot written: docs/assets/${snapshotFile} (${Math.round(snapSiz
 
 // The injection one-liner: fetches the snapshot from the running dev server and
 // writes the full app-format save entry into localStorage.
+// Cache-bust the fetch: the PWA service worker caches /assets/*.json, so a plain
+// fetch() of a REBUILT snapshot is served the STALE prior body — silently injecting
+// the old VM state. The ?ts query + {cache:'no-store'} bypass the SW cache.
+// See .tome/go-to-snapshot-sw-cache.md.
 const injectSnippet =
-  `fetch('/assets/${snapshotFile}').then(r=>r.json()).then(s=>{` +
+  `fetch('/assets/${snapshotFile}?ts='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(s=>{` +
   `localStorage.setItem(` +
     `'${saveKey}',` +
     `JSON.stringify({` +
