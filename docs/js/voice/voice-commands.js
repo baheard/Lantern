@@ -172,6 +172,30 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
+  // "Turn off push-to-talk" — leave PTT mode by voice so you don't have to reach
+  // the settings toggle (#175). Reachable because PTT hold unmutes the mic while
+  // the button is held, so the spoken command is processed before re-muting.
+  {
+    const pttPhrase = lower.replace(/-/g, ' ').replace(/\s+/g, ' ');
+    if (/^(?:turn off|disable|stop|cancel|exit|end) push to talk(?: mode)?$/.test(pttPhrase) ||
+        /^push to talk(?: mode)? off$/.test(pttPhrase)) {
+      state.pendingCommandProcessed = true;
+      const toggle = document.getElementById('pushToTalkToggle');
+      if (toggle && toggle.checked) {
+        // Reuse the toggle's change handler for the full disable side-effects.
+        toggle.checked = false;
+        toggle.dispatchEvent(new Event('change'));
+      } else {
+        state.pushToTalkMode = false;
+        try { localStorage.setItem('lantern_push_to_talk', 'false'); } catch (e) { /* ignore */ }
+      }
+      // Resume continuous listening so the mic stays live after the button release.
+      await handlers.unmute();
+      speakAppMessage('Push to talk off. Continuous listening on.');
+      return false;
+    }
+  }
+
   // During narration, allow navigation commands but block game commands
   if (state.isNarrating && !state.pausedForSound) {
     if (NAVIGATION_COMMANDS.includes(lower) || SKIP_N_PATTERN.test(lower) || BACK_N_PATTERN.test(lower)) {
