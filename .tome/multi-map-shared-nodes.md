@@ -88,15 +88,26 @@ sheet shows "Go to other map" only for a shared node; jumps the active map to an
 map holding it and selects+centers it (cycles when on >2 maps). The amber ring is the
 indicator; this button is the navigation.
 
-## Deferred — full portal behavior
+## Auto-switch on traversal — DONE (v1.5.717)
 
-Still not built (the *automatic* version of the switch above):
-2. Traversing a connection whose far node lives on **another** map → **auto-switch maps**
-   (today it's a manual button, not triggered by in-game movement).
-3. Traversing toward a connection that doesn't exist → create it on the **current** map
-   (already today's auto-mapper behavior, preserved).
-4. When you create a portal, **that location's map becomes the default** that new nodes
-   get added to as you move (resolves the "which map am I on?" ambiguity).
+`handleLocationChange`: when leaving a **portal** node toward a room that isn't on
+this map but already exists + is connected on another map the portal spans,
+`switchMap` to that map instead of duplicating the room/edge here
+(`findPortalTargetMap`). Bidirectional. **Critical ordering gotcha:** this check
+runs BEFORE the `deletedNodes` guard — a room sent to another map is marked
+`deleted` on the source, so if the guard ran first it would `return` and the
+auto-switch never fires. (That was the bug in the first cut.)
+
+**Cross-map exit indicator** (`computePortalExits`, folded into
+`recomputeSharedIds`): for each active-map portal, finds headings that have an
+edge on another map but not here, stashes them transiently on the node as
+`_portalExits`; `map-render` draws dashed-amber spokes so the jump is predictable.
+
+This effectively also satisfies the old "which map am I on?" rule — after crossing
+a portal you're on the destination map, so newly-discovered rooms attach there.
+#144 phases 1–3 are complete; the only thing not built is a portal *toggle* to
+manually designate/undesignate a shared node as a portal (portals are currently
+implicit = any shared node).
 
 See also [[automap-two-build-paths]], [[automap-substate-node-collapse]],
 [[map-undo-snapshots]].
