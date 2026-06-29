@@ -539,8 +539,8 @@ async function applyArtBadge(card, gameName) {
   badge.title = 'AI art available';
   badge.setAttribute('aria-label', 'AI art available');
   badge.innerHTML = ART_BADGE_SVG;
-  // Art sits right after the save indicator; the hint badge trails it.
-  placeBadge(title, badge, ['[data-save-indicator]']);
+  // Art sits right after the ⓘ info icon; the hint badge trails it.
+  placeBadge(title, badge, ['.game-meta', '[data-save-indicator]']);
 }
 
 // Add the "AI Hints available" icon on a single game card — shown whenever the game
@@ -556,7 +556,7 @@ async function applyHintBadge(card, gameName) {
   badge.title = 'AI Hints available';
   badge.setAttribute('aria-label', 'AI Hints available');
   badge.innerHTML = HINT_BADGE_SVG;
-  placeBadge(title, badge, ['.art-badge', '[data-save-indicator]']);
+  placeBadge(title, badge, ['.art-badge', '.game-meta', '[data-save-indicator]']);
 }
 
 // Re-paint every card's art icon — called when the home default is toggled so the
