@@ -20,11 +20,11 @@
     { "name": "north jamb east", "box": [4.5, 11, 0.4], "at": [4.25, 5.5, -6.5], "role": "wall", "shell": true },
     { "name": "north lintel", "box": [4, 4.5, 0.4], "at": [0, 8.75, -6.5], "role": "wall", "shell": true },
 
-    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [0, 5, 0], "role": "machine", "detail": "vast stately brass disk standing upright (vertical), facing the entry; blue-glass globe at its centre, glass-globe wheels pirouetting on its face" },
-    { "name": "blue-glass globe (centre)", "sphere": 0.85, "at": [0, 5, 0], "color": "#3a66a0", "detail": "fixed blue-glass globe at the disk's centre, the disk revolving around it" },
-    { "name": "glass globe wheel 1", "sphere": 0.45, "at": [0.3, 7.4, 1.2], "color": "#7fa6c8", "detail": "small wheel bearing a glass globe, pirouetting on the disk face" },
-    { "name": "glass globe wheel 2", "sphere": 0.45, "at": [-0.3, 2.8, -1.4], "color": "#7fa6c8" },
-    { "name": "glass globe wheel 3", "sphere": 0.4, "at": [0.2, 5.6, 2], "color": "#7fa6c8" },
+    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [-2, 5, 0], "role": "machine", "detail": "vast stately brass disk standing upright (vertical), pushed toward the far (west) wall, its face toward the entry (east); revolves around the central globe" },
+    { "name": "blue-glass globe (centre/hub)", "sphere": 0.85, "at": [-2, 5, 0], "color": "#3a66a0", "detail": "fixed blue-glass globe at the disk's centre/hub; the disk revolves around it" },
+    { "name": "glass globe wheel 1", "sphere": 0.45, "at": [-1.5, 7.2, 1.4], "color": "#7fa6c8", "detail": "wheel bearing a glass globe, pirouetting ACROSS the disk's front (east) face — not through it" },
+    { "name": "glass globe wheel 2", "sphere": 0.45, "at": [-1.5, 3, -1.6], "color": "#7fa6c8" },
+    { "name": "glass globe wheel 3", "sphere": 0.4, "at": [-1.5, 5.4, 2.2], "color": "#7fa6c8" },
 
     { "name": "south alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, 8.6], "role": "floor", "detail": "small curved alcove off the south side" },
     { "name": "south alcove ladder rail E", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [0.45, 3.3, 9.6], "role": "ladder" },
@@ -35,18 +35,18 @@
   ],
   "cameras": {
     "orrery": {
-      "pos": [5.8, 3, 3.2],
-      "look": [-1.5, 5, -0.5],
-      "fov": 60
+      "pos": [5.8, 4, 1.8],
+      "look": [-2, 5, 0],
+      "fov": 56
     },
     "south-alcove": {
       "pos": [0, 2, 8.4],
-      "look": [0, 4.4, 0],
+      "look": [-2, 4.6, 0],
       "fov": 56
     },
     "north-alcove": {
       "pos": [0, 2, -8.4],
-      "look": [0, 4.4, 0],
+      "look": [-2, 4.6, 0],
       "fov": 56
     }
   },
