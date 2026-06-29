@@ -8,6 +8,15 @@ aliases: [portals, share to map, move to map, sharedId, cross-map nodes]
 
 # Multi-map shared nodes (portal groundwork)
 
+> **STATUS (v1.5.718): portals ON HOLD.** The whole portal layer is gated behind
+> `PORTALS_ENABLED` (map-config.js, currently `false`) — code intact + commented,
+> flip the flag to revive (last working: v1.5.717). What's LIVE with the flag off:
+> manual **Share to map** (shared nodes) + live content sync + the amber shared-node
+> ring, and **Send to new map** as a *pure bulk move* (no shared boundary). What's
+> GATED OFF: auto-switch on traversal, cross-map exit spokes, the "Go to other map"
+> switch button, auto-sharing the seeded node on add-map, and the boundary-share on
+> send. The rest of this entry describes the full design as built before the hold.
+
 Issue #144. The auto-mapper supports multiple maps per game, but they were fully
 **siloed** — independent blobs in `_allMapsData[mapId]` (each its own `nodes`/`edges`
 arrays), node identity per-map, no cross-map anything. This entry covers the
