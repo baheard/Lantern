@@ -206,6 +206,40 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     }
   }
 
+  // PAK menu / pager (char-mode) navigation — MUST run before the narration block.
+  // A char-mode screen (Inform menus, "press any key", read/pager) is narrated as it
+  // appears, so without this the narration guard below would block "enter"/"escape"/
+  // "space" and misroute "up"/"down" as movement — leaving voice unable to drive into
+  // and out of nested PAK menu layers (#73). Keyboard-equivalent words only, no new
+  // vocabulary. Sending a key changes the screen, so stop the stale narration first.
+  {
+    const { getInputType, sendInput } = await import('../game/voxglk.js');
+    if (getInputType() === 'char') {
+      // "Read"/"read all/screen/menu/page" — re-narrate the full PAK screen on demand.
+      if (['read', 'read all', 'read screen', 'read menu', 'read page'].includes(lower)) {
+        const { getCharModeText, triggerCharModeNarration } = await import('../game/voxglk.js');
+        const text = getCharModeText();
+        if (text.trim()) triggerCharModeNarration(text);
+        return false;
+      }
+
+      const CHAR_KEYS = {
+        enter: 'return', up: 'up', down: 'down', left: 'left', right: 'right',
+        space: ' ', spacebar: ' ', backspace: 'delete', 'back space': 'delete',
+        escape: 'escape', esc: 'escape',
+      };
+      if (Object.prototype.hasOwnProperty.call(CHAR_KEYS, lower)) {
+        state.pendingCommandProcessed = true;
+        if (state.isNarrating) {
+          const { stopNarration } = await import('../narration/tts-player.js');
+          stopNarration();
+        }
+        sendInput(CHAR_KEYS[lower], 'char');
+        return false;
+      }
+    }
+  }
+
   // During narration, allow navigation commands but block game commands
   if (state.isNarrating && !state.pausedForSound) {
     if (NAVIGATION_COMMANDS.includes(lower) || SKIP_N_PATTERN.test(lower) || BACK_N_PATTERN.test(lower)) {
@@ -227,72 +261,14 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // VOICE-SPECIFIC: "Escape" - Send escape key
+  // LINE mode "Escape"/"Enter" (char mode is handled above in the PAK navigation block).
   if (lower === 'escape') {
     handlers.sendCommandDirect('\x1b');  // ESC character
     return false;
   }
-
-  // VOICE-SPECIFIC: Char mode key commands - Send special keys
-  // Single destructuring import; runtime caches the module so repeated calls are free.
-  const { getInputType, sendInput } = await import('../game/voxglk.js');
-  const inputType = getInputType();
-
-  // VOICE-SPECIFIC: "Enter" - Send enter key in char mode, empty command in line mode
   if (lower === 'enter') {
-    if (inputType === 'char') {
-      sendInput('return', 'char');
-    } else {
-      handlers.sendCommandDirect('');
-    }
+    handlers.sendCommandDirect('');  // empty line = "press enter"
     return false;
-  }
-
-  if (inputType === 'char') {
-
-    // "Read all" / "read screen" / "read menu" — re-narrate the full PAK screen
-    if (['read', 'read all', 'read screen', 'read menu', 'read page'].includes(lower)) {
-      const { getCharModeText, triggerCharModeNarration } = await import('../game/voxglk.js');
-      const text = getCharModeText();
-      if (text.trim()) triggerCharModeNarration(text);
-      return false;
-    }
-
-    // Arrow keys
-    if (lower === 'up') {
-      sendInput('up', 'char');
-      return false;
-    }
-    if (lower === 'down') {
-      sendInput('down', 'char');
-      return false;
-    }
-    if (lower === 'left') {
-      sendInput('left', 'char');
-      return false;
-    }
-    if (lower === 'right') {
-      sendInput('right', 'char');
-      return false;
-    }
-
-    // Space
-    if (lower === 'space' || lower === 'spacebar') {
-      sendInput(' ', 'char');
-      return false;
-    }
-
-    // Backspace/Delete
-    if (lower === 'backspace' || lower === 'back space') {
-      sendInput('delete', 'char');
-      return false;
-    }
-
-    // Escape
-    if (lower === 'escape' || lower === 'esc') {
-      sendInput('escape', 'char');
-      return false;
-    }
   }
 
   // NOTE: "print [text]" is intentionally NOT handled here. Stripping the
