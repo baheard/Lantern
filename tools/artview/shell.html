@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Artview</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+__CLIENT_CSS__
+</style></head><body>
+<div id="rail"></div>
+<div id="items"><div id="itemhead"></div><input id="itemfilter" placeholder="Filter locations…" autocomplete="off" spellcheck="false" style="display:none"><div id="itemlist"></div></div>
+<div id="detail"><p class="none">Loading…</p></div>
+<div id="lb"><button class="lbnav lbprev" title="Previous">‹</button><img alt=""><button class="lbnav lbnext" title="Next">›</button><button class="lbfin" title="Toggle finalist (F)">☆ Finalist</button><div class="lbcap"></div>
+  <div class="lbnotes" id="lbNotes"><label class="ed">Notes / feedback<span class="noteflag" id="lbNoteFlag"></span></label><div class="lbnotefor" id="lbNoteFor"></div><textarea class="edit" id="lbNote" placeholder="What you think of THIS image — Claude reads these to tune the artist. Saved to the same notes as the location screen."></textarea><div class="noteacts" id="lbNoteActs"></div><label class="ed edp">Actual prompt used</label><div class="lbprompt empty" id="lbPrompt">(none)</div></div></div>
+<div id="modal"></div>
+<div id="gens"></div>
+<button id="logsBtn" title="Generation logs (this server)" onclick="toggleLogs()"><span class="dot"></span>Logs</button>
+<div id="logsPanel"></div>
+<div id="status"></div>
+<script>
+__CLIENT_JS__
+</script></body></html>
