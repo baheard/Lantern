@@ -14,6 +14,17 @@ export function getScrollContainer() {
 }
 
 /**
+ * Height of the sticky header (status bar + upper window) that overlays the top
+ * of the scroll container. Games without an upper window collapse this to ~0,
+ * so callers can safely add it to a scroll buffer unconditionally. See #181.
+ * @returns {number} Header height in px (0 if absent/hidden)
+ */
+function getStickyHeaderHeight() {
+  const header = document.getElementById('gameHeader');
+  return header ? header.offsetHeight : 0;
+}
+
+/**
  * Scroll to bottom of container
  * @param {HTMLElement} [container] - Container to scroll (defaults to gameOutput)
  */
@@ -96,7 +107,11 @@ export function scrollToNewContent(newElement, container) {
   // Position text near the top of the visible area to maximize content shown
   // 60px buffer: ensures command line above new content stays visible (command ~30-40px + breathing room)
   // Add viewport offset to account for when visual viewport has shifted
-  const bufferFromTop = 60 + viewportOffset;
+  // Add the sticky header height: .game-header (status bar + upper window) is
+  // position:sticky inside the scroll container and overlays the top of the
+  // visible area, so without this the echoed command hides behind it in games
+  // with an upper window (e.g. Bronze). See issue #181.
+  const bufferFromTop = 60 + viewportOffset + getStickyHeaderHeight();
 
   const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
 
@@ -128,7 +143,8 @@ function scrollToNewContentDelayed(newElement, container) {
   // After keyboard closes, use full window height
   const vv = window.visualViewport;
   const viewportOffset = vv ? vv.offsetTop : 0;
-  const bufferFromTop = 60 + viewportOffset;
+  // Include sticky header height so the command isn't hidden behind it (see #181)
+  const bufferFromTop = 60 + viewportOffset + getStickyHeaderHeight();
 
   const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
   const scrollToBottom = container.scrollHeight - container.clientHeight;
