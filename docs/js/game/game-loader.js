@@ -15,11 +15,12 @@ import { createGiDispaShim } from './gidispa-shim.js';
 import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
 import { closeSettings } from '../ui/settings/settings-panel.js';
 import { getAppDefault } from '../utils/game-settings.js';
-import { loadLocationManifest, getTitleImageUrl, attachPeek } from '../features/location-art.js';
+import { loadLocationManifest } from '../features/location-art.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
 import { resetAllHintState } from '../features/hints/hints-state.js';
+import { loadHints } from '../features/hints/hints-data.js';
 import {
   trackCustomGame,
   removeCustomGame,
@@ -497,12 +498,30 @@ async function launchGame(gamePath, gameName, onOutput, { trackFn = null } = {})
 
 // Inline eye glyph for the home-card art-availability icon (matches the in-game
 // affordance in features/location-art.js). Carries no text content so it never
-// affects card titles read aloud.
+// affects card titles read aloud. It's a static indicator only — no hover/peek.
 const ART_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 
-// Add (or remove) the "art available" icon on a single game card. Shown only when
+// Inline question-mark glyph for the home-card hints-availability icon. Same size
+// and treatment as the art badge so they read as a matched pair.
+const HINT_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+
+// Insert a badge into a card title after the first matching anchor selector, so
+// the row reads left-to-right consistently (save → art → hint) no matter which
+// async load resolves first.
+function placeBadge(title, badge, anchorSelectors) {
+  let anchor = null;
+  for (const sel of anchorSelectors) {
+    anchor = title.querySelector(sel);
+    if (anchor) break;
+  }
+  if (anchor) anchor.insertAdjacentElement('afterend', badge);
+  else title.appendChild(badge);
+}
+
+// Add (or remove) the "AI art available" icon on a single game card. Shown only when
 // the app-wide "AI Images by Default" setting is on and the game ships a manifest
-// with at least one image. Idempotent — safe to re-run on toggle.
+// with at least one image. Static indicator (no hover/peek). Idempotent — safe to
+// re-run on toggle.
 async function applyArtBadge(card, gameName) {
   let badge = card.querySelector('.art-badge');
   if (!getAppDefault('locationArt', false)) {
@@ -515,24 +534,29 @@ async function applyArtBadge(card, gameName) {
   if (badge) return; // already present
   const title = card.querySelector('.game-title');
   if (!title) return;
-  // Display name = the title's leading text node(s), minus the badge/meta spans.
-  const displayName =
-    [...title.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim() || gameName;
   badge = document.createElement('span');
   badge.className = 'art-badge';
-  badge.title = 'AI location art available';
-  badge.setAttribute('aria-label', `Preview AI art for ${displayName}`);
+  badge.title = 'AI art available';
+  badge.setAttribute('aria-label', 'AI art available');
   badge.innerHTML = ART_BADGE_SVG;
-  // Same hover-thumbnail + click-to-fullscreen behavior as the in-game location eyes.
-  // Resolve the title-image URL once (manifest is already cached) and hold it; the
-  // peek handlers read it lazily so a hover before it resolves simply shows nothing.
-  let _titleUrl = null;
-  getTitleImageUrl(gameName).then((u) => { _titleUrl = u; });
-  attachPeek(badge, () => _titleUrl, () => displayName);
-  // Place after the save badge so the dots/icons read left-to-right consistently.
-  const saveBadge = title.querySelector('[data-save-indicator]');
-  if (saveBadge) saveBadge.insertAdjacentElement('afterend', badge);
-  else title.appendChild(badge);
+  // Art sits right after the save indicator; the hint badge trails it.
+  placeBadge(title, badge, ['[data-save-indicator]']);
+}
+
+// Add the "AI Hints available" icon on a single game card — shown whenever the game
+// ships a hints file. Static indicator. Idempotent.
+async function applyHintBadge(card, gameName) {
+  if (card.querySelector('.hint-badge')) return; // already present
+  const hints = await loadHints(gameName);
+  if (!hints) return;
+  const title = card.querySelector('.game-title');
+  if (!title) return;
+  const badge = document.createElement('span');
+  badge.className = 'hint-badge';
+  badge.title = 'AI Hints available';
+  badge.setAttribute('aria-label', 'AI Hints available');
+  badge.innerHTML = HINT_BADGE_SVG;
+  placeBadge(title, badge, ['.art-badge', '[data-save-indicator]']);
 }
 
 // Re-paint every card's art icon — called when the home default is toggled so the
@@ -577,6 +601,9 @@ export function initGameSelection(onOutput) {
       // setting is on AND this game ships location art. Gated + lazy so it costs
       // nothing when the feature is off.
       applyArtBadge(card, gameName);
+
+      // Hints-availability icon — shown whenever the game ships a hints file.
+      applyHintBadge(card, gameName);
     }
   });
 

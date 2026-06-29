@@ -5,7 +5,9 @@
   background: var(--bg-surface);
   width: 100%;
   border-top: 1px solid var(--border-subtle);
-  padding: 4px 8px;
+  /* Bottom inset fills the home-indicator safe area with the surface color — this
+     used to be painted by the now-removed status bar's ::after filler (#182). */
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom)) 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;

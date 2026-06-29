@@ -255,13 +255,16 @@
   box-shadow: 0 0 8px rgba(196, 163, 90, 0.6);
 }
 
-/* Art-availability icon on game cards — injected by game-loader.js only when the
-   "AI Images by Default" home setting is on and the game ships location art. */
-.art-badge {
+/* Availability icons on game cards — injected by game-loader.js. The art badge
+   shows only when the "AI Images by Default" home setting is on and the game ships
+   location art; the hint badge shows whenever the game ships a hints file. Both are
+   static indicators (no hover/peek) in a subtle gray. */
+.art-badge,
+.hint-badge {
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
-  color: var(--accent-warm);
+  color: var(--text-secondary);
   vertical-align: middle;
   flex-shrink: 0;
   opacity: 0.85;
