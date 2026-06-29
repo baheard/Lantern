@@ -20,7 +20,7 @@ import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
   GRID_SIZE, DIRECTION_OFFSETS, DIRECTION_OPPOSITES, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
-  NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX
+  NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX, PORTALS_ENABLED
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
 import {
@@ -731,7 +731,8 @@ function handleLocationChange(e) {
   // switch to that map instead of duplicating the room/edge here. Runs BEFORE the
   // deletedNodes guard on purpose — a room sent to another map is marked deleted
   // here, and that's exactly the case we want to follow across the portal.
-  if (command !== null && previousLocationId && !existingNode) {
+  // ON HOLD: gated by PORTALS_ENABLED (#144) — see map-config.js.
+  if (PORTALS_ENABLED && command !== null && previousLocationId && !existingNode) {
     const targetMap = findPortalTargetMap(previousLocationId, locationName);
     if (targetMap) {
       switchMap(targetMap);
@@ -1956,10 +1957,11 @@ function addMap() {
   // Phase 1 of multi-map (#144): a brand-new map should immediately carry the
   // current location instead of starting empty, so the user has an anchor. Gate
   // on automap like the delete-last-map reset path does.
-  if (mapState.autoMapEnabled && seedCurrentLocation()) {
-    // The seeded location also exists on the source map (it's where you were),
-    // so link the two copies with a sharedId — the current location becomes the
-    // shared PORTAL between the old map and the new one (#144).
+  if (mapState.autoMapEnabled && seedCurrentLocation() && PORTALS_ENABLED) {
+    // ON HOLD (#144): the seeded location also exists on the source map (it's
+    // where you were), so link the two copies with a sharedId — the current
+    // location becomes the shared PORTAL between the old and new map. Gated off
+    // for now; the new map still seeds the (unshared) current location above.
     const id = mapState.currentNodeId;
     const newNode = mapState.nodes.get(id);
     const srcNode = (_allMapsData[sourceMapId]?.nodes || []).find(n => n.id === id);
@@ -2009,7 +2011,9 @@ function recomputeSharedIds() {
 // already present here. Stored transiently on the node as `_portalExits` and
 // drawn as dashed-amber stubs so auto-switch isn't a surprise (#144).
 function computePortalExits() {
+  // Always clear any stale spokes; only recompute them while portals are enabled.
   for (const n of mapState.nodes.values()) { if (n._portalExits) delete n._portalExits; }
+  if (!PORTALS_ENABLED) return; // ON HOLD (#144)
   if (!mapState.sharedNodeIds || mapState.sharedNodeIds.size === 0) return;
   for (const node of mapState.nodes.values()) {
     if (!node.sharedId || !mapState.sharedNodeIds.has(node.sharedId)) continue;
@@ -2121,11 +2125,17 @@ function handleSendSelectionToNewMap() {
   if (selected.length === 0) { showHint('Select some locations first'); return; }
   const selectedSet = new Set(selected);
 
-  // Boundary = selected node with an edge to a non-selected node.
+  // Boundary = selected node with an edge to a non-selected node; it stays shared
+  // on both maps as the PORTAL. ON HOLD (#144): with portals disabled the boundary
+  // set is empty, so EVERY selected node moves cleanly to the new map and nothing
+  // stays shared — i.e. "Send to new map" is a plain move. Flip PORTALS_ENABLED
+  // (map-config.js) to restore the shared-boundary/portal behavior.
   const boundary = new Set();
-  for (const edge of mapState.edges.values()) {
-    const fromSel = selectedSet.has(edge.from), toSel = selectedSet.has(edge.to);
-    if (fromSel !== toSel) { if (fromSel) boundary.add(edge.from); if (toSel) boundary.add(edge.to); }
+  if (PORTALS_ENABLED) {
+    for (const edge of mapState.edges.values()) {
+      const fromSel = selectedSet.has(edge.from), toSel = selectedSet.has(edge.to);
+      if (fromSel !== toSel) { if (fromSel) boundary.add(edge.from); if (toSel) boundary.add(edge.to); }
+    }
   }
 
   snapshotForUndo();

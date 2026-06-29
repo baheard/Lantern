@@ -6,7 +6,7 @@ import {
   container, mapState, domRefs,
   NODE_ICONS, CONNECTION_TYPES,
   CARDINAL_DIRECTIONS, DIRECTION_SHORT_LABELS, DIRECTION_COMMAND_TOKENS,
-  COMMAND_DIRECTIONS, DIRECTION_TO_TYPE
+  COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, PORTALS_ENABLED
 } from './map-config.js';
 import { render } from './map-render.js';
 import { escapeHtml } from '../utils/text-processing.js';
@@ -274,10 +274,12 @@ export function openNodeSheet(node) {
 
   // Show "Go to other map" only for a truly shared node (on >1 map) — it's the
   // portal-navigation switch (#144). The amber ring is the visual indicator.
+  // ON HOLD (#144): portal navigation is gated by PORTALS_ENABLED, so this stays
+  // hidden for now even on shared nodes (the amber ring still marks them shared).
   const switchBtn = document.getElementById('nodeSwitchToMapBtn');
   if (switchBtn) {
     const isShared = !!(node.sharedId && mapState.sharedNodeIds && mapState.sharedNodeIds.has(node.sharedId));
-    switchBtn.classList.toggle('hidden', !isShared);
+    switchBtn.classList.toggle('hidden', !(PORTALS_ENABLED && isShared));
   }
 
   const sheet = document.getElementById('nodeEditSheet');
