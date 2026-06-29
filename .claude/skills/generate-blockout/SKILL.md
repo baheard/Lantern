@@ -84,6 +84,16 @@ which parts are fixed vs orbiting — e.g. the Orrery is a tilted disk with a fi
 silver wheel (violet hub + tan rim) and a copper wheel (red hub + green rim) on opposite sides,
 none of which the one-line framing spells out. Model what the game actually describes.
 
+**Block the big masses + placement-critical features ONLY — let the prompt fill detail.** The
+blockout carries *position* (anything whose left/right/where must stay consistent across vantages,
+or that the player interacts with: the hero masses, the orb the player grabs, exits, named
+placement-critical features). It does NOT carry *texture*: how many cogs, surface engraving,
+ornament, "feels like an engine of gears." That is the scene prose's job — model a suggestive base
+mass + add a prompt cue ("mounted in an engine of gears and shafts; render the gearwork") and let
+the generator detail it. Over-modeling fiddly geometry is wasted effort and makes the clay brittle.
+Rule of thumb: if moving it would change the *composition*, block it out; if it only changes the
+*surface*, leave it to the prompt.
+
 **Apply the baked gotchas up front** (from the tome):
 - **Fill the frame** — a big featureless foreground or bare pit makes the model hallucinate
   (it invented a brick crypt under the theatre seats). Add real geometry; for a sunken pit, cut
