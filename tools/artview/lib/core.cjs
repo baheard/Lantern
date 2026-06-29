@@ -95,6 +95,13 @@ const ROLE_LEGEND = {
   rail: 'the warm-brown rails are carved WOODEN balustrades/railings (timber, not fabric or upholstery)',
   brick: 'the brick-red panel set into a wall is a BRICKED-UP DOORWAY — an old doorway filled in with bricks',
   hole: 'the dark recess in a wall is a HOLE smashed through the wall, opening onto darkness beyond — render it with a rough, irregular, broken outline (crumbled masonry, jagged cracked edges, loose rubble at its lip); the block only marks its rough position and size, so do NOT reproduce its straight rectangular edges — a busted-through hole is never a clean rectangle',
+  dome: 'the pale rounded shell is a smooth DOME (a curved dome you stand beside or within — render its surface continuous and unbroken except where an opening is marked)',
+  rock: 'the brown-grey mass is natural ROCK — a cliff face, mountain, or boulder (rough, irregular stone)',
+  valley: 'the green plane far below is a distant VALLEY floor seen from a height (treetops/fields receding into haze, NOT a nearby lawn)',
+  machine: 'the brass-coloured disk/mass is a large intricate BRASS MACHINE — a great tilted engraved disk on an axis, bearing small glass globes (an orrery), turning slowly',
+  ladder: 'the dark vertical bars are an iron LADDER (two uprights with rungs)',
+  steps: 'the stacked blocks are STEPS / a short flight of stairs',
+  opening: 'the dark recess set into a surface is an OPENING — a round hatch or doorway leading through; render it as a dark hole into shadow, not a solid panel',
   wall: 'the cool-grey planes are WALLS', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {

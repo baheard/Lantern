@@ -143,7 +143,38 @@ pass, with human review as the final gate** — NOT a hard stop at scene.json. F
 
 Studio orchestrates it as an optional phase. Renderer now has the interactive editor that makes
 the human-review touch-up step cheap — see renderer.html (gizmo, Save all, model-aware viewport).
-Not yet built; this is the agreed scope.
+
+### BUILT 2026-06-29 as `/generate-blockout` (`.claude/skills/generate-blockout/SKILL.md`)
+Scope landed = author + handoff + web-agent review (NOT fully headless). User's call: "1 but then
+a step for review using 2" — i.e. the skill authors `<volume>.scene.json` deterministically
+(geometry from the framing Geometry block + one camera per member from its Vantage line, gotchas
+baked), HANDS OFF clay-capture+restyle to the browser renderer (you click Generate in artview —
+clay is browser-only, see below), then drives a **web-agent self-review** over the resulting shots.
+First two volumes authored: `dreamhold/_blockout/outer-catwalk.scene.json` (4 day stations) and
+`orrery.scene.json` (3 members, hero brass disk through 2 alcove archways). Validated in the
+locked renderer: dome+walkway+opening+valley and the brass disk+globe all build and frame sanely.
+
+**Gotchas hit while building (bake these in):**
+- **Role legend must be EXTENDED for new games, in TWO places kept in sync.** `ROLE_LEGEND`
+  (core.cjs) + `ROLE_COLORS` (renderer.html) only knew theatre's vocabulary. A role with no
+  legend entry renders as an unnamed coloured blob — the model can't read it. Added a reusable
+  generic-Dreamhold set: `dome, rock, valley, machine, ladder, steps, opening`. Per-part `detail`
+  is human-only (inspect panel) — it is NOT sent to the model; only the role legend + scene prose
+  + notes reach the model. So SHAPE comes from the blockout, IDENTITY from the scene prose, and
+  the legend is the bridge.
+- **The renderer's default static src path 404s on :3009.** `renderer.html` falls back to
+  `/games/images/<g>/_blockout/<v>.scene.json`, which the review-server does NOT serve statically.
+  artview (client.js ~L284) always loads it as `/blockout?src=<URL-encoded /api/blockout?game=&volume=>&game=&volume=`.
+  To open the renderer standalone (e.g. web-agent screenshots), pass that `?src=` form, not the
+  bare `?game=&volume=`.
+- **Lighting/sky states are NOT separate blockouts** — one geometry serves day/night/unearthly
+  (catwalk) and dark/lit/starry (dome); the state is a restyle prompt delta on the same clay.
+- First-pass cameras are deliberately rough; the render→look→adjust loop (renderer "Update
+  vantage") is the human refine phase, exactly as the theatre took 3–4 iterations.
+
+**Still TODO** (unchanged): the true headless node renderer (puppeteer/WebGL) that would collapse
+Steps 3–4 into one CLI command and make the skill fully autonomous. Until then clay-capture needs
+the browser in the loop.
 
 **Above the skill: a studio-level "get all the pictures for `<game>`" orchestrator** (decided
 2026-06-25, not built). A completeness sweep that guarantees EVERY location ends with committed

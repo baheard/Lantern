@@ -3,7 +3,7 @@
  * Provides offline caching for all bundled games and core app resources
  */
 
-const CACHE_VERSION = 'v1.5.699';
+const CACHE_VERSION = 'v1.5.701';
 const CACHE_NAMES = {
   core: `lantern-core-${CACHE_VERSION}`,
   games: `lantern-games-${CACHE_VERSION}`,

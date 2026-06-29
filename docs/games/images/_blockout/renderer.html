@@ -207,7 +207,7 @@ function renderFrame() { if (composer) composer.render(); else renderer.render(s
 const clay = (hex) => new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
 // Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
 // stage from seats from boxes). MUST match ROLE_LEGEND in review-server.cjs.
-const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#161318', floor: '#9c9c9c' };
+const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#161318', floor: '#9c9c9c', dome: '#cdd0da', rock: '#7a7066', valley: '#6f8f5a', machine: '#b0863a', ladder: '#5a5a62', steps: '#9a948a', opening: '#161318' };
 const roleColor = (p, inherit) => ROLE_COLORS[p.role || inherit] || p.color;
 const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
 const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;

@@ -1,0 +1,63 @@
+{
+  "$schema": "../../_blockout/scene-def.md",
+  "game": "dreamhold",
+  "volume": "orrery",
+  "title": "Orrery",
+  "source": "location-framing.md → Volume: Orrery (anchor orrery)",
+  "frame": "+X east, +Z south, +Y up. Wide tall six-sided chamber; the disk faces ±X so the main (east) camera sees its face and the two alcove cameras (N/S) glimpse the SAME machine three-quarter through their archways.",
+  "background": "#9a9a9a",
+  "fog": { "near": 22, "far": 64 },
+  "parts": [
+    { "name": "floor", "box": [13, 0.4, 13], "at": [0, -0.2, 0], "role": "floor" },
+    { "name": "ceiling", "box": [13, 0.4, 13], "at": [0, 11, 0], "role": "ceiling", "shell": true, "detail": "high roof; vault above the machine is lost in shadow" },
+    { "name": "east wall (entry)", "box": [0.4, 11, 13], "at": [6.5, 5.5, 0], "role": "wall", "shell": true },
+    { "name": "west wall", "box": [0.4, 11, 13], "at": [-6.5, 5.5, 0], "role": "wall", "shell": true },
+
+    { "name": "south jamb west", "box": [4.5, 11, 0.4], "at": [-4.25, 5.5, 6.5], "role": "wall", "shell": true },
+    { "name": "south jamb east", "box": [4.5, 11, 0.4], "at": [4.25, 5.5, 6.5], "role": "wall", "shell": true },
+    { "name": "south lintel", "box": [4, 4.5, 0.4], "at": [0, 8.75, 6.5], "role": "wall", "shell": true },
+    { "name": "north jamb west", "box": [4.5, 11, 0.4], "at": [-4.25, 5.5, -6.5], "role": "wall", "shell": true },
+    { "name": "north jamb east", "box": [4.5, 11, 0.4], "at": [4.25, 5.5, -6.5], "role": "wall", "shell": true },
+    { "name": "north lintel", "box": [4, 4.5, 0.4], "at": [0, 8.75, -6.5], "role": "wall", "shell": true },
+
+    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [0, 5, 0], "rot": [0, 0, 18], "role": "machine", "detail": "vast stately tilted brass disk on an axis; lower edge inches off the floor, upper edge near the high roof" },
+    { "name": "blue-glass globe (centre)", "sphere": 0.85, "at": [0, 5, 0], "color": "#3a66a0", "detail": "fixed blue-glass globe at the disk's centre, the disk revolving around it" },
+    { "name": "glass globe wheel 1", "sphere": 0.45, "at": [0.3, 7.4, 1.2], "color": "#7fa6c8", "detail": "small wheel bearing a glass globe, pirouetting on the disk face" },
+    { "name": "glass globe wheel 2", "sphere": 0.45, "at": [-0.3, 2.8, -1.4], "color": "#7fa6c8" },
+    { "name": "glass globe wheel 3", "sphere": 0.4, "at": [0.2, 5.6, 2], "color": "#7fa6c8" },
+
+    { "name": "south alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, 8.6], "role": "floor", "detail": "small curved alcove off the south side" },
+    { "name": "south alcove ladder rail E", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [0.45, 3.3, 9.6], "role": "ladder" },
+    { "name": "south alcove ladder rail W", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [-0.45, 3.3, 9.6], "role": "ladder", "detail": "iron ladder up a shaft (→ Starry Dome North)" },
+
+    { "name": "north alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, -8.6], "role": "floor", "detail": "small curved alcove off the north side" },
+    { "name": "north alcove stairs", "box": [3, 1.2, 2.5], "at": [0, 0.6, -9.6], "role": "steps", "detail": "archway onto a flight of ascending stairs (→ Curving Hall West End)" }
+  ],
+  "cameras": {
+    "orrery": {
+      "pos": [5.7, 3, 0],
+      "look": [-2, 5.2, 0],
+      "fov": 62
+    },
+    "south-alcove": {
+      "pos": [0, 2, 8.4],
+      "look": [0, 4.4, 0],
+      "fov": 56
+    },
+    "north-alcove": {
+      "pos": [0, 2, -8.4],
+      "look": [0, 4.4, 0],
+      "fov": 56
+    }
+  },
+  "members": [
+    "orrery",
+    "south-alcove",
+    "north-alcove"
+  ],
+  "notes": {
+    "orrery": "anchor. camera pressed back against the east entry wall; the vast tilted brass disk nearly fills the frame, blue-glass globe at centre, small glass globes pirouetting on its face; vault above lost in shadow.",
+    "south-alcove": "stand in the small alcove looking through the archway at the SAME machine spinning in the chamber; iron ladder up a shaft beside you.",
+    "north-alcove": "stand in the alcove; archway onto ascending stairs; the same machine glimpsed turning through the opening."
+  }
+}
