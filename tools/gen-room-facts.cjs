@@ -206,6 +206,38 @@ function stateLabel(name) {
   const dome = name.match(DOME_LIGHT);       if (dome) return dome[1];
   return '';
 }
+// Positional/posture sub-state: "Curtained Room (on the chair)" → base "Curtained Room". Mirrors
+// auto-mapper.mapNodeName EXACTLY (same preposition/gerund set), so the pack's anchor base matches
+// the app's collapsed map-node identity. postureLabel() reads the bracketed phrase for the render
+// vantage note ("on the chair").
+const POSTURE_PAREN_RE = /\s*\((?:on|in|at|atop|under|behind|astride|aboard|sitting|seated|lying|lain|riding|standing|kneeling|perched)\b[^)]*\)\s*$/i;
+function postureBase(name) {
+  const stripped = (name || '').replace(POSTURE_PAREN_RE, '').trim();
+  return stripped && stripped !== name ? stripped : null;
+}
+function postureLabel(name) {
+  const m = (name || '').match(POSTURE_PAREN_RE);
+  return m ? m[0].trim().replace(/^\(/, '').replace(/\)$/, '').trim() : '';
+}
+// From a bracket label ("on the settee", "sitting on the bench", "astride the horse") derive the
+// candidate command(s) that would PUT the player into that posture FROM the base room — used by the
+// posture-recapture pass to re-reach the sub-state from the base's PRISTINE snapshot rather than
+// trusting the walkthrough's (possibly very late) incidental first arrival. Returns [] when the
+// label isn't a base-room posture (e.g. "on the glass platform", reached by climbing) — those fail
+// every candidate and correctly fall through to the incidental capture.
+const POSTURE_GERUND_VERB = { sitting: 'sit', seated: 'sit', lying: 'lie', lain: 'lie', standing: 'stand', kneeling: 'kneel', perched: 'perch', riding: 'ride' };
+function postureProbeCmds(label) {
+  const m = (label || '').match(/^(?:(sitting|seated|lying|lain|standing|kneeling|perched|riding)\s+)?(on|in|at|atop|astride|aboard|under|behind)\s+(?:the\s+|a\s+|an\s+)?(.+)$/i);
+  if (!m) return [];
+  const gerund = (m[1] || '').toLowerCase();
+  const prep = m[2].toLowerCase();
+  const noun = objectHead(m[3]) || m[3].trim();
+  if (!noun) return [];
+  const verbs = gerund ? [POSTURE_GERUND_VERB[gerund]]
+    : (prep === 'astride' || prep === 'aboard') ? ['mount', 'board', 'ride']
+    : ['sit', 'stand', 'lie', 'kneel'];
+  return verbs.filter(Boolean).map((v) => `${v} ${prep} ${noun}`);
+}
 
 // Command classifiers + object-head extraction, used to fold EXAMINE detail into a room's
 // scene while keeping TAKEABLE objects out (the persistence rule: see .tome/art-direction-model.md).
@@ -228,7 +260,13 @@ const EXAMINE_SKIP = new Set(['me','self','myself','around','room','it','them','
 // does — so mergeExamines can drop non-pristine examines and let mold judge from a clean view.
 const PRISTINE_INERT = new Set(['look','l','examine','x','search','read','consult','inventory','i',
   'wait','z','score','about','help','verbose','brief','undo','again','g','save','restore']);
-function breaksPristine(verb) { return !!verb && !MOVES.has(verb) && !PRISTINE_INERT.has(verb); }
+// Posture/position verbs (sit/stand/lie/…) are the DEFINING action of a sub-state node like
+// "Curtained Room (on the chair)" — not a mutation of it. The seated view (the mirror's faceless
+// reflection) is that node's pristine first-entry scene, so the entry verb must NOT taint it.
+// (A real mutation made while seated — e.g. `put mask on mirror` — still breaks pristine, so a
+// post-mutation examine is correctly dropped. See the posture-anchor pass below.)
+const POSTURE_VERBS = new Set(['sit','stand','lie','recline','kneel','mount','board','perch','sprawl','lean']);
+function breaksPristine(verb) { return !!verb && !MOVES.has(verb) && !PRISTINE_INERT.has(verb) && !POSTURE_VERBS.has(verb); }
 // Visually load-bearing fixture classes whose APPEARANCE usually lives in an EXAMINE, not the
 // room summary (a "portrait" in the prose, but the gentleman/fireplace/door only in `examine
 // portrait`). Walkthroughs examine for PUZZLE reasons, not visual ones, so these are routinely
@@ -258,23 +296,35 @@ const normSent = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+
 // Fold captured EXAMINE detail into the base scene: skip examines of objects the walkthrough
 // takes (removable → not in a fixed backdrop), strip chrome via visualCore, dedup at the
 // sentence level against what's already there, and cap the merged scene.
+// Turn a captured examine's internal `obj` key back into the player-facing command that
+// produced it, for the review modal's attribution ("examine mirror", "look up", "look").
+function cmdLabel(obj) {
+  if (obj === 'look') return 'look';
+  if (obj.startsWith('look-')) return 'look ' + obj.slice(5);
+  return 'examine ' + obj;
+}
+// Returns { scene, extras }. `extras` is the per-command list of NON-first-visit detail that
+// actually got folded into the scene — [{ cmd, text }] — so the reviewer can show "what beyond
+// the room description colored this image" without re-deriving it from a string diff.
 function mergeExamines(baseScene, examines, takenHeads) {
-  if (!examines || !examines.length) return baseScene;
+  if (!examines || !examines.length) return { scene: baseScene, extras: [] };
   const seen = new Set(splitSentences(baseScene).map(normSent));
-  const adds = [];
+  const adds = [], extras = [];
   for (const e of examines) {
     if (!e.obj || takenHeads.has(e.obj)) continue;   // takeable → leave to the room text
     if (e.pristine === false) continue;              // captured after a room mutation (e.g. container contents) → not a first-entry view
+    const got = [];
     for (const s of splitSentences(visualCore(e.resp))) {
       const k = normSent(s);
       if (!k || seen.has(k)) continue;
-      seen.add(k); adds.push(s);
+      seen.add(k); adds.push(s); got.push(s);
     }
+    if (got.length) extras.push({ cmd: cmdLabel(e.obj), text: got.join(' ') });
   }
-  if (!adds.length) return baseScene;
+  if (!adds.length) return { scene: baseScene, extras };
   let scene = [baseScene, ...adds].join(' ').replace(/\s+/g, ' ').trim();
   if (scene.length > 1100) { const cut = scene.slice(0, 1100); scene = cut.slice(0, cut.lastIndexOf('. ') + 1) || cut; }
-  return scene.trim();
+  return { scene: scene.trim(), extras };
 }
 
 // ---------------------------------------------------------------------------
@@ -743,6 +793,18 @@ async function main() {
     } else if ((mm = fullCmd.match(LOOK_DIR_RE))) {
       const resp = extractResponse(t);
       if (resp) L.examines.push({ obj: 'look-' + mm[1].toLowerCase(), resp, pristine: L.pristine });
+    } else if (/^(?:look|l)$/i.test(fullCmd)) {
+      // A bare re-LOOK. Usually echoes the first-visit description (so mergeExamines dedups it away
+      // sentence-by-sentence), but after a state change it can reveal NEW prose the initial room
+      // text didn't carry — fold that delta in too. obj 'look' so it never collides with a takeable.
+      // A bare look REPRINTS the room heading; strip a leading "<Room Name>" so the heading can't
+      // glue to the first body sentence and dodge the dedup (which would leak it into the scene).
+      let resp = extractResponse(t);
+      if (resp) {
+        const head = new RegExp('^\\s*' + L.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+        resp = resp.replace(head, '').trim();
+      }
+      if (resp) L.examines.push({ obj: 'look', resp, pristine: L.pristine });
     }
     // Latch this room non-pristine once the walkthrough mutates it (open/push/drop/put/…), so any
     // LATER examine here is recognized as a post-mutation view and dropped by mergeExamines.
@@ -861,12 +923,12 @@ async function main() {
     // transition, or a sub-view the walkthrough only LOOKed at — e.g. the Starry Dome facings),
     // the visual prose still lives in the captured examines/LOOK-dir responses. Rebuild the
     // scene from those instead of discarding the whole room. Takeables stay excluded.
-    let scene, sceneSource;
+    let scene, sceneSource, sceneExtras;
     if (L.description) {
-      scene = mergeExamines(visualCore(L.description), L.examines, takenHeads);
+      ({ scene, extras: sceneExtras } = mergeExamines(visualCore(L.description), L.examines, takenHeads));
       sceneSource = 'description';
     } else {
-      scene = mergeExamines('', L.examines, takenHeads);
+      ({ scene, extras: sceneExtras } = mergeExamines('', L.examines, takenHeads));
       sceneSource = 'examines';
     }
     if (!scene) { deferred.push({ L, exits }); continue; }  // → Gap B pass (needs stemIndex)
@@ -877,6 +939,7 @@ async function main() {
     const unprobed = fixtureHits(L.description).filter((w) => !examinedHeads.has(w));
     const room = { name: L.name, slug: L.slug, exits, description: L.description, scene, prompt };
     if (unprobed.length) room.unprobed = unprobed;
+    if (sceneExtras && sceneExtras.length) room.sceneExtras = sceneExtras; // examine/look detail beyond the first-visit description (review modal)
     if (L.exitFacts) room.exitFacts = L.exitFacts;   // exit FORM + reciprocals (exit-probe)
     if (L.lookFacts) room.lookFacts = L.lookFacts;    // look up/down visibility (exit-probe)
     if (sceneSource === 'examines') room.recoveredFrom = 'examines'; // Gap A provenance for mold/review
@@ -948,6 +1011,130 @@ async function main() {
     report.stateRecov.push({ name: L.name, anchor: anchor ? anchor.name : null, label, preview });
   }
 
+  // Posture/position vantage-anchor pass. A node like "Curtained Room (on the chair)" already built
+  // its own scene above — from the SEATED examines now kept pristine (the mirror's faceless
+  // reflection) via Gap A, or from a transition delta via Gap B. It is the same physical space as
+  // its base room seen from a NEW VANTAGE, so anchor it to the base room's committed image as an
+  // img2img reference (geometry/identity) while the examine-built scene supplies the changed view.
+  // Unlike a Gap B relight, the edit is a re-framing (anchorMode 'vantage'), so render re-poses the
+  // camera instead of only changing light. Runs last, so every base room is already in `rooms`.
+  const roomByName = new Map(rooms.map((r) => [r.name, r]));
+  const postureRecap = [];   // genuine posture sub-states to re-capture from the base's pristine snapshot
+  for (const room of rooms) {
+    if (room.anchorRoom) continue;                 // already an anchored state-variant (Gap B)
+    const baseName = postureBase(room.name);
+    if (!baseName) continue;
+    const base = roomByName.get(baseName);
+    if (!base || base.slug === room.slug) continue;
+    room.anchorRoom = base.slug;
+    room.anchorMode = 'vantage';                   // re-framed camera, not a relight (render phrasing)
+    const lbl = postureLabel(room.name);
+    if (lbl) room.stateLabel = lbl;                // e.g. "on the chair"
+    report.postureAnchored = report.postureAnchored || [];
+    report.postureAnchored.push({ name: room.name, anchor: baseName, label: lbl });
+    const baseL = locs.get(baseName);
+    if (baseL && baseL.firstVisitIdx && postureProbeCmds(lbl).length) {
+      postureRecap.push({ room, node: locs.get(room.name), baseL, label: lbl });
+    }
+  }
+
+  // Posture-recapture pass. A vantage sub-state's scene was built (above) from the walkthrough's
+  // OWN first arrival at the node — but that arrival can be arbitrarily LATE, and by then the base
+  // room may have been globally mutated (Dreamhold's "Sitting Room (on the settee)" is only reached
+  // on the post-dream `enter rent` return — ~90 turns after the desert painting was taken — so its
+  // incidental scene shows an EMPTY HOOK + OPEN door, a puzzle-solved state a first-time sitter
+  // never sees). The pristine-latch fix (POSTURE_VERBS inert) only stops the entry VERB from
+  // tainting the node; it can't rewind mutations that happened turns earlier. So here we re-reach
+  // the posture FROM the base room's PRISTINE first-visit snapshot — `sit on settee` off the clean
+  // Sitting Room — and rebuild the scene from THAT. A label that no candidate command can re-reach
+  // (e.g. "on the glass platform", a climbed camera position, not a base-room posture) simply keeps
+  // its incidental capture. Snapshot-based like the exit-probe, so it shares that gate.
+  if (postureRecap.length && !args['no-exit-probe'] && !args['no-posture-recapture']) {
+    try {
+      process.stderr.write(`\n[posture] Re-capturing ${postureRecap.length} posture sub-state(s) from base-pristine…\n`);
+      const baseIdx = new Map();
+      for (const { baseL } of postureRecap) baseIdx.set(baseL.name, baseL.firstVisitIdx);
+      const snaps = await buildSnapshotsIncremental(game, seed, cmdsPath, baseIdx);
+      const PLAY = path.join(REPO, 'tools/play.cjs');
+      for (const { room, node, baseL, label } of postureRecap) {
+        const snap = snaps.get(baseL.name);
+        if (!snap) continue;
+        const exObjs = (node ? node.examines : []).map((e) => e.obj).filter((o) => o && o !== 'look');
+        const exCmds = exObjs.map((o) => o.startsWith('look-') ? 'look ' + o.slice(5) : 'examine ' + o);
+        const nounRefs = (room.exitFacts || []).filter((f) => f.kind === 'noun').map((f) => f.ref);
+        const tail = ['look', ...exCmds, ...nounRefs.map((r) => 'examine ' + r)];
+        let chosen = null, pturns = null;
+        for (const entryCmd of postureProbeCmds(label)) {
+          const out = await execAsync([PLAY, game, '--seed', String(seed), '--snapshot-in', snap, '--status',
+            '--cmds', [entryCmd, ...tail].join(' ; ')], { maxBuffer: 16 * 1024 * 1024, cwd: REPO, timeout: 20000 });
+          const pt = parseTurns(out);
+          if (pt.some((t) => t.location === room.name && extractDescription(t))) { chosen = entryCmd; pturns = pt; break; }
+        }
+        if (!chosen) {   // not a base-room posture (e.g. climbed vantage) — keep the incidental capture
+          const e = report.postureAnchored.find((x) => x.name === room.name); if (e) e.kind = 'movement-vantage';
+          continue;
+        }
+        // Rebuild description + examines from the pristine-base replay.
+        let desc = null; const examines = []; const exMap = new Map();
+        for (const t of pturns) {
+          if (t.location !== room.name) continue;
+          if (!desc) { const d = extractDescription(t); if (d) desc = d; }
+          const fc = (t.command || '').trim(); let mm;
+          if ((mm = fc.match(EXAMINE_RE))) {
+            const obj = objectHead(mm[1]);
+            if (obj && !EXAMINE_SKIP.has(obj)) { const r = extractResponse(t); if (r) { examines.push({ obj, resp: r, pristine: true }); exMap.set(obj, r); } }
+          } else if ((mm = fc.match(LOOK_DIR_RE))) {
+            const r = extractResponse(t); if (r) examines.push({ obj: 'look-' + mm[1].toLowerCase(), resp: r, pristine: true });
+          }
+        }
+        if (!desc) continue;
+        const { scene, extras } = mergeExamines(visualCore(desc), examines, takenHeads);
+        if (!scene) continue;
+        room.description = desc;
+        room.scene = scene;
+        room.prompt = `Scene: ${scene}`;
+        if (extras && extras.length) room.sceneExtras = extras; else delete room.sceneExtras;
+        const examined = new Set(examines.map((e) => e.obj));
+        const unprobed = fixtureHits(desc).filter((w) => !examined.has(w));
+        if (unprobed.length) room.unprobed = unprobed; else delete room.unprobed;
+        // Refresh noun exit-facts (e.g. the white door's open/closed examine) from the pristine view.
+        for (const f of (room.exitFacts || [])) {
+          if (f.kind !== 'noun' || !exMap.has(f.ref)) continue;
+          const ex = capWords(visualCore(exMap.get(f.ref)), 220); if (ex) f.examine = ex;
+        }
+        room.recapturedFrom = 'base-pristine';   // provenance for review
+        const e = report.postureAnchored.find((x) => x.name === room.name); if (e) { e.kind = 'posture'; e.recaptured = chosen; }
+        (report.postureRecaptured = report.postureRecaptured || []).push({ name: room.name, base: baseL.name, via: chosen });
+      }
+      for (const p of new Set(snaps.values())) { try { fs.unlinkSync(p); } catch { /* ignore */ } }
+      process.stderr.write(`[posture] Recaptured ${(report.postureRecaptured || []).length} sub-state(s) from base-pristine.\n`);
+    } catch (e) { process.stderr.write(`[posture] recapture failed (${e.message}) — keeping incidental captures.\n`); }
+  }
+
+  // Inbound-facing pass: hand the mold the travel-INTO-room direction so it can pin a camera facing
+  // (mold factor 10a) and translate compass→frame (10b) WITHOUT re-deriving it by hand — the manual
+  // step an early pass skips, leaving vague "in one wall / two others" placement. Each outbound edge
+  // "dir → Dest" means the player travels `dir` to ENTER Dest, so Dest is entered facing `dir`.
+  const COMPASS_DIRS = new Set(['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest']);
+  const inbound = new Map();   // destName → [{ facing, from }] in pack order (≈ walkthrough order)
+  for (const r of rooms) {
+    for (const e of (r.exits || [])) {
+      const parts = e.split('→'); if (parts.length < 2) continue;
+      const facing = parts[0].trim().toLowerCase();
+      const dest = parts[1].trim();
+      if (!inbound.has(dest)) inbound.set(dest, []);
+      inbound.get(dest).push({ facing, from: r.name });
+    }
+  }
+  for (const room of rooms) {
+    const ins = inbound.get(room.name); if (!ins || !ins.length) continue;
+    room.enteredBy = ins.map((x) => `${x.facing} ← ${x.from}`);
+    // defaultFacing = first inbound COMPASS direction in pack order (walkthrough-plausible primary
+    // entry); up/down/in/out give no yaw so are skipped. The mold may override with a stated reason.
+    const compassIn = ins.find((x) => COMPASS_DIRS.has(x.facing));
+    if (compassIn) room.defaultFacing = compassIn.facing;
+  }
+
   const gameDir = path.join(REPO, 'docs/games/images', game);
   fs.mkdirSync(gameDir, { recursive: true });
   const pack = { game, seed, style: styleKey, generatedFrom: path.relative(REPO, cmdsPath), landmarks, rooms };
@@ -987,6 +1174,10 @@ async function main() {
   if (c.stateRecov.length) {
     console.error(`\nSTATE-RECOVERED — now in pack via Gap B; render as img2img relight off the anchor:`);
     for (const r of c.stateRecov) console.error(`  • ${r.name}  [${r.label || '?'} → anchor: ${r.anchor || 'none (delta-only)'}]\n      ${r.preview}`);
+  }
+  if (c.postureAnchored && c.postureAnchored.length) {
+    console.error(`\nVANTAGE-ANCHORED — posture sub-state; scene = the new view, rendered FREE (text2img), NOT img2img off the base (anchorMode 'vantage'):`);
+    for (const r of c.postureAnchored) console.error(`  • ${r.name}  [${r.label || 'posture'} → base: ${r.anchor}]`);
   }
   if (c.thin.length) {
     console.error(`\nTHIN — in pack but sparse; consider probing before render:`);

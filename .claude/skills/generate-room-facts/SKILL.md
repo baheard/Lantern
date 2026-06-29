@@ -84,10 +84,11 @@ It writes:
 2. **Don't bump the app version.** This is dev-only tooling/data (no service-worker change) —
    bumping `CACHE_VERSION` would force a pointless re-download for users. (Same rule as
    `location-art`.)
-3. **Hand off to `mold` (phase 2).** The pack is scene-only FACTS. The next step is `mold`, which
-   molds each room's facts into a finished Scene override in `<game>/style.json` so artview opens
-   render-ready; then `render-rooms` (phase 3) makes the pictures. Tell the user the facts are ready
-   and the next step is `/mold <game>` (or `/build-scenes <game>` to have done facts+mold in one go).
+3. **Hand off to phase 2 (`/frame` → `/scene`).** The pack is scene-only FACTS. Next is `/frame`
+   (facts → framing JUDGMENT in `<game>/location-framing.md`) then `/scene` (framing → the Scene
+   override in `<game>/style.json` so artview opens render-ready); then `render-rooms` (phase 3)
+   makes the pictures. Tell the user the facts are ready and the next step is `/frame <game>` (or
+   `/studio <game>` to orchestrate the remaining phases).
 
 ## Notes
 - **The scrape now cleans + probes (2026-06-19).** `visualCore` strips parser chrome (`[score]`,
@@ -101,9 +102,13 @@ It writes:
   artist style. Per-room literal fixes, per-game aesthetic, and global artist style all live in
   the three-layer files `location-art` owns (`<game>/style.json`, `_artists/artists.json`). See
   `.tome/art-direction-model.md`.
-- Regenerating the pack later (e.g. after the walkthrough changes) overwrites `room-facts.json`.
-  Any per-room art direction the user added lives in `style.json` → `scenes[slug]` overrides,
-  which are separate and survive a pack regen.
+- Regenerating the pack later (walkthrough change, or a facts-engine fix) overwrites
+  `room-facts.json`. The phase-2 artifacts — `location-framing.md` (`/frame`) and `style.json` →
+  `scenes[slug]` (`/scene`) — are separate and **survive the regen unchanged, which is the trap:
+  they now reflect the OLD facts and are STALE.** The renderer reads the `style.json` scene
+  override, **NOT** `room-facts.json`, so a facts fix is invisible in renders until you re-run
+  `/frame` then `/scene --only <changed rooms>` to re-distil, *then* re-render. (`/studio` flags
+  this via pipeline stamps, but the regen is where to catch it.)
 - Headless replay mechanics (seeds, snapshots): `.tome/headless-replay-harness.md`.
 
 ## On completion — stamp provenance

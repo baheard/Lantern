@@ -383,6 +383,7 @@ se
 examine mirror
 examine chair
 sit on chair
+look
 examine mirror
 put white mask on mirror
 put gold mask on mirror

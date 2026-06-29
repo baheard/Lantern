@@ -144,7 +144,7 @@ export function updateSettingsContext() {
   // (per-game override → app default → OFF).
   const locationArtToggle = document.getElementById('locationArtToggle');
   if (locationArtToggle) {
-    locationArtToggle.checked = getGameSetting('locationArt', true) !== false;
+    locationArtToggle.checked = getGameSetting('locationArt', false) !== false;
   }
 
   // Sync audio settings visibility with current OpenAI state
@@ -572,11 +572,13 @@ export function initSettings() {
   // Location Art by Default toggle (welcome screen only) — app-wide default, OFF unless set.
   const locationArtByDefaultToggle = document.getElementById('locationArtByDefaultToggle');
   if (locationArtByDefaultToggle) {
-    locationArtByDefaultToggle.checked = getAppDefault('locationArt', true) !== false;
+    locationArtByDefaultToggle.checked = getAppDefault('locationArt', false) !== false;
     locationArtByDefaultToggle.addEventListener('change', (e) => {
       const enabled = e.target.checked;
       setAppDefault('locationArt', enabled);
-      updateStatus(enabled ? '✓ New games will show location art' : '✗ Location art off by default');
+      // Re-paint the home game-card art-availability icons (gated on this default).
+      import('../../game/game-loader.js').then(({ refreshArtBadges }) => refreshArtBadges && refreshArtBadges());
+      updateStatus(enabled ? '✓ New games will show AI images' : '✗ AI images off by default');
     });
   }
 
@@ -588,7 +590,7 @@ export function initSettings() {
       const enabled = e.target.checked;
       setGameSetting('locationArt', enabled);
       import('../../features/location-art.js').then(({ refreshLocationArt }) => refreshLocationArt());
-      updateStatus(enabled ? '✓ Location art on' : '✗ Location art off');
+      updateStatus(enabled ? '✓ AI images on' : '✗ AI images off');
     });
   }
 

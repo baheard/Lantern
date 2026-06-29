@@ -29,7 +29,8 @@ different skills):
 
    ── FRAME (judgment only — no images generated) ──
 4  author aesthetic     →  style.json.aesthetic  world + mood, feeling-words only
-5  mold                 →  style.json.scenes     frames every room (vantage, what's in frame, prose)
+5  frame → scene        →  style.json.scenes     /frame pins vantage+occlusion (location-framing.md),
+                                                  /scene distils it to render prose (stamps `mold`)
 
    ── CHOOSE (cheap throwaway renders) ──
 6  audition → artist    →  selected-artist.json  bake-off to CAST the artist
@@ -114,7 +115,7 @@ Theatre — content status
   Artist          ✓   Pulp Magazine        (audition)
   Images          ✗   0 / 18 rendered      (render)
 
-What's next: 4 rooms unmolded — /mold theatre
+What's next: 4 rooms unmolded — /frame theatre then /scene theatre
 ```
 
 **"What's next" rule:** the rows are in dependency order, so walk top-down and suggest the skill
@@ -159,7 +160,7 @@ stale step, not just the first ✗.
 | 1 | Generate hints | invoke `generate-hints` skill |
 | 2 | Create image prompts | invoke `generate-room-facts` skill |
 | 3 | Author aesthetic styling | run inline — see below |
-| 4 | Mold scenes | invoke `mold` skill |
+| 4 | Frame + distil scenes | invoke `frame` then `scene` skill |
 | 5 | Audition & choose artist | run inline — see below |
 | 6 | Render images | invoke `render-rooms` skill |
 | 7 | Prototype in Artview | invoke `/artview` skill |
@@ -231,6 +232,7 @@ handful you'll audition on.
 
 - Dev-only data changes (walkthroughs, prompts, style.json, images) — do **not** bump the app version.
 - Full pipeline order: `trace-walkthrough` → `generate-hints` → `generate-room-facts` → **aesthetic** +
-  **mold** (the two FRAME steps, either order, both needed) → **audition → artist** (CHOOSE) →
-  `render-rooms` (MAKE). Artview is the prototyping surface used during the frame/choose steps.
+  (**`frame` → `scene`**) (the FRAME-judgment steps; aesthetic is order-independent of frame/scene, but
+  `scene` follows `frame`) → **audition → artist** (CHOOSE) → `render-rooms` (MAKE). The pipeline step
+  is stamped `mold` by `scene`. Artview is the prototyping surface used during the frame/choose steps.
 </content>

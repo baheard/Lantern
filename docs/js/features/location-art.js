@@ -63,6 +63,20 @@ export async function getLocationImageUrl(locationName) {
   return `games/images/${gameName}/${file}`;
 }
 
+// Resolve a representative "title" image for a game — used by the home game-card eye
+// (hover preview / full-screen). Prefers an explicit `title` field in the manifest
+// (a dedicated title piece rendered by the same artist); falls back to the first
+// location image so this works before any title art is generated. Returns null if
+// the game ships no art at all.
+export async function getTitleImageUrl(gameName) {
+  if (!gameName) return null;
+  const manifest = await loadLocationManifest(gameName);
+  if (!manifest || !manifest.images) return null;
+  const file = manifest.title || Object.values(manifest.images)[0];
+  if (!file) return null;
+  return `games/images/${gameName}/${file}`;
+}
+
 // ---------------------------------------------------------------------------
 // Content-area thumbnail
 // ---------------------------------------------------------------------------
@@ -159,7 +173,7 @@ function hideThumb() {
 //   - Click / phone tap: TOGGLES the full-screen lightbox — first click/tap opens it
 //     pinned and keeps it up, a second closes it. `touchstart` is preventDefault'd so
 //     the tap doesn't also fire a synthetic hover/click (no thumbnail on touch).
-function attachPeek(el, getUrl, getCaption) {
+export function attachPeek(el, getUrl, getCaption) {
   // Is the overlay currently up AND showing this element's image? (getAttribute
   // keeps the relative URL we set, unlike img.src which resolves to absolute.)
   const isShowingThis = () => {
@@ -183,8 +197,10 @@ function attachPeek(el, getUrl, getCaption) {
   el.addEventListener('mouseenter', () => { if (!isArtOverlayPinned()) showThumb(el, getUrl()); });
   el.addEventListener('mouseleave', () => { hideThumb(); });
   // Click opens the full lightbox — drop the hover thumbnail first so they don't stack.
-  el.addEventListener('click', (e) => { e.preventDefault(); hideThumb(); toggle(); });
-  el.addEventListener('touchstart', (e) => { e.preventDefault(); toggle(); }, { passive: false });
+  // stopPropagation keeps a peek from also firing an enclosing handler (e.g. the home
+  // game-card's launch-on-click when the eye is nested inside the card button).
+  el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); hideThumb(); toggle(); });
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); toggle(); }, { passive: false });
 }
 
 // Drop a per-room eye marker into the transcript, just to the RIGHT of the location

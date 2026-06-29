@@ -179,25 +179,33 @@ one strong shared register, authored once here:
 - **Exits:** show the stair-foot rising off-frame and the narrow gap; both minimal, in dark stone.
 
 ### crowded-study
-- **Vantage:** standing amid the clutter, the massive worn wooden desk centre-frame with the immense
-  book on its bare top; tall glass-fronted cabinet behind it, small closed brass trunk beside.
-  Panelled walls jammed floor-to-rafter with books, papers, dried plants, preserved animals, antique
-  instruments, candles. Heavy dark roof-beams above.
-- **Exits (4 — cap & place):** wide doorways on two adjacent sides (north/east → screen as plain
-  openings), a heavy iron-strapped wooden door (south, closed) on another wall, stairs descending into
-  dimness (west). Show the closed plank-and-iron door and the descending stair-mouth; the two wide
-  doorways as plain gaps. No other doors.
-- **Persistence:** DROP the white papier-mâché mask by the desk (takeable). KEEP desk/book/cabinet/
-  trunk (fixtures/furniture).
+- **Vantage (10a, facing EAST = `defaultFacing`):** entry is from Narrow Hallway (`east ← Narrow
+  Hallway`), so the camera stands just inside the west doorway looking east across the crammed study.
+  The massive worn wooden desk is centre-ahead with the single immense book on its bare top; the tall
+  glass-fronted cabinet stands directly beyond it, small closed brass trunk beside. Panelled walls
+  jammed floor-to-rafter (books, papers, dried plants, preserved animals, instruments, candles); books
+  stack on the floor. Heavy dark roof-beams overhead (lookFacts up).
+- **Facing→frame (EAST ⇒ N=left, S=right, W=behind):** the heavy iron-strapped wooden door (`south →
+  Iron Corridor`; thick iron lock, closed — exitFacts) → **on the right**. The other three exits are
+  plain openings: parlour doorway (`north`) → left, Curtained-Room doorway (`east`) → ahead behind the
+  cabinet, Narrow-Hallway entry (`west`) → behind the viewpoint.
+- **Exits (10d — cap & place):** SHOW only the characterful iron-strapped door (right, closed); SCREEN
+  the three plain gaps (lost in clutter / behind the viewpoint). No other doors studding the walls.
+- **Persistence:** DROP the white papier-mâché mask by the desk (takeable, lookFacts down). KEEP
+  desk/book/cabinet/trunk.
 
 ### sitting-room
-- **Vantage (AUDITION room):** the inviting parlour — two chairs and a cushioned settee facing the
-  hearth on the far wall, the desert-landscape painting above it (`landmarks.painting`). Flower-painted
-  walls melting into a soft flower-petal carpet.
+- **Vantage (10a, facing NORTH = `defaultFacing`; AUDITION room):** entry is from Crowded Study
+  (`north ← Crowded Study`), so the camera looks north toward the hearth, which the prose puts on "the
+  far wall" — i.e. **ahead**. Two chairs and a cushioned settee stand before it, facing it, so they are
+  seen from behind. The desert-landscape painting (`landmarks.painting`) hangs above the hearth.
+  Flower-painted walls melting into a soft flower-petal carpet.
+- **Facing→frame (NORTH ⇒ E=right, W=left, S=behind):** the panelled white door with the ornate copper
+  knob (closed — exitFacts) → **on the right** (`east → Curving Hall`). The two open plain doorways
+  (`southeast → Curtained Room`, `south → Crowded Study` = the entry) → **behind the viewpoint**.
 - **Light:** the hearth holds NO fire — a silver-wire basket of glowing cherry-red glass spheres with
   insubstantial flame flickering above them (source-named; render exactly, no invented fire).
-- **Exits:** two doorways (south, southeast corner) as plain openings; a panelled white door with copper
-  knob (east, closed). Screen/show minimally.
+- **Exits (10d):** SHOW the white copper-knob door (right, closed); SCREEN the two open doorways behind.
 
 ### curving-hall
 - **Vantage:** a high dim plaster corridor curving gently away out of sight; lit only by tiny flickering
@@ -216,9 +224,13 @@ one strong shared register, authored once here:
   subject.
 
 ### dim-shed
-- **Vantage:** a small windowless garden-shed of bare-dirt floor and unfinished planks; the only light
-  falls in through an archway on one wall; a narrow opening to a steep stair climbing into darkness on
-  another.
+- **Vantage (10a, facing EAST = `defaultFacing`):** entry is through the lit archway from Curving Hall,
+  South End (`east ← Curving Hall, South End`), so the camera stands just inside that archway looking
+  east into the dim shed — bare hard-packed dirt floor (lookFacts down), rough unfinished plank walls,
+  the interior fading into dimness ahead.
+- **Facing→frame (EAST ⇒ N=left, S=right, W=behind):** the only light spills in from the **archway
+  behind the viewpoint** (the entry, `west → Curving Hall, South End`); the narrow opening onto the
+  steep stairway climbing up into darkness (`up → Landing`) → **on the left**.
 - **Persistence:** DROP the single glove in the corner (takeable).
 
 ### landing
@@ -342,11 +354,23 @@ one strong shared register, authored once here:
 ### sitting-room-on-the-settee
 - **Vantage (10a — occupied furniture is the vantage):** viewed *while seated on the settee* → **the
   settee is beneath the viewpoint, OMIT it from frame** (don't list it among the things facing the
-  hearth — that draws an empty settee). The two armchairs ahead, facing the hearth, DO appear.
-- **State (factor 8):** the hearth now shows an **empty hook above** it (the fireplace spheres-basket
-  has been taken). Transient/post-action state. Frame as the sitting-room from the settee, hook empty
-  over the hearth. Same flower walls/carpet, two chairs ahead.
-- **Exits:** two doorways + the now-open white door — minimal.
+  hearth — that draws an empty settee). Camera looks toward the hearth ahead (same NORTH axis as base
+  `sitting-room`), a touch lower/closer than the standing base shot. The two chairs ahead, facing the
+  hearth, DO appear (seen from behind/the side).
+- **State (factor 8 — canonical PRISTINE, first-sit):** the desert-landscape painting
+  (`landmarks.painting` — a stark rocky desert at dawn, harsh scarlets and rust) hangs above the
+  hearth, and the white door is CLOSED. **Provenance:** this is the FIRST-sit state, recovered from the
+  base-pristine snapshot (`recapturedFrom: base-pristine`) — NOT the post-dream `enter rent` return
+  (empty hook / open door) the walkthrough incidentally lands in. Same flower walls / flower-petal
+  carpet, two chairs ahead.
+- **Light:** the hearth holds NO wood fire — a silver-wire basket of glowing cherry-red glass spheres
+  with insubstantial flame flickering above them (source-named; render exactly, no invented fire).
+  Matches base `sitting-room`.
+- **Facing→frame (seated, facing the hearth ahead — NORTH axis ⇒ E=right, W=left, S=behind):** the
+  panelled white-painted door with the ornate copper knob (CLOSED) → **on the right** (`east → Curving
+  Hall`); the two plain doorways → **behind the viewpoint**, out of frame. (Matches base `sitting-room`
+  so the two images agree.)
+- **Exits (10d):** SHOW the closed white copper-knob door (right); SCREEN the two doorways behind.
 
 ### dark-dome-east  — member: Dark Dome
 - **Vantage:** at the east edge, looking across the vast dim round dome to the west; the open archway
@@ -626,24 +650,46 @@ one strong shared register, authored once here:
   indistinct grey void.
 
 ### curtained-room
-- **Vantage:** a small room whose walls are entirely swathed in heavy brocade curtains; centre a
-  massive high-backed chair of pale wood (nearly a throne, rough joinery finished smooth) facing a tall
-  oval **mirror** in a standing iron-bar frame (`landmarks.mirror`) directly before it. A closed dull
-  grey lead-slab door on one wall (small keyhole, heavy opening-bar); two curtained openings out.
+- **Vantage (10a, facing pinned):** travel-into-room = EAST (player enters from Crowded Study via
+  `east → Curtained Room`), and east also faces the signature chair-and-mirror — so the camera stands
+  just inside the west curtained opening looking east across the small, curtain-swathed chamber. The
+  throne and mirror are ahead, centre; the chair faces the mirror (directly before it), so it is seen
+  from behind / three-quarter. Subject: massive high-backed pale-wood chair (nearly a throne, rough
+  joinery finished smooth) + tall oval **mirror** in a standing iron-bar frame (`landmarks.mirror`).
+- **Compass→frame (facing EAST ⇒ N=left, S=right, W=behind):** lead-slab door (south) → **on the
+  right** wall; the two curtained openings — west (the entry) and northwest — → **behind the
+  viewpoint**, out of frame. (Earlier override went vague — "one wall / two others" — which passed the
+  compass-BAN but skipped the translation; this pins it.)
+- **Mirror — plain from this vantage (factor 1, examine mirror):** the mirror is "a plain oval mirror…
+  you can't look directly into it from where you're standing" — the distorting-oil VISION only appears
+  when SEATED (the `…-on-the-chair` sub-state). So from this standing establishing shot the mirror
+  shows only a faint, plain reflection of the room — state it, so the seated vision can't leak into the
+  base image (the seated reframe owns the vision exclusively).
 
-### curtained-room-on-the-chair  — (AUDITION room)
+### curtained-room-on-the-chair  — vantage sub-state of `curtained-room` (renders FREE)
+- **Anchor:** facts mark this `anchorMode: vantage`, `anchorRoom: curtained-room`. The anchor records
+  the SHARED room identity (same brocade/mirror/iron-bar geometry) but, per the Render-method bullet,
+  this sub-state renders FREE (text2img), not as an img2img reframe of the base image.
+- **Provenance (seated `look`):** the walkthrough now does `sit on chair` → `look` → `examine mirror`,
+  so the node carries a real seated-vantage description — "Directly in front of you is a tall mirror in
+  a standing frame" (chair gone, because you occupy it) — plus the `examine mirror` vision as a folded
+  `sceneExtras` reveal. This corroborates the vantage below; it is no longer recovered-from-examines.
 - **Vantage (10a — occupied furniture is the vantage):** the viewpoint is the SEAT of the high-backed
   pale-wood chair, looking straight ahead into the mirror. **The real chair is beneath/behind the
   camera — OMIT it from frame** (naming it as an object made the model render an empty chair — the
   reported defect). The only chair that appears is the one *reflected in the mirror*.
-- **State:** the scene seen *while seated in the chair, staring into the mirror* — a magic-mirror
-  reflection: in the mirror the curtains and the chair reflect perfectly, but the figure seated in the
-  reflected chair is unclear, blurred as if through distorting oil, strongest around the upper body, the
-  head a faceless blank void; dim red/green/blue/black/brown/gold/white shadow-fragments flit and orbit
-  lazily where its face should be, a patchwork reflection. Render the curtained room + the mirror (with
-  the reflected chair + blurred faceless figure + orbiting coloured fragments) as the subject. (This is
-  a magical vision, not the player's body — the no-people rule still holds; the "reflection" is an
-  abstract faceless patchwork, not a person.)
+- **State:** the scene seen *while seated in the chair, staring into the mirror* — the pristine
+  first-sit vision (pre-mask). Keep the source's words verbatim: in the mirror the curtains and the
+  chair reflect perfectly, and **a figure sits IN the reflected chair** (placing it — without "sits in
+  the reflected chair" the model floats the figure behind the throne), but its form is unclear, as if
+  the mirror were touched with distorting oil, the blurring strongest about the upper body, the head a
+  faceless blank; dim red/green/blue/black/brown/gold/white shadows flit around the reflected body.
+  (A magical vision, not the player's body — no-people rule holds; the "reflection" is a faceless
+  blurred form, not a person.)
+- **Render method:** render FREE (text2img), NOT img2img off the base. A/B test (sandbox r18/r57 free
+  vs r41/r55/r56 anchored): the vantage anchor dragged composition back to the wide-room base and
+  imposed its palette, scattering this mirror-dominated reframe. So `anchorMode: vantage` renders free;
+  only `relight` variants (Dome lit/dark) use the base img2img.
 
 ### iron-corridor
 - **Vantage:** a windowless square tube of dark hammered iron stretching away ahead; a hanging sconce

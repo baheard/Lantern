@@ -35,7 +35,11 @@
       ],
       "description": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
       "scene": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
-      "prompt": "Scene: This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall."
+      "prompt": "Scene: This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
+      "enteredBy": [
+        "west ← Narrow Hallway"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Narrow Hallway",
@@ -79,7 +83,12 @@
           "destination": "Cell",
           "reciprocal": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone."
         }
-      ]
+      ],
+      "enteredBy": [
+        "east ← Cell",
+        "west ← Crowded Study"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Crowded Study",
@@ -93,6 +102,12 @@
       "description": "You stand amid clutter, oddments, shelves and stacks. The chamber is comfortably broad, centered around a massive and well-worn wooden desk. But so much is jammed in, around the desk and up the panelled walls, that you barely find room to stand. Books; papers; dried plants; animals stuffed and preserved, antique instruments, candles of any hue. You don't recognize half of it, and you can't name half the rest.\n\nThere are wide doorways on the north and east sides of the room. A door of heavy wood stands closed to the south, and stairs descend into dimness to the west.\n\nYou see an immense book on the desk. Behind the desk is a tall glass-fronted cabinet. Beside that is a small brass trunk, which is closed.\n\nIf there were a quarter as much here, and a tenth as many books, you might be in any scholar's study. But this knowledge must represent lifetimes of work -- lifetimes under a single hand. You do not know where you are, but you know what this place is: a dreamhold. A wizard's high house.\n\nYou do not find yourself afraid. A dreamhold is more than merely dangerous.",
       "scene": "You stand amid clutter, oddments, shelves and stacks. The chamber is comfortably broad, centered around a massive and well-worn wooden desk. But so much is jammed in, around the desk and up the panelled walls, that you barely find room to stand. Books; papers; dried plants; animals stuffed and preserved, antique instruments, candles of any hue. You don't recognize half of it, and you can't name half the rest. There are wide doorways on the north and east sides of the room. A door of heavy wood stands closed to the south, and stairs descend into dimness to the west. You see an immense book on the desk. Behind the desk is a tall glass-fronted cabinet. Beside that is a small brass trunk, which is closed. The desk is heavy and plain, a massive wooden construction. Surprisingly, the surface is bare, except for an immense book. Something in the chaos catches your eye. It looks like a white papier-mache mask, lying beside the desk.",
       "prompt": "Scene: You stand amid clutter, oddments, shelves and stacks. The chamber is comfortably broad, centered around a massive and well-worn wooden desk. But so much is jammed in, around the desk and up the panelled walls, that you barely find room to stand. Books; papers; dried plants; animals stuffed and preserved, antique instruments, candles of any hue. You don't recognize half of it, and you can't name half the rest. There are wide doorways on the north and east sides of the room. A door of heavy wood stands closed to the south, and stairs descend into dimness to the west. You see an immense book on the desk. Behind the desk is a tall glass-fronted cabinet. Beside that is a small brass trunk, which is closed. The desk is heavy and plain, a massive wooden construction. Surprisingly, the surface is bare, except for an immense book. Something in the chaos catches your eye. It looks like a white papier-mache mask, lying beside the desk.",
+      "sceneExtras": [
+        {
+          "cmd": "examine desk",
+          "text": "The desk is heavy and plain, a massive wooden construction. Surprisingly, the surface is bare, except for an immense book. Something in the chaos catches your eye. It looks like a white papier-mache mask, lying beside the desk."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "door",
@@ -127,7 +142,14 @@
       "lookFacts": {
         "up": "The room is raftered with heavy beams, their wood worn dark with time.",
         "down": "The floor is piled high with unnameable clutter. Something in the chaos catches your eye. It looks like a white papier-mache mask, lying beside the desk."
-      }
+      },
+      "enteredBy": [
+        "east ← Narrow Hallway",
+        "south ← Sitting Room",
+        "west ← Curtained Room",
+        "north ← Iron Passage"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Sitting Room",
@@ -170,7 +192,13 @@
       ],
       "lookFacts": {
         "down": "The carpet is soft and stretches entirely across the room. Delicate colors run across it, like sprays of flower petals. You cannot imagine how it was woven."
-      }
+      },
+      "enteredBy": [
+        "north ← Crowded Study",
+        "west ← Curving Hall",
+        "northwest ← Curtained Room"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Curving Hall",
@@ -230,7 +258,15 @@
       "lookFacts": {
         "up": "High overhead, the plaster arches to a crude vault.",
         "down": "The floor is worn wooden boards, unevenly laid."
-      }
+      },
+      "enteredBy": [
+        "east ← Sitting Room",
+        "north ← Curving Hall, South End",
+        "west ← Mosaic Room",
+        "southwest ← Atelier",
+        "southeast ← Curving Hall at Pedestal"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Curving Hall, South End",
@@ -243,6 +279,12 @@
       "description": "The curving corridor ends here. The blank plaster wall to the south features a large window; sunlight pours in, brightening this end of the hall. You can go through the archway to the east, take the closed door to the west, or return north along the corridor.",
       "scene": "The curving corridor ends here. The blank plaster wall to the south features a large window; sunlight pours in, brightening this end of the hall. You can go through the archway to the east, take the closed door to the west, or return north along the corridor. A broad glass pane -- inhumanly smooth and flawless -- looks out over a sunlit, mountainous world. You must be looking out of a sheer cliff, for you can see no ground below the windowsill. Far below, stone slopes break and crumble into a verdant valley. Sunlight glints off water -- threads of stream amid the greenery. Beyond the valley, the mountains rise again, and mountains beyond that.",
       "prompt": "Scene: The curving corridor ends here. The blank plaster wall to the south features a large window; sunlight pours in, brightening this end of the hall. You can go through the archway to the east, take the closed door to the west, or return north along the corridor. A broad glass pane -- inhumanly smooth and flawless -- looks out over a sunlit, mountainous world. You must be looking out of a sheer cliff, for you can see no ground below the windowsill. Far below, stone slopes break and crumble into a verdant valley. Sunlight glints off water -- threads of stream amid the greenery. Beyond the valley, the mountains rise again, and mountains beyond that.",
+      "sceneExtras": [
+        {
+          "cmd": "examine window",
+          "text": "A broad glass pane -- inhumanly smooth and flawless -- looks out over a sunlit, mountainous world. You must be looking out of a sheer cliff, for you can see no ground below the windowsill. Far below, stone slopes break and crumble into a verdant valley. Sunlight glints off water -- threads of stream amid the greenery. Beyond the valley, the mountains rise again, and mountains beyond that."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "door",
@@ -281,7 +323,13 @@
       "lookFacts": {
         "up": "High overhead, the plaster arches to a crude vault.",
         "down": "The floor is worn wooden boards, unevenly laid."
-      }
+      },
+      "enteredBy": [
+        "south ← Curving Hall",
+        "west ← Dim Shed",
+        "east ← Starry Dome, East"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Dim Shed",
@@ -309,7 +357,12 @@
       ],
       "lookFacts": {
         "down": "The floor of the shed is bare, hard-packed earth."
-      }
+      },
+      "enteredBy": [
+        "east ← Curving Hall, South End",
+        "north ← Mountain Path"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Landing",
@@ -327,6 +380,9 @@
           "destination": "Mountain Path",
           "reciprocal": "You stand at the foot of a low rocky cliff."
         }
+      ],
+      "enteredBy": [
+        "up ← Dim Shed"
       ]
     },
     {
@@ -366,7 +422,12 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "The path runs south from here, between the boulders."
-      }
+      },
+      "enteredBy": [
+        "up ← Landing",
+        "north ← Mountain Garden"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Mountain Garden",
@@ -422,7 +483,14 @@
       ],
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare."
-      }
+      },
+      "enteredBy": [
+        "south ← Mountain Path",
+        "west ← Cool Bower",
+        "east ← Warm Bower",
+        "north ← Marble Balcony"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Cool Bower",
@@ -433,6 +501,12 @@
       "description": "You stand on a small promontory which juts out of the face of the mountain. Shrubs and raised flowerbeds lie around you, except for the path which slopes down to the west. To the south and east, a sharp dropoff looks out over a lush green valley.\n\nIn the center of the bower, a single dense bush squats, sullen and dark. Its branches knot heavily around each other, then spread into sprays of delicate, blue-green needles. Strangely, a chill fog seems to spread out from under the bush; it rolls across the ground and spills from the edges of the promontory.",
       "scene": "You stand on a small promontory which juts out of the face of the mountain. Shrubs and raised flowerbeds lie around you, except for the path which slopes down to the west. To the south and east, a sharp dropoff looks out over a lush green valley. In the center of the bower, a single dense bush squats, sullen and dark. Its branches knot heavily around each other, then spread into sprays of delicate, blue-green needles. Strangely, a chill fog seems to spread out from under the bush; it rolls across the ground and spills from the edges of the promontory. The bush is broad and squat. Its blue-tinged needle-like leaves grow profusely, hiding heavy branches and small clusters of translucent white berries.",
       "prompt": "Scene: You stand on a small promontory which juts out of the face of the mountain. Shrubs and raised flowerbeds lie around you, except for the path which slopes down to the west. To the south and east, a sharp dropoff looks out over a lush green valley. In the center of the bower, a single dense bush squats, sullen and dark. Its branches knot heavily around each other, then spread into sprays of delicate, blue-green needles. Strangely, a chill fog seems to spread out from under the bush; it rolls across the ground and spills from the edges of the promontory. The bush is broad and squat. Its blue-tinged needle-like leaves grow profusely, hiding heavy branches and small clusters of translucent white berries.",
+      "sceneExtras": [
+        {
+          "cmd": "examine bush",
+          "text": "The bush is broad and squat. Its blue-tinged needle-like leaves grow profusely, hiding heavy branches and small clusters of translucent white berries."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "west",
@@ -443,7 +517,11 @@
       ],
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare."
-      }
+      },
+      "enteredBy": [
+        "east ← Mountain Garden"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Warm Bower",
@@ -454,6 +532,12 @@
       "description": "This corner of the garden is cozily tucked into a natural alcove, surrounded by stone bluffs on three sides. The sun is hot on your face. To the south, the ground drops away, revealing a lush valley far below. The path back to the garden curves up around an outcropping to the east.\n\nSmall shrubs dot this garden bower, but a single tall and wild bush dominates the space. Its branches twist in intricate profusion, then leap chaotically upward, spraying gold-veined leaves through the air.",
       "scene": "This corner of the garden is cozily tucked into a natural alcove, surrounded by stone bluffs on three sides. The sun is hot on your face. To the south, the ground drops away, revealing a lush valley far below. The path back to the garden curves up around an outcropping to the east. Small shrubs dot this garden bower, but a single tall and wild bush dominates the space. Its branches twist in intricate profusion, then leap chaotically upward, spraying gold-veined leaves through the air. The wild bush is not broad, but it is taller than you. Its leaves are narrow, glossy, many-pointed, and veined with gold amid a yellow blush. Clusters of brilliant orange berries hang half-concealed amid the tangled black branches. You catch a whiff of woodsmoke -- the same smoke you saw while descending the path. You glance around for the fire... ...And realize that the smoke is drifting from the bush. You see no flames, nor even ember-glow; but grey wisps curl from the coal-black stems and branches. The smoke trails up from the bush, buoyed on its own heat, and vanishes upward in a wind-tossed ribbon.",
       "prompt": "Scene: This corner of the garden is cozily tucked into a natural alcove, surrounded by stone bluffs on three sides. The sun is hot on your face. To the south, the ground drops away, revealing a lush valley far below. The path back to the garden curves up around an outcropping to the east. Small shrubs dot this garden bower, but a single tall and wild bush dominates the space. Its branches twist in intricate profusion, then leap chaotically upward, spraying gold-veined leaves through the air. The wild bush is not broad, but it is taller than you. Its leaves are narrow, glossy, many-pointed, and veined with gold amid a yellow blush. Clusters of brilliant orange berries hang half-concealed amid the tangled black branches. You catch a whiff of woodsmoke -- the same smoke you saw while descending the path. You glance around for the fire... ...And realize that the smoke is drifting from the bush. You see no flames, nor even ember-glow; but grey wisps curl from the coal-black stems and branches. The smoke trails up from the bush, buoyed on its own heat, and vanishes upward in a wind-tossed ribbon.",
+      "sceneExtras": [
+        {
+          "cmd": "examine bush",
+          "text": "The wild bush is not broad, but it is taller than you. Its leaves are narrow, glossy, many-pointed, and veined with gold amid a yellow blush. Clusters of brilliant orange berries hang half-concealed amid the tangled black branches. You catch a whiff of woodsmoke -- the same smoke you saw while descending the path. You glance around for the fire... ...And realize that the smoke is drifting from the bush. You see no flames, nor even ember-glow; but grey wisps curl from the coal-black stems and branches. The smoke trails up from the bush, buoyed on its own heat, and vanishes upward in a wind-tossed ribbon."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "east",
@@ -464,7 +548,11 @@
       ],
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare."
-      }
+      },
+      "enteredBy": [
+        "west ← Mountain Garden"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Marble Balcony",
@@ -475,6 +563,12 @@
       "description": "Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air.\n\nIn the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face.",
       "scene": "Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask.",
       "prompt": "Scene: Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask.",
+      "sceneExtras": [
+        {
+          "cmd": "examine statue",
+          "text": "The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask. The mask would not fit a child, and is unusually flat besides. It's not so much worn as balanced on the statue's brow."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "north",
@@ -486,7 +580,11 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "It's a broad balcony, tiled in white marble, at the southern edge of the garden."
-      }
+      },
+      "enteredBy": [
+        "south ← Mountain Garden"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Mosaic Room",
@@ -500,6 +598,16 @@
       "unprobed": [
         "mosaic"
       ],
+      "sceneExtras": [
+        {
+          "cmd": "examine cage",
+          "text": "You've seen -- you might have seen -- such cages in the market, holding songbirds in their shining wire embrace. This one, however, contains a ripe and perfect apple. You cannot imagine why. The cage door is closed."
+        },
+        {
+          "cmd": "examine apple",
+          "text": "The apple looks ripe and fresh; it might have been plucked moments before you entered the room."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "west",
@@ -510,7 +618,11 @@
       ],
       "lookFacts": {
         "up": "The mosaic seems to represent a perfect blue sky, rising up the walls and across the ceiling. A few mosaic birds circle above the eastern horizon."
-      }
+      },
+      "enteredBy": [
+        "east ← Curving Hall"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Atelier",
@@ -531,7 +643,15 @@
           "destination": "Curving Hall",
           "reciprocal": "You are in a high, dim corridor, walled in cracked and moldering plaster."
         }
-      ]
+      ],
+      "enteredBy": [
+        "northeast ← Curving Hall",
+        "south ← Mountain Pool",
+        "south ← Platform in the Void",
+        "south ← Red Desert",
+        "south ← Sea of White"
+      ],
+      "defaultFacing": "northeast"
     },
     {
       "name": "Metal Culvert",
@@ -542,6 +662,12 @@
       "description": "You find yourself standing in a dark culvert of some kind. The curving walls are polished metal, antique with tarnish. To the south, the channel ends in a circular glass barrier; to the north, it opens out into light.",
       "scene": "You find yourself standing in a dark culvert of some kind. The curving walls are polished metal, antique with tarnish. To the south, the channel ends in a circular glass barrier; to the north, it opens out into light. You bend and peer into the telescope's lens. You see a tiny dot of light in the distance... and then the... world turns... sideways.... Metal Culvert You find yourself standing in a dark culvert of some kind.",
       "prompt": "Scene: You find yourself standing in a dark culvert of some kind. The curving walls are polished metal, antique with tarnish. To the south, the channel ends in a circular glass barrier; to the north, it opens out into light. You bend and peer into the telescope's lens. You see a tiny dot of light in the distance... and then the... world turns... sideways.... Metal Culvert You find yourself standing in a dark culvert of some kind.",
+      "sceneExtras": [
+        {
+          "cmd": "look in",
+          "text": "You bend and peer into the telescope's lens. You see a tiny dot of light in the distance... and then the... world turns... sideways.... Metal Culvert You find yourself standing in a dark culvert of some kind."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "north",
@@ -572,7 +698,11 @@
           "destination": "Atelier",
           "reciprocal": "This cramped, boxy room appears to have been an artist's studio."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Metal Culvert"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Platform in the Void",
@@ -672,7 +802,14 @@
       "lookFacts": {
         "up": "High overhead, the plaster arches to a crude vault.",
         "down": "The floor is worn wooden boards, unevenly laid."
-      }
+      },
+      "enteredBy": [
+        "northwest ← Curving Hall",
+        "south ← Natural Passage",
+        "east ← Curving Hall, West End",
+        "southwest ← Harp Chamber"
+      ],
+      "defaultFacing": "northwest"
     },
     {
       "name": "Natural Passage",
@@ -697,7 +834,13 @@
           "destination": "Curving Hall at Pedestal",
           "reciprocal": "The dingy plaster walls of this corridor curve out of sight to the west and southeast."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Curving Hall at Pedestal",
+        "go ← Darkness",
+        "south ← Vaulting Cavern"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Darkness",
@@ -715,7 +858,11 @@
           "destination": "Natural Passage",
           "reciprocal": "This is a narrow passageway, which winds between irregular stone walls into the world's underdarkness."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Natural Passage"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Subterrane World",
@@ -746,22 +893,36 @@
       "name": "Sitting Room (on the settee)",
       "slug": "sitting-room-on-the-settee",
       "exits": [],
-      "description": "This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall.\n\nYou see an empty hook above the fireplace.\n\nYou see doorways to the south and in the southeast corner of the room. A white-painted door to the east is open.",
-      "scene": "This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall. You see an empty hook above the fireplace. You see doorways to the south and in the southeast corner of the room. A white-painted door to the east is open.",
-      "prompt": "Scene: This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall. You see an empty hook above the fireplace. You see doorways to the south and in the southeast corner of the room. A white-painted door to the east is open.",
+      "description": "This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall.\n\nA desert landscape painting hangs above the fireplace.\n\nYou see doorways to the south and in the southeast corner of the room. A white-painted door to the east is closed.",
+      "scene": "This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall. A desert landscape painting hangs above the fireplace. You see doorways to the south and in the southeast corner of the room. A white-painted door to the east is closed. The door is neatly carpentered in panels, and painted white. It has an ornate copper doorknob and a tiny keyhole. The door is closed.",
+      "prompt": "Scene: This room seems more inviting. The walls are painted with delicate patterns of flowers, which merge into a soft-hued carpet beneath your feet. Two chairs and a cushioned settee face a bright-flickering fireplace on the far wall. A desert landscape painting hangs above the fireplace. You see doorways to the south and in the southeast corner of the room. A white-painted door to the east is closed. The door is neatly carpentered in panels, and painted white. It has an ornate copper doorknob and a tiny keyhole. The door is closed.",
       "unprobed": [
+        "painting",
         "fireplace"
       ],
       "exitFacts": [
         {
           "ref": "door",
           "kind": "noun",
-          "examine": "The door is neatly carpentered in panels, and painted white. It has an ornate copper doorknob and a tiny keyhole. The door is open."
+          "examine": "The door is neatly carpentered in panels, and painted white. It has an ornate copper doorknob and a tiny keyhole. The door is closed."
         }
       ],
       "lookFacts": {
         "down": "The carpet is soft and stretches entirely across the room. Delicate colors run across it, like sprays of flower petals. You cannot imagine how it was woven."
-      }
+      },
+      "anchorRoom": "sitting-room",
+      "anchorMode": "vantage",
+      "stateLabel": "on the settee",
+      "sceneExtras": [
+        {
+          "cmd": "examine door",
+          "text": "The door is neatly carpentered in panels, and painted white. It has an ornate copper doorknob and a tiny keyhole. The door is closed."
+        }
+      ],
+      "recapturedFrom": "base-pristine",
+      "enteredBy": [
+        "inside ← Subterrane World"
+      ]
     },
     {
       "name": "Dark Dome, East",
@@ -797,7 +958,11 @@
       ],
       "lookFacts": {
         "up": "The dome is a dim blank expanse. Only its edges are washed by a faint colorless light."
-      }
+      },
+      "enteredBy": [
+        "west ← Curving Hall, South End"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Dark Dome, North",
@@ -828,7 +993,11 @@
       ],
       "lookFacts": {
         "up": "The dome is a dim blank expanse. Only its edges are washed by a faint colorless light."
-      }
+      },
+      "enteredBy": [
+        "north ← Dark Dome, East"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Dark Dome, West",
@@ -859,7 +1028,11 @@
       ],
       "lookFacts": {
         "up": "The dome is a dim blank expanse. Only its edges are washed by a faint colorless light."
-      }
+      },
+      "enteredBy": [
+        "west ← Dark Dome, North"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Dark Dome, South",
@@ -890,7 +1063,11 @@
       ],
       "lookFacts": {
         "up": "The dome is a dim blank expanse. Only its edges are washed by a faint colorless light."
-      }
+      },
+      "enteredBy": [
+        "south ← Dark Dome, West"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Dark Dome, Center",
@@ -899,6 +1076,12 @@
       "description": "You stand at the center of a vast round space. An immense dome arches above you. A diffuse illumination spreads across the lower reaches, barely bright enough to see by.\n\nIn the distance to the east, you can see a doorway; a ladder is visible far to the north.\n\nA low metal pyramid stands in the center of the floor. Its surface shines with a dim, oddly shifting gleam. Its base has hinges along one edge, and a handle opposite.",
       "scene": "You stand at the center of a vast round space. An immense dome arches above you. A diffuse illumination spreads across the lower reaches, barely bright enough to see by. In the distance to the east, you can see a doorway; a ladder is visible far to the north. A low metal pyramid stands in the center of the floor. Its surface shines with a dim, oddly shifting gleam. Its base has hinges along one edge, and a handle opposite. It's a six-sided pyramid, perhaps a yard across and standing higher than your knee. It seems to be made of metal, but it has a strange sheen -- as if the surface were engraved with countless parallel lines. Hinges at the base of one edge, and a handle, imply that the pyramid could be pulled open.",
       "prompt": "Scene: You stand at the center of a vast round space. An immense dome arches above you. A diffuse illumination spreads across the lower reaches, barely bright enough to see by. In the distance to the east, you can see a doorway; a ladder is visible far to the north. A low metal pyramid stands in the center of the floor. Its surface shines with a dim, oddly shifting gleam. Its base has hinges along one edge, and a handle opposite. It's a six-sided pyramid, perhaps a yard across and standing higher than your knee. It seems to be made of metal, but it has a strange sheen -- as if the surface were engraved with countless parallel lines. Hinges at the base of one edge, and a handle, imply that the pyramid could be pulled open.",
+      "sceneExtras": [
+        {
+          "cmd": "examine pyramid",
+          "text": "It's a six-sided pyramid, perhaps a yard across and standing higher than your knee. It seems to be made of metal, but it has a strange sheen -- as if the surface were engraved with countless parallel lines. Hinges at the base of one edge, and a handle, imply that the pyramid could be pulled open."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "doorway",
@@ -913,7 +1096,11 @@
       ],
       "lookFacts": {
         "up": "The dome is a dim blank expanse. Only its edges are washed by a faint colorless light."
-      }
+      },
+      "enteredBy": [
+        "north ← Dark Dome, South"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Starry Dome, Center",
@@ -924,6 +1111,16 @@
       "description": null,
       "scene": "The Bull and Cow are small star-groups near the zenith. Jernos desired Seroa, the wife of the Southern king. She turned herself into a sparrow and fled; he turned himself into a horhawk and followed her. Seroa hid herself in many other shapes, but each time Jernos changed into something that could find her. Finally she turned herself into a bull. Jernos turned into a cow, but a cow was too stupid to chase Seroa further. Seroa-the-bull mounted the Jernos-the-cow and sired eight brass calves. You've never been quite sure what the moral of that story was supposed to be. The Crutch is a bright zig-zag of stars high overhead. King Maijnir the Farsighted quarrelled with his son Walking Boy. He wounded Walking Boy's foot, and then exiled him to walk the boundaries of his kingdom, bearing only rags, tatters, and a crutch of gold.",
       "prompt": "Scene: The Bull and Cow are small star-groups near the zenith. Jernos desired Seroa, the wife of the Southern king. She turned herself into a sparrow and fled; he turned himself into a horhawk and followed her. Seroa hid herself in many other shapes, but each time Jernos changed into something that could find her. Finally she turned herself into a bull. Jernos turned into a cow, but a cow was too stupid to chase Seroa further. Seroa-the-bull mounted the Jernos-the-cow and sired eight brass calves. You've never been quite sure what the moral of that story was supposed to be. The Crutch is a bright zig-zag of stars high overhead. King Maijnir the Farsighted quarrelled with his son Walking Boy. He wounded Walking Boy's foot, and then exiled him to walk the boundaries of his kingdom, bearing only rags, tatters, and a crutch of gold.",
+      "sceneExtras": [
+        {
+          "cmd": "examine bull",
+          "text": "The Bull and Cow are small star-groups near the zenith. Jernos desired Seroa, the wife of the Southern king. She turned herself into a sparrow and fled; he turned himself into a horhawk and followed her. Seroa hid herself in many other shapes, but each time Jernos changed into something that could find her. Finally she turned herself into a bull. Jernos turned into a cow, but a cow was too stupid to chase Seroa further. Seroa-the-bull mounted the Jernos-the-cow and sired eight brass calves. You've never been quite sure what the moral of that story was supposed to be."
+        },
+        {
+          "cmd": "examine crutch",
+          "text": "The Crutch is a bright zig-zag of stars high overhead. King Maijnir the Farsighted quarrelled with his son Walking Boy. He wounded Walking Boy's foot, and then exiled him to walk the boundaries of his kingdom, bearing only rags, tatters, and a crutch of gold."
+        }
+      ],
       "recoveredFrom": "examines"
     },
     {
@@ -937,7 +1134,22 @@
       "description": null,
       "scene": "Parhu's Galley is visible to the east. A row of dim stars mark the oars of the galley slaves. Parhu flung himself into the sea and drowned, but he did not rescind his oath, and so his slaves are bound to row forever after Parhu's Ruby, the red star beyond the Galley's prow. The stars of Juinua's Wall run high above the eastern horizon. Juinua of Junorr was given a prophecy, that her blood would stain the walls of Junorr before her thirtieth year. Instead of tearing down the city wall, she ordered it built higher -- a new course of great stones every year. In her twenty-ninth year, she was crushed by a stone as she supervised the work on the wall. Or, depending who tells the tale, she died giving birth to a stone; or she was murdered by the master builder; or she died of the flux in an overcrowded city street.",
       "prompt": "Scene: Parhu's Galley is visible to the east. A row of dim stars mark the oars of the galley slaves. Parhu flung himself into the sea and drowned, but he did not rescind his oath, and so his slaves are bound to row forever after Parhu's Ruby, the red star beyond the Galley's prow. The stars of Juinua's Wall run high above the eastern horizon. Juinua of Junorr was given a prophecy, that her blood would stain the walls of Junorr before her thirtieth year. Instead of tearing down the city wall, she ordered it built higher -- a new course of great stones every year. In her twenty-ninth year, she was crushed by a stone as she supervised the work on the wall. Or, depending who tells the tale, she died giving birth to a stone; or she was murdered by the master builder; or she died of the flux in an overcrowded city street.",
-      "recoveredFrom": "examines"
+      "sceneExtras": [
+        {
+          "cmd": "examine galley",
+          "text": "Parhu's Galley is visible to the east. A row of dim stars mark the oars of the galley slaves. Parhu flung himself into the sea and drowned, but he did not rescind his oath, and so his slaves are bound to row forever after Parhu's Ruby, the red star beyond the Galley's prow."
+        },
+        {
+          "cmd": "examine wall",
+          "text": "The stars of Juinua's Wall run high above the eastern horizon. Juinua of Junorr was given a prophecy, that her blood would stain the walls of Junorr before her thirtieth year. Instead of tearing down the city wall, she ordered it built higher -- a new course of great stones every year. In her twenty-ninth year, she was crushed by a stone as she supervised the work on the wall. Or, depending who tells the tale, she died giving birth to a stone; or she was murdered by the master builder; or she died of the flux in an overcrowded city street."
+        }
+      ],
+      "recoveredFrom": "examines",
+      "enteredBy": [
+        "east ← Starry Dome, Center",
+        "east ← Starry Dome, North"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Starry Dome, West",
@@ -948,7 +1160,17 @@
       "description": null,
       "scene": "The Doorstep of Heaven is a near-perfect circle of stars in the western sky. It marks the gate, or guards the gate, through which the dead travel to the All-Place. Funereal ceremonies always begin when the Doorstep rises, day or night.",
       "prompt": "Scene: The Doorstep of Heaven is a near-perfect circle of stars in the western sky. It marks the gate, or guards the gate, through which the dead travel to the All-Place. Funereal ceremonies always begin when the Doorstep rises, day or night.",
-      "recoveredFrom": "examines"
+      "sceneExtras": [
+        {
+          "cmd": "examine doorstep",
+          "text": "The Doorstep of Heaven is a near-perfect circle of stars in the western sky. It marks the gate, or guards the gate, through which the dead travel to the All-Place. Funereal ceremonies always begin when the Doorstep rises, day or night."
+        }
+      ],
+      "recoveredFrom": "examines",
+      "enteredBy": [
+        "west ← Starry Dome, South"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Starry Dome, North",
@@ -961,7 +1183,19 @@
       "description": null,
       "scene": "The stars of the Iron Moth hang high in the northern sky. The Moth never sets; it flutters constantly around and around the Utter North, which is always near its bright left antenna. Lodestones are dust from the Moth's wing.",
       "prompt": "Scene: The stars of the Iron Moth hang high in the northern sky. The Moth never sets; it flutters constantly around and around the Utter North, which is always near its bright left antenna. Lodestones are dust from the Moth's wing.",
-      "recoveredFrom": "examines"
+      "sceneExtras": [
+        {
+          "cmd": "examine moth",
+          "text": "The stars of the Iron Moth hang high in the northern sky. The Moth never sets; it flutters constantly around and around the Utter North, which is always near its bright left antenna. Lodestones are dust from the Moth's wing."
+        }
+      ],
+      "recoveredFrom": "examines",
+      "enteredBy": [
+        "north ← Starry Dome, East",
+        "north ← Starry Dome, West",
+        "down ← Translucent Dome"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Translucent Dome",
@@ -973,6 +1207,20 @@
       "description": "You are in a small round dome, much smaller than the vast dark space below. The curving surface is translucent, bright with the daylight filtering in from outside. The floor beneath your feet is a harsh metal grating. The ladder runs from a hole in the grating, near the south side, up to a matching opening in the dome above.\n\nA low platform fills the center of the floor. The platform is piled high with split lengths of wood.\n\nA tall triangle of beaten copper rises along the north side of the dome.",
       "scene": "You are in a small round dome, much smaller than the vast dark space below. The curving surface is translucent, bright with the daylight filtering in from outside. The floor beneath your feet is a harsh metal grating. The ladder runs from a hole in the grating, near the south side, up to a matching opening in the dome above. A low platform fills the center of the floor. The platform is piled high with split lengths of wood. A tall triangle of beaten copper rises along the north side of the dome. It is a thin sheet of hammered copper, as wide at the base as your outstretched arms. The sheet tapers as it rises, curving inward as it hugs the dome's inner surface. Its peak is halfway up the dome. The shape reminds you of a billowing sail. The copper triangle stands to the north, but its base rests in a narrow track that runs all the way around the dome. A narrow circular track runs around the room, a bare finger's width from the dome's lower edge. The copper sail rests in this track on the north side of the dome. The wood is laid out in an immense, semicircular heap.",
       "prompt": "Scene: You are in a small round dome, much smaller than the vast dark space below. The curving surface is translucent, bright with the daylight filtering in from outside. The floor beneath your feet is a harsh metal grating. The ladder runs from a hole in the grating, near the south side, up to a matching opening in the dome above. A low platform fills the center of the floor. The platform is piled high with split lengths of wood. A tall triangle of beaten copper rises along the north side of the dome. It is a thin sheet of hammered copper, as wide at the base as your outstretched arms. The sheet tapers as it rises, curving inward as it hugs the dome's inner surface. Its peak is halfway up the dome. The shape reminds you of a billowing sail. The copper triangle stands to the north, but its base rests in a narrow track that runs all the way around the dome. A narrow circular track runs around the room, a bare finger's width from the dome's lower edge. The copper sail rests in this track on the north side of the dome. The wood is laid out in an immense, semicircular heap.",
+      "sceneExtras": [
+        {
+          "cmd": "examine triangle",
+          "text": "It is a thin sheet of hammered copper, as wide at the base as your outstretched arms. The sheet tapers as it rises, curving inward as it hugs the dome's inner surface. Its peak is halfway up the dome. The shape reminds you of a billowing sail. The copper triangle stands to the north, but its base rests in a narrow track that runs all the way around the dome."
+        },
+        {
+          "cmd": "examine track",
+          "text": "A narrow circular track runs around the room, a bare finger's width from the dome's lower edge. The copper sail rests in this track on the north side of the dome."
+        },
+        {
+          "cmd": "examine wood",
+          "text": "The wood is laid out in an immense, semicircular heap. It looks like nothing so much as a bonfire, ready for the spark."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "ladder",
@@ -993,7 +1241,13 @@
       ],
       "lookFacts": {
         "up": "Daylight gives the dome a soft white glow, although you can see nothing outside."
-      }
+      },
+      "enteredBy": [
+        "up ← Starry Dome, North",
+        "down ← Catwalk, South",
+        "down ← Catwalk, South; Night",
+        "down ← Catwalk, South; Unearthly"
+      ]
     },
     {
       "name": "Catwalk, South",
@@ -1032,7 +1286,12 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "up ← Translucent Dome",
+        "south ← Catwalk, East"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Catwalk, West",
@@ -1054,7 +1313,11 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "west ← Catwalk, South"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Catwalk, North",
@@ -1076,7 +1339,11 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "north ← Catwalk, West"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Catwalk, East",
@@ -1098,7 +1365,11 @@
       "lookFacts": {
         "up": "The sky is unclouded blue. It stretches with the broad perfection of its mountain domain. The sun is an exuberant early-afternoon glare.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "east ← Catwalk, North"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Catwalk, West; Night",
@@ -1133,7 +1404,12 @@
       "lookFacts": {
         "up": "The sky is black, but clear, hung thickly with stars. You find, with calm surprise, that you can recognize constellations. The moon is well risen, and surrounded by a halo.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "east ← Shadow Path, West of Dome; Night",
+        "west ← Catwalk, South; Night"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Catwalk, North; Night",
@@ -1145,6 +1421,12 @@
       "description": "The copper sail inside the dome is visible here, a dark silhouette. It blocks the firelight; a long black shadow falls north across the catwalk and out into the empty air.",
       "scene": "The copper sail inside the dome is visible here, a dark silhouette. It blocks the firelight; a long black shadow falls north across the catwalk and out into the empty air. The shadow of the sail is an immensely elongated triangle, stretching out to the north, across the catwalk and out into space. It's odd, in fact, how it seems to hang in the air. A strip of utter black beyond the catwalk, reaching as far as the mountain face...",
       "prompt": "Scene: The copper sail inside the dome is visible here, a dark silhouette. It blocks the firelight; a long black shadow falls north across the catwalk and out into the empty air. The shadow of the sail is an immensely elongated triangle, stretching out to the north, across the catwalk and out into space. It's odd, in fact, how it seems to hang in the air. A strip of utter black beyond the catwalk, reaching as far as the mountain face...",
+      "sceneExtras": [
+        {
+          "cmd": "examine shadow",
+          "text": "The shadow of the sail is an immensely elongated triangle, stretching out to the north, across the catwalk and out into space. It's odd, in fact, how it seems to hang in the air. A strip of utter black beyond the catwalk, reaching as far as the mountain face..."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "north",
@@ -1161,7 +1443,12 @@
       "lookFacts": {
         "up": "The sky is black, but clear, hung thickly with stars. You find, with calm surprise, that you can recognize constellations. The moon is well risen, and surrounded by a halo.",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "north ← Catwalk, West; Night",
+        "south ← Ledge; Night"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Ledge; Night",
@@ -1183,7 +1470,11 @@
       "lookFacts": {
         "up": "The sky is black, but clear, hung thickly with stars. You find, with calm surprise, that you can recognize constellations. The moon is well risen, and surrounded by a halo.",
         "down": "The shadow falls from the silhouette on the illuminated dome to the south. It seems heavier, and darker, than any shadow should be... and it lies across the air, beneath your feet, supporting you. You…"
-      }
+      },
+      "enteredBy": [
+        "north ← Catwalk, North; Night"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "South Alcove",
@@ -1211,6 +1502,9 @@
           "destination": "Orrery",
           "reciprocal": "You stand in a wide, tall, and dimly lit chamber."
         }
+      ],
+      "enteredBy": [
+        "down ← Starry Dome, North"
       ]
     },
     {
@@ -1222,6 +1516,20 @@
       "description": "You stand in a wide, tall, and dimly lit chamber. It has six sides; smaller alcoves open to the north and south.\n\nThe chamber is dominated by a vast machine: an engine of gears, shafts, and clattering motion. It is primarily a great stately disk of brass which turns on a tilted axis. Smaller wheels pirouette on the disk's face, bearing globes of delicate glass in their complicated courses.\n\nThe great brass disk continues its revolution. The silver wheel is borne out of reach.\n\nYou notice a blue mask fluttering from one of the glass globes on the machine's wheels.",
       "scene": "You stand in a wide, tall, and dimly lit chamber. It has six sides; smaller alcoves open to the north and south. The chamber is dominated by a vast machine: an engine of gears, shafts, and clattering motion. It is primarily a great stately disk of brass which turns on a tilted axis. Smaller wheels pirouette on the disk's face, bearing globes of delicate glass in their complicated courses. The great brass disk continues its revolution. The silver wheel is borne out of reach. You notice a blue mask fluttering from one of the glass globes on the machine's wheels. The brass disk nearly fills the room. It rises at a sharp angle; its lower edge is a few inches above the floor, but the opposite edge approaches the high roof. Intricate arcs and lines are engraved across its surface, measuring you know not what. The disk turns with a slow, steady rotation. A large globe of blue glass is embedded at the disk's center. The globe bears a delicate pattern of brown and white, like a map of islands in an impossible curved sea. The globe is fixed; the disk rotates around it.",
       "prompt": "Scene: You stand in a wide, tall, and dimly lit chamber. It has six sides; smaller alcoves open to the north and south. The chamber is dominated by a vast machine: an engine of gears, shafts, and clattering motion. It is primarily a great stately disk of brass which turns on a tilted axis. Smaller wheels pirouette on the disk's face, bearing globes of delicate glass in their complicated courses. The great brass disk continues its revolution. The silver wheel is borne out of reach. You notice a blue mask fluttering from one of the glass globes on the machine's wheels. The brass disk nearly fills the room. It rises at a sharp angle; its lower edge is a few inches above the floor, but the opposite edge approaches the high roof. Intricate arcs and lines are engraved across its surface, measuring you know not what. The disk turns with a slow, steady rotation. A large globe of blue glass is embedded at the disk's center. The globe bears a delicate pattern of brown and white, like a map of islands in an impossible curved sea. The globe is fixed; the disk rotates around it.",
+      "sceneExtras": [
+        {
+          "cmd": "examine disk",
+          "text": "The brass disk nearly fills the room. It rises at a sharp angle; its lower edge is a few inches above the floor, but the opposite edge approaches the high roof. Intricate arcs and lines are engraved across its surface, measuring you know not what. The disk turns with a slow, steady rotation. A large globe of blue glass is embedded at the disk's center. The globe bears a delicate pattern of brown and white, like a map of islands in an impossible curved sea. The globe is fixed; the disk rotates around it. A silver wheel makes its own revolutions on the lower left side of the disk. Opposite it, on the upper right side, a copper wheel turns. The wheels are also carried slowly around with the great disk's motion."
+        },
+        {
+          "cmd": "examine wheel",
+          "text": "The copper wheel is incised with precise radial lines. At its center is a banded globe of red glass. There is a small green globe at the wheel's rim, circling slowly as the wheel turns. The copper wheel now occupies the lower side of the great brass disk, as the engine continues its stately revolution. The green globe has passed the outermost edge of the brass disk. The copper wheel is borne out of reach."
+        },
+        {
+          "cmd": "examine wheel",
+          "text": "The silver wheel is engraved with spiralling moiré metrics. At its center, a globe of violet glass rotates slowly. A smaller globe of tan is carried around the silver wheel's rim with its motion. The tan globe is itself circled with heavy rings of frosted glass. The silver wheel now occupies the lower side of the great brass disk, as the engine continues its stately revolution. The ringed tan globe is swinging past the center of the brass disk, and the blue globe which rests there."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "north",
@@ -1232,7 +1540,11 @@
       ],
       "lookFacts": {
         "up": "The vault above the machine is lost in shadow."
-      }
+      },
+      "enteredBy": [
+        "north ← South Alcove"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "North Alcove",
@@ -1260,7 +1572,11 @@
           "destination": "Curving Hall, West End",
           "reciprocal": "The curving corridor ends here, in a blank plaster wall relieved by a single window."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Orrery"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Curving Hall, West End",
@@ -1272,6 +1588,12 @@
       "description": "The curving corridor ends here, in a blank plaster wall relieved by a single window. The window looks out on a strange subterranean prospect to the west. You can return east, pass through the archway to the north, or try the closed door to the south.",
       "scene": "The curving corridor ends here, in a blank plaster wall relieved by a single window. The window looks out on a strange subterranean prospect to the west. You can return east, pass through the archway to the north, or try the closed door to the south. A broad glass pane -- inhumanly smooth and flawless -- looks out over a dark cavern. This end of the corridor seems to be deep underground. A natural cave spreads out below; its mammoth columns and cascades of flowstone are only dimly picked out by the candlelight behind you. The farther reaches are hidden in darkness. But the shining waterfall before you is easily visible. A stream pours in from your right, tumbles from a ledge, and plummets into a pit beneath the window. The water seems to sparkle with some natural phosphorescence.",
       "prompt": "Scene: The curving corridor ends here, in a blank plaster wall relieved by a single window. The window looks out on a strange subterranean prospect to the west. You can return east, pass through the archway to the north, or try the closed door to the south. A broad glass pane -- inhumanly smooth and flawless -- looks out over a dark cavern. This end of the corridor seems to be deep underground. A natural cave spreads out below; its mammoth columns and cascades of flowstone are only dimly picked out by the candlelight behind you. The farther reaches are hidden in darkness. But the shining waterfall before you is easily visible. A stream pours in from your right, tumbles from a ledge, and plummets into a pit beneath the window. The water seems to sparkle with some natural phosphorescence.",
+      "sceneExtras": [
+        {
+          "cmd": "examine window",
+          "text": "A broad glass pane -- inhumanly smooth and flawless -- looks out over a dark cavern. This end of the corridor seems to be deep underground. A natural cave spreads out below; its mammoth columns and cascades of flowstone are only dimly picked out by the candlelight behind you. The farther reaches are hidden in darkness. But the shining waterfall before you is easily visible. A stream pours in from your right, tumbles from a ledge, and plummets into a pit beneath the window. The water seems to sparkle with some natural phosphorescence."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "door",
@@ -1304,7 +1626,12 @@
       "lookFacts": {
         "up": "High overhead, the plaster arches to a crude vault.",
         "down": "The floor is worn wooden boards, unevenly laid."
-      }
+      },
+      "enteredBy": [
+        "up ← North Alcove",
+        "south ← Arboretum"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Arboretum",
@@ -1322,7 +1649,11 @@
           "destination": "Curving Hall, West End",
           "reciprocal": "The curving corridor ends here, in a blank plaster wall relieved by a single window."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Curving Hall, West End"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Dank Jungle (in the earthenware tub)",
@@ -1344,6 +1675,16 @@
       "unprobed": [
         "pillar"
       ],
+      "sceneExtras": [
+        {
+          "cmd": "examine harp",
+          "text": "This once-proud instrument looks as if it was destroyed in inferno -- although the room shows no other signs of a fire. The harp's pillar and frame are blackened and cracked; the soundbox is split apart. The few remaining strings are curled knots of ash."
+        },
+        {
+          "cmd": "examine straw",
+          "text": "You take a closer look at the bundle of straw. Your best guess is that it's a torch of some sort. The straw is tied tightly at one end, forming a handle; the other end is splayed, and seems to be slightly charred."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "door",
@@ -1356,7 +1697,11 @@
           "destination": "Curving Hall at Pedestal",
           "reciprocal": "The dingy plaster walls of this corridor curve out of sight to the west and southeast."
         }
-      ]
+      ],
+      "enteredBy": [
+        "northeast ← Curving Hall at Pedestal"
+      ],
+      "defaultFacing": "northeast"
     },
     {
       "name": "Vaulting Cavern",
@@ -1404,7 +1749,12 @@
       ],
       "lookFacts": {
         "up": "The roof is hung with stalactites. A dark vein of stone slashes across the creamy limestone."
-      }
+      },
+      "enteredBy": [
+        "up ← Ledge in Pit",
+        "southwest ← Confusing Passage"
+      ],
+      "defaultFacing": "southwest"
     },
     {
       "name": "Shore of River",
@@ -1425,7 +1775,11 @@
           "destination": "Far Shore of River",
           "reciprocal": "You have reached the western side of the subterranean river."
         }
-      ]
+      ],
+      "enteredBy": [
+        "west ← Vaulting Cavern"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Far Shore of River",
@@ -1443,7 +1797,11 @@
           "destination": "River Crawl",
           "reciprocal": "You are crouched in a narrow twisting crawlway."
         }
-      ]
+      ],
+      "enteredBy": [
+        "west ← Shore of River"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "River Crawl",
@@ -1461,7 +1819,11 @@
           "destination": "Ledge in Pit",
           "reciprocal": "You are balanced on a ledge, leaning against the wall of a twisty, irregular pit."
         }
-      ]
+      ],
+      "enteredBy": [
+        "southwest ← Far Shore of River"
+      ],
+      "defaultFacing": "southwest"
     },
     {
       "name": "Ledge in Pit",
@@ -1499,7 +1861,11 @@
       ],
       "lookFacts": {
         "down": "It's wide enough to stand on. That's about all it has going for it."
-      }
+      },
+      "enteredBy": [
+        "down ← River Crawl",
+        "up ← Deep in Pit"
+      ]
     },
     {
       "name": "Deep in Pit",
@@ -1534,6 +1900,10 @@
           "destination": "Ledge in Pit",
           "reciprocal": "You are balanced on a ledge, leaning against the wall of a twisty, irregular pit."
         }
+      ],
+      "enteredBy": [
+        "down ← Ledge in Pit",
+        "up ← Depths of Pit"
       ]
     },
     {
@@ -1567,6 +1937,9 @@
           "destination": "Deep in Pit",
           "reciprocal": "The shaft is roughly vertical here, and you cling to holds in the wall, hoping desperately that you do not slip."
         }
+      ],
+      "enteredBy": [
+        "down ← Deep in Pit"
       ]
     },
     {
@@ -1598,7 +1971,12 @@
       ],
       "lookFacts": {
         "up": "The roof is a twisted vault of stone, hung with stalactites."
-      }
+      },
+      "enteredBy": [
+        "northeast ← Vaulting Cavern",
+        "west ← Grey Chamber"
+      ],
+      "defaultFacing": "northeast"
     },
     {
       "name": "Dead End",
@@ -1626,7 +2004,11 @@
           "destination": "Cistern, West",
           "reciprocal": "You are at the edge of an immense and empty elliptical chamber."
         }
-      ]
+      ],
+      "enteredBy": [
+        "northeast ← Confusing Passage"
+      ],
+      "defaultFacing": "northeast"
     },
     {
       "name": "Cistern, West",
@@ -1640,6 +2022,12 @@
       "unprobed": [
         "window",
         "column"
+      ],
+      "sceneExtras": [
+        {
+          "cmd": "examine grate",
+          "text": "It's a round slab of rough hammered brass, pierced by finger-sized holes. You can see only darkness below."
+        }
       ],
       "exitFacts": [
         {
@@ -1662,7 +2050,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light. A catwalk is hung around the perimeter wall,…",
         "down": "The floor is a black, blank ellipse. The surface seems like it should be reflective, but you can see no reflection within it -- not even the soft glare of the roof."
-      }
+      },
+      "enteredBy": [
+        "east ← Dead End",
+        "west ← Cistern, Bottom"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Cistern, East",
@@ -1677,7 +2070,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light. A catwalk is hung around the perimeter wall,…",
         "down": "The floor is a black, blank ellipse. The surface seems like it should be reflective, but you can see no reflection within it -- not even the soft glare of the roof."
-      }
+      },
+      "enteredBy": [
+        "east ← Cistern, West",
+        "down ← Cistern, East (on the glass platform)"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Cistern, East (on the glass platform)",
@@ -1686,9 +2084,9 @@
         "down → Cistern, East",
         "up → Cistern Catwalk, East"
       ],
-      "description": "Handholds cut into the wall, to the right of the platform, form a ladder leading both up and down.\n\nA heavy iron lever rises from the platform, by the wall.",
-      "scene": "Handholds cut into the wall, to the right of the platform, form a ladder leading both up and down. A heavy iron lever rises from the platform, by the wall.",
-      "prompt": "Scene: Handholds cut into the wall, to the right of the platform, form a ladder leading both up and down. A heavy iron lever rises from the platform, by the wall.",
+      "description": "You are standing on a low glass platform at the eastern side of the elliptical cistern. The platform is about three strides across; it juts out from the granite wall, a bare inch above the dead-black floor.\n\nHigh above you, a glass catwalk runs around the room's perimeter.\n\nA black column rises along the east wall, from the black floor up to the catwalk. It passes just to the right of the platform.\n\nA heavy iron lever rises from the platform, by the wall.",
+      "scene": "You are standing on a low glass platform at the eastern side of the elliptical cistern. The platform is about three strides across; it juts out from the granite wall, a bare inch above the dead-black floor. High above you, a glass catwalk runs around the room's perimeter. A black column rises along the east wall, from the black floor up to the catwalk. It passes just to the right of the platform. A heavy iron lever rises from the platform, by the wall.",
+      "prompt": "Scene: You are standing on a low glass platform at the eastern side of the elliptical cistern. The platform is about three strides across; it juts out from the granite wall, a bare inch above the dead-black floor. High above you, a glass catwalk runs around the room's perimeter. A black column rises along the east wall, from the black floor up to the catwalk. It passes just to the right of the platform. A heavy iron lever rises from the platform, by the wall.",
       "exitFacts": [
         {
           "ref": "down",
@@ -1706,7 +2104,18 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light. A catwalk is hung around the perimeter wall,…",
         "down": "The floor is a black, blank ellipse. The surface seems like it should be reflective, but you can see no reflection within it -- not even the soft glare of the roof."
-      }
+      },
+      "anchorRoom": "cistern-east",
+      "anchorMode": "vantage",
+      "stateLabel": "on the glass platform",
+      "unprobed": [
+        "column"
+      ],
+      "recapturedFrom": "base-pristine",
+      "enteredBy": [
+        "up ← Cistern, Bottom",
+        "down ← Cistern Catwalk, East"
+      ]
     },
     {
       "name": "Cistern, Bottom",
@@ -1777,7 +2186,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It begins here, and seems to curve almost all the way around the room at this level. The glass is thick and clear, but…"
-      }
+      },
+      "enteredBy": [
+        "up ← Cistern, East (on the glass platform)",
+        "southeast ← Cistern Catwalk, Northeast"
+      ],
+      "defaultFacing": "southeast"
     },
     {
       "name": "Cistern Catwalk, Northeast",
@@ -1806,7 +2220,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It seems to curve almost all the way around the room at this level. The glass is thick and clear, but somewhat uneven at the…"
-      }
+      },
+      "enteredBy": [
+        "north ← Cistern Catwalk, East",
+        "east ← Cistern Catwalk, North"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Cistern Catwalk, North",
@@ -1818,6 +2237,12 @@
       "description": "You stand in the glass trough, on the north side of the chamber. It runs east and west from here. The catwalk is somewhat cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a small hole is broken right through.",
       "scene": "You stand in the glass trough, on the north side of the chamber. It runs east and west from here. The catwalk is somewhat cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a small hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of your thumb.",
       "prompt": "Scene: You stand in the glass trough, on the north side of the chamber. It runs east and west from here. The catwalk is somewhat cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a small hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of your thumb.",
+      "sceneExtras": [
+        {
+          "cmd": "examine hole",
+          "text": "Several cracks converge, leaving a gap in the glass surface the size of your thumb."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "hole",
@@ -1845,7 +2270,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It seems to curve almost all the way around the room at this level. The glass is uneven and slightly cracked. You see a hole…"
-      }
+      },
+      "enteredBy": [
+        "northwest ← Cistern Catwalk, Northeast",
+        "northeast ← Cistern Catwalk, Northwest"
+      ],
+      "defaultFacing": "northwest"
     },
     {
       "name": "Cistern Catwalk, Northwest",
@@ -1857,6 +2287,12 @@
       "description": "You stand in the glass trough, on the northwest side of the chamber. It runs southwest and northeast from here. The catwalk is rather cracked at this point. A web of cracks spreads nearly across the trough; at their center, a large hole is broken right through.",
       "scene": "You stand in the glass trough, on the northwest side of the chamber. It runs southwest and northeast from here. The catwalk is rather cracked at this point. A web of cracks spreads nearly across the trough; at their center, a large hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of your fist.",
       "prompt": "Scene: You stand in the glass trough, on the northwest side of the chamber. It runs southwest and northeast from here. The catwalk is rather cracked at this point. A web of cracks spreads nearly across the trough; at their center, a large hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of your fist.",
+      "sceneExtras": [
+        {
+          "cmd": "examine hole",
+          "text": "Several cracks converge, leaving a gap in the glass surface the size of your fist."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "hole",
@@ -1884,7 +2320,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It seems to curve almost all the way around the room at this level. The glass is cracked and uneven. You see a hole the size…"
-      }
+      },
+      "enteredBy": [
+        "west ← Cistern Catwalk, North",
+        "north ← Cistern Catwalk, West"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Cistern Catwalk, West",
@@ -1896,6 +2337,12 @@
       "description": "You stand in the glass trough, at the west edge of the chamber. It runs south and north from here. The catwalk is heavily cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a medium-sized hole is broken right through.",
       "scene": "You stand in the glass trough, at the west edge of the chamber. It runs south and north from here. The catwalk is heavily cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a medium-sized hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of an egg.",
       "prompt": "Scene: You stand in the glass trough, at the west edge of the chamber. It runs south and north from here. The catwalk is heavily cracked at this point. The cracks spiderweb several feet of the glass surface; at their center, a medium-sized hole is broken right through. Several cracks converge, leaving a gap in the glass surface the size of an egg.",
+      "sceneExtras": [
+        {
+          "cmd": "examine hole",
+          "text": "Several cracks converge, leaving a gap in the glass surface the size of an egg."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "hole",
@@ -1923,7 +2370,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It seems to curve almost all the way around the room at this level. The glass is cracked and irregular. You see an egg-sized…"
-      }
+      },
+      "enteredBy": [
+        "southwest ← Cistern Catwalk, Northwest",
+        "northwest ← Cistern Catwalk, Southwest"
+      ],
+      "defaultFacing": "southwest"
     },
     {
       "name": "Cistern Catwalk, Southwest",
@@ -1935,6 +2387,12 @@
       "description": "You stand in the glass trough, on the southwest side of its arc. It runs southeast and northwest from here.\n\nParallel waves of cracks mar the glass surface. The fractures are even thicker to the east; there the trough seems ready to fall into splinters.",
       "scene": "You stand in the glass trough, on the southwest side of its arc. It runs southeast and northwest from here. Parallel waves of cracks mar the glass surface. The fractures are even thicker to the east; there the trough seems ready to fall into splinters. You see nothing special about the cracks.",
       "prompt": "Scene: You stand in the glass trough, on the southwest side of its arc. It runs southeast and northwest from here. Parallel waves of cracks mar the glass surface. The fractures are even thicker to the east; there the trough seems ready to fall into splinters. You see nothing special about the cracks.",
+      "sceneExtras": [
+        {
+          "cmd": "examine cracks",
+          "text": "You see nothing special about the cracks."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "northwest",
@@ -1952,7 +2410,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a shallow glass trough, a yard wide and perhaps a foot deep. It seems to curve almost all the way around the room at this level. The glass is badly cracked here; opaque glinting seams…"
-      }
+      },
+      "enteredBy": [
+        "south ← Cistern Catwalk, West",
+        "west ← Cistern Catwalk, South"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Cistern Catwalk, South",
@@ -1984,7 +2447,12 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The catwalk is a flat black pathway, a yard wide. The black substance seems to fill it to the brim."
-      }
+      },
+      "enteredBy": [
+        "southeast ← Cistern Catwalk, Southwest",
+        "southwest ← Cistern Catwalk, Southeast"
+      ],
+      "defaultFacing": "southeast"
     },
     {
       "name": "Cistern Catwalk, Southeast",
@@ -2014,7 +2482,11 @@
       "lookFacts": {
         "up": "The ceiling is a white ellipse, remote and blank. It radiates a featureless white glow, which illuminates the chamber -- a perfect and shadowless light.",
         "down": "The black substance meets the wall, where it seems to rear up and spill over the edges of the catwalk. There it joins the black column which descends directly beneath you."
-      }
+      },
+      "enteredBy": [
+        "east ← Cistern Catwalk, South"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Grey Chamber",
@@ -2058,6 +2530,16 @@
       "description": "The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south.\n\nIn the center of the room is a massive, high-backed chair of some pale wood. Directly before it is a tall mirror in a standing frame.",
       "scene": "The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south. In the center of the room is a massive, high-backed chair of some pale wood. Directly before it is a tall mirror in a standing frame. It seems to be a plain oval mirror, suspended in a frame of iron bars. You can't look directly into it from where you're standing. The chair is cut from heavy planks of pale wood. It has a solid base, high arms and back -- nearly a throne, you think. The joinery is rough, but the surface has been finished to a smooth fineness. The chair is positioned in front of a standing mirror.",
       "prompt": "Scene: The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south. In the center of the room is a massive, high-backed chair of some pale wood. Directly before it is a tall mirror in a standing frame. It seems to be a plain oval mirror, suspended in a frame of iron bars. You can't look directly into it from where you're standing. The chair is cut from heavy planks of pale wood. It has a solid base, high arms and back -- nearly a throne, you think. The joinery is rough, but the surface has been finished to a smooth fineness. The chair is positioned in front of a standing mirror.",
+      "sceneExtras": [
+        {
+          "cmd": "examine mirror",
+          "text": "It seems to be a plain oval mirror, suspended in a frame of iron bars. You can't look directly into it from where you're standing."
+        },
+        {
+          "cmd": "examine chair",
+          "text": "The chair is cut from heavy planks of pale wood. It has a solid base, high arms and back -- nearly a throne, you think. The joinery is rough, but the surface has been finished to a smooth fineness. The chair is positioned in front of a standing mirror."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "door",
@@ -2081,7 +2563,50 @@
           "destination": "Sitting Room",
           "reciprocal": "This room seems more inviting."
         }
-      ]
+      ],
+      "enteredBy": [
+        "east ← Crowded Study",
+        "southeast ← Sitting Room"
+      ],
+      "defaultFacing": "east"
+    },
+    {
+      "name": "Curtained Room (on the chair)",
+      "slug": "curtained-room-on-the-chair",
+      "exits": [],
+      "description": "The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south.\n\nDirectly in front of you is a tall mirror in a standing frame.",
+      "scene": "The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south. Directly in front of you is a tall mirror in a standing frame. You blink and stare into the mirror. How odd. The mirror reflects your chair, and the curtains behind you, perfectly. But your own form is unclear -- as if the mirror were touched with some distorting oil. The blurring is strongest around your upper body; your head appears to be a faceless blank. Nervously, you raise your hand to your own face. Everything feels in its place. But your reflection has raised a blurred hand to a featureless void. And dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body. Then they are gone. Your reflection is strangely blurred. The distortion is strongest around your upper body; your head appears to be a faceless blank. But dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body. The door appears to be a single slab of dull grey lead.",
+      "prompt": "Scene: The walls of this small room are entirely swathed in heavy brocade curtains. The only openings are to the west and northwest, and a closed lead-slab door to the south. Directly in front of you is a tall mirror in a standing frame. You blink and stare into the mirror. How odd. The mirror reflects your chair, and the curtains behind you, perfectly. But your own form is unclear -- as if the mirror were touched with some distorting oil. The blurring is strongest around your upper body; your head appears to be a faceless blank. Nervously, you raise your hand to your own face. Everything feels in its place. But your reflection has raised a blurred hand to a featureless void. And dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body. Then they are gone. Your reflection is strangely blurred. The distortion is strongest around your upper body; your head appears to be a faceless blank. But dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body. The door appears to be a single slab of dull grey lead.",
+      "sceneExtras": [
+        {
+          "cmd": "examine mirror",
+          "text": "You blink and stare into the mirror. How odd. The mirror reflects your chair, and the curtains behind you, perfectly. But your own form is unclear -- as if the mirror were touched with some distorting oil. The blurring is strongest around your upper body; your head appears to be a faceless blank. Nervously, you raise your hand to your own face. Everything feels in its place. But your reflection has raised a blurred hand to a featureless void. And dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body. Then they are gone."
+        },
+        {
+          "cmd": "examine mirror",
+          "text": "Your reflection is strangely blurred. The distortion is strongest around your upper body; your head appears to be a faceless blank. But dim red, green, blue, black, brown, gold, and white shadows seem to flit around your reflected body."
+        },
+        {
+          "cmd": "examine door",
+          "text": "The door appears to be a single slab of dull grey lead. (Perhaps only a sheet of lead covering ordinary wood, but... you don't think so.) It has no knob -- only a small keyhole beneath the heavy opening-bar."
+        }
+      ],
+      "exitFacts": [
+        {
+          "ref": "door",
+          "kind": "noun",
+          "examine": "The door appears to be a single slab of dull grey lead. (Perhaps only a sheet of lead covering ordinary wood, but... you don't think so.) It has no knob -- only a small keyhole beneath the heavy opening-bar."
+        },
+        {
+          "ref": "opening",
+          "kind": "noun",
+          "examine": "The door appears to be a single slab of dull grey lead. (Perhaps only a sheet of lead covering ordinary wood, but... you don't think so.) It has no knob -- only a small keyhole beneath the heavy opening-bar."
+        }
+      ],
+      "anchorRoom": "curtained-room",
+      "anchorMode": "vantage",
+      "stateLabel": "on the chair",
+      "recapturedFrom": "base-pristine"
     },
     {
       "name": "Iron Corridor",
@@ -2089,7 +2614,17 @@
       "exits": [],
       "description": "This hall is a windowless square tube of dark hammered iron, stretching south. Yellow light trembles in a hanging sconce above you.\n\nAhead, the air is mirrored with the privacy spell you left in place. The lamp is reflected in it, again and again, into the seeming distance.",
       "scene": "This hall is a windowless square tube of dark hammered iron, stretching south. Yellow light trembles in a hanging sconce above you. Ahead, the air is mirrored with the privacy spell you left in place. The lamp is reflected in it, again and again, into the seeming distance. The spell hovers to the south, mindlessly awaiting the approach of some uncrafty explorer. It isn't even smart enough to recognize you, although you could smash it with a thought.",
-      "prompt": "Scene: This hall is a windowless square tube of dark hammered iron, stretching south. Yellow light trembles in a hanging sconce above you. Ahead, the air is mirrored with the privacy spell you left in place. The lamp is reflected in it, again and again, into the seeming distance. The spell hovers to the south, mindlessly awaiting the approach of some uncrafty explorer. It isn't even smart enough to recognize you, although you could smash it with a thought."
+      "prompt": "Scene: This hall is a windowless square tube of dark hammered iron, stretching south. Yellow light trembles in a hanging sconce above you. Ahead, the air is mirrored with the privacy spell you left in place. The lamp is reflected in it, again and again, into the seeming distance. The spell hovers to the south, mindlessly awaiting the approach of some uncrafty explorer. It isn't even smart enough to recognize you, although you could smash it with a thought.",
+      "sceneExtras": [
+        {
+          "cmd": "examine spell",
+          "text": "The spell hovers to the south, mindlessly awaiting the approach of some uncrafty explorer. It isn't even smart enough to recognize you, although you could smash it with a thought."
+        }
+      ],
+      "enteredBy": [
+        "south ← Crowded Study"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Iron Passage",
@@ -2124,7 +2659,11 @@
           "destination": "Crowded Study",
           "reciprocal": "You stand amid clutter, oddments, shelves and stacks."
         }
-      ]
+      ],
+      "enteredBy": [
+        "north ← Laboratory"
+      ],
+      "defaultFacing": "north"
     },
     {
       "name": "Laboratory",
@@ -2138,6 +2677,28 @@
       "unprobed": [
         "mirror"
       ],
+      "sceneExtras": [
+        {
+          "cmd": "examine table",
+          "text": "The granite table is several inches thick; it rests on immovable boulders. The work space is dominated by a complex optical apparatus. Also on the table are an empty flask, a wooden basket, a leaden jar, and a scrap of paper."
+        },
+        {
+          "cmd": "look under",
+          "text": "The table is supported by four irregular outcrops of granite, which rise through the floor to precisely equal height. Between them, a small drain opens between the slate flagstones."
+        },
+        {
+          "cmd": "examine drain",
+          "text": "You see a small hole in the floor, beneath the worktable. The rim is slightly stained from all the various concoctions and alchemic mistakes you've poured down it."
+        },
+        {
+          "cmd": "examine scrap",
+          "text": "You have the formulation of the necessary ink scrawled here: \"Winter lithontree resin, and sea-blood corundum -- combine -- ensolve by exposure to (2 pulses) month-aged noonlight.\" Easy enough to repeat. The hard part was gathering those substances."
+        },
+        {
+          "cmd": "examine basket",
+          "text": "Standing on the table is a rough wooden basket. It is at least two feet tall, and broad and heavy to match. The basket is full of lumps of golden resin."
+        }
+      ],
       "exitFacts": [
         {
           "ref": "north",
@@ -2149,7 +2710,11 @@
       "lookFacts": {
         "up": "Tiny worms of light crawl across the ceiling tiles, providing an illumination which is colorless, even and only slightly squirmy. You decide, as you often do, to come up with a better light source…",
         "down": "Broad flagstones of black slate pave the chamber. They are laid not quite flat; the floor slopes down, very slightly, to a drain under the worktable."
-      }
+      },
+      "enteredBy": [
+        "south ← Iron Passage"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Shadow Path, West of Dome; Night",
@@ -2178,7 +2743,12 @@
       "lookFacts": {
         "up": "The sky is black, but clear, hung thickly with stars. You find, with calm surprise, that you can recognize constellations. The moon is well risen, and surrounded by a halo.",
         "down": "The shadow falls from the silhouette on the illuminated dome to the east. It seems heavier, and darker, than any shadow should be... and it lies across the air, beneath your feet, supporting you. You…"
-      }
+      },
+      "enteredBy": [
+        "west ← Catwalk, West; Night",
+        "east ← Shadow Path, Far West of Dome; Night"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Shadow Path, Far West of Dome; Night",
@@ -2200,7 +2770,11 @@
       "lookFacts": {
         "up": "The sky is black, but clear, hung thickly with stars. You find, with calm surprise, that you can recognize constellations. The moon is well risen, and surrounded by a halo.",
         "down": "The shadow falls from the silhouette on the illuminated dome to the east. It seems heavier, and darker, than any shadow should be... and it lies across the air, beneath your feet, supporting you. You…"
-      }
+      },
+      "enteredBy": [
+        "west ← Shadow Path, West of Dome; Night"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Catwalk, West; Unearthly",
@@ -2227,7 +2801,12 @@
       "lookFacts": {
         "up": "The sky is an endlessly racing nightmare: streams of scarlet, carmine, rust, magenta, and every other shade flood across the heavens. You can see no sun -- the world is lit only in harsh red -- but…",
         "down": "The view over the catwalk's edge goes uncomfortably far down."
-      }
+      },
+      "enteredBy": [
+        "west ← Catwalk, South; Unearthly",
+        "east ← Shadow Path, West of Dome; Unearthly"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Cell, Possibly",
@@ -2254,7 +2833,10 @@
       "lookFacts": {
         "up": "The stone ceiling is low, crowding roughly down on your head.",
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "inside ← Cell"
+      ]
     },
     {
       "name": "White Hallway, Possibly",
@@ -2276,7 +2858,11 @@
       "lookFacts": {
         "up": "High overhead, the plaster arches to a crude vault.",
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "northeast ← Cell, Possibly"
+      ],
+      "defaultFacing": "northeast"
     },
     {
       "name": "Gold Harp Chamber, Possibly",
@@ -2300,7 +2886,11 @@
       ],
       "lookFacts": {
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "east ← White Hallway, Possibly"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Red-Curtained Room, Possibly",
@@ -2324,7 +2914,11 @@
       ],
       "lookFacts": {
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "southeast ← Gold Harp Chamber, Possibly"
+      ],
+      "defaultFacing": "southeast"
     },
     {
       "name": "Brown Shed, Possibly",
@@ -2345,7 +2939,11 @@
       ],
       "lookFacts": {
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "south ← Red-Curtained Room, Possibly"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Green Bower, Possibly",
@@ -2366,7 +2964,11 @@
       ],
       "lookFacts": {
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "southwest ← Brown Shed, Possibly"
+      ],
+      "defaultFacing": "southwest"
     },
     {
       "name": "Blue Mosaic Room, Possibly",
@@ -2388,7 +2990,11 @@
       "lookFacts": {
         "up": "The mosaic seems to represent a perfect blue sky, rising up the walls and across the ceiling.",
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "west ← Green Bower, Possibly"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Black Night, Perhaps",
@@ -2399,7 +3005,11 @@
       "prompt": "Scene: You are surrounded by deep sky. In all directions you see stars in their slow-eternal coursing. The infinite diagram remains below you, dark markings on blackness, but even its geometry is not dense enough to bisect the night. Someone is talking, though not to you:",
       "lookFacts": {
         "down": "This is not the diagram you inscribed. These marks are ramified across the entire floor, dividing into swirls and sprays too delicate to discern. It is beyond your comprehension."
-      }
+      },
+      "enteredBy": [
+        "northwest ← Blue Mosaic Room, Possibly"
+      ],
+      "defaultFacing": "northwest"
     },
     {
       "name": "Lit Dome, Center",
@@ -2425,7 +3035,11 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "dark-dome-south",
       "stateDelta": "The Cloak of Night is a ragged patch of starless dark, low in the south, just above the horizon. The Lady of Summer leaves it lying there half the year, while she dances. In winter she takes up her cloak to wrap herself, as she sits by the fire to tell stories. The Cloak is low on the dome, just above your head. It seems low enough to touch.",
-      "stateLabel": "Starry"
+      "stateLabel": "Starry",
+      "enteredBy": [
+        "south ← Starry Dome, East"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Catwalk, South; Night",
@@ -2440,7 +3054,12 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "catwalk-south",
       "stateDelta": "The sky fades to night as you climb.",
-      "stateLabel": "Night"
+      "stateLabel": "Night",
+      "enteredBy": [
+        "south ← Catwalk, West; Night",
+        "south ← Catwalk, East; Night"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Catwalk, East; Night",
@@ -2454,7 +3073,11 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "catwalk-east",
       "stateDelta": "You edge along the precarious catwalk, moving east around the dome.",
-      "stateLabel": "Night"
+      "stateLabel": "Night",
+      "enteredBy": [
+        "east ← Catwalk, North; Night"
+      ],
+      "defaultFacing": "east"
     },
     {
       "name": "Catwalk, South; Unearthly",
@@ -2469,7 +3092,11 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "catwalk-south",
       "stateDelta": "A peculiar red glow spreads across the sky as you climb.",
-      "stateLabel": "Unearthly"
+      "stateLabel": "Unearthly",
+      "enteredBy": [
+        "south ← Catwalk, West; Unearthly"
+      ],
+      "defaultFacing": "south"
     },
     {
       "name": "Shadow Path, West of Dome; Unearthly",
@@ -2484,7 +3111,12 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "shadow-path-west-of-dome-night",
       "stateDelta": "You step out onto the path of black shadow.",
-      "stateLabel": "Unearthly"
+      "stateLabel": "Unearthly",
+      "enteredBy": [
+        "west ← Catwalk, West; Unearthly",
+        "east ← Shadow Path, Far West of Dome; Unearthly"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Shadow Path, Far West of Dome; Unearthly",
@@ -2498,7 +3130,11 @@
       "recoveredFrom": "state-delta",
       "anchorRoom": "shadow-path-far-west-of-dome-night",
       "stateDelta": "You venture farther from the dome.",
-      "stateLabel": "Unearthly"
+      "stateLabel": "Unearthly",
+      "enteredBy": [
+        "west ← Shadow Path, West of Dome; Unearthly"
+      ],
+      "defaultFacing": "west"
     },
     {
       "name": "Catwalk, East; Unearthly",

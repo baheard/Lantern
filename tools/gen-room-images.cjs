@@ -116,7 +116,7 @@ function appPromptText() {
 // riso as riso, photo as photo). Aesthetics describe WORLD content only — lighting/palette
 // directives belong to the artist. Order: Artist ▸ Scene ▸ Aesthetic ▸ App. Kept identical to
 // review-server.cjs composedFor()/composedPrompt() so batch == reviewer.
-const ARTIST_LEAD = 'This medium is the PRIMARY instruction for STYLE: render the entire image in this medium and let it govern the linework, palette, colour treatment and finish. But the SCENE itself sets the overall brightness and value key: when the scene describes a dim, dark, or barely-lit space, render it genuinely low-key and shadow-dominated, mostly dark with only the light the scene names, and do NOT add light sources, glow, bright skies or bright reflective surfaces the scene does not mention in order to manufacture contrast.';
+const ARTIST_LEAD = 'Render entirely in this medium; let it govern linework, palette and finish. Light each space by what the scene names: genuinely dark where it calls for dark, lit by any source it names, otherwise soft, even and clearly readable — never a murky gloom or an invented dramatic spotlight.';
 function composeRoomPrompt(room, layers) {
   const scene = sceneFor(room, layers.scenes);
   return [
@@ -456,16 +456,22 @@ async function main() {
     // Default render: prompt-only (or whatever --ref the user passed explicitly).
     let composed = composeRoomPrompt(room, layers) + steer;
     let refImagePath = args.ref, refMode = args['ref-mode'];
-    // Gap B relight: an anchored variant with no explicit --ref edits its base image instead.
-    if (room.anchorRoom && !args.ref) {
+    // Gap B RELIGHT: an anchored variant with no explicit --ref edits its base image (keep camera,
+    // change only the lighting/water state — the validated shared-volume approach).
+    // VANTAGE sub-states do NOT anchor: the img2img edit drags composition back to the base's framing
+    // and imposes its palette, scattering a radical camera change (A/B-tested on Dreamhold
+    // curtained-room-on-the-chair: free text2img r18/r57 beat anchored r41/r55/r56). The vantage
+    // scene already describes the new camera fully, so it renders free.
+    if (room.anchorRoom && room.anchorMode !== 'vantage' && !args.ref) {
       const anchorImg = anchorImageFor(room.anchorRoom);
       if (!anchorImg) { console.log(`  skip  ${room.slug} (anchor "${room.anchorRoom}" not rendered yet — render it first, then re-run)`); skip++; continue; }
       refImagePath = anchorImg;
       refMode = 'edit';
-      const relight = (layers.scenes && layers.scenes[room.slug]) || room.stateDelta || sceneFor(room, layers.scenes);
-      composed = (`Relight of the supplied scene${room.stateLabel ? ` to its "${room.stateLabel}" state` : ''}: ${relight}`).trim() + steer;
+      const editScene = (layers.scenes && layers.scenes[room.slug]) || room.stateDelta || sceneFor(room, layers.scenes);
+      composed = (`Relight of the supplied scene${room.stateLabel ? ` to its "${room.stateLabel}" state` : ''}: ${editScene}`).trim() + steer;
     }
-    process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug}${refMode === 'edit' && room.anchorRoom ? ` (relight ← ${room.anchorRoom})` : ''} ... `);
+    const anchorTag = refMode === 'edit' && room.anchorRoom ? ` (relight ← ${room.anchorRoom})` : '';
+    process.stdout.write(`  ${regen ? 'regen' : 'gen  '} ${room.slug}${anchorTag} ... `);
     try {
       const buf = await generateImage({ prompt: composed, refImagePath, refMode, apiKey, model, aspect, provider, quality });
       if (!toSandbox && regen && fs.existsSync(out)) fs.copyFileSync(out, path.join(reviewDir, `${room.slug}.prev.png`)); // keep old for compare

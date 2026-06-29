@@ -14,6 +14,8 @@ import { APP_CONFIG } from '../config.js';
 import { createGiDispaShim } from './gidispa-shim.js';
 import { updateCurrentGameDisplay, reloadSettingsForGame, updateSettingsContext } from '../ui/settings/index.js';
 import { closeSettings } from '../ui/settings/settings-panel.js';
+import { getAppDefault } from '../utils/game-settings.js';
+import { loadLocationManifest, getTitleImageUrl, attachPeek } from '../features/location-art.js';
 import { updateMobileMenuForGameState } from '../ui/mobile-menu.js';
 import { activateIfEnabled } from '../utils/wake-lock.js';
 import { confirmDialog } from '../ui/confirm-dialog.js';
@@ -493,6 +495,55 @@ async function launchGame(gamePath, gameName, onOutput, { trackFn = null } = {})
   }
 }
 
+// Inline eye glyph for the home-card art-availability icon (matches the in-game
+// affordance in features/location-art.js). Carries no text content so it never
+// affects card titles read aloud.
+const ART_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+
+// Add (or remove) the "art available" icon on a single game card. Shown only when
+// the app-wide "AI Images by Default" setting is on and the game ships a manifest
+// with at least one image. Idempotent — safe to re-run on toggle.
+async function applyArtBadge(card, gameName) {
+  let badge = card.querySelector('.art-badge');
+  if (!getAppDefault('locationArt', false)) {
+    if (badge) badge.remove();
+    return;
+  }
+  const manifest = await loadLocationManifest(gameName);
+  const hasArt = !!(manifest && manifest.images && Object.keys(manifest.images).length);
+  if (!hasArt) { if (badge) badge.remove(); return; }
+  if (badge) return; // already present
+  const title = card.querySelector('.game-title');
+  if (!title) return;
+  // Display name = the title's leading text node(s), minus the badge/meta spans.
+  const displayName =
+    [...title.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim() || gameName;
+  badge = document.createElement('span');
+  badge.className = 'art-badge';
+  badge.title = 'AI location art available';
+  badge.setAttribute('aria-label', `Preview AI art for ${displayName}`);
+  badge.innerHTML = ART_BADGE_SVG;
+  // Same hover-thumbnail + click-to-fullscreen behavior as the in-game location eyes.
+  // Resolve the title-image URL once (manifest is already cached) and hold it; the
+  // peek handlers read it lazily so a hover before it resolves simply shows nothing.
+  let _titleUrl = null;
+  getTitleImageUrl(gameName).then((u) => { _titleUrl = u; });
+  attachPeek(badge, () => _titleUrl, () => displayName);
+  // Place after the save badge so the dots/icons read left-to-right consistently.
+  const saveBadge = title.querySelector('[data-save-indicator]');
+  if (saveBadge) saveBadge.insertAdjacentElement('afterend', badge);
+  else title.appendChild(badge);
+}
+
+// Re-paint every card's art icon — called when the home default is toggled so the
+// icons appear/disappear without a reload.
+export function refreshArtBadges() {
+  document.querySelectorAll('.game-card[data-game]').forEach((card) => {
+    const gameName = card.dataset.game.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
+    applyArtBadge(card, gameName);
+  });
+}
+
 /**
  * Initialize game selection handlers
  * @param {Function} onOutput - Callback for game output (for TTS)
@@ -521,6 +572,11 @@ export function initGameSelection(onOutput) {
         badge.classList.add('has-save');
         badge.title = 'Game in progress';
       }
+
+      // Art-availability icon — shown only when the "AI Images by Default" home
+      // setting is on AND this game ships location art. Gated + lazy so it costs
+      // nothing when the feature is off.
+      applyArtBadge(card, gameName);
     }
   });
 

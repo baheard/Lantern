@@ -3,12 +3,13 @@
     "cistern-west",
     "orrery",
     "laboratory",
-    "translucent-dome"
+    "sitting-room"
   ],
   "artists": [
     "picture-book",
     "plein-air",
     "illustration-plate",
-    "lantern-slide"
+    "lantern-slide",
+    "tonal-oil"
   ]
 }

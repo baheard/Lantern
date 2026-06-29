@@ -53,7 +53,15 @@
       "name": "Impasto Oil",
       "summary": "Alla prima oil study — thick impasto, wet-on-wet edges, energetic unpolished marks.",
       "goodFor": "Outdoor scenes, impressionist, vivid naturalistic settings",
-      "style": "Alla prima oil paint study: thick gestural impasto, visible palette-knife and bristle-brush marks, colours mixing wet-on-wet at edges and not fully resolved. Raised paint ridges catch light at every boundary. Energetic, unpolished, painted quickly on a primed white ground.",
+      "style": "Alla prima oil paint study: thick gestural impasto, visible palette-knife and bristle-brush marks, colours mixing wet-on-wet at edges and not fully resolved. Energetic, unpolished, painted quickly on a primed white ground.",
+      "examples": []
+    },
+    {
+      "id": "tonal-oil",
+      "name": "Tonal Oil",
+      "summary": "Alla prima oil — visible chunky impasto and knife-marks, organised into big value masses with atmospheric depth; textured but not busy.",
+      "goodFor": "Outdoor scenes, sweeping landscapes, serene naturalistic vistas, atmospheric depth; also dim interiors that want real paint texture without granular busyness",
+      "style": "Alla prima oil landscape, palette-knife and loaded-bristle work, in the spirit of a confident plein-air painter. KEEP the paint VISIBLE and PHYSICAL: thick, chunky, gestural impasto strokes and knife-marks that you can read as paint, wet-on-wet colour mixing and unresolved edges, an unpolished hand-painted surface. This is a rough oil SKETCH, not a finish — energetic and direct. BUT impose compositional discipline so the texture is not uniformly dense: group the scene into a few large simple value masses rather than rendering every leaf, rock-facet or blade; use atmospheric perspective so distant land goes cooler, softer and lower-contrast while the boldest, thickest paint and sharpest contrast are RESERVED for one foreground focal passage; let some edges go soft and lost between masses. Limited harmonious palette. CRITICAL: this must read as a real, textured oil PAINTING with obvious brush/knife marks — NOT a smooth, polished, blended digital illustration, NOT a storybook or fairy-tale plate, NOT airbrushed.",
       "examples": []
     },
     {
