@@ -66,13 +66,35 @@ would silently drop `sharedId` — breaking every shared link on a cross-device 
 Both functions were patched to carry `sharedId`. Any future per-node field needs the
 same treatment in BOTH spots.
 
-## Deferred — phase 3 (portal behavior)
+## Send selection to new map — the unifying gesture (v1.5.715)
 
-Not built yet, but the agreed traversal rules (capture these if you build it):
-1. A portal node gets a distinct indicator.
-2. Traversing a connection whose far node lives on **another** map → **auto-switch maps**.
+The feature that makes multi-map worth having, and the one that dissolved the
+move-vs-share dilemma: **the user never chooses per node; the geometry of the
+selection decides.** In select mode, `#mapSendToMapBtn` (`handleSendSelectionToNewMap`)
+sends `mapState.selectedNodes` to a fresh map:
+- **Boundary node** = a selected node with an edge to a node *not* in the selection.
+  It stays on the source AND the new map (linked by `sharedId`) — i.e. it auto-becomes
+  the **portal** between old and new. Interior (non-boundary) selected nodes are removed
+  from the source.
+- New map gets copies of all selected nodes + the edges among them; the crossing edge
+  (boundary↔remaining) stays on the source. Then it switches into the new map.
+- Boundary-to-boundary within-selection edges can land on both maps (harmless per-map
+  dup) — deliberately not special-cased.
+- `snapshotForUndo()` is taken but `switchMap` clears the undo stack, so a send isn't
+  undoable — acceptable, reverse manually.
+
+**Portal switch button** (`#nodeSwitchToMapBtn`, `switchToSharedNodeMap`): the node
+sheet shows "Go to other map" only for a shared node; jumps the active map to another
+map holding it and selects+centers it (cycles when on >2 maps). The amber ring is the
+indicator; this button is the navigation.
+
+## Deferred — full portal behavior
+
+Still not built (the *automatic* version of the switch above):
+2. Traversing a connection whose far node lives on **another** map → **auto-switch maps**
+   (today it's a manual button, not triggered by in-game movement).
 3. Traversing toward a connection that doesn't exist → create it on the **current** map
-   (this is just today's auto-mapper behavior, preserved — portals don't change it).
+   (already today's auto-mapper behavior, preserved).
 4. When you create a portal, **that location's map becomes the default** that new nodes
    get added to as you move (resolves the "which map am I on?" ambiguity).
 
