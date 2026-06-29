@@ -33,7 +33,7 @@ import {
   createNodeEditSheet, openNodeSheet, closeNodeSheet, dismissNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
   handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
-  setupSheetDragHandlers, getSheetTopForViewport
+  setupSheetDragHandlers, getSheetTopForViewport, toggleMoveMapMenu
 } from './map-sheet.js';
 
 // ============================================================================
@@ -99,6 +99,7 @@ function setupCallbacks() {
     showHint,
     saveMapForGame,
     snapshotForUndo,
+    moveNodeToMap,
     startConnectionFromSheetCallback: (nodeId) => {
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = nodeId;
@@ -326,6 +327,7 @@ function setupEventListeners() {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
+  document.getElementById('nodeMoveMapBtn').addEventListener('click', toggleMoveMapMenu);
 
   // Global — only redraw the canvas when the map is actually showing.
   window.addEventListener('resize', () => { if (isVisible) resizeCanvas(); });
@@ -1928,6 +1930,50 @@ function addMap() {
   updateNodeCount();
   updateMapBadge();
   if (isVisible) render();
+}
+
+// Move a node off the active map onto another (stashed) map. Cross-map node op
+// for multi-map (#144, phase 2). The target map lives serialized in _allMapsData,
+// so we mutate its node/protected arrays in place. Edges touching the node are
+// dropped from the source map — edges are per-map and the node no longer lives here.
+function moveNodeToMap(nodeId, targetMapId) {
+  if (!nodeId || targetMapId === mapState.activeMapId) return;
+  const node = mapState.nodes.get(nodeId);
+  const target = _allMapsData[targetMapId];
+  if (!node || !target) return;
+
+  snapshotForUndo();
+
+  // Drop edges connected to the node on the source map.
+  for (const [key, edge] of mapState.edges) {
+    if (edge.from === nodeId || edge.to === nodeId) {
+      mapState.edges.delete(key);
+      mapState.deletedEdges.add(key);
+    }
+  }
+  // Remove the node from the source map.
+  mapState.nodes.delete(nodeId);
+  mapState.deletedNodes.add(nodeId);
+  mapState.protectedNodes.delete(nodeId);
+  if (mapState.currentNodeId === nodeId) mapState.currentNodeId = null;
+  if (mapState.selectedNode === nodeId) mapState.selectedNode = null;
+
+  // Add the node to the target map (serialized arrays).
+  target.nodes = target.nodes || [];
+  if (!target.nodes.some(n => n.id === nodeId)) target.nodes.push({ ...node });
+  target.protectedNodes = target.protectedNodes || [];
+  if (!target.protectedNodes.includes(nodeId)) target.protectedNodes.push(nodeId);
+  // Un-suppress on the target if it had been deleted there before.
+  if (Array.isArray(target.deletedNodes)) {
+    target.deletedNodes = target.deletedNodes.filter(id => id !== nodeId);
+  }
+
+  mapState.hasUnsavedChanges = true;
+  const targetName = mapState.mapOrder.find(m => m.id === targetMapId)?.name || 'map';
+  saveMapForGame(true);
+  render();
+  updateNodeCount();
+  showHint(`Moved "${node.name}" to ${targetName}`);
 }
 
 function renameCurrentMap(name) {

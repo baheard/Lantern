@@ -43,7 +43,8 @@ let callbacks = {
   saveMapForGame: () => {},
   startConnectionFromSheetCallback: () => {},
   startMergeFromSheetCallback: () => {},
-  snapshotForUndo: () => {}
+  snapshotForUndo: () => {},
+  moveNodeToMap: () => {}
 };
 
 // Whether the current edit session has already captured an undo snapshot.
@@ -155,10 +156,14 @@ export function createNodeEditSheet() {
           <button class="sheet-btn sheet-btn-secondary" id="nodeMergeWithBtn">
             <span class="material-icons">merge</span> Merge with...
           </button>
+          <button class="sheet-btn sheet-btn-secondary" id="nodeMoveMapBtn">
+            <span class="material-icons">moving</span> Move to map
+          </button>
           <button class="sheet-btn sheet-btn-danger" id="nodeDeleteBtn">
             <span class="material-icons">delete</span> Delete
           </button>
         </div>
+        <div class="sheet-actions move-map-menu hidden" id="nodeMoveMapMenu"></div>
         </div>
       </div>
     </div>
@@ -188,6 +193,9 @@ export function openNodeSheet(node) {
 
   // Start a fresh edit session; first field change will snapshot for undo.
   editSnapshotTaken = false;
+
+  // Collapse the "Move to map" submenu from any previous open.
+  document.getElementById('nodeMoveMapMenu')?.classList.add('hidden');
 
   const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
@@ -576,6 +584,34 @@ export function handleNodeDelete() {
   render();
   callbacks.showHint(`Deleted "${node?.name}"`);
   callbacks.saveMapForGame();
+}
+
+// Multi-map (#144, phase 2): "Move to map" expands an inline submenu listing the
+// other maps; picking one hands off to the moveNodeToMap callback in map-canvas.js.
+export function toggleMoveMapMenu() {
+  const menu = document.getElementById('nodeMoveMapMenu');
+  if (!menu) return;
+  if (!menu.classList.contains('hidden')) { menu.classList.add('hidden'); return; }
+
+  const others = mapState.mapOrder.filter(m => m.id !== mapState.activeMapId);
+  if (others.length === 0) {
+    callbacks.showHint('No other maps yet — add one from the map picker first');
+    return;
+  }
+
+  menu.innerHTML = others.map(m =>
+    `<button class="sheet-btn sheet-btn-secondary move-map-target" data-map-id="${escapeHtml(m.id)}">` +
+    `<span class="material-icons">arrow_forward</span> ${escapeHtml(m.name)}</button>`
+  ).join('');
+  menu.querySelectorAll('.move-map-target').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const nodeId = mapState.selectedNode;
+      menu.classList.add('hidden');
+      closeNodeSheet();
+      callbacks.moveNodeToMap(nodeId, btn.dataset.mapId);
+    });
+  });
+  menu.classList.remove('hidden');
 }
 
 // ============================================================================
