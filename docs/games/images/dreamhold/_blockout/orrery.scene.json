@@ -20,7 +20,7 @@
     { "name": "north jamb east", "box": [4.5, 11, 0.4], "at": [4.25, 5.5, -6.5], "role": "wall", "shell": true },
     { "name": "north lintel", "box": [4, 4.5, 0.4], "at": [0, 8.75, -6.5], "role": "wall", "shell": true },
 
-    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [0, 5, 0], "rot": [0, 0, 18], "role": "machine", "detail": "vast stately tilted brass disk on an axis; lower edge inches off the floor, upper edge near the high roof" },
+    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [0, 5, 0], "rot": [0, 0, 78], "role": "machine", "detail": "vast stately near-upright brass disk on a tilted axis; lower edge inches off the floor (forward), upper edge near the high roof (leaning back ~12 deg)" },
     { "name": "blue-glass globe (centre)", "sphere": 0.85, "at": [0, 5, 0], "color": "#3a66a0", "detail": "fixed blue-glass globe at the disk's centre, the disk revolving around it" },
     { "name": "glass globe wheel 1", "sphere": 0.45, "at": [0.3, 7.4, 1.2], "color": "#7fa6c8", "detail": "small wheel bearing a glass globe, pirouetting on the disk face" },
     { "name": "glass globe wheel 2", "sphere": 0.45, "at": [-0.3, 2.8, -1.4], "color": "#7fa6c8" },
