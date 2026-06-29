@@ -33,6 +33,8 @@
   #result img{max-width:100%;max-height:100%;object-fit:contain}
   #resultCap{position:absolute;top:0;left:0;right:0;padding:6px 10px;font-size:13px;font-weight:600;
        color:#f0e6d0;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));border-radius:8px 8px 0 0;pointer-events:none;z-index:2}
+  #resultCap .cap-file{display:block;margin-top:2px;font-weight:400;font-size:11px;color:#cfc6dc;
+       word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;pointer-events:auto;user-select:text}
   #result .ph{color:#6a6478;text-align:center;padding:24px;line-height:1.6}
   /* height = thumb (96) + room for the horizontal scrollbar, so the scrollbar never overlaps
      the thumbnails. align-items:flex-start keeps thumbs pinned to top. */
@@ -45,6 +47,10 @@
   .ingame-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;
     background:#1f7a45;color:#eafff0;letter-spacing:.3px;vertical-align:middle}
   #gallery .thumb img{height:100%;display:block;border-radius:3px}
+  /* Filename label pinned to the bottom of each thumb so shots are referable by file. */
+  #gallery .thumb .thumb-name{position:absolute;bottom:0;left:0;right:0;font-size:9px;line-height:1.15;
+    padding:2px 3px;background:rgba(0,0,0,.66);color:#e8e2d4;word-break:break-all;text-align:center;
+    pointer-events:none;border-radius:0 0 3px 3px;font-family:ui-monospace,Menlo,Consolas,monospace}
   #gallery .none{color:#6a6478;align-self:center;padding:0 10px}
   #colText{flex:2 1 0;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:10px;min-height:0}
   #colText .panel{background:#17151d;border:1px solid #2a2536;border-radius:8px;padding:10px 12px}
@@ -492,7 +498,7 @@ function setResult(file) {
   const name = (INFO[currentView] || {}).name || currentView || '';
   const gInGame = !!(GENS.find((x) => x.file === file) || {}).inGame;
   document.getElementById('result').innerHTML = file
-    ? `<div id="resultCap">${name}${gInGame ? ' <span class="ingame-tag">★ in game</span>' : ''}</div><img src="${imgUrl(file)}" alt="gen">`
+    ? `<div id="resultCap">${name}${gInGame ? ' <span class="ingame-tag">★ in game</span>' : ''}<span class="cap-file">${file}</span></div><img src="${imgUrl(file)}" alt="gen">`
     : '<div class="ph">No shot yet from this vantage — Generate one.</div>';
   document.querySelectorAll('#gallery .thumb').forEach((t) => t.classList.toggle('on', t.dataset.f === file));
   // Image note (shared with the reviewer's _review-notes.json, keyed per shot).
@@ -574,7 +580,7 @@ function renderGallery() {
   const el = document.getElementById('gallery');
   const list = GENS.filter((g) => g.view === currentView);
   if (!list.length) { el.innerHTML = '<span class="none">No shots from this vantage yet — Generate one.</span>'; return; }
-  el.innerHTML = list.map((g) => { const tag = (g.file.split('__')[1] || '').replace(/\.png$/, ''); return `<div class="thumb${g.file === lastFile ? ' on' : ''}${g.inGame ? ' ingame' : ''}" data-f="${g.file}" title="${g.inGame ? 'IN GAME — ' : ''}${tag}"><img src="${imgUrl(g.file)}">${g.inGame ? '<span class="ingame-tag">★ in game</span>' : ''}</div>`; }).join('');
+  el.innerHTML = list.map((g) => `<div class="thumb${g.file === lastFile ? ' on' : ''}${g.inGame ? ' ingame' : ''}" data-f="${g.file}" title="${g.inGame ? 'IN GAME — ' : ''}${g.file}"><img src="${imgUrl(g.file)}">${g.inGame ? '<span class="ingame-tag">★ in game</span>' : ''}<span class="thumb-name">${g.file}</span></div>`).join('');
   el.querySelectorAll('.thumb').forEach((t) => t.onclick = () => setResult(t.dataset.f));
 }
 async function generate() {
