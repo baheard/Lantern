@@ -155,11 +155,31 @@ one strong shared register, authored once here:
 
 ### Volume: Orrery — anchor `orrery`
 - **Members:** `orrery`, `south-alcove`, `north-alcove`. A wide tall dim six-sided chamber dominated by
-  a **vast brass-disk machine** (an orrery: a great stately brass disk on a tilted axis, lower edge
-  inches off the floor and upper edge near the high roof, engraved with arcs, a fixed blue-glass globe
-  at its centre, smaller wheels bearing glass globes pirouetting on its face, slow steady rotation).
-  The two small curved **alcoves** open off the north and south sides and *see the machine spinning in
-  the chamber*. Pull the machine into both alcove views as the thing glimpsed through the opening.
+  a **vast brass-disk machine** (an orrery) that nearly fills the room.
+- **Machine geometry (from `orrery` sceneExtras — `examine disk` / `examine wheel` ×2; carry the FULL
+  component set into every member, not a generic "wheels bearing globes"):**
+  - the heart is a **great stately brass disk** turning slowly on a **tilted axis** (rises at a sharp
+    angle — lower edge a few inches off the floor, opposite edge near the high roof); its face engraved
+    with intricate arcs and lines.
+  - a large **blue-glass globe** (brown-and-white island-map pattern) is **fixed at the disk's centre**;
+    the disk revolves around it.
+  - **two smaller wheels** ride on the disk's face on **opposite sides** (one upper, one lower —
+    positions swap as the disk turns), each itself spinning and each bearing TWO glass globes:
+    - **silver wheel** (spiralling moiré engraving): a **violet** globe at its centre + a smaller **tan**
+      globe on its rim (the tan one circled with heavy rings of frosted glass — the blue mask catches in
+      those rings).
+    - **copper wheel** (radial-line engraving): a **red** globe at its centre + a smaller **green**
+      globe (pocked/cratered) on its rim.
+  - the whole disk is driven by an **engine of gears, shafts and clattering motion** at/behind its base.
+  - a thin **grey ribbon/cord of soft material** hangs from the dark vault over the disk's upper edge,
+    out of reach (seen on the ride; a soft hanging strip, not a pole).
+- **Composition decision (shared across members):** the disk reads as a **clean free-spinning PERFECT
+  CIRCLE**; tuck the gear machinery **behind** the disk so it does not break the circle from the front
+  (glimpsed at the edges, in the gap below, and from the alcove side-views). The sub-wheels are SMALL
+  relative to the great disk — never let one read as a second competing circle. Vault above lost in shadow.
+- **Alcoves (10g — pull the machine in):** the two small curved alcoves open north and south and *see
+  the same machine spinning in the chamber through the opening*. Each alcove view shows the SAME orrery
+  (disk + blue hub + silver/copper wheels + the four coloured globes), seen three-quarter from the side.
 - **Exits:** south-alcove has an iron ladder up a shaft (→ Starry Dome North); north-alcove an archway
   to ascending stairs (→ Curving Hall West End). Render minimally (shaft mouth / stair archway).
 
@@ -477,28 +497,36 @@ one strong shared register, authored once here:
   the sky/light change. Render the red racing sky as the dominant note.
 
 ### south-alcove  — member: Orrery
-- **Vantage:** a small curved alcove off the large chamber; a plain iron ladder rises up a shaft; the
-  **vast brass machine** spins endlessly in the chamber glimpsed through the opening. Pull the machine
-  in as the thing seen beyond.
+- **Vantage:** a small curved alcove off the large chamber; a plain iron ladder rises up a shaft. Through
+  the opening, the **SAME orrery** turns in the chamber (10g), seen three-quarter from the side: the
+  tilted brass disk, the fixed central **blue** island-globe, the **silver wheel** (violet hub + tan rim)
+  and **copper wheel** (red hub + green rim), gears/shafts below. Pull the full machine in as the thing
+  seen beyond — not a generic gear-wheel.
 
 ### orrery  — member: Orrery (ANCHOR)
 - **Vantage (10a):** standing on the six-sided chamber's floor, the **vast machine** filling the frame
   ahead — it "nearly fills the room", so the camera is pressed back against the entry wall looking into
   it. Eye-level; the great tilted brass disk dominates, its lower edge a few inches above the floor in
   the foreground, its upper edge climbing near the high roof in the background.
-- **Geometry (from base desc):** the disk is a *great stately brass disk on a tilted axis* — engraved
-  with intricate arcs and lines, slow steady rotation; a fixed **blue-glass globe** (brown-and-white
-  pattern like a map of islands in a curved sea) at its centre, the disk revolving around it; smaller
-  wheels pirouetting across its face bearing delicate glass globes. Keep these nouns verbatim.
+- **Geometry:** the full component set is in the Volume block — carry ALL of it: the tilted engraved
+  brass disk, the fixed central **blue** island-globe, the **silver wheel** (violet hub + tan rim globe
+  w/ frosted rings) and **copper wheel** (red hub + green rim globe) on opposite sides, the gear/shaft
+  engine driving it, and the grey ribbon hanging from the vault. Keep the source nouns verbatim.
+- **Composition (10c occlusion decision):** the disk reads as a clean free-spinning **perfect circle**;
+  the gear machinery is **tucked behind** it (glimpsed below/at the edges, not breaking the circle); the
+  two sub-wheels are SMALL on its face (not a second competing circle), standing proud so the globes
+  read as freely rotating. Caught mid-rotation — a turning wheel, not a fixed dial.
 - **Compass→frame:** alcoves open *north and south*; with the camera facing into the machine these read
   as small curved openings to **either side** (left and right). The vault above the machine is lost in
   shadow — render it dark, unresolved overhead.
 - **Persistence:** DROP the blue mask fluttering on a globe (takeable). KEEP the machine/disk/globes.
 
 ### north-alcove  — member: Orrery
-- **Vantage:** a small curved alcove off the chamber; an archway reveals a flight of ascending stairs;
-  the vast brass machine spins in the chamber glimpsed the other way. DROP the pale gauzy rag at the
-  alcove's edge (takeable).
+- **Vantage:** a small curved alcove off the chamber; an archway reveals a flight of ascending stairs.
+  Through the opening, the **SAME orrery** turns in the chamber (10g), seen three-quarter from the other
+  side: the tilted brass disk, fixed central **blue** island-globe, **silver wheel** (violet hub + tan
+  rim) and **copper wheel** (red hub + green rim), gears/shafts below. Pull the full machine in — not a
+  generic gear-wheel. DROP the pale gauzy rag at the alcove's edge (takeable).
 
 ### curving-hall-west-end
 - **Vantage:** the curving plaster corridor dead-ends at a blank wall holding one **window** onto a
