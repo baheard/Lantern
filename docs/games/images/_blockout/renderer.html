@@ -112,13 +112,7 @@
   <button id="addblk" title="Drop a 1×1×1 block in front of the camera, then edit it" style="display:none">➕ Add block</button>
   <button id="saveAll" title="Save all pending block changes to the scene" style="display:none" disabled>💾 Save all</button>
   <span class="spacer"></span>
-  <select id="model" title="Generator model">
-    <option value="openai-low">OpenAI · low (~$0.006)</option>
-    <option value="openai-medium">OpenAI · medium (~$0.05)</option>
-    <option value="gemini">Gemini (~$0.04)</option>
-    <option value="gemini-pro">Nano Banana Pro (~$0.13)</option>
-  </select>
-  <button id="gen" title="Render this vantage and style it through the model">✨ Generate</button>
+  <button id="gen" title="Render this vantage and style it through OpenAI · low (~$0.006)">✨ Generate</button>
   <button id="openloc" title="Open this room’s location page in artview" style="display:none">↗ Location</button>
   <span id="msg"></span>
 </div>
@@ -168,14 +162,14 @@ const G = params.get('game'), VOL = params.get('volume');
 const srcUrl = params.get('src') || (G && VOL ? `/games/images/${G}/_blockout/${VOL}.scene.json` : null);
 const liveTool = !!(G && VOL);
 
-// Capture/viewport aspect tracks the SELECTED model's true output aspect, so the frame you
-// compose is the frame you get. OpenAI has no native 3:4 → portrait collapses to 2:3 (taller);
-// Gemini renders true 3:4. Keep width fixed at 768; height follows the ratio.
+// Always render with OpenAI · low (~$0.006) — the cheapest model. Capture/viewport aspect
+// matches its true output aspect, so the frame you compose is the frame you get. OpenAI has
+// no native 3:4 → portrait collapses to 2:3 (taller). Keep width fixed at 768; height follows.
+const MODEL = 'openai-low';
 const MODEL_ASPECT = { 'openai-low': [2, 3], 'openai-medium': [2, 3], 'gemini': [3, 4], 'gemini-pro': [3, 4] };
 let CW = 768, CH = 1024;
 function applyModelAspect() {
-  const sel = document.getElementById('model');
-  const [aw, ah] = MODEL_ASPECT[sel ? sel.value : 'openai-low'] || [3, 4];
+  const [aw, ah] = MODEL_ASPECT[MODEL] || [3, 4];
   CW = 768; CH = Math.round((768 * ah) / aw);
   const vp = document.getElementById('viewport'); if (vp) vp.style.aspectRatio = aw + '/' + ah;
   if (typeof sizeToViewport === 'function') sizeToViewport();
@@ -585,7 +579,7 @@ function renderGallery() {
 }
 async function generate() {
   if (!liveTool) { setMsg('Open from artview to generate.'); return; }
-  const gen = document.getElementById('gen'), model = document.getElementById('model').value, sceneText = document.getElementById('prompt').value;
+  const gen = document.getElementById('gen'), model = MODEL, sceneText = document.getElementById('prompt').value;
   gen.disabled = true; setMsg('Rendering clay…'); const png = captureClay(); setMsg('Generating · ' + model + ' … (~10–20s)');
   try {
     const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view: currentView, model, png, scene: sceneText, facing: facingString() }) })).json();
@@ -678,8 +672,7 @@ async function boot() {
     document.getElementById('imgProm').onclick = promoteImage;
   } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
   document.getElementById('gen').onclick = generate;
-  // Reflow the clay viewport to the selected model's true output aspect so framing translates.
-  document.getElementById('model').addEventListener('change', applyModelAspect);
+  // Reflow the clay viewport to the (fixed) model's true output aspect so framing translates.
   applyModelAspect();
 
   document.getElementById('pickClose').onclick = clearPick;
