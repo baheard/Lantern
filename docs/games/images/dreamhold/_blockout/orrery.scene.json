@@ -30,15 +30,15 @@
 
     { "name": "silver wheel (upper side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-2.17, 7.99, -1.5], "rot": [0, 0, 94], "color": "#c8c8d2", "detail": "silver wheel on the disk's upper side; itself rotates, carrying the tan globe around the violet hub" },
     { "name": "violet globe (silver wheel hub)", "sphere": 0.5, "at": [-2.17, 7.99, -1.5], "color": "#7a4fa0", "detail": "violet globe at the silver wheel's CENTRE — the tan globe orbits around THIS one" },
-    { "name": "silver wheel arm (hub to rim)", "box": [0.12, 0.12, 1.45], "at": [-2.17, 7.99, -0.78], "role": "machine", "detail": "radial arm carrying the tan globe around the violet hub — shows the orb-around-orb motion" },
-    { "name": "tan globe (silver wheel rim)", "sphere": 0.42, "at": [-2.17, 7.99, -0.05], "color": "#c9b083", "detail": "tan globe on the silver wheel's rim, circling the violet hub; ringed with frosted white glass (the blue mask caught in the rings); swings down to the floor at its nadir" },
+    { "name": "silver wheel arm (hub to rim)", "box": [0.22, 0.22, 1.55], "at": [-2.17, 8.46, -0.82], "rot": [25, 0, 0], "role": "machine", "detail": "radial arm/spoke carrying the tan globe around the violet hub — angled sideways so the orb-around-orb motion reads from the front" },
+    { "name": "tan globe (silver wheel rim)", "sphere": 0.42, "at": [-2.17, 8.62, -0.14], "color": "#c9b083", "detail": "tan globe out on the silver wheel's arm, circling the violet hub; ringed with frosted white glass (the blue mask caught in the rings); swings down to the floor at its nadir" },
 
     { "name": "copper wheel (lower side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-1.83, 3.01, 1.5], "rot": [0, 0, 94], "color": "#b0703a", "detail": "copper wheel on the disk's lower side; carries the green globe around the red hub" },
     { "name": "red globe (copper wheel hub)", "sphere": 0.5, "at": [-1.83, 3.01, 1.5], "color": "#b03330", "detail": "red globe at the copper wheel's CENTRE — the green globe orbits around THIS one" },
-    { "name": "copper wheel arm (hub to rim)", "box": [0.12, 0.12, 1.45], "at": [-1.83, 3.01, 2.22], "role": "machine", "detail": "radial arm carrying the green globe around the red hub" },
-    { "name": "green globe (copper wheel rim)", "sphere": 0.36, "at": [-1.83, 3.01, 2.95], "color": "#5a9a4a", "detail": "small pocked green globe on the copper wheel's rim, circling the red hub" },
+    { "name": "copper wheel arm (hub to rim)", "box": [0.22, 0.22, 1.55], "at": [-1.83, 2.69, 2.18], "rot": [-25, 0, 0], "role": "machine", "detail": "radial arm/spoke carrying the green globe around the red hub — angled sideways so the orbit reads from the front" },
+    { "name": "green globe (copper wheel rim)", "sphere": 0.36, "at": [-1.83, 2.38, 2.86], "color": "#5a9a4a", "detail": "small pocked green globe out on the copper wheel's arm, circling the red hub" },
 
-    { "name": "dangling grey strip", "box": [0.15, 3.4, 0.5], "at": [-2.35, 12, 0], "color": "#8a8a90", "detail": "grey strip of soft material hanging from the dark vault over the disk's upper edge — just out of reach" },
+    { "name": "dangling grey strip", "box": [0.07, 2.8, 0.4], "at": [-2.35, 12.4, 0], "color": "#8a8a90", "detail": "thin grey RIBBON/strip of soft cloth-like material hanging limp from the dark vault over the disk's upper edge — out of reach; render as a soft dangling strip, not a rigid pole" },
 
     { "name": "south alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, 8.6], "role": "floor", "detail": "small curved alcove off the south side" },
     { "name": "south alcove ladder rail E", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [0.45, 3.3, 9.6], "role": "ladder" },
@@ -70,7 +70,7 @@
     "north-alcove"
   ],
   "notes": {
-    "orrery": "anchor, framing-accurate: eye-level, pressed back against the entry (east) wall, the nearly-upright brass disk filling the frame, lower edge a few inches off the floor in the foreground, upper edge climbing toward the dark vault. Front clear so the tan globe can swing to the floor; rear pylon/gears behind. Blue hub centre; silver wheel (tan orbiting violet) one side, copper wheel (green orbiting red) opposite.",
+    "orrery": "DIM, deeply shadowed chamber — only faint light, the brass catching low warm highlights, the high vault lost in blackness; not brightly lit. anchor, framing-accurate: eye-level, pressed back against the entry (east) wall, the nearly-upright brass disk filling the frame, lower edge a few inches off the floor in the foreground, upper edge climbing toward the dark vault. Front clear so the tan globe can swing to the floor; rear pylon/gears behind. Blue hub centre; silver wheel (tan orbiting violet) one side, copper wheel (green orbiting red) opposite.",
     "south-alcove": "stand in the small alcove looking through the archway at the SAME machine turning in the chamber; iron ladder up a shaft beside you.",
     "north-alcove": "stand in the alcove; archway onto ascending stairs; the same machine glimpsed turning through the opening."
   }
