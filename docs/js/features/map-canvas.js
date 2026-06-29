@@ -1627,9 +1627,19 @@ export function showMap() {
   if (_pendingNewAreaHint) { showNewAreaHint(); }
   else { showOnboardingOrHint(); }
 
+  // The first centerOnCurrentLocation() above runs while the panel is still
+  // opening (mid CSS transition) — on mobile its dimensions/viewport aren't
+  // settled yet, so the map can end up not centered on the current location
+  // (issue #184). Re-center once layout has settled (next frame), and again
+  // after the keyboard-visibility pass below adjusts the toolbar.
+  requestAnimationFrame(() => {
+    if (isVisible) centerOnCurrentLocation({ instant: true });
+  });
+
   // Check keyboard state and hide UI elements if keyboard is up
   setTimeout(() => {
     updateUIVisibilityForKeyboard();
+    if (isVisible) centerOnCurrentLocation({ instant: true });
   }, 100);
 }
 

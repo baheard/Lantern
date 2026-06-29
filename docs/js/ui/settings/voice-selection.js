@@ -217,6 +217,12 @@ function getVoiceDisplayName(voice) {
  */
 let _voiceRetries = 0;
 export function populateVoiceDropdown() {
+  // Register live-refresh handler lazily (only once the dropdown is actually
+  // being populated, i.e. settings opened) — never at startup. See issue #180.
+  if ('speechSynthesis' in window && speechSynthesis.onvoiceschanged !== populateVoiceDropdown) {
+    speechSynthesis.onvoiceschanged = populateVoiceDropdown;
+  }
+
   const voices = speechSynthesis.getVoices();
 
   if (voices.length === 0) {
@@ -307,11 +313,14 @@ export function loadBrowserVoiceConfig() {
   const volume = savedVolume ? parseInt(savedVolume) / 100 : 1.0;
   state.browserVoiceConfig.volume = volume;
 
-  // Populate dropdown after loading config
-  if ('speechSynthesis' in window) {
-    speechSynthesis.onvoiceschanged = populateVoiceDropdown;
-    populateVoiceDropdown();
-  }
+  // NOTE: We intentionally do NOT touch speechSynthesis here (no getVoices(),
+  // no onvoiceschanged). On mobile (iOS Safari especially), merely calling
+  // getVoices() or registering onvoiceschanged activates the speech-synthesis
+  // audio session, which steals Bluetooth/audio focus and pauses the user's
+  // music — even when narration is off. The voice dropdown is purely settings
+  // UI, so it's populated lazily when the settings panel opens
+  // (settings-panel.js calls populateVoiceDropdown() on open, which also
+  // registers onvoiceschanged for live refresh). See issue #180.
 }
 
 /**
