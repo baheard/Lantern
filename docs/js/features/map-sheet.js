@@ -161,6 +161,9 @@ export function createNodeEditSheet() {
           <button class="sheet-btn sheet-btn-secondary" id="nodeShareMapBtn">
             <span class="material-icons">link</span> Share to map
           </button>
+          <button class="sheet-btn sheet-btn-secondary hidden" id="nodeSwitchToMapBtn">
+            <span class="material-icons">swap_horiz</span> Go to other map
+          </button>
           <button class="sheet-btn sheet-btn-danger" id="nodeDeleteBtn">
             <span class="material-icons">delete</span> Delete
           </button>
@@ -267,6 +270,14 @@ export function openNodeSheet(node) {
     }
   } else {
     mergeSection.classList.add('hidden');
+  }
+
+  // Show "Go to other map" only for a truly shared node (on >1 map) — it's the
+  // portal-navigation switch (#144). The amber ring is the visual indicator.
+  const switchBtn = document.getElementById('nodeSwitchToMapBtn');
+  if (switchBtn) {
+    const isShared = !!(node.sharedId && mapState.sharedNodeIds && mapState.sharedNodeIds.has(node.sharedId));
+    switchBtn.classList.toggle('hidden', !isShared);
   }
 
   const sheet = document.getElementById('nodeEditSheet');

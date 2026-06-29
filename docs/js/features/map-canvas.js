@@ -174,6 +174,9 @@ function createMapUI() {
           <button class="map-fab map-fab-select" id="mapSelectBtn" title="Select nodes" aria-label="Select nodes">
             <span class="material-icons">select_all</span>
           </button>
+          <button class="map-fab map-fab-secondary hidden" id="mapSendToMapBtn" title="Send selection to a new map" aria-label="Send selection to a new map">
+            <span class="material-icons">open_in_new</span>
+          </button>
           <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
             <span class="material-icons">timeline</span>
           </button>
@@ -271,6 +274,7 @@ function setupEventListeners() {
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
   document.getElementById('mapSelectBtn').addEventListener('click', toggleSelectMode);
+  document.getElementById('mapSendToMapBtn').addEventListener('click', handleSendSelectionToNewMap);
   document.getElementById('mapCenterBtn').addEventListener('click', () => centerOnCurrentLocation());
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
 
@@ -330,6 +334,11 @@ function setupEventListeners() {
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
   document.getElementById('nodeShareMapBtn').addEventListener('click', toggleShareMapMenu);
+  document.getElementById('nodeSwitchToMapBtn').addEventListener('click', () => {
+    const id = mapState.selectedNode;
+    closeNodeSheet();
+    switchToSharedNodeMap(id);
+  });
 
   // Global — only redraw the canvas when the map is actually showing.
   window.addEventListener('resize', () => { if (isVisible) resizeCanvas(); });
@@ -625,6 +634,7 @@ export function toggleSelectMode() {
   domRefs.modeIndicator.classList.remove('hidden');
   domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap nodes to select, drag canvas to box-select';
   document.getElementById('mapSelectBtn')?.classList.add('active');
+  document.getElementById('mapSendToMapBtn')?.classList.remove('hidden');
   canvas.style.cursor = 'default';
 }
 
@@ -650,6 +660,7 @@ export function exitAddMode() {
   mapState.rectSelectStart = null;
   mapState.rectSelectEnd = null;
   document.getElementById('mapSelectBtn')?.classList.remove('active');
+  document.getElementById('mapSendToMapBtn')?.classList.add('hidden');
   domRefs.modeIndicator?.classList.add('hidden');
   canvas.style.cursor = 'grab';
   hideHint();
@@ -2017,6 +2028,97 @@ function shareNodeToMap(nodeId, targetMapId) {
   render();
   updateNodeCount();
   showHint(`Shared "${node.name}" to ${targetName}`);
+}
+
+// Send the current multi-selection to a brand-new map (#144). The selected
+// nodes (and the edges among them) move to the new map; any BOUNDARY node — a
+// selected node still connected to a node left behind — stays on the source map
+// AND on the new map, linked by a sharedId. That shared boundary node is the
+// portal between the two maps, so splitting a region off keeps its doorway.
+function handleSendSelectionToNewMap() {
+  const selected = [...(mapState.selectedNodes || [])];
+  if (selected.length === 0) { showHint('Select some locations first'); return; }
+  const selectedSet = new Set(selected);
+
+  // Boundary = selected node with an edge to a non-selected node.
+  const boundary = new Set();
+  for (const edge of mapState.edges.values()) {
+    const fromSel = selectedSet.has(edge.from), toSel = selectedSet.has(edge.to);
+    if (fromSel !== toSel) { if (fromSel) boundary.add(edge.from); if (toSel) boundary.add(edge.to); }
+  }
+
+  snapshotForUndo();
+
+  // Stamp boundary nodes with a sharedId BEFORE copying, so source + copy link.
+  for (const id of boundary) {
+    const n = mapState.nodes.get(id);
+    if (n && !n.sharedId) n.sharedId = generateSharedId();
+  }
+
+  // New map = copies of every selected node + the edges among them.
+  const newNodes = selected.map(id => mapState.nodes.get(id)).filter(Boolean).map(n => ({ ...n }));
+  const newEdges = [];
+  for (const edge of mapState.edges.values()) {
+    if (selectedSet.has(edge.from) && selectedSet.has(edge.to)) newEdges.push({ ...edge });
+  }
+
+  const mapId = generateMapId();
+  const name = `Map ${mapState.mapOrder.length + 1}`;
+  mapState.mapOrder.push({ id: mapId, name });
+  _allMapsData[mapId] = {
+    nodes: newNodes,
+    edges: newEdges,
+    protectedNodes: selected.slice(),
+    protectedEdges: newEdges.map(e => `${e.from}-${e.to}`),
+    deletedEdges: [], deletedNodes: [],
+    viewport: { x: 0, y: 0, scale: 1 },
+    autoMapEnabled: mapState.autoMapEnabled,
+    currentNodeId: null
+  };
+
+  // On the source map: remove INTERIOR selected nodes (+ their edges). Boundary
+  // nodes stay (now shared); their crossing edges to remaining nodes stay too.
+  for (const id of selected) {
+    if (boundary.has(id)) continue;
+    for (const [key, edge] of mapState.edges) {
+      if (edge.from === id || edge.to === id) { mapState.edges.delete(key); mapState.deletedEdges.add(key); }
+    }
+    mapState.nodes.delete(id);
+    mapState.deletedNodes.add(id);
+    mapState.protectedNodes.delete(id);
+    if (mapState.currentNodeId === id) mapState.currentNodeId = null;
+  }
+
+  exitAddMode(); // leaves select mode, clears selection, hides the FAB, renders
+  // Switch into the new map (re-extracts + stashes the now-mutated source).
+  switchMap(mapId);
+  recomputeSharedIds();
+  saveMapForGame(true);
+  const n = selected.length, s = boundary.size;
+  showHint(`Sent ${n} location${n === 1 ? '' : 's'} to ${name}${s ? ` (${s} shared)` : ''}`);
+}
+
+// Portal navigation (#144): jump the active map to another map that holds this
+// shared node, then select + center the same node there. Cycles to the next
+// such map when the node spans more than two.
+function switchToSharedNodeMap(nodeId) {
+  const node = mapState.nodes.get(nodeId);
+  if (!node || !node.sharedId) return;
+  for (const [mapId, data] of Object.entries(_allMapsData)) {
+    if (mapId === mapState.activeMapId || !Array.isArray(data.nodes)) continue;
+    if (!data.nodes.some(n => n.sharedId === node.sharedId)) continue;
+    switchMap(mapId);
+    const t = mapState.nodes.get(nodeId) || [...mapState.nodes.values()].find(n => n.sharedId === node.sharedId);
+    if (t) {
+      mapState.selectedNode = t.id;
+      const scale = mapState.viewport.scale;
+      panViewportTo(-t.x * scale, -t.y * scale, true);
+      render();
+    }
+    const mapName = mapState.mapOrder.find(m => m.id === mapId)?.name || 'map';
+    showHint(`Switched to ${mapName}`);
+    return;
+  }
 }
 
 function renameCurrentMap(name) {
