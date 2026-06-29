@@ -332,7 +332,7 @@ function detailLocation(l){
   // LEFT column (widest): candidate strip, then read-only reference layers (In-game prose →
   // Artist → Style), then the ONLY editable prompt layer (Scene), Composed, Actual, Notes.
   const left='<h1>'+esc(l.name)+'</h1><div class="sub">'+(l.exits.length?l.exits.join('  ·  '):'no recorded exits')+'</div>'+
-    '<div class="btns"><button id="bSetTitle" '+(sel?'':'disabled')+' title="Use the selected image as this game\'s title/cover (shown on the home game card)">★ Set as title</button>'+
+    '<div class="btns"><button id="bSetTitle" '+(l.committed?'':'disabled')+' title="Make this LOCATION the game\'s cover (shown on the home game card). Tracks the location\'s current image — re-rendering it updates the cover automatically.">★ Set as title</button>'+
       '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\'s layers to play freely">⚗ Sandbox!</button>'+boBtn+
       '<button class="primary" id="bProm" '+(sel?'':'disabled')+'>Promote → in game</button>'+
       '<button class="danger" id="bRej" '+(sel?'':'disabled')+'>Delete selected</button>'+
@@ -389,7 +389,7 @@ function detailLocation(l){
   document.querySelectorAll('#detail .zoom').forEach(b=>b.onclick=(e)=>{e.stopPropagation();openLB(b.dataset.zoom);});
   $('#bProm').onclick=()=>act('/api/promote',{game:curGame,slug:l.slug,candidate:sel},'Promoted '+sel);
   $('#bRej').onclick=()=>rejectSelected();
-  { const bt=$('#bSetTitle'); if(bt) bt.onclick=()=>{ if(!sel) return; act('/api/set-title',{game:curGame,candidate:sel},'Set as title for '+curGame); }; }
+  { const bt=$('#bSetTitle'); if(bt) bt.onclick=()=>{ if(!l.committed) return; act('/api/set-title',{game:curGame,slug:l.slug},'Set '+l.name+' as title for '+curGame); }; }
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }
   const cs=$('#candSort'); if(cs){ cs.value=candSort; cs.onchange=()=>{candSort=cs.value; detailLocation(curLoc);}; }
   const seg=$('#regenSeg');
@@ -618,7 +618,8 @@ function updateSelUI(){
     renderNoteStatus(k); }
   const bp=$('#bProm'); if(bp) bp.disabled=!sel;
   const br=$('#bRej'); if(br) br.disabled=!sel;
-  const bt=$('#bSetTitle'); if(bt) bt.disabled=!sel;
+  // bSetTitle depends on the location's committed image, not the selected candidate —
+  // its disabled state is set at render time (detailLocation) and must not be reset here.
 }
 // ---- Title Images: per-game title (view / pick / unselect) + the two app heroes (mini-gen) ----
 // A game's title is now just an EXISTING game image you designate via "★ Set as title" on the
@@ -633,21 +634,21 @@ async function detailTitle(id){
   afterDetailRender();
 }
 function renderGameTitle(t){
-  const l=t.location||{}, committed=l.committed;
+  const l=t.location||{}, committed=l.committed, loc=l.titleLocation;
   const right=committed
     ? '<div class="bigprev" id="bigprev"><img alt="title" src="/img/committed?game='+curGame+'&f='+encodeURIComponent(committed)+'&v='+ver+'"></div>'
     : '<div class="bigprev empty" id="bigprev"><span>No title set</span></div>';
   const left='<h1>'+esc(t.name)+' · title</h1>'+
-    '<div class="sub">The game\'s cover, shown on the home game card. Set it from any image on this game\'s location pages.</div>'+
+    '<div class="sub">The game\'s cover, shown on the home game card. It POINTS AT a location — re-rendering that location updates the cover. Set it via <b>★ Set as title</b> on any location page.</div>'+
     '<div class="btns"><button class="primary" id="bPickTitle">Pick from '+esc(curGame)+' locations ▸</button>'+
-      '<button class="danger" id="bClearTitle"'+(committed?'':' disabled')+'>Unselect title</button></div>'+
-    (committed
-      ? '<div class="sec scope-image"><label class="ro"><span class="tag">Current</span>'+esc(committed)+'</label></div>'
-      : '<div class="sec"><div class="val">No title image yet. Open a location, select an image, then click <b>★ Set as title</b>.</div></div>');
+      '<button class="danger" id="bClearTitle"'+(loc?'':' disabled')+'>Unselect title</button></div>'+
+    (loc
+      ? '<div class="sec scope-image"><label class="ro"><span class="tag">Cover location</span>'+esc(loc)+(committed?'':' — (no image rendered yet)')+'</label></div>'
+      : '<div class="sec"><div class="val">No cover location set. Open a location, then click <b>★ Set as title</b>.</div></div>');
   $('#detail').innerHTML='<div class="loc-wrap"><div class="loc-left">'+left+'</div><div class="loc-right">'+right+'</div></div>';
   $('#bPickTitle').onclick=()=>selectTopic('g:'+curGame);
-  const bc=$('#bClearTitle'); if(bc) bc.onclick=()=>{ if(!committed) return;
-    if(confirm('Unselect the title image for '+curGame+'?')) clearTitleSlot(); };
+  const bc=$('#bClearTitle'); if(bc) bc.onclick=()=>{ if(!loc) return;
+    if(confirm('Unselect the cover location for '+curGame+'?')) clearTitleSlot(); };
 }
 function composeHero(){
   const art=(curTitleArtist&&curTitleArtist.style)||'';

@@ -148,7 +148,7 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/select-glyph') return wrap(() => selectGlyph(body.id));
       if (u.pathname === '/api/select-artist') return wrap(() => selectArtist(body.game, body.id));
       if (u.pathname === '/api/title-artist') return wrap(() => saveTitleArtist(body.id, body.artistId));
-      if (u.pathname === '/api/set-title') return wrap(() => setGameTitle(body.game, body.candidate));
+      if (u.pathname === '/api/set-title') return wrap(() => setGameTitle(body.game, body.slug));
       if (u.pathname === '/api/clear-title') return wrap(() => clearTitle(body.id));
       if (u.pathname === '/api/artist-create') return wrap(() => ({ artist: createArtist(body) }));
       if (u.pathname === '/api/app-prompt') return wrap(() => saveAppPrompt(body.prompt));

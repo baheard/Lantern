@@ -494,11 +494,20 @@ function saveTitleArtist(id, artistId) {
   fs.writeFileSync(appPromptPath, JSON.stringify(d, null, 2));
   return { id, artistId };
 }
-// The committed (in-game) file for a slot: game title → manifest.title; hero → app.json heroes map.
+// The committed (in-game) file for a slot. A game title is a POINTER to a location
+// (manifest.titleLocation = a location name) — resolve it to that location's current
+// committed image so re-rendering the room updates the cover automatically. Falls back
+// to the legacy frozen manifest.title for games set before this redesign. Hero → app.json.
 function titleCommitted(slot) {
   const g = gamePaths(slot.game);
   if (slot.heroKey) return ((readJSON(appPromptPath, {}).heroes) || {})[slot.heroKey] || null;
-  return (readJSON(g.manifest, { images: {} }).title) || null;
+  const m = readJSON(g.manifest, { images: {} });
+  if (m.titleLocation && m.images && m.images[m.titleLocation]) return m.images[m.titleLocation];
+  return m.title || null;
+}
+// The location NAME currently designated as a game's cover (or null). UI display only.
+function titleLocationName(game) {
+  return (readJSON(gamePaths(game).manifest, {}).titleLocation) || null;
 }
 // Build the location-shaped object the client's detailLocation() consumes, for a title slot.
 function titleLocationObj(id) {
@@ -536,25 +545,25 @@ function titleLocationObj(id) {
     slug: slot.slug, name: slot.name, description: '', exits: [],
     committed, committedSource, candidates, candidatePrompts, auditions: {}, mtimes, candMeta,
     sceneDefault: '', sceneOverride: scenes[slot.slug] || '', sceneExtras: [],
+    titleLocation: slot.heroKey ? null : titleLocationName(slot.game),
   };
 }
-// Set a game's title/cover to an EXISTING image (a room candidate, committed room image, or an
-// audition piece). Copies it to <game>/title.png and records manifest.title — the home game-card
-// eye reads manifest.title. This is the "Set as title" path on the location page (titles are no
-// longer generated per-slot; you pick a finished room image).
-function setGameTitle(game, candidate) {
+// Designate a game's title/cover by pointing at a LOCATION (not a frozen image). Records the
+// location's name in manifest.titleLocation; the cover resolves to that location's current
+// committed image at read time (titleCommitted / the app's getTitleImageUrl), so re-rendering
+// the room updates the cover automatically. This is the "★ Set as title" path on a location page.
+function setGameTitle(game, slug) {
   const g = gamePaths(game);
-  const src = candidate.indexOf('aud:') === 0
-    ? path.join(g.audition, candidate.slice(4))
-    : (fs.existsSync(path.join(g.review, candidate)) ? path.join(g.review, candidate) : path.join(g.dir, candidate));
-  if (!fs.existsSync(src)) throw new Error('image not found: ' + candidate);
-  fs.copyFileSync(src, path.join(g.dir, 'title.png'));
+  const name = ((readJSON(g.pack, { rooms: [] }).rooms.find((r) => r.slug === slug)) || {}).name || slug;
   const manifest = readJSON(g.manifest, { game, images: {} });
-  manifest.title = 'title.png';
+  if (!manifest.images || !manifest.images[name]) throw new Error('location has no committed image: ' + name);
+  manifest.titleLocation = name;
+  delete manifest.title; // drop any legacy frozen-copy reference; the pointer supersedes it
   fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
-  return { title: 'title.png' };
+  return { titleLocation: name, file: manifest.images[name] };
 }
-// Unselect a title slot: a game title clears manifest.title; an app hero clears app.json heroes[key].
+// Unselect a title slot: a game title clears the titleLocation pointer (and any legacy
+// manifest.title); an app hero clears app.json heroes[key].
 function clearTitle(id) {
   const slot = titleSlot(id);
   if (slot.heroKey) {
@@ -564,6 +573,7 @@ function clearTitle(id) {
   }
   const g = gamePaths(slot.game);
   const manifest = readJSON(g.manifest, { images: {} });
+  delete manifest.titleLocation;
   delete manifest.title;
   fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
   return { ok: true };
@@ -1061,4 +1071,4 @@ function setNoteStatus(key, status, appliedTo, stamp) {
 }
 
 
-module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };
+module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationName, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };

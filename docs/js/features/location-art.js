@@ -64,15 +64,20 @@ export async function getLocationImageUrl(locationName) {
 }
 
 // Resolve a representative "title" image for a game — used by the home game-card eye
-// (hover preview / full-screen). Prefers an explicit `title` field in the manifest
-// (a dedicated title piece rendered by the same artist); falls back to the first
-// location image so this works before any title art is generated. Returns null if
-// the game ships no art at all.
+// (hover preview / full-screen). The manifest's `titleLocation` POINTS AT a location
+// (by name), so the cover always reflects that location's CURRENT image — re-rendering
+// the room updates the cover with no re-designation. Resolution order:
+//   1. titleLocation → that location's current image (the designated cover)
+//   2. legacy `title` field (a frozen copy, for games set before this redesign)
+//   3. first location image (so the eye works before any title is designated)
+// Returns null if the game ships no art at all.
 export async function getTitleImageUrl(gameName) {
   if (!gameName) return null;
   const manifest = await loadLocationManifest(gameName);
   if (!manifest || !manifest.images) return null;
-  const file = manifest.title || Object.values(manifest.images)[0];
+  const file = (manifest.titleLocation && manifest.images[manifest.titleLocation])
+    || manifest.title
+    || Object.values(manifest.images)[0];
   if (!file) return null;
   return `games/images/${gameName}/${file}`;
 }
