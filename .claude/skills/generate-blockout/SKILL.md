@@ -76,6 +76,14 @@ a new kind of mass, add the role to BOTH `ROLE_COLORS` (renderer.html) and `ROLE
 (tools/artview/lib/core.cjs) — they must stay in sync** — rather than leaning on a one-off
 `color`. A role with no legend entry renders as a coloured blob the model can't name.
 
+**Probe moving/multi-part MECHANISMS empirically.** If a volume centres on a machine or linked
+mechanism (the orrery disk + wheels + globes, a lever-driven contraption), the framing only
+*summarises* it — drive `tools/play.cjs` to that room and `examine` each component over a few
+turns (`wait`/`z` to watch it move). That gives the true part count, colours, arrangement, and
+which parts are fixed vs orbiting — e.g. the Orrery is a tilted disk with a fixed blue hub plus a
+silver wheel (violet hub + tan rim) and a copper wheel (red hub + green rim) on opposite sides,
+none of which the one-line framing spells out. Model what the game actually describes.
+
 **Apply the baked gotchas up front** (from the tome):
 - **Fill the frame** — a big featureless foreground or bare pit makes the model hallucinate
   (it invented a brick crypt under the theatre seats). Add real geometry; for a sunken pit, cut

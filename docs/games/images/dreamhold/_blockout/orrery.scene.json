@@ -20,11 +20,16 @@
     { "name": "north jamb east", "box": [4.5, 11, 0.4], "at": [4.25, 5.5, -6.5], "role": "wall", "shell": true },
     { "name": "north lintel", "box": [4, 4.5, 0.4], "at": [0, 8.75, -6.5], "role": "wall", "shell": true },
 
-    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.5, "axis": "x" }, "at": [-2, 5, 0], "role": "machine", "detail": "vast stately brass disk standing upright (vertical), pushed toward the far (west) wall, its face toward the entry (east); revolves around the central globe" },
-    { "name": "blue-glass globe (centre/hub)", "sphere": 0.85, "at": [-2, 5, 0], "color": "#3a66a0", "detail": "fixed blue-glass globe at the disk's centre/hub; the disk revolves around it" },
-    { "name": "glass globe wheel 1", "sphere": 0.45, "at": [-1.5, 7.2, 1.4], "color": "#7fa6c8", "detail": "wheel bearing a glass globe, pirouetting ACROSS the disk's front (east) face — not through it" },
-    { "name": "glass globe wheel 2", "sphere": 0.45, "at": [-1.5, 3, -1.6], "color": "#7fa6c8" },
-    { "name": "glass globe wheel 3", "sphere": 0.4, "at": [-1.5, 5.4, 2.2], "color": "#7fa6c8" },
+    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.4, "axis": "x" }, "at": [-2, 5, 0], "rot": [0, 0, 108], "role": "machine", "detail": "vast brass disk rising at a SHARP angle (~18deg back from vertical): lower edge a few inches off the floor in front (east), upper edge climbing near the high roof at the back (west). Engraved arcs/lines; revolves around the fixed central globe." },
+    { "name": "blue-glass globe (centre/hub, fixed)", "sphere": 0.85, "at": [-2, 5, 0], "color": "#3a66a0", "detail": "large fixed blue-glass globe embedded at the disk's centre, brown/white island-map pattern; the disk rotates around it" },
+
+    { "name": "silver wheel (upper side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-2.77, 7.38, -1.5], "rot": [0, 0, 108], "color": "#c8c8d2", "detail": "silver wheel, spiralling moire metrics; on the upper side of the disk, opposite the copper wheel" },
+    { "name": "violet globe (silver wheel hub)", "sphere": 0.5, "at": [-2.77, 7.38, -1.5], "color": "#7a4fa0", "detail": "swollen glittering violet globe, streaked silver and black, at the silver wheel's centre" },
+    { "name": "tan globe (silver wheel rim)", "sphere": 0.42, "at": [-2.77, 7.38, -0.15], "color": "#c9b083", "detail": "tan globe on the silver wheel's rim, circled by heavy rings of frosted white glass (the blue mask is caught in the rings)" },
+
+    { "name": "copper wheel (lower side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-1.23, 2.62, 1.5], "rot": [0, 0, 108], "color": "#b0703a", "detail": "copper wheel, incised radial lines; on the lower side of the disk, opposite the silver wheel" },
+    { "name": "red globe (copper wheel hub)", "sphere": 0.5, "at": [-1.23, 2.62, 1.5], "color": "#b03330", "detail": "large red globe banded in crimson/rust/scarlet/magenta/rose, at the copper wheel's centre" },
+    { "name": "green globe (copper wheel rim)", "sphere": 0.36, "at": [-1.23, 2.62, 2.8], "color": "#5a9a4a", "detail": "small green globe, pocked and cratered, circling the copper wheel's rim" },
 
     { "name": "south alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, 8.6], "role": "floor", "detail": "small curved alcove off the south side" },
     { "name": "south alcove ladder rail E", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [0.45, 3.3, 9.6], "role": "ladder" },
@@ -35,9 +40,9 @@
   ],
   "cameras": {
     "orrery": {
-      "pos": [5.8, 4, 1.8],
-      "look": [-2, 5, 0],
-      "fov": 56
+      "pos": [6, 2.6, 3.4],
+      "look": [-2.5, 5, -0.4],
+      "fov": 66
     },
     "south-alcove": {
       "pos": [0, 2, 8.4],
