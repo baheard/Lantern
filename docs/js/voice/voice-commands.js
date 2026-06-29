@@ -172,26 +172,36 @@ export async function processVoiceKeywords(transcript, handlers, confidence = nu
     return false;
   }
 
-  // "Turn off push-to-talk" — leave PTT mode by voice so you don't have to reach
-  // the settings toggle (#175). Reachable because PTT hold unmutes the mic while
-  // the button is held, so the spoken command is processed before re-muting.
+  // Toggle push-to-talk mode by voice so you don't have to reach the settings
+  // toggle (#175). Both directions are reachable: PTT-hold unmutes the mic while
+  // the button is held (so "off" is heard before re-muting), and "on" is spoken
+  // in continuous mode where the mic is already live.
   {
     const pttPhrase = lower.replace(/-/g, ' ').replace(/\s+/g, ' ');
-    if (/^(?:turn off|disable|stop|cancel|exit|end) push to talk(?: mode)?$/.test(pttPhrase) ||
-        /^push to talk(?: mode)? off$/.test(pttPhrase)) {
+    const wantsOff = /^(?:turn off|disable|stop|cancel|exit|end) push to talk(?: mode)?$/.test(pttPhrase) ||
+                     /^push to talk(?: mode)? off$/.test(pttPhrase);
+    const wantsOn = /^(?:turn on|enable|start|begin) push to talk(?: mode)?$/.test(pttPhrase) ||
+                    /^push to talk(?: mode)?(?: on)?$/.test(pttPhrase);
+    if (wantsOff || wantsOn) {
       state.pendingCommandProcessed = true;
+      const desired = wantsOn;  // off wins only when not an explicit "on"
       const toggle = document.getElementById('pushToTalkToggle');
-      if (toggle && toggle.checked) {
-        // Reuse the toggle's change handler for the full disable side-effects.
-        toggle.checked = false;
+      if (toggle && toggle.checked !== desired) {
+        // Reuse the toggle's change handler for the full enable/disable side-effects
+        // (enabling stops continuous listening + mutes; disabling the reverse).
+        toggle.checked = desired;
         toggle.dispatchEvent(new Event('change'));
       } else {
-        state.pushToTalkMode = false;
-        try { localStorage.setItem('lantern_push_to_talk', 'false'); } catch (e) { /* ignore */ }
+        state.pushToTalkMode = desired;
+        try { localStorage.setItem('lantern_push_to_talk', desired.toString()); } catch (e) { /* ignore */ }
       }
-      // Resume continuous listening so the mic stays live after the button release.
-      await handlers.unmute();
-      speakAppMessage('Push to talk off. Continuous listening on.');
+      if (wantsOn) {
+        speakAppMessage('Push to talk on. Hold the mic button to speak.');
+      } else {
+        // Resume continuous listening so the mic stays live after the button release.
+        await handlers.unmute();
+        speakAppMessage('Push to talk off. Continuous listening on.');
+      }
       return false;
     }
   }

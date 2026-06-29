@@ -127,12 +127,25 @@
             <p class="setting-description">Auto-enable map tracking when starting new games</p>
           </div>
 
-          <!-- Location Art toggles removed from Settings for now. The feature still
-               works but defaults OFF (features/location-art.js -> isLocationArtEnabled()).
-               To bring the toggles back, re-add the two blocks here
-               (#locationArtByDefaultToggle welcome-section-item + #locationArtToggle
-               game-section-item); their handlers in ui/settings/settings-panel.js were
-               left in place (guarded, harmless without the elements). -->
+          <!-- Enable AI Images by Default (welcome screen only) — app-wide default, OFF
+               unless set. Drives the home game-card art-availability icon and the in-game
+               location-art panel/eye. Setting key is 'locationArt'. -->
+          <div class="setting-item welcome-section-item">
+            <label>
+              Enable AI Images by Default
+              <input type="checkbox" id="locationArtByDefaultToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Show AI-generated location art for games that have it</p>
+          </div>
+
+          <!-- AI Images (per-game override). Initial checked state synced on panel open. -->
+          <div class="setting-item game-section-item">
+            <label>
+              AI Images
+              <input type="checkbox" id="locationArtToggle" class="toggle-switch">
+            </label>
+            <p class="setting-description">Show AI-generated location art for this game</p>
+          </div>
 
           <!-- Keep Screen Awake toggle -->
           <div class="setting-item">
@@ -272,6 +285,7 @@
                 <ul class="help-commands">
                   <li><span class="material-icons">mic</span> <code>"Mute"</code> <code>"Unmute"</code> — Turn the microphone off / on</li>
                   <li><span class="material-icons">ac_unit</span> <code>"Freeze"</code> <code>"Unfreeze"</code> — Temporarily stop / resume listening</li>
+                  <li><span class="material-icons">record_voice_over</span> <code>"Push to talk on"</code> <code>"Turn off push to talk"</code> — Switch between hold-to-talk and continuous listening</li>
                   <li><span class="material-icons">lock</span> <code>"Lock Screen"</code> <code>"Unlock Screen"</code> — Lock or unlock the display</li>
                 </ul>
               </div>
