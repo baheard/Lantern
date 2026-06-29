@@ -1915,7 +1915,8 @@ function switchMap(mapId) {
 function addMap() {
   _pendingNewAreaHint = false;
   setSuppressJourneyClear(false);
-  _allMapsData[mapState.activeMapId] = extractMapData();
+  const sourceMapId = mapState.activeMapId;
+  _allMapsData[sourceMapId] = extractMapData();
 
   const mapId = generateMapId();
   const name = `Map ${mapState.mapOrder.length + 1}`;
@@ -1938,7 +1939,20 @@ function addMap() {
   // Phase 1 of multi-map (#144): a brand-new map should immediately carry the
   // current location instead of starting empty, so the user has an anchor. Gate
   // on automap like the delete-last-map reset path does.
-  if (mapState.autoMapEnabled) seedCurrentLocation();
+  if (mapState.autoMapEnabled && seedCurrentLocation()) {
+    // The seeded location also exists on the source map (it's where you were),
+    // so link the two copies with a sharedId — the current location becomes the
+    // shared PORTAL between the old map and the new one (#144).
+    const id = mapState.currentNodeId;
+    const newNode = mapState.nodes.get(id);
+    const srcNode = (_allMapsData[sourceMapId]?.nodes || []).find(n => n.id === id);
+    if (newNode && srcNode) {
+      const sid = srcNode.sharedId || generateSharedId();
+      srcNode.sharedId = sid;
+      newNode.sharedId = sid;
+      recomputeSharedIds();
+    }
+  }
 
   saveMapForGame(true);
   updateMapNameDisplay();
