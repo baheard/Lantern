@@ -84,15 +84,20 @@ which parts are fixed vs orbiting — e.g. the Orrery is a tilted disk with a fi
 silver wheel (violet hub + tan rim) and a copper wheel (red hub + green rim) on opposite sides,
 none of which the one-line framing spells out. Model what the game actually describes.
 
-**Block the big masses + placement-critical features ONLY — let the prompt fill detail.** The
-blockout carries *position* (anything whose left/right/where must stay consistent across vantages,
-or that the player interacts with: the hero masses, the orb the player grabs, exits, named
-placement-critical features). It does NOT carry *texture*: how many cogs, surface engraving,
-ornament, "feels like an engine of gears." That is the scene prose's job — model a suggestive base
-mass + add a prompt cue ("mounted in an engine of gears and shafts; render the gearwork") and let
-the generator detail it. Over-modeling fiddly geometry is wasted effort and makes the clay brittle.
-Rule of thumb: if moving it would change the *composition*, block it out; if it only changes the
-*surface*, leave it to the prompt.
+**Block out everything that must reliably APPEAR or whose POSITION matters; the prompt only
+elaborates geometry that's already there — it will NOT conjure absent structure.** Empirically
+validated on the Orrery (2026-06-29): when the gear train was blocked out, the model rendered it
+richly (it elaborated 2 blocked cogs into a full bank of cogwheels); when it was stripped to a
+"suggestive mass" + a strong prose cue ("mounted in an engine of gears and shafts"), the gears
+nearly VANISHED — the prose alone did not produce them. So:
+- **Prominent structure** (the gear train, a staircase, a balcony, the machine base) = block it
+  out, even roughly. The model amplifies present geometry; it does not invent missing masses from
+  prose. Under-modeling these is the real failure mode, not over-modeling.
+- **Fine surface detail** (number of teeth on a cog, engraving, ornament, exact rivet pattern) =
+  leave to the prompt; don't model it.
+- Rule of thumb: if you'd notice it MISSING from the final image, block it out. If it only changes
+  the *surface* of something already blocked, leave it to the prompt. When unsure, block it — a
+  rough mass that the model elaborates beats a confident prose cue the model ignores.
 
 **Apply the baked gotchas up front** (from the tome):
 - **Fill the frame** — a big featureless foreground or bare pit makes the model hallucinate
