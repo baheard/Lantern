@@ -3,8 +3,8 @@
   "game": "dreamhold",
   "volume": "orrery",
   "title": "Orrery",
-  "source": "location-framing.md → Volume: Orrery (anchor orrery); component detail probed in-game via tools/play.cjs",
-  "frame": "+X east, +Z south, +Y up. Wide TALL six-sided chamber; the brass disk faces ~east toward the entry and is tilted ~9deg back from vertical (lower edge front/low, upper edge back/high). The two alcove cameras (N/S) glimpse the same machine three-quarter through their archways.",
+  "source": "location-framing.md → Volume: Orrery (anchor orrery); component detail + base mechanism probed in-game via tools/play.cjs",
+  "frame": "+X east, +Z south, +Y up. Wide TALL six-sided chamber; the brass disk faces ~east toward the entry, tilted only ~4-5deg back from vertical, and is LIFTED off the floor on a gear/axle base (an engine of gears + shafts). Lower edge a few inches above the floor; upper edge climbs toward the dark vault. Alcove cameras (N/S) glimpse the same machine three-quarter through their archways.",
   "background": "#9a9a9a",
   "fog": { "near": 24, "far": 70 },
   "parts": [
@@ -20,16 +20,23 @@
     { "name": "north jamb east", "box": [4.5, 14, 0.4], "at": [4.25, 7, -6.5], "role": "wall", "shell": true },
     { "name": "north lintel", "box": [4, 8, 0.4], "at": [0, 10, -6.5], "role": "wall", "shell": true },
 
-    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.4, "axis": "x" }, "at": [-2, 5, 0], "rot": [0, 0, 99], "role": "machine", "detail": "vast brass disk tilted ~9deg back from vertical: lower edge a few inches off the floor in front (east), upper edge climbing toward the high roof at the back (west). Engraved arcs/lines; revolves around the fixed central globe." },
-    { "name": "blue-glass globe (centre/hub, fixed)", "sphere": 0.85, "at": [-2, 5, 0], "color": "#3a66a0", "detail": "large fixed blue-glass globe embedded at the disk's centre, brown/white island-map pattern; the disk rotates around it" },
+    { "name": "raised stone dais", "cyl": { "r": 3.4, "len": 0.5, "axis": "y" }, "at": [-1.8, 0.15, 0], "role": "floor", "detail": "low circular stone dais the machine rises from" },
+    { "name": "gear + axle base housing", "box": [2.6, 2.4, 2.2], "at": [-1.8, 1.2, 0], "role": "machine", "detail": "the engine of gears and shafts the brass disk is mounted on — the disk's lower edge floats just above this, a few inches off the floor" },
+    { "name": "base gear A", "cyl": { "r": 0.95, "len": 0.3, "axis": "x" }, "at": [-0.2, 1.4, 1.7], "role": "machine", "detail": "exposed drive gear at the base front" },
+    { "name": "base gear B", "cyl": { "r": 0.7, "len": 0.3, "axis": "x" }, "at": [-0.4, 1.0, -1.7], "role": "machine", "detail": "smaller drive gear at the base" },
 
-    { "name": "silver wheel (upper side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-2.39, 7.47, -1.5], "rot": [0, 0, 99], "color": "#c8c8d2", "detail": "silver wheel, spiralling moire metrics; on the upper side of the disk, opposite the copper wheel" },
-    { "name": "violet globe (silver wheel hub)", "sphere": 0.5, "at": [-2.39, 7.47, -1.5], "color": "#7a4fa0", "detail": "swollen glittering violet globe, streaked silver and black, at the silver wheel's centre" },
-    { "name": "tan globe (silver wheel rim)", "sphere": 0.42, "at": [-2.39, 7.47, -0.15], "color": "#c9b083", "detail": "tan globe on the silver wheel's rim, circled by heavy rings of frosted white glass (the blue mask is caught in the rings)" },
+    { "name": "orrery disk", "cyl": { "r": 5, "len": 0.4, "axis": "x" }, "at": [-2, 5.5, 0], "rot": [0, 0, 94], "role": "machine", "detail": "vast brass disk, nearly upright (tilted only ~4-5deg back from vertical), lifted clear of the floor on the gear base; engraved arcs/lines; revolves around the fixed central globe" },
+    { "name": "blue-glass globe (centre/hub, fixed)", "sphere": 0.85, "at": [-2, 5.5, 0], "color": "#3a66a0", "detail": "large fixed blue-glass globe embedded at the disk's centre, brown/white island-map pattern; the disk rotates around it" },
 
-    { "name": "copper wheel (lower side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-1.61, 2.53, 1.5], "rot": [0, 0, 99], "color": "#b0703a", "detail": "copper wheel, incised radial lines; on the lower side of the disk, opposite the silver wheel" },
-    { "name": "red globe (copper wheel hub)", "sphere": 0.5, "at": [-1.61, 2.53, 1.5], "color": "#b03330", "detail": "large red globe banded in crimson/rust/scarlet/magenta/rose, at the copper wheel's centre" },
-    { "name": "green globe (copper wheel rim)", "sphere": 0.36, "at": [-1.61, 2.53, 2.85], "color": "#5a9a4a", "detail": "small green globe, pocked and cratered, circling the copper wheel's rim" },
+    { "name": "silver wheel (upper side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-2.17, 7.99, -1.5], "rot": [0, 0, 94], "color": "#c8c8d2", "detail": "silver wheel, spiralling moire metrics; on the upper side of the disk, opposite the copper wheel" },
+    { "name": "violet globe (silver wheel hub)", "sphere": 0.5, "at": [-2.17, 7.99, -1.5], "color": "#7a4fa0", "detail": "swollen glittering violet globe, streaked silver and black, at the silver wheel's centre" },
+    { "name": "tan globe (silver wheel rim)", "sphere": 0.42, "at": [-2.17, 7.99, -0.15], "color": "#c9b083", "detail": "tan globe on the silver wheel's rim, circled by heavy rings of frosted white glass (the blue mask is caught in the rings)" },
+
+    { "name": "copper wheel (lower side)", "cyl": { "r": 1.4, "len": 0.3, "axis": "x" }, "at": [-1.83, 3.01, 1.5], "rot": [0, 0, 94], "color": "#b0703a", "detail": "copper wheel, incised radial lines; on the lower side of the disk, opposite the silver wheel" },
+    { "name": "red globe (copper wheel hub)", "sphere": 0.5, "at": [-1.83, 3.01, 1.5], "color": "#b03330", "detail": "large red globe banded in crimson/rust/scarlet/magenta/rose, at the copper wheel's centre" },
+    { "name": "green globe (copper wheel rim)", "sphere": 0.36, "at": [-1.83, 3.01, 2.85], "color": "#5a9a4a", "detail": "small green globe, pocked and cratered, circling the copper wheel's rim" },
+
+    { "name": "dangling grey strip", "box": [0.15, 3.4, 0.5], "at": [-2.35, 12, 0], "color": "#8a8a90", "detail": "grey strip/cord of soft material hanging from the dark vault over the disk's upper edge — just out of reach" },
 
     { "name": "south alcove floor", "box": [4, 0.4, 4], "at": [0, -0.2, 8.6], "role": "floor", "detail": "small curved alcove off the south side" },
     { "name": "south alcove ladder rail E", "cyl": { "r": 0.12, "len": 7, "axis": "y" }, "at": [0.45, 3.3, 9.6], "role": "ladder" },
@@ -40,18 +47,18 @@
   ],
   "cameras": {
     "orrery": {
-      "pos": [6, 2.2, 3.8],
-      "look": [-2.2, 5.5, -0.3],
-      "fov": 70
+      "pos": [5.6, 1.7, 3.0],
+      "look": [-2, 6, -0.3],
+      "fov": 66
     },
     "south-alcove": {
       "pos": [0, 2, 8.4],
-      "look": [-2, 4.6, 0],
+      "look": [-2, 5.2, 0],
       "fov": 56
     },
     "north-alcove": {
       "pos": [0, 2, -8.4],
-      "look": [-2, 4.6, 0],
+      "look": [-2, 5.2, 0],
       "fov": 56
     }
   },
@@ -61,8 +68,8 @@
     "north-alcove"
   ],
   "notes": {
-    "orrery": "anchor. wide corner vantage from the entry wall so the tall chamber reads (floor, walls, vault above lost in shadow), the tilted brass disk dominating; blue hub globe at centre, silver wheel (violet+tan) on one side, copper wheel (red+green) opposite.",
-    "south-alcove": "stand in the small alcove looking through the archway at the SAME machine spinning in the chamber; iron ladder up a shaft beside you.",
+    "orrery": "anchor. low front vantage looking UP at the machine so the lifted gear-base reads (the disk floats clear of the floor) and the tall chamber + dark vault show above; nearly-upright brass disk, blue hub globe at centre, silver wheel (violet+tan) one side, copper wheel (red+green) opposite, a grey strip dangling from the vault over the top edge.",
+    "south-alcove": "stand in the small alcove looking through the archway at the SAME machine turning in the chamber; iron ladder up a shaft beside you.",
     "north-alcove": "stand in the alcove; archway onto ascending stairs; the same machine glimpsed turning through the opening."
   }
 }
