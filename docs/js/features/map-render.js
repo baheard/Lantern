@@ -266,6 +266,24 @@ function drawNodes() {
       ctx.stroke(); ctx.setLineDash([]);
     }
 
+    // Cross-map exit stubs (#144): dashed amber spokes pointing the directions
+    // that auto-switch to another map, so the jump is predictable not magic.
+    if (node._portalExits && node._portalExits.length) {
+      for (const ex of node._portalExits) {
+        const off = DIRECTION_OFFSETS[ex.dir];
+        if (!off) continue;
+        const len = Math.hypot(off.x, off.y) || 1;
+        const ux = off.x / len, uy = off.y / len;
+        const r0 = radius + 3, r1 = radius + 17;
+        ctx.beginPath();
+        ctx.moveTo(node.x + ux * r0, node.y + uy * r0);
+        ctx.lineTo(node.x + ux * r1, node.y + uy * r1);
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.setLineDash([3, 2]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(node.x + ux * r1, node.y + uy * r1, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#f59e0b'; ctx.fill();
+      }
+    }
+
     // Icon (only if node has an icon type with a non-empty value)
     const iconChar = NODE_ICONS[node.type];
     if (iconChar) {

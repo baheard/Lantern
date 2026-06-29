@@ -726,6 +726,23 @@ function handleLocationChange(e) {
   // Check if we already have a node with this name
   const existingNode = mapState.nodes.get(locationName);
 
+  // Portal auto-switch (#144): if we're leaving a PORTAL toward a room that isn't
+  // on this map but already exists + is connected on another map the portal spans,
+  // switch to that map instead of duplicating the room/edge here. Runs BEFORE the
+  // deletedNodes guard on purpose — a room sent to another map is marked deleted
+  // here, and that's exactly the case we want to follow across the portal.
+  if (command !== null && previousLocationId && !existingNode) {
+    const targetMap = findPortalTargetMap(previousLocationId, locationName);
+    if (targetMap) {
+      switchMap(targetMap);
+      mapState.currentNodeId = locationName;
+      mapState.selectedNode = locationName;
+      if (isVisible) { render(); centerOnCurrentLocation(); }
+      saveMapForGame();
+      return;
+    }
+  }
+
   // Safety: Never add deleted nodes
   if (mapState.deletedNodes.has(locationName)) return;
 
@@ -1984,6 +2001,56 @@ function recomputeSharedIds() {
     if (Array.isArray(data.nodes)) bump(data.nodes);
   }
   mapState.sharedNodeIds = new Set([...counts.entries()].filter(([, c]) => c >= 2).map(([id]) => id));
+  computePortalExits();
+}
+
+// For each portal node on the ACTIVE map, compute the directions that lead to
+// another map — an edge from the portal on some other map, in a heading not
+// already present here. Stored transiently on the node as `_portalExits` and
+// drawn as dashed-amber stubs so auto-switch isn't a surprise (#144).
+function computePortalExits() {
+  for (const n of mapState.nodes.values()) { if (n._portalExits) delete n._portalExits; }
+  if (!mapState.sharedNodeIds || mapState.sharedNodeIds.size === 0) return;
+  for (const node of mapState.nodes.values()) {
+    if (!node.sharedId || !mapState.sharedNodeIds.has(node.sharedId)) continue;
+    // Headings that already have an edge on THIS map — don't flag those.
+    const activeDirs = new Set();
+    for (const e of mapState.edges.values()) {
+      if (e.from === node.id || e.to === node.id) {
+        const d = COMMAND_DIRECTIONS[(e.command || '').toLowerCase().trim()];
+        if (d) activeDirs.add(d);
+      }
+    }
+    const exits = [], seen = new Set();
+    for (const [mapId, data] of Object.entries(_allMapsData)) {
+      if (mapId === mapState.activeMapId || !data) continue;
+      if (!(data.nodes || []).some(n => n.id === node.id || n.sharedId === node.sharedId)) continue;
+      const mapName = (mapState.mapOrder.find(m => m.id === mapId) || {}).name || 'map';
+      for (const e of (data.edges || [])) {
+        if (e.from !== node.id && e.to !== node.id) continue;
+        const d = COMMAND_DIRECTIONS[((e.command || e.cmd) || '').toLowerCase().trim()];
+        if (d && !activeDirs.has(d) && !seen.has(d)) { seen.add(d); exits.push({ dir: d, mapId, mapName }); }
+      }
+    }
+    if (exits.length) node._portalExits = exits;
+  }
+}
+
+// Find another map this portal spans where the destination already exists and is
+// connected to the portal — the auto-switch target. Null if none. See #144.
+function findPortalTargetMap(portalId, destId) {
+  const portal = mapState.nodes.get(portalId);
+  if (!portal || !portal.sharedId) return null;
+  if (!(mapState.sharedNodeIds && mapState.sharedNodeIds.has(portal.sharedId))) return null;
+  for (const [mapId, data] of Object.entries(_allMapsData)) {
+    if (mapId === mapState.activeMapId || !data) continue;
+    const nodes = data.nodes || [], edges = data.edges || [];
+    const hasPortal = nodes.some(n => n.id === portalId || n.sharedId === portal.sharedId);
+    const hasDest = nodes.some(n => n.id === destId);
+    if (!hasPortal || !hasDest) continue;
+    if (edges.some(e => (e.from === portalId && e.to === destId) || (e.from === destId && e.to === portalId))) return mapId;
+  }
+  return null;
 }
 
 // Propagate the content fields of an edited shared node to its copies on the
