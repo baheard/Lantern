@@ -255,15 +255,37 @@
   box-shadow: 0 0 8px rgba(196, 163, 90, 0.6);
 }
 
-/* Availability icons on game cards — injected by game-loader.js. The art badge
-   shows only when the "AI Images by Default" home setting is on and the game ships
-   location art; the hint badge shows whenever the game ships a hints file. Both are
-   static indicators (no hover/peek) in a subtle gray. */
+/* Top-right cluster on game cards, injected by game-loader.js. Holds the AI
+   availability badges with the ⓘ info icon as the rightmost item, pinned to the
+   card corner so the ⓘ is always top-right regardless of title length. */
+.card-badges {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+}
+
+/* The ⓘ, relocated into the cluster, drops its own absolute positioning and flows
+   as the rightmost flex item. Kept position:relative so its ::after tooltip still
+   anchors to the icon. */
+.card-badges .game-meta {
+  position: relative;
+  top: auto;
+  right: auto;
+  padding: 0;
+}
+
+/* Availability icons on game cards. The art badge shows only when the "AI Images by
+   Default" home setting is on and the game ships location art; the hint badge shows
+   whenever the game ships a hints file. Both are static indicators (no hover/peek)
+   in a subtle gray. */
 .art-badge,
 .hint-badge {
   display: inline-flex;
   align-items: center;
-  margin-left: 6px;
   color: var(--text-secondary);
   vertical-align: middle;
   flex-shrink: 0;

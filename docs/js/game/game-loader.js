@@ -501,21 +501,36 @@ async function launchGame(gamePath, gameName, onOutput, { trackFn = null } = {})
 // affects card titles read aloud. It's a static indicator only — no hover/peek.
 const ART_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 
-// Inline question-mark glyph for the home-card hints-availability icon. Same size
-// and treatment as the art badge so they read as a matched pair.
-const HINT_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+// Inline lightbulb glyph for the home-card hints-availability icon — the universal
+// "hint/idea" metaphor, deliberately NOT a question mark so it can't be mistaken
+// for the ⓘ info/tooltip affordance. Same size + treatment as the art badge.
+const HINT_BADGE_SVG = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>`;
 
-// Insert a badge into a card title after the first matching anchor selector, so
-// the row reads left-to-right consistently (save → art → hint) no matter which
+// Get-or-create the top-right badge cluster for a card. The ⓘ info icon (.game-meta)
+// lives here as the RIGHTMOST item — the AI availability badges (art, hint) sit to
+// its left. The cluster is pinned to the card's top-right corner by CSS, so the ⓘ is
+// always top-right regardless of title length. Idempotent.
+function getBadgeCluster(card) {
+  const title = card.querySelector('.game-title');
+  if (!title) return null;
+  let cluster = card.querySelector('.card-badges');
+  if (cluster) return cluster;
+  cluster = document.createElement('span');
+  cluster.className = 'card-badges';
+  title.appendChild(cluster);
+  // Relocate the existing info icon into the cluster so it anchors the right edge.
+  const meta = title.querySelector('.game-meta');
+  if (meta) cluster.appendChild(meta);
+  return cluster;
+}
+
+// Insert a badge into the cluster immediately before `beforeSelector` (the element
+// that should stay to its right), so order is always art → hint → ⓘ no matter which
 // async load resolves first.
-function placeBadge(title, badge, anchorSelectors) {
-  let anchor = null;
-  for (const sel of anchorSelectors) {
-    anchor = title.querySelector(sel);
-    if (anchor) break;
-  }
-  if (anchor) anchor.insertAdjacentElement('afterend', badge);
-  else title.appendChild(badge);
+function placeBadge(card, badge, beforeSelector) {
+  const cluster = getBadgeCluster(card);
+  if (!cluster) return;
+  cluster.insertBefore(badge, cluster.querySelector(beforeSelector));
 }
 
 // Add (or remove) the "AI art available" icon on a single game card. Shown only when
@@ -539,8 +554,8 @@ async function applyArtBadge(card, gameName) {
   badge.title = 'AI art available';
   badge.setAttribute('aria-label', 'AI art available');
   badge.innerHTML = ART_BADGE_SVG;
-  // Art sits right after the ⓘ info icon; the hint badge trails it.
-  placeBadge(title, badge, ['.game-meta', '[data-save-indicator]']);
+  // Art goes left of the hint badge (which is itself left of the ⓘ).
+  placeBadge(card, badge, '.hint-badge, .game-meta');
 }
 
 // Add the "AI Hints available" icon on a single game card — shown whenever the game
@@ -556,7 +571,8 @@ async function applyHintBadge(card, gameName) {
   badge.title = 'AI Hints available';
   badge.setAttribute('aria-label', 'AI Hints available');
   badge.innerHTML = HINT_BADGE_SVG;
-  placeBadge(title, badge, ['.art-badge', '.game-meta', '[data-save-indicator]']);
+  // Hint badge goes immediately left of the ⓘ (and right of the art badge).
+  placeBadge(card, badge, '.game-meta');
 }
 
 // Re-paint every card's art icon — called when the home default is toggled so the
