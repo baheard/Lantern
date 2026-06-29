@@ -583,16 +583,28 @@ function renderGallery() {
   el.innerHTML = list.map((g) => `<div class="thumb${g.file === lastFile ? ' on' : ''}${g.inGame ? ' ingame' : ''}" data-f="${g.file}" title="${g.inGame ? 'IN GAME — ' : ''}${g.file}"><img src="${imgUrl(g.file)}">${g.inGame ? '<span class="ingame-tag">★ in game</span>' : ''}<span class="thumb-name">${g.file}</span></div>`).join('');
   el.querySelectorAll('.thumb').forEach((t) => t.onclick = () => setResult(t.dataset.f));
 }
+// Number of renders currently in flight. Generate doesn't block until a render
+// finishes — it disables the button for just 2s (swallow accidental double-clicks),
+// then re-enables so you can queue another shot (e.g. on a freshly picked vantage)
+// while the first is still rendering. Each call snapshots its own view/clay/scene.
+let genInFlight = 0;
 async function generate() {
   if (!liveTool) { setMsg('Open from artview to generate.'); return; }
   const gen = document.getElementById('gen'), model = MODEL, sceneText = document.getElementById('prompt').value;
-  gen.disabled = true; setMsg('Rendering clay…'); const png = captureClay(); setMsg('Generating · ' + model + ' … (~10–20s)');
+  const view = currentView;                       // snapshot — currentView may change while this awaits
+  const png = captureClay();                      // capture the clay for THIS vantage now, before any await
+  gen.disabled = true; setTimeout(() => { gen.disabled = false; }, 2000);
+  genInFlight++;
+  setMsg(genInFlight > 1 ? `Generating · ${model} … (${genInFlight} in flight)` : 'Generating · ' + model + ' … (~10–20s)');
   try {
-    const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view: currentView, model, png, scene: sceneText, facing: facingString() }) })).json();
+    const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view, model, png, scene: sceneText, facing: facingString() }) })).json();
     if (!j.ok) throw new Error(j.error || 'failed');
-    await loadGallery(); setResult(j.file); setMsg('✓ ' + currentView + ' · ' + model);
-  } catch (e) { setMsg('⚠ ' + e.message); }
-  gen.disabled = false;
+    await loadGallery();
+    if (currentView === view) setResult(j.file);  // only swap the shown shot if still on this vantage
+    const others = genInFlight - 1;
+    setMsg('✓ ' + view + ' · ' + model + (others > 0 ? ` · ${others} still rendering` : ''));
+  } catch (e) { setMsg('⚠ ' + view + ': ' + e.message); }
+  finally { genInFlight--; }
 }
 function openLocation() { try { if (window.parent && window.parent !== window && window.parent.selectTopic) window.parent.selectTopic('g:' + G, currentView); else setMsg('(open artview to jump to the location)'); } catch (e) { setMsg('(cannot reach artview)'); } }
 
