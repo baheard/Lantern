@@ -44,7 +44,9 @@ let callbacks = {
   startConnectionFromSheetCallback: () => {},
   startMergeFromSheetCallback: () => {},
   snapshotForUndo: () => {},
-  moveNodeToMap: () => {}
+  shareNodeToMap: () => {},
+  syncSharedNode: () => {},
+  recomputeSharedIds: () => {}
 };
 
 // Whether the current edit session has already captured an undo snapshot.
@@ -156,14 +158,14 @@ export function createNodeEditSheet() {
           <button class="sheet-btn sheet-btn-secondary" id="nodeMergeWithBtn">
             <span class="material-icons">merge</span> Merge with...
           </button>
-          <button class="sheet-btn sheet-btn-secondary" id="nodeMoveMapBtn">
-            <span class="material-icons">moving</span> Move to map
+          <button class="sheet-btn sheet-btn-secondary" id="nodeShareMapBtn">
+            <span class="material-icons">link</span> Share to map
           </button>
           <button class="sheet-btn sheet-btn-danger" id="nodeDeleteBtn">
             <span class="material-icons">delete</span> Delete
           </button>
         </div>
-        <div class="sheet-actions move-map-menu hidden" id="nodeMoveMapMenu"></div>
+        <div class="sheet-actions share-map-menu hidden" id="nodeShareMapMenu"></div>
         </div>
       </div>
     </div>
@@ -194,8 +196,8 @@ export function openNodeSheet(node) {
   // Start a fresh edit session; first field change will snapshot for undo.
   editSnapshotTaken = false;
 
-  // Collapse the "Move to map" submenu from any previous open.
-  document.getElementById('nodeMoveMapMenu')?.classList.add('hidden');
+  // Collapse the "Share to map" submenu from any previous open.
+  document.getElementById('nodeShareMapMenu')?.classList.add('hidden');
 
   const isDuplicate = node.isDuplicate || node.hasDuplicates;
   const badge = document.getElementById('sheetNodeBadge');
@@ -514,6 +516,7 @@ export function handleNodeNameChange(e) {
   document.getElementById('sheetNodeName').textContent = e.target.value || 'Edit Location';
   document.getElementById('sheetNodeBadge').textContent = 'Your edit';
   document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
+  callbacks.syncSharedNode(node.id);
   render();
 }
 
@@ -525,6 +528,7 @@ export function handleNodeNotesChange(e) {
     node.isEdited = true;
     mapState.protectedNodes.add(node.id);
     mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
+    callbacks.syncSharedNode(node.id);
   }
 }
 
@@ -541,6 +545,7 @@ export function handleNodeTypeChange(type) {
   });
   document.getElementById('sheetNodeBadge').textContent = 'Your edit';
   document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
+  callbacks.syncSharedNode(node.id);
   render();
   callbacks.saveMapForGame();
 }
@@ -558,6 +563,7 @@ export function handleNodeSmallToggle() {
   smallToggle.setAttribute('aria-checked', node.isSmall);
   document.getElementById('sheetNodeBadge').textContent = 'Your edit';
   document.getElementById('sheetNodeBadge').className = 'sheet-node-badge user';
+  callbacks.syncSharedNode(node.id);
   render();
   callbacks.saveMapForGame();
 }
@@ -568,6 +574,11 @@ export function handleNodeDelete() {
 
   // Snapshot before deleting the node and its connected edges
   callbacks.snapshotForUndo();
+
+  // Map-aware delete (#144): deleting only ever touches the active map's
+  // collections, so a node shared onto other maps survives there — we just
+  // word the confirmation differently and refresh the shared-node set after.
+  const wasShared = !!(node.sharedId && mapState.sharedNodeIds && mapState.sharedNodeIds.has(node.sharedId));
 
   for (const [key, edge] of mapState.edges) {
     if (edge.from === nodeId || edge.to === nodeId) {
@@ -580,16 +591,18 @@ export function handleNodeDelete() {
   mapState.deletedNodes.add(nodeId);
   mapState.selectedNode = null;
   mapState.hasUnsavedChanges = true; // Trigger full autosave on map close
+  callbacks.recomputeSharedIds();
   closeNodeSheet();
   render();
-  callbacks.showHint(`Deleted "${node?.name}"`);
+  callbacks.showHint(wasShared ? `Removed "${node?.name}" from this map (still on other maps)` : `Deleted "${node?.name}"`);
   callbacks.saveMapForGame();
 }
 
-// Multi-map (#144, phase 2): "Move to map" expands an inline submenu listing the
-// other maps; picking one hands off to the moveNodeToMap callback in map-canvas.js.
-export function toggleMoveMapMenu() {
-  const menu = document.getElementById('nodeMoveMapMenu');
+// Multi-map (#144): "Share to map" expands an inline submenu listing the other
+// maps; picking one hands off to the shareNodeToMap callback in map-canvas.js,
+// which keeps the node here AND adds a linked copy on the chosen map.
+export function toggleShareMapMenu() {
+  const menu = document.getElementById('nodeShareMapMenu');
   if (!menu) return;
   if (!menu.classList.contains('hidden')) { menu.classList.add('hidden'); return; }
 
@@ -600,15 +613,15 @@ export function toggleMoveMapMenu() {
   }
 
   menu.innerHTML = others.map(m =>
-    `<button class="sheet-btn sheet-btn-secondary move-map-target" data-map-id="${escapeHtml(m.id)}">` +
-    `<span class="material-icons">arrow_forward</span> ${escapeHtml(m.name)}</button>`
+    `<button class="sheet-btn sheet-btn-secondary share-map-target" data-map-id="${escapeHtml(m.id)}">` +
+    `<span class="material-icons">link</span> ${escapeHtml(m.name)}</button>`
   ).join('');
-  menu.querySelectorAll('.move-map-target').forEach(btn => {
+  menu.querySelectorAll('.share-map-target').forEach(btn => {
     btn.addEventListener('click', () => {
       const nodeId = mapState.selectedNode;
       menu.classList.add('hidden');
       closeNodeSheet();
-      callbacks.moveNodeToMap(nodeId, btn.dataset.mapId);
+      callbacks.shareNodeToMap(nodeId, btn.dataset.mapId);
     });
   });
   menu.classList.remove('hidden');

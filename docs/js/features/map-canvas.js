@@ -33,7 +33,7 @@ import {
   createNodeEditSheet, openNodeSheet, closeNodeSheet, dismissNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
   handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
-  setupSheetDragHandlers, getSheetTopForViewport, toggleMoveMapMenu
+  setupSheetDragHandlers, getSheetTopForViewport, toggleShareMapMenu
 } from './map-sheet.js';
 
 // ============================================================================
@@ -99,7 +99,9 @@ function setupCallbacks() {
     showHint,
     saveMapForGame,
     snapshotForUndo,
-    moveNodeToMap,
+    shareNodeToMap,
+    syncSharedNode,
+    recomputeSharedIds,
     startConnectionFromSheetCallback: (nodeId) => {
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = nodeId;
@@ -327,7 +329,7 @@ function setupEventListeners() {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
-  document.getElementById('nodeMoveMapBtn').addEventListener('click', toggleMoveMapMenu);
+  document.getElementById('nodeShareMapBtn').addEventListener('click', toggleShareMapMenu);
 
   // Global — only redraw the canvas when the map is actually showing.
   window.addEventListener('resize', () => { if (isVisible) resizeCanvas(); });
@@ -1850,6 +1852,8 @@ function applyMapData(data) {
   }
   if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
   mapState.currentNodeId = data.currentNodeId || null;
+  // Refresh the shared-node set whenever a map is loaded/switched (#144).
+  recomputeSharedIds();
 }
 
 function clearActiveMapData() {
@@ -1932,48 +1936,87 @@ function addMap() {
   if (isVisible) render();
 }
 
-// Move a node off the active map onto another (stashed) map. Cross-map node op
-// for multi-map (#144, phase 2). The target map lives serialized in _allMapsData,
-// so we mutate its node/protected arrays in place. Edges touching the node are
-// dropped from the source map — edges are per-map and the node no longer lives here.
-function moveNodeToMap(nodeId, targetMapId) {
+function generateSharedId() { return 'shared_' + Date.now() + '_' + Math.floor(Math.random() * 1e6); }
+
+// Fields that are conceptually the NODE's (its identity/content) and therefore
+// kept in sync across every map a shared node appears on. Placement (x/y) and
+// edges stay per-map and are deliberately NOT synced. See #144.
+const SHARED_SYNC_FIELDS = ['name', 'type', 'notes', 'isSmall', 'isEdited'];
+
+// Recompute which sharedIds currently live on >1 map. A node only reads as
+// "shared" (gets the indicator, gets per-map delete semantics) while at least
+// two maps carry its sharedId — so deleting the last extra copy demotes it back
+// to an ordinary node. The active map is counted live (its _allMapsData entry
+// may be stale between saves); other maps are counted from their stashed data.
+function recomputeSharedIds() {
+  const counts = new Map();
+  const bump = (nodes) => {
+    for (const n of nodes) if (n && n.sharedId) counts.set(n.sharedId, (counts.get(n.sharedId) || 0) + 1);
+  };
+  bump(mapState.nodes.values());
+  for (const [mapId, data] of Object.entries(_allMapsData)) {
+    if (mapId === mapState.activeMapId) continue;
+    if (Array.isArray(data.nodes)) bump(data.nodes);
+  }
+  mapState.sharedNodeIds = new Set([...counts.entries()].filter(([, c]) => c >= 2).map(([id]) => id));
+}
+
+// Propagate the content fields of an edited shared node to its copies on the
+// OTHER maps (in-memory; persistence rides the normal save). Called from the
+// sheet's content-edit handlers so a rename/note/type change shows everywhere.
+function syncSharedNode(nodeId) {
+  const src = mapState.nodes.get(nodeId);
+  if (!src || !src.sharedId) return;
+  for (const [mapId, data] of Object.entries(_allMapsData)) {
+    if (mapId === mapState.activeMapId || !Array.isArray(data.nodes)) continue;
+    for (const n of data.nodes) {
+      if (n.sharedId === src.sharedId) {
+        for (const f of SHARED_SYNC_FIELDS) n[f] = src[f];
+      }
+    }
+  }
+}
+
+// Share a node onto another (stashed) map: it stays on the source AND gains a
+// linked copy on the target, joined by a sharedId so content syncs (#144). The
+// copy keeps its own position; edges are per-map and not copied. If the target
+// already has this location, we link rather than duplicate (the merge-warning
+// case collapses to a no-op when the ids already match).
+function shareNodeToMap(nodeId, targetMapId) {
   if (!nodeId || targetMapId === mapState.activeMapId) return;
   const node = mapState.nodes.get(nodeId);
   const target = _allMapsData[targetMapId];
   if (!node || !target) return;
 
-  snapshotForUndo();
+  const targetName = mapState.mapOrder.find(m => m.id === targetMapId)?.name || 'map';
+  if (!node.sharedId) node.sharedId = generateSharedId();
 
-  // Drop edges connected to the node on the source map.
-  for (const [key, edge] of mapState.edges) {
-    if (edge.from === nodeId || edge.to === nodeId) {
-      mapState.edges.delete(key);
-      mapState.deletedEdges.add(key);
-    }
-  }
-  // Remove the node from the source map.
-  mapState.nodes.delete(nodeId);
-  mapState.deletedNodes.add(nodeId);
-  mapState.protectedNodes.delete(nodeId);
-  if (mapState.currentNodeId === nodeId) mapState.currentNodeId = null;
-  if (mapState.selectedNode === nodeId) mapState.selectedNode = null;
-
-  // Add the node to the target map (serialized arrays).
   target.nodes = target.nodes || [];
-  if (!target.nodes.some(n => n.id === nodeId)) target.nodes.push({ ...node });
+  const existing = target.nodes.find(n => n.id === nodeId || (n.sharedId && n.sharedId === node.sharedId));
+  if (existing) {
+    // Target already has this location — link the two instead of duplicating.
+    existing.sharedId = node.sharedId;
+    recomputeSharedIds();
+    saveMapForGame(true);
+    render();
+    showHint(`"${node.name}" is already on ${targetName} — linked them`);
+    return;
+  }
+
+  snapshotForUndo();
+  target.nodes.push({ ...node });
   target.protectedNodes = target.protectedNodes || [];
   if (!target.protectedNodes.includes(nodeId)) target.protectedNodes.push(nodeId);
-  // Un-suppress on the target if it had been deleted there before.
   if (Array.isArray(target.deletedNodes)) {
     target.deletedNodes = target.deletedNodes.filter(id => id !== nodeId);
   }
 
   mapState.hasUnsavedChanges = true;
-  const targetName = mapState.mapOrder.find(m => m.id === targetMapId)?.name || 'map';
+  recomputeSharedIds();
   saveMapForGame(true);
   render();
   updateNodeCount();
-  showHint(`Moved "${node.name}" to ${targetName}`);
+  showHint(`Shared "${node.name}" to ${targetName}`);
 }
 
 function renameCurrentMap(name) {
@@ -2448,6 +2491,7 @@ function optimizeMapData(mapData) {
     if (node.isManual === true) opt.isManual = true;
     if (node.isEdited === true) opt.isEdited = true;
     if (node.isSmall === true) opt.isSmall = true;
+    if (node.sharedId) opt.sharedId = node.sharedId; // cross-map link (#144) — must survive save-file round-trip
     return opt;
   });
   const edges = (mapData.edges || []).map(edge => {
@@ -2471,7 +2515,8 @@ function expandMapData(opt) {
   const nodes = (opt.nodes || []).map(n => ({
     id: n.id, name: n.name, x: n.x, y: n.y,
     type: n.type || 'room', notes: n.notes || '',
-    isManual: n.isManual || false, isEdited: n.isEdited || false, isSmall: n.isSmall || false
+    isManual: n.isManual || false, isEdited: n.isEdited || false, isSmall: n.isSmall || false,
+    ...(n.sharedId ? { sharedId: n.sharedId } : {})
   }));
   const edges = (opt.edges || []).map(e => ({
     from: e.from, to: e.to, command: e.cmd || e.command,
