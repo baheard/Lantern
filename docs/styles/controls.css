@@ -538,7 +538,15 @@
   letter-spacing: 0.5px;
 }
 
-/* Status Bar */
+/* Status Bar — removed from the layout (#182) to reclaim vertical space. The
+   #status element stays in the DOM as a sink for updateStatus() (its messages
+   are now logged and folded into feedback), but is never painted. The version
+   number lives in the welcome screen and Settings instead. */
+.status {
+  display: none !important;
+}
+
+/* Legacy styling kept below for reference; the rule above wins. */
 .status:not(.hidden) {
   position: relative; /* For ::after pseudo-element */
   padding: 4px 16px;

@@ -7,6 +7,7 @@
  */
 
 import { APP_CONFIG } from '../config.js';
+import { getStatusLog } from '../utils/status.js';
 
 const FORM_ID        = '1FAIpQLSfdB2XXAsBC7D-aMb6z0NbquRy29VV6Qlx_soZ54EvPBwjMEA';
 const FIELD_GAME     = 'entry.1142768170';
@@ -18,6 +19,7 @@ const FIELD_VERSION  = 'entry.788116155';
 
 const OUTPUT_CHAR_LIMIT  = 1500;
 const CONSOLE_CHAR_LIMIT = 800;
+const STATUS_CHAR_LIMIT  = 700;
 
 /**
  * Collect device/browser info as a compact string.
@@ -74,17 +76,43 @@ export function getConsoleLog() {
 }
 
 /**
+ * Get the recent status-message log (last ~700 chars). The on-screen status bar
+ * was removed in #182, so these messages are folded into feedback instead.
+ * @returns {string}
+ */
+export function getStatusMessages() {
+  const log = getStatusLog();
+  if (!log.length) return '';
+  let result = '';
+  for (let i = log.length - 1; i >= 0; i--) {
+    const line = log[i] + '\n';
+    if (result.length + line.length > STATUS_CHAR_LIMIT) break;
+    result = line + result;
+  }
+  return result.trim();
+}
+
+/**
  * Submit feedback to Google Form.
  * @param {string} feedbackText - User's feedback text
  * @param {string} gameName - Current game name (or 'None')
  * @returns {Promise<void>}
  */
 export async function submitFeedback(feedbackText, gameName = 'None') {
+  // The status-message log rides in the console field with a header — the form
+  // has a fixed set of fields, and status messages are diagnostic like console.
+  const statusMsgs = getStatusMessages();
+  const consoleLog = getConsoleLog();
+  const diagnostics = [
+    statusMsgs && `--- Status messages ---\n${statusMsgs}`,
+    consoleLog && `--- Console ---\n${consoleLog}`,
+  ].filter(Boolean).join('\n\n');
+
   const formData = new URLSearchParams({
     [FIELD_GAME]:     gameName,
     [FIELD_FEEDBACK]: feedbackText,
     [FIELD_DEVICE]:   getDeviceInfo(),
-    [FIELD_CONSOLE]:  getConsoleLog(),
+    [FIELD_CONSOLE]:  diagnostics,
     [FIELD_OUTPUT]:   getRecentOutput(),
     [FIELD_VERSION]:  APP_CONFIG.version,
   });
