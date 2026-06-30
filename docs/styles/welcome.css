@@ -75,7 +75,7 @@
   font-size: 24px;
 }
 
-/* "What is Modern Illumination?" help dialog */
+/* "What is Lantern?" help dialog */
 .help-dialog {
   margin: auto;
   border: 1px solid var(--border-subtle);
@@ -289,7 +289,15 @@
   color: var(--text-secondary);
   vertical-align: middle;
   flex-shrink: 0;
-  opacity: 0.85;
+  opacity: 0.55;
+}
+
+/* Eye / lightbulb glyphs: a touch smaller than their 15px intrinsic size so they
+   read as quiet secondary indicators next to the more prominent ⓘ info icon. */
+.art-badge svg,
+.hint-badge svg {
+  width: 13px;
+  height: 13px;
 }
 
 /* Classics Expander */
@@ -774,9 +782,9 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 18px;
-  color: var(--text-muted);
-  opacity: 0.5;
+  font-size: 21px;
+  color: var(--text-secondary);
+  opacity: 0.8;
   cursor: help;
   transition: opacity 0.15s;
   padding: 4px;
