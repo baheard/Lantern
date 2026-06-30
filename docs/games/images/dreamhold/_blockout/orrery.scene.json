@@ -524,6 +524,111 @@
       ],
       "role": "steps",
       "detail": "archway onto a flight of ascending stairs (→ Curving Hall West End)"
+    },
+    {
+      "name": "south alcove wall west",
+      "box": [
+        0.4,
+        6.5,
+        4
+      ],
+      "at": [
+        -2,
+        3.25,
+        8.6
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "south alcove wall east",
+      "box": [
+        0.4,
+        6.5,
+        4
+      ],
+      "at": [
+        2,
+        3.25,
+        8.6
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "south alcove back wall",
+      "box": [
+        4,
+        6.5,
+        0.4
+      ],
+      "at": [
+        0,
+        3.25,
+        10.6
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "south alcove ceiling",
+      "box": [
+        4,
+        0.4,
+        4
+      ],
+      "at": [
+        0,
+        6.5,
+        8.6
+      ],
+      "role": "ceiling",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall west",
+      "box": [
+        0.4,
+        6.5,
+        4
+      ],
+      "at": [
+        -2,
+        3.25,
+        -8.6
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall east",
+      "box": [
+        0.4,
+        6.5,
+        4
+      ],
+      "at": [
+        2,
+        3.25,
+        -8.6
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove ceiling",
+      "box": [
+        4,
+        0.4,
+        4
+      ],
+      "at": [
+        0,
+        6.5,
+        -8.6
+      ],
+      "role": "ceiling",
+      "shell": true
     }
   ],
   "cameras": {
