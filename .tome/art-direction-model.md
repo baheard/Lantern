@@ -785,3 +785,30 @@ passed and one didn't:
   up-view. The comic-panel *audition* actually showed the split better than this re-mold. Likely needs
   a vantage reword that leads with the split (flights leaving up-left and up-right as the subject) or
   an img2img anchor — text-to-image resists the three-way "up off both sides + down in front" framing.
+
+## Shown exits need a frame-position; opposite-wall openings can't both be in-frame (2026-06-30)
+A SHOWN exit with no position is a distinct failure mode from a HEDGED one. The `/scene` lint already
+caught compass words and vague hedges ("in one wall"), but Dreamhold `north-alcove` emitted *"An
+archway reveals a flight of stairs ascending out of sight"* — no compass word, no hedge, just **no
+frame-position at all** — and it passed clean. The model then floats the archway anywhere.
+
+Worse, the same scene put the orrery *"Ahead, through the opening"*. The alcove is a **pass-through**:
+chamber-mouth (orrery) on the SOUTH wall, archway on the NORTH wall — opposite walls. A camera facing
+one CANNOT see the other in front of it, so "orrery ahead + archway revealed" is physically
+impossible. The framing never pinned which opening was the subject, so `/scene` had nothing to place
+the archway against and invented the contradiction.
+
+**Why only north-alcove broke (not south-alcove):** south-alcove's exit is the ladder going `up` —
+**overhead**, vertical. Overhead never competes with an "ahead" feature, so its scene ("ladder rises
+up a shaft overhead" + "orrery ahead") is consistent. The bug is specific to **two openings on
+opposing horizontal walls**.
+
+**Engine fix (routed up, not a per-prompt patch):**
+- `/scene` lint — two new scans: **unplaced-feature** (every exit/opening noun must carry a
+  frame-position word, else defect) and **opposite-wall contradiction** (one feature ahead + a second
+  described visible when framing locates them on opposite walls → kick to `/frame`).
+- `/frame` 10d — a SHOWN exit MUST carry a frame position derived from the pinned facing; added the
+  **pass-through / opposite-wall rule**: pin which opening is the subject (ahead), side-place the other
+  (a curved alcove swings its far opening to a SIDE) or screen it (a straight one puts it behind-camera).
+- north-alcove reframed: face NORTH, archway+stairs AHEAD as subject, orrery glimpsed three-quarter
+  through the side opening on the RIGHT, de-emphasised.
