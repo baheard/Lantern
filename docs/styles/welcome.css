@@ -182,6 +182,20 @@
   border-radius: 6px;
 }
 
+/* Hero tagline — same serif as the section titles (.category-title) but
+   distinguished as the logo's tagline by being a larger headline, NOT bold,
+   and a desaturated gold (picks up the lantern glow in the art) rather than
+   the full warm accent the bold section titles use. */
+.welcome-tagline {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: #b3a883;
+  font-size: 1.45rem;
+  text-align: center;
+  margin: 6px 0 0 0;
+  letter-spacing: 0.01em;
+}
+
 .game-list {
   max-width: 800px;
   display: flex;
