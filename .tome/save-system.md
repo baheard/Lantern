@@ -95,6 +95,42 @@ quicksave is a single manual slot); they keep using the capped `createBackup` ch
 
 `MAX_SAVES = 5` was enforced in the original `commands.js`, silently dropped when `commands.js` was modularized into `game/commands/` (commit `107a47b`), and later restored: `meta-command-handlers.js` now defines `MAX_SAVES = 5` and enforces it inside `validateSaveName()`, which BOTH `handleSaveResponse` (typed SAVE) and `handleGameSaveResponse` (in-game dialog) route through. Verified 2026-06-12. If save-name validation is ever refactored, keep both handlers on the shared `validateSaveName` path — that's what closed the regression.
 
+## Intro-state save guard — manual saves refuse the opening prompt (#186, v1.5.729)
+
+A **manual** save (quicksave / custom `SAVE`) taken while the game is parked at its
+**opening intro prompt** — before the player's first real turn — captures a
+pre-first-line state. The engine snapshot is faithful, so on restore the VM resumes
+*at that opening prompt*: the game re-presents its first question (e.g. Bronze's
+"Have you played interactive fiction before?") and the player's next command is
+eaten as the answer ("Please answer yes or no."). This reads as "quick restore
+re-asks the opening question" (#186).
+
+**Important — it's only reproducible when the SAVE captured the intro state.** A
+genuinely deep quicksave restores cleanly (verified). So a report of "deep restore
+re-asks the opening" means the *restored slot actually held an intro-state save* —
+delivered either by a stale move-0 quicksave that was never overwritten, or by Drive
+conflict-resolution bringing an old intro save back down over the deep local one
+(the report that surfaced this also had "Drive sync not working"). Killing the save
+at creation closes the hole regardless of delivery path.
+
+**The guard** (`save-manager.js isIntroSaveState()`, called from `quickSave()` +
+`customSave()`): refuse the save when
+`getInputType() === 'char'` **OR** (`getLineInputsSubmitted() === 0` **AND**
+`state.appMoveCount === 0`). Toast: "Can't save yet — make a move first".
+
+- `getLineInputsSubmitted()` (voxglk) counts real line commands submitted **this
+  page-session**; reset in `init()`, incremented in `sendInput()` for non-char input.
+- **Why not `appMoveCount` alone:** it only increments inside `autoSave()` *after*
+  the 3-turn grace, so it's still 0 for the first ~3 legit moves — gating on it
+  would block safe early-game saves. `lineInputsSubmitted > 0` allows them.
+  (Verified: a save at move 1 has `appMoveCount:0` but `lineInputsSubmitted:2` →
+  allowed and restores clean.)
+- **No false positive after restore:** a restored deep save carries
+  `appMoveCount > 0`, so a re-save before the first post-restore move is still allowed.
+- **Autosave is not gated here** — voxglk already skips char turns + the first 3
+  line turns, so it never captures the intro state (see the autosave-timing section
+  above). The hole was the manual paths only.
+
 ## Autorestore (engine path — bootstrap is HISTORICAL)
 
 ⚠️ **As of Phase 6b (v1.5.582), restore runs entirely on ZVM's built-in

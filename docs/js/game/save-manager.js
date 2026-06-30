@@ -690,9 +690,40 @@ async function performRestore(storageKey, displayName = null, options = {}) {
  * Quick save to dedicated quick slot
  * Uses same comprehensive approach as autosave
  */
+/**
+ * True when the game is parked at its opening intro prompt — no real turn taken
+ * yet this session and no prior progress restored. A manual save here captures the
+ * pre-first-line state, and restoring it re-presents the game's opening question
+ * (the next command is then eaten as the answer to it). Bug #186 — reproduced on
+ * Bronze's "Have you played interactive fiction before?" intro.
+ *
+ * Also refuses char-mode prompts (press-any-key / menus / char intros): a save
+ * mid-char-prompt resumes at that prompt rather than a clean game-loop line read.
+ *
+ * Deliberately NOT a false positive for: a legit early-game save (a line command
+ * has been submitted → lineInputsSubmitted > 0), or a freshly restored deep save
+ * sitting at a mid-game line prompt (appMoveCount carried from the save is > 0).
+ * Autosave is not gated here — voxglk already skips char turns + the first 3 line
+ * turns (see .tome/save-system.md), so it never captures the intro state.
+ */
+async function isIntroSaveState() {
+    try {
+        const { getInputType, getLineInputsSubmitted } = await import('./voxglk.js');
+        if (getInputType() === 'char') return true;
+        return getLineInputsSubmitted() === 0 && (state.appMoveCount || 0) === 0;
+    } catch {
+        return false; // never block a save because the probe failed
+    }
+}
+
 export async function quickSave() {
     if (!state.currentGameName) {
         updateStatus('Error: No game loaded', 'error');
+        return false;
+    }
+
+    if (await isIntroSaveState()) {
+        updateStatus("Can't save yet — make a move first", 'error');
         return false;
     }
 
@@ -713,6 +744,11 @@ export async function quickSave() {
  */
 export async function customSave(saveName) {
     if (!state.currentGameName || !saveName) {
+        return false;
+    }
+
+    if (await isIntroSaveState()) {
+        updateStatus("Can't save yet — make a move first", 'error');
         return false;
     }
 

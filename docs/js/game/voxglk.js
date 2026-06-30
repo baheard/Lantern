@@ -77,6 +77,13 @@ const s = {
   autosaveCounter: 0,
   skipFirstAutosave: false,
 
+  // Line commands the player has submitted since this fresh boot (reset in init()).
+  // 0 while the game is still at its opening intro prompt (the very first aread) —
+  // used to refuse a manual save that would capture the pre-first-turn state, which
+  // on restore re-presents the game's opening question. See .tome/save-system.md
+  // "Intro-state save guard" and bug #186.
+  lineInputsSubmitted: 0,
+
   // Browser infrastructure — NOT reset in init() (browser-level debounce)
   resizeTimeout: null,
 };
@@ -230,6 +237,7 @@ export function createVoxGlk(textOutputCallback) {
       s.inputType = 'line';
       s.inputWindowId = null;
       s.autosaveCounter = 0; // Reset counter for new game session
+      s.lineInputsSubmitted = 0; // Reset intro-state save guard for new session
       s.lastCharModePlainText = '';
       s.previousInputType = null;
       s.justExitedCharMode = false;
@@ -794,6 +802,10 @@ export function sendInput(text, type = 'line') {
   // handled correctly by persistent grid state in voxglk-grid.js, which mirrors
   // GlkOte/Parchment's "leave untouched lines alone" model.
 
+  // Count real line commands this session (drives the intro-state save guard —
+  // see getLineInputsSubmitted). Char input (menus / press-any-key) doesn't count.
+  if (type !== 'char') s.lineInputsSubmitted++;
+
   // Send the input event to Glk
   if (!s.acceptCallback) return;
   s.acceptCallback(inputEvent);
@@ -825,6 +837,16 @@ export function isInputEnabled() {
  */
 export function getInputType() {
   return s.inputType;
+}
+
+/**
+ * Number of real line commands the player has submitted since this fresh boot.
+ * 0 means the game is still at its opening intro prompt (no turn taken yet) —
+ * resets on every page load, so a restored session also starts at 0 until the
+ * first post-restore command. Used by the manual-save intro-state guard.
+ */
+export function getLineInputsSubmitted() {
+  return s.lineInputsSubmitted;
 }
 
 /**
