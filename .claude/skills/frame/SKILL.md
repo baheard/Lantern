@@ -88,6 +88,15 @@ Review mode grades each. Grouped:
    inscriptions). Work the `unprobed` list: take content from the `landmarks` glossary if present,
    else live-probe; a fixture left un-probed renders indistinct by the app default — fine for
    background, not for a focal landmark.
+   **Multi-part fixtures — enumerate the FULL `sceneExtras` component set; never collapse to a
+   generic noun.** When a focal fixture/mechanism has several examined parts in `sceneExtras` (a wheel
+   with named sub-wheels, a machine with distinct components, a panel of distinct controls), the
+   framing must name EVERY part and its distinguishing attributes (count, colour, material, motion) —
+   not summarise to "a vast brass machine" or "smaller wheels bearing globes". `sceneExtras` is the
+   ONLY pull point for this detail (by design it is never auto-folded into the scene field, and `/scene`
+   inherits whatever framing decided) — so collapsing it HERE silently strips the detail from every
+   downstream render and every member room that sees the fixture. If a part is in `sceneExtras`, it is
+   in the framing.
 2. **Persistence — fixtures IN, takeables OUT.** Depict only what stays put at the establishing view.
    Anything pocketable (`take <noun>` succeeds) is dropped. Puzzle-gated takeables (firmly-attached-
    until-solved, like the dagger) are fixtures at first view.
