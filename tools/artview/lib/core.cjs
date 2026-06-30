@@ -163,6 +163,56 @@ function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, fac
     }));
   });
 }
+// Refine an EXISTING blockout shot: feed the prior RENDER (not the clay) back to the model as an
+// `edit` ref + the shot note as the correction instruction ("here is the image you made, fix these").
+// Surgical img2img — the wrapper preserves composition/lighting and changes only what the note asks.
+// Lands in the same per-view gallery as another -rN take (tag carries a `-refine` marker).
+function blockoutRefine({ game, volume, view, file, instruction, model }) {
+  return new Promise((resolve, reject) => {
+    const dir = blockoutGenDir(game, volume);
+    if (!file || !view) return reject(new Error('missing file/view'));
+    const src = path.join(dir, path.basename(file));
+    if (!fs.existsSync(src)) return reject(new Error('no such shot: ' + file));
+    if (!instruction || !instruction.trim()) return reject(new Error('no instruction — type a note on the shot first'));
+    const MAP = { 'openai-low': { provider: 'openai', quality: 'low' }, 'openai-medium': { provider: 'openai', quality: 'medium' },
+      'gemini': { provider: 'gemini' }, 'gemini-pro': { provider: 'gemini', model: 'gemini-3-pro-image-preview' } };
+    const m = MAP[model] || MAP['openai-low'];
+    const isPro = !!m.model, tag = (isPro ? 'gem-pro' : modelTag(m.provider, m.quality)) + '-refine';
+    let max = 0; for (const f of fs.readdirSync(dir)) { const mm = f.match(/-r(\d+)\.png$/i); if (mm && f.indexOf(view + '__') === 0) max = Math.max(max, +mm[1]); }
+    const outName = `${view}__${tag}-r${max + 1}.png`;
+    const out = path.join(dir, outName);
+    const prov = m.provider === 'openai' ? `openai/${m.quality}` : (isPro ? 'gemini-pro' : 'gemini');
+    // The edit-mode wrapper already says "Modify the supplied image … Apply ONLY these changes:" — so the
+    // prompt IS the correction note, nothing else (no scene/artist layers; style is preserved from the image).
+    const prompt = instruction.trim();
+    const cliArgs = [path.join('tools', 'gen-room-images.cjs'), '--aspect', '3:4', '--prompt', prompt,
+      '--out', out, '--ref', src, '--ref-mode', 'edit'];
+    if (m.provider === 'openai') cliArgs.push('--provider', 'openai', '--quality', m.quality);
+    else if (m.model) cliArgs.push('--model', m.model);
+    const jobId = String(++jobSeq);
+    JOBS.set(jobId, { game, slug: view, kind: 'blockout-refine', mode: prov, file: outName, status: 'queued', startedAt: Date.now() });
+    scheduleGen(() => new Promise((inner) => {
+      const job = JOBS.get(jobId); if (job) job.status = 'running';
+      logLine(`BLOCKOUT-REFINE ${game}/${view} via ${prov} ← ${path.basename(file)} → ${outName}`);
+      const t0 = Date.now();
+      execFile('node', cliArgs, { cwd: REPO, maxBuffer: 1 << 22 }, (err, so, se) => {
+        const dt = ((Date.now() - t0) / 1000).toFixed(1);
+        const j2 = JOBS.get(jobId);
+        if (err || !fs.existsSync(out)) {
+          const msg = String(se || so || (err && err.message) || 'error').slice(0, 500);
+          logLine(`BLOCKOUT-REFINE FAIL ${game}/${view} (${dt}s): ${msg}`);
+          if (j2) { j2.status = 'error'; j2.error = msg; j2.finishedAt = Date.now(); }
+          reject(new Error(msg));
+        } else {
+          logLine(`BLOCKOUT-REFINE OK ${game}/${view} (${dt}s) ${outName}`);
+          if (j2) { j2.status = 'done'; j2.finishedAt = Date.now(); }
+          resolve({ file: outName, view, model });
+        }
+        inner();
+      });
+    }));
+  });
+}
 // Overwrite one camera (vantage) in a volume's scene-def from the live renderer's "Update vantage".
 function saveBlockoutCamera({ game, volume, view, pos, look, fov }) {
   const f = path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json');
@@ -424,6 +474,12 @@ function promote(gameSlug, slug, candidate) {
     const d = readJSON(appPromptPath, {}); d.heroes = d.heroes || {};
     d.heroes[hero.heroKey] = destFile;
     fs.writeFileSync(appPromptPath, JSON.stringify(d, null, 2));
+    // Bridge to the live app: the welcome screen loads docs/images/lantern-hero* directly
+    // (see docs/index.html), NOT _app/. Without this copy, "Set as hero" updates app.json
+    // but never the file the app shows.
+    const liveByKey = { app: 'docs/images/lantern-hero.png', mobile: 'docs/images/lantern-hero-mobile.jpg' };
+    const live = liveByKey[hero.heroKey];
+    if (live) fs.copyFileSync(path.join(g.dir, destFile), path.join(REPO, live));
     return { name: hero.name, file: destFile };
   }
   if (slug === 'title') {
@@ -1078,4 +1134,4 @@ function setNoteStatus(key, status, appliedTo, stamp) {
 }
 
 
-module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationName, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };
+module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, blockoutRefine, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationName, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };

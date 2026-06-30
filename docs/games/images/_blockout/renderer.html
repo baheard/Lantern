@@ -69,6 +69,8 @@
   #imgDel:disabled{opacity:.4;cursor:default}
   #imgProm{float:right;margin-left:10px;font:12px system-ui;font-weight:600;padding:1px 9px;border:1px solid #5ab06a;border-radius:5px;background:#2c5a3a;color:#bdecc8;cursor:pointer}
   #imgProm:disabled{opacity:.4;cursor:default}
+  #imgRefine{float:right;margin-left:10px;font:12px system-ui;font-weight:600;padding:1px 9px;border:1px solid #7a5ec5;border-radius:5px;background:#33285a;color:#cfc0f0;cursor:pointer}
+  #imgRefine:disabled{opacity:.4;cursor:default}
   #imgnote{flex:1;min-height:0;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
   #imgnote:disabled{opacity:.45}
   #actualPrompt{flex:3;min-height:0;width:100%;resize:none;background:#0e0c14;color:#b8c0a8;border:1px solid #2a2536;border-radius:6px;padding:8px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
@@ -135,7 +137,7 @@
     <div id="gallery"></div>
   </div>
   <div id="colImgNote">
-    <label>Note on the selected shot <button id="imgProm" title="Promote this shot to the in-game image for this room" disabled>★ Promote → in game</button><button id="imgDel" title="Permanently delete the selected shot" disabled>🗑 Delete</button><label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
+    <label>Note on the selected shot <button id="imgRefine" title="Regenerate this shot applying the note as a correction — surgical img2img off THIS image (not the clay)" disabled>↻ Refine from note</button><button id="imgProm" title="Promote this shot to the in-game image for this room" disabled>★ Promote → in game</button><button id="imgDel" title="Permanently delete the selected shot" disabled>🗑 Delete</button><label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
     <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
     <label>Actual prompt sent to the model</label>
     <textarea id="actualPrompt" readonly placeholder="(generate a shot to see its prompt)"></textarea>
@@ -510,6 +512,7 @@ function setResult(file) {
   const ap = document.getElementById('actualPrompt');
   const idel = document.getElementById('imgDel'); if (idel) idel.disabled = !file;
   const iprom = document.getElementById('imgProm'); if (iprom) iprom.disabled = !file;
+  const iref = document.getElementById('imgRefine'); if (iref) iref.disabled = !file;
   if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; ap.value = g.prompt || '(no saved prompt)'; }
   else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; ap.value = ''; }
   saveNav();
@@ -545,6 +548,26 @@ async function promoteImage() {
     if (!j.ok) throw new Error(j.error || 'failed');
     setMsg('★ promoted → in game (' + (j.name || view) + ')');
   } catch (e) { setMsg('⚠ ' + e.message); }
+}
+// Refine the selected shot: feed THIS render back to the model as an edit-ref with the shot note as
+// the correction. Lands as a new -rN take in the same gallery. The note IS the instruction.
+async function refineImage() {
+  if (!liveTool || !lastFile || !currentView) return;
+  const instruction = document.getElementById('imgnote').value.trim();
+  if (!instruction) { setMsg('Type a note on this shot first — the note is the correction.'); return; }
+  await saveImgNote();                         // persist the note before using it
+  const view = currentView, file = lastFile, model = MODEL;
+  const btn = document.getElementById('imgRefine'); btn.disabled = true; setTimeout(() => { if (lastFile) btn.disabled = false; }, 2000);
+  genInFlight++;
+  setMsg(genInFlight > 1 ? `Refining · ${model} … (${genInFlight} in flight)` : 'Refining · ' + model + ' … (~10–20s)');
+  try {
+    const j = await (await fetch('/api/blockout-refine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view, file, instruction, model }) })).json();
+    if (!j.ok) throw new Error(j.error || 'failed');
+    await loadGallery();
+    if (currentView === view) setResult(j.file);   // only swap if still on this vantage
+    setMsg('✓ refined ' + view + ' · ' + model);
+  } catch (e) { setMsg('⚠ refine: ' + e.message); }
+  finally { genInFlight--; }
 }
 function captureClay() {
   const wasVis = shellGroup ? shellGroup.visible : true; if (shellGroup) shellGroup.visible = true;   // clay always keeps walls
@@ -692,6 +715,7 @@ async function boot() {
     document.getElementById('imgResolve').addEventListener('change', toggleImgResolve);
     document.getElementById('imgDel').onclick = deleteImage;
     document.getElementById('imgProm').onclick = promoteImage;
+    document.getElementById('imgRefine').onclick = refineImage;
   } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
   document.getElementById('gen').onclick = generate;
   // Reflow the clay viewport to the (fixed) model's true output aspect so framing translates.
