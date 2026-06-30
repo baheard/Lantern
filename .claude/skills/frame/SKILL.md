@@ -153,6 +153,17 @@ Review mode grades each. Grouped:
       every exit in (the junction-art note). Per exit: **screen it** (off-frame/behind/lost in shadow —
       the conservative default) or **show it minimally in its true form**, from the room's own prose
       first, destination second (split stair → flights rising off-frame, not doorways; arch → arch).
+      **A SHOWN exit MUST carry a frame position** (ahead/left/right/overhead/foreground+background),
+      derived from the pinned facing — a shown exit with no position is what produces the floating
+      "an archway reveals stairs" miss downstream (`north-alcove`). If you can't place it, you haven't
+      pinned the facing — fix 10a first.
+      **Opposite-wall / pass-through rule.** Two openings on OPPOSING walls cannot both be in-frame: the
+      camera faces one, so the other is to the side or behind. A pass-through space — an alcove with the
+      chamber-mouth on one wall and an exit archway on the opposite wall — must STATE which opening is
+      the subject (ahead/foreground) and where the other lands (a curved alcove swings its far opening to
+      a SIDE; a straight one puts it behind-camera → screen it). Never write framing that shows a feature
+      ahead AND a second feature on the wall behind it as both visible (the `north-alcove` orrery-ahead
+      vs archway-behind contradiction).
       **Cap & place doors** — loose wording studs every wall; name the EXACT doors on which walls +
       "no other doors/openings".
     - **10e Canonical geometry — give a named real-world feature its true shape, stated.** Spell out

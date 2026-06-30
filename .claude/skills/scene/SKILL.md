@@ -107,6 +107,21 @@ Two scans, both must pass (this is what would have caught the `curtained-room` "
   curving corridor that hides exits round the bend. Otherwise it's an un-placed locatable feature: place
   it from the framing's facing→frame map, or if the framing never pinned a facing, kick it back to
   `/frame`.
+- **Unplaced-feature scan** — the vague-placement scan catches *hedged* placement; this catches
+  *absent* placement. For every **exit/opening noun** the scene NAMES —
+  `door · doorway · archway · arch · opening · mouth · passage · passageway · corridor · gap · gate ·
+  stair · stairs · staircase · steps · ladder · window · hatch · tunnel · shaft` — its clause must
+  carry a **frame-position word**: `ahead · in front · foreground · background · behind · left · right ·
+  overhead · above · below · underfoot · out of frame · to one side` (or an explicit screen). A named
+  exit with NO position word is a defect (it's the `north-alcove` "an archway reveals a flight of
+  stairs" miss — the model has no idea where to put it). Place it from the framing's facing→frame map,
+  or if the framing never pinned its position, kick it back to `/frame`.
+- **Opposite-wall contradiction scan** — two features the framing places on OPPOSING walls cannot both
+  be in-frame: the camera faces one, so the other is to the side or behind. Flag any scene that puts one
+  feature `ahead`/in-frame AND describes a second feature as visible/`revealed`/`through the opening`
+  when the framing locates them on opposite walls (the `north-alcove` orrery-ahead-`south` vs
+  archway-`north` contradiction). The fix is a framing decision — kick to `/frame` to pin which is the
+  subject and screen or side-place the other.
 
 Quick check across a whole game: `node -e "const s=require('./docs/games/images/<game>/style.json').scenes; …"`
 (scan each scene string for the two regexes; report slugs that hit).

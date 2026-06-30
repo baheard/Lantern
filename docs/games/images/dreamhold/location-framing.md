@@ -522,11 +522,21 @@ one strong shared register, authored once here:
 - **Persistence:** DROP the blue mask fluttering on a globe (takeable). KEEP the machine/disk/globes.
 
 ### north-alcove  — member: Orrery
-- **Vantage:** a small curved alcove off the chamber; an archway reveals a flight of ascending stairs.
-  Through the opening, the **SAME orrery** turns in the chamber (10g), seen three-quarter from the other
-  side: the tilted brass disk, fixed central **blue** island-globe, **silver wheel** (violet hub + tan
-  rim) and **copper wheel** (red hub + green rim), gears/shafts below. Pull the full machine in — not a
-  generic gear-wheel. DROP the pale gauzy rag at the alcove's edge (takeable).
+- **Vantage (10a, facing pinned):** facing **NORTH** (`defaultFacing`; also the alcove's own signature
+  feature) — standing in the small curved alcove looking at its far curved wall. The chamber (with the
+  orrery) is to the SOUTH = behind; the **archway with ascending stairs** is the SUBJECT.
+- **Facing→frame (10b) + Exits (10d) — the pass-through pin:** this alcove has openings on OPPOSING
+  walls, so the camera faces only one. **Archway + ascending stairs (the `up` exit, north) = AHEAD,
+  background** — set in the curved far wall, the arch framing a few stone steps rising out of sight
+  (show the arch + steps, not a flat doorway). The **chamber-mouth (south) is behind** the camera, but
+  the alcove curves, swinging that opening to the camera's **RIGHT** — so the **orrery is glimpsed
+  three-quarter through the side opening on the right**, midground, de-emphasised (the machine in the
+  chamber you just left, NOT the focal subject). No other openings.
+- **Shared volume (10g):** the side-glimpsed orrery is the SAME machine — carry the component set but
+  smaller/peripheral: tilted brass disk, fixed central **blue** island-globe, **silver wheel** (violet
+  hub + tan rim) and **copper wheel** (red hub + green rim), gears/shafts below. Smaller than the anchor;
+  it must not compete with the archway for the eye.
+- **Persistence:** DROP the pale gauzy rag at the alcove's edge (takeable).
 
 ### curving-hall-west-end
 - **Vantage:** the curving plaster corridor dead-ends at a blank wall holding one **window** onto a

@@ -72,6 +72,7 @@
   #imgnote{flex:1;min-height:0;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
   #imgnote:disabled{opacity:.45}
   #actualPrompt{flex:3;min-height:0;width:100%;resize:none;background:#0e0c14;color:#b8c0a8;border:1px solid #2a2536;border-radius:6px;padding:8px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
+  #gameDesc{flex:2;min-height:0;overflow:auto;width:100%;background:#120f18;color:#d2ccde;border:1px solid #2a2536;border-radius:6px;padding:8px;font:14px/1.5 system-ui,sans-serif;white-space:pre-wrap}
   #hint{position:fixed;left:14px;bottom:10px;color:#cfc8da;background:rgba(0,0,0,.45);padding:4px 9px;border-radius:5px;font-size:11px;pointer-events:none;z-index:4}
   #pick{position:fixed;right:14px;bottom:14px;width:264px;background:rgba(20,17,26,.95);border:1px solid #4a4458;border-radius:8px;padding:9px 12px;z-index:6;display:none}
   #pick h4{margin:0 0 6px;font-size:14px;color:#f0d9a0;padding-right:16px}
@@ -138,6 +139,8 @@
     <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
     <label>Actual prompt sent to the model</label>
     <textarea id="actualPrompt" readonly placeholder="(generate a shot to see its prompt)"></textarea>
+    <label>What the player sees — canon room description</label>
+    <div id="gameDesc">(canon room description)</div>
   </div>
 </div>
 <div id="hint"><b>left-click</b> inspect · <b>right-drag</b> look · <b>WASD</b> move (W follows your look) · <b>Space/E</b> up · <b>Q</b> down · <b>Shift</b> fast · <b>scroll</b> fwd/back</div>
@@ -486,7 +489,8 @@ function applyView(name) {
   vantageDirty = false; updUpd();   // just arrived at the saved vantage → nothing to update
   return v;
 }
-function showDesc(name) { const i = INFO[name] || {}; document.getElementById('descName').textContent = 'Vantage: ' + (i.name || name); document.getElementById('descProse').textContent = i.description || '(no canon description)'; }
+function showDesc(name) { const i = INFO[name] || {}; document.getElementById('descName').textContent = 'Vantage: ' + (i.name || name); document.getElementById('descProse').textContent = i.description || '(no canon description)';
+  const gd = document.getElementById('gameDesc'); if (gd) gd.textContent = i.description || '(no canon description)'; }
 function showNote(name) { document.getElementById('note').value = (INFO[name] || {}).note || ''; }
 function showScene(name) { document.getElementById('prompt').value = (INFO[name] || {}).scene || ''; }
 let selKey = null, lastFile = null;
