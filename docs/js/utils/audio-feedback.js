@@ -33,11 +33,16 @@ let silentLoopAudio = null;
  * called from a user-gesture context to satisfy autoplay policies — getContext()
  * is only ever reached via button-press handlers, so this rides along on that.
  */
-function ensureSilentAudioLoop() {
-  if (silentLoopAudio) return;
-  silentLoopAudio = new Audio(SILENT_WAV_DATA_URI);
-  silentLoopAudio.loop = true;
-  silentLoopAudio.play().catch(() => {});
+export function ensureSilentAudioLoop() {
+  if (!silentLoopAudio) {
+    silentLoopAudio = new Audio(SILENT_WAV_DATA_URI);
+    silentLoopAudio.loop = true;
+  }
+  // Replay if never started, or if iOS paused it while backgrounded. This element
+  // doubles as the Media Session anchor (see tts-player.js startKeepAlive): the OS
+  // only exposes lock-screen / car / Bluetooth transport controls while a real
+  // <audio> element is actively *playing*, so it must not be left paused.
+  if (silentLoopAudio.paused) silentLoopAudio.play().catch(() => {});
 }
 
 async function getContext() {

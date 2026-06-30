@@ -14,75 +14,87 @@ import { updateTextHighlight, removeHighlight } from './highlighting.js';
 import { getDefaultVoice, getDefaultAppVoice } from '../ui/settings/index.js';
 import { scrollToBottom } from '../utils/scroll.js';
 import { isOpenAITTSEnabled, playWithOpenAITTS, prefetchOpenAIChunk } from './openai-tts.js';
+import { ensureSilentAudioLoop } from '../utils/audio-feedback.js';
 
-// Keep-alive audio context for mobile background playback
-let keepAliveAudio = null;
-let keepAliveContext = null;
-
-/**
- * Start silent audio to keep browser active during phone sleep
- * Uses Web Audio API to generate inaudible tone
- */
-export function startKeepAlive() {
-  if (keepAliveContext) return; // Already running
-
-  try {
-    keepAliveContext = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Create a very quiet oscillator (inaudible but keeps audio context alive)
-    const oscillator = keepAliveContext.createOscillator();
-    const gainNode = keepAliveContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(keepAliveContext.destination);
-
-    // Set volume to nearly zero (inaudible)
-    gainNode.gain.value = 0.001;
-    oscillator.frequency.value = 1; // Very low frequency
-
-    oscillator.start();
-
-    // Set up Media Session API for lock screen controls
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: 'Lantern Narration',
-        artist: 'Interactive Fiction',
-        album: state.currentGameName || 'Game'
-      });
-
-      navigator.mediaSession.setActionHandler('play', () => {
-        // Resume narration from current position
-        if (state.narrationEnabled && !state.isNarrating) {
-          speakTextChunked(null, state.currentChunkIndex);
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('pause', () => {
-        stopNarration();
-      });
-
-      navigator.mediaSession.setActionHandler('stop', () => {
-        stopNarration();
-        stopKeepAlive();
-      });
-    }
-  } catch (err) {
-    // KeepAlive failed to start - silently ignored
+/** Reflect narration state on the lock screen / car / Bluetooth transport controls. */
+function setMediaPlaybackState(s) {
+  if ('mediaSession' in navigator) {
+    try { navigator.mediaSession.playbackState = s; } catch (_) {}
   }
 }
 
 /**
- * Stop the keep-alive audio
+ * Set up the Media Session so narration responds to lock-screen, car head-unit, and
+ * physical Bluetooth / steering-wheel transport buttons.
+ *
+ * The session is anchored to a real, looping, *playing* <audio> element (the silent
+ * loop in audio-feedback.js) — NOT a Web Audio oscillator. The OS only exposes
+ * transport controls while a real media element is actually playing; a bare oscillator
+ * doesn't create that state. See .tome/car-bluetooth-tts-routing.md.
+ *
+ * Scope note: this gives us CONTROLS on both platforms. It does NOT route narration
+ * AUDIO over Bluetooth/CarPlay on iOS — WebKit forces speechSynthesis to the phone
+ * speaker and exposes no JS lever to change it (documented platform wall; cloud TTS
+ * and a native wrapper were both ruled out — see the tome note).
+ */
+export function startKeepAlive() {
+  // Anchor: ensure the silent loop is playing so the OS sees "media is playing".
+  ensureSilentAudioLoop();
+
+  if (!('mediaSession' in navigator)) return;
+
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Lantern Narration',
+      artist: 'Interactive Fiction',
+      album: state.currentGameName || 'Game'
+    });
+  } catch (_) {}
+
+  setMediaPlaybackState('playing');
+
+  // Unsupported actions throw on some browsers — wrap each.
+  const setHandler = (action, fn) => {
+    try { navigator.mediaSession.setActionHandler(action, fn); } catch (_) {}
+  };
+
+  setHandler('play', () => {
+    // Lock-screen / BT Play doubles as the manual resume after an interruption
+    // (phone call, Siri) — don't rely on OS auto-resume.
+    if (state.narrationEnabled && !state.isNarrating) {
+      setMediaPlaybackState('playing');
+      speakTextChunked(null, state.currentChunkIndex);
+    }
+  });
+
+  setHandler('pause', () => {
+    stopNarration();  // sets playbackState='paused'
+  });
+
+  setHandler('stop', () => {
+    stopNarration();
+    stopKeepAlive();  // sets playbackState='none'
+  });
+
+  // Physical Bluetooth / steering-wheel skip buttons → previous / next sentence.
+  // Dynamic import avoids a static cycle (navigation.js imports from this module).
+  setHandler('previoustrack', async () => {
+    const { skipToChunk } = await import('./navigation.js');
+    skipToChunk(-1, speakTextChunked);
+  });
+  setHandler('nexttrack', async () => {
+    const { skipToChunk } = await import('./navigation.js');
+    skipToChunk(1, speakTextChunked);
+  });
+}
+
+/**
+ * Signal a full stop to the transport controls. The silent-loop anchor is left
+ * playing on purpose — it's the session-wide Media Session / audio-session anchor
+ * (audio feedback relies on it too); only the playback STATE goes to 'none'.
  */
 export function stopKeepAlive() {
-  if (keepAliveContext) {
-    try {
-      keepAliveContext.close();
-    } catch (err) {
-      // Ignore
-    }
-    keepAliveContext = null;
-  }
+  setMediaPlaybackState('none');
 }
 
 /**
@@ -444,6 +456,9 @@ export async function speakTextChunked(_text, startFromIndex = 0) {
 
       removeHighlight();
 
+      // Narration finished naturally — clear the transport controls.
+      setMediaPlaybackState('none');
+
       // DISABLED: Testing if we need this scroll
       // Scroll to bottom
       // scrollToBottom();
@@ -484,8 +499,10 @@ export async function stopNarration(preserveHighlight = false) {
   // Clear echo detection buffer to prevent blocking commands after pause
   state.recentlySpokenChunks = [];
 
-  // Stop keep-alive audio (saves battery when not narrating)
-  stopKeepAlive();
+  // Reflect a paused state on the lock screen / car controls — the anchor stays
+  // alive so the Play button can resume. A true stop ('none') comes via skipToEnd
+  // or the Media Session 'stop' handler (both call stopKeepAlive).
+  setMediaPlaybackState('paused');
 
   // Only update status if not showing something else
   const statusText = dom.status?.textContent || '';
