@@ -102,7 +102,7 @@ const ROLE_LEGEND = {
   ladder: 'the dark vertical bars are an iron LADDER (two uprights with rungs)',
   steps: 'the stacked blocks are STEPS / a short flight of stairs',
   opening: 'the dark recess set into a surface is an OPENING — a round hatch or doorway leading through; render it as a dark hole into shadow, not a solid panel',
-  wall: 'the cool-grey planes are WALLS', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
+  wall: 'the cool-grey COURSED-STONE planes (faint masonry joints) are SOLID WALLS — even far or dim ones are unbroken solid surfaces, NEVER an opening, doorway or passage; only a part explicitly marked as an opening/hole/door is a way through', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
   return new Promise((resolve, reject) => {
@@ -479,7 +479,17 @@ function promote(gameSlug, slug, candidate) {
     // but never the file the app shows.
     const liveByKey = { app: 'docs/images/lantern-hero.png', mobile: 'docs/images/lantern-hero-mobile.jpg' };
     const live = liveByKey[hero.heroKey];
-    if (live) fs.copyFileSync(path.join(g.dir, destFile), path.join(REPO, live));
+    if (live) {
+      const srcPng = path.join(g.dir, destFile);
+      const dst = path.join(REPO, live);
+      if (/\.jpe?g$/i.test(live)) {
+        // The live mobile asset is a .jpg (index.html srcset references it). Re-encode the
+        // promoted PNG to real JPEG so the file's bytes match its extension.
+        require('sharp')(srcPng).jpeg({ quality: 88 }).toFile(dst).catch((e) => logLine('hero-bridge jpeg: ' + e.message));
+      } else {
+        fs.copyFileSync(srcPng, dst);
+      }
+    }
     return { name: hero.name, file: destFile };
   }
   if (slug === 'title') {

@@ -1,0 +1,8 @@
+# Art-pipeline scratch folders — never served to players, excluded from deploy.
+# The app only loads promoted art listed in games/images/<game>/manifest.json
+# (files directly in each game folder, plus _app/ heroes).
+_audition/
+_sandbox/
+_review/
+_blockout/
+icons-prev-promptL/

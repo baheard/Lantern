@@ -1,3 +1,7 @@
 {
-  "prompt": "Portrait 3:4. A recessive, understated backdrop — quiet accompaniment to the story text, with no single harsh focal point. No people; no text, lettering, captions, watermarks, UI, or modern typography. Depict ONLY what the scene names — invent no furniture, figures, windows, or architecture it does not mention. The room's own permanent contents are the subject."
+  "prompt": "Portrait 3:4. A recessive, understated backdrop — quiet accompaniment to the story text, with no single harsh focal point. No people; no text, lettering, captions, watermarks, UI, or modern typography. Depict ONLY what the scene names — invent no furniture, figures, windows, or architecture it does not mention. The room's own permanent contents are the subject.",
+  "heroes": {
+    "app": "app-hero.png",
+    "mobile": "mobile-hero.png"
+  }
 }

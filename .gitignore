@@ -120,3 +120,14 @@ tmp/
 
 # Blockout generated outputs (clay refs + styled renders) — throwaway
 docs/games/images/*/_blockout/_gen/
+
+# Blockout regenerable render outputs — clay captures + styled gen frames are
+# recreated from the authored *.scene.json; keep the .scene.json + viewer .html.
+# (Placed after the docs/**/*.png|jpg re-include rules above so these win.)
+docs/games/images/*/_blockout/_clay/
+docs/games/images/*/_blockout/*.png
+docs/games/images/*/_blockout/*.jpg
+docs/games/images/*/_blockout/*.jpeg
+
+# Old icon backup (superseded set)
+docs/icons-prev-promptL/

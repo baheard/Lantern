@@ -47,11 +47,21 @@ otherwise drop since `titles` isn't `isGame`).
 else (hero) `arts[0]`. Only heroes actually expose the dropdown now, but the resolver still
 serves both via `/api/title` (`artist` + `artists[]`).
 
+## promote → live-app bridge (FIXED 2026-06-29, v1.5.719)
+
+The gotcha that bit a user: artview **Set as hero** wrote `_app/app-hero.png` +
+`app.json heroes[...]`, but the welcome screen (`docs/index.html`) loads
+`docs/images/lantern-hero.png` / `lantern-hero-mobile.jpg` directly — two unrelated paths.
+Result: "I set the hero, not seeing it." Fix in `core.cjs` `promote()` `hero` branch: after
+writing app.json, copy the destFile to the live asset by heroKey
+(`{app:'docs/images/lantern-hero.png', mobile:'docs/images/lantern-hero-mobile.jpg'}`). Note
+the mobile live file is `.jpg` but receives PNG bytes — browsers sniff content so it renders;
+left as-is to match the existing `index.html` srcset reference. To preserve an old hero before
+overwriting, copy the live `lantern-hero.png` into `_app/_review/app-hero-<name>.png` (the
+candidate filter is `startsWith('app-hero-') && .png`) so it shows in the collection.
+
 ## Open follow-ups
 
-- Heroes promote to `_app/`, NOT the real welcome assets `docs/images/lantern-hero.png` /
-  `lantern-hero-mobile.jpg` (what the app/SW serve). Wiring promote to copy there (or pointing
-  the app at `_app/`) is still open.
 - Item-list marks are always `·` for title slots (committed state isn't computed per slot) —
   cosmetic only.
 - No actual title/hero image has been rendered yet (generate path smoke-tested; not spent on a

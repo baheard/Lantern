@@ -173,7 +173,7 @@ async function loadAll(){
   GLYPHS=await (await fetch('/api/glyphs')).json();
   buildRail();
   let t=NAV.topic;
-  const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||t==='blockout'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
+  const valid=t==='placeholders'||t==='artist'||t==='audition'||t==='sandbox'||t==='blockout'||t==='titles'||(isGame(t)&&STATE.games.indexOf(gameOf(t))>=0);
   if(!valid) t=STATE.games[0]?'g:'+STATE.games[0]:'placeholders';   // fresh browser only; NAV (localStorage) wins otherwise
   selectTopic(t);   // no explicit item → selectTopic restores NAV.byTopic[t]
   pollGens(); setInterval(pollGens, 2000);   // progress banner + cross-navigation completion refresh
