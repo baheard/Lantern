@@ -135,6 +135,24 @@
   font-size: 0.95rem;
 }
 
+/* Second section heading ("What is interactive fiction?") — same gold h2, spaced
+   off the feature list above it. */
+.help-dialog h2.help-dialog-subhead {
+  margin-top: 28px;
+}
+
+/* In-dialog glossary jump: the term "interactive fiction" in the lede links down
+   to its own explainer section. */
+.help-jump {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.help-jump:hover {
+  color: var(--link-color-hover);
+}
+
 .help-feature-list {
   list-style: none;
   margin: 0;
@@ -397,15 +415,14 @@
 }
 
 .if-database-section a {
-  color: var(--text-primary);
-  text-decoration: none;
-  font-weight: 500;
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
   transition: color 0.2s ease;
 }
 
 .if-database-section a:hover {
   color: var(--link-color-hover);
-  text-decoration: underline;
 }
 
 /* Custom URL Input */

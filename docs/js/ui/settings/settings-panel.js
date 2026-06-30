@@ -392,7 +392,13 @@ export function initSettings() {
   const helpDialog = document.getElementById('helpDialog');
   const helpDialogClose = document.getElementById('helpDialogClose');
   if (welcomeHelpBtn && helpDialog) {
-    welcomeHelpBtn.addEventListener('click', () => helpDialog.showModal());
+    welcomeHelpBtn.addEventListener('click', () => {
+      helpDialog.showModal();
+      // Always open at the top (the dialog can retain scroll position, and the
+      // glossary jump-link can pull it down on reopen).
+      const inner = helpDialog.querySelector('.help-dialog-inner');
+      if (inner) inner.scrollTop = 0;
+    });
     if (helpDialogClose) {
       helpDialogClose.addEventListener('click', () => helpDialog.close());
     }
@@ -400,6 +406,16 @@ export function initSettings() {
     helpDialog.addEventListener('click', (e) => {
       if (e.target === helpDialog) helpDialog.close();
     });
+    // Glossary jump: "interactive fiction" in the lede scrolls to its explainer
+    // (smooth-scroll the dialog's own scroll container, not the page behind it).
+    const helpJump = helpDialog.querySelector('.help-jump');
+    if (helpJump) {
+      helpJump.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById('ifSection');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
 
   // Close settings button
