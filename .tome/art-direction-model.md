@@ -798,10 +798,17 @@ one CANNOT see the other in front of it, so "orrery ahead + archway revealed" is
 impossible. The framing never pinned which opening was the subject, so `/scene` had nothing to place
 the archway against and invented the contradiction.
 
-**Why only north-alcove broke (not south-alcove):** south-alcove's exit is the ladder going `up` —
-**overhead**, vertical. Overhead never competes with an "ahead" feature, so its scene ("ladder rises
-up a shaft overhead" + "orrery ahead") is consistent. The bug is specific to **two openings on
-opposing horizontal walls**.
+**Both alcoves had the bug — and one masked it (corrected 2026-06-30).** I first thought only
+north-alcove broke and south-alcove was "immune" because its exit is the ladder going `up` (overhead,
+vertical, doesn't compete with "ahead"). **Wrong.** Projecting the south-alcove ladder against its
+camera (rails at z≈9.6, camera z=8.4 facing −z toward the orrery) gives a forward-dot of −0.69 —
+the ladder is **behind the camera, not in frame**. Its scene "a plain iron ladder rises up a shaft
+overhead" was *geometrically false*, but **"overhead" is a valid position word so it PASSED the
+unplaced-feature text lint.** Lesson: a text lint catches a MISSING position, never a position that's
+present-but-wrong-relative-to-the-camera. **Only the clay (the blockout Step-4 self-review) is the real
+authority on visibility** — verify each named feature actually projects in front of the camera. Both
+alcoves resolved the same way: keep facing the orrery, SCREEN the behind-camera exit (archway / ladder)
+from both the scene and the vantage note.
 
 **Engine fix (routed up, not a per-prompt patch):**
 - `/scene` lint — two new scans: **unplaced-feature** (every exit/opening noun must carry a

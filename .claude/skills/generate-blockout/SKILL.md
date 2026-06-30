@@ -161,6 +161,13 @@ against the framing facts. For each member, load
 `http://localhost:3009/img/blockout?game=<game>&volume=<volume>&f=<file>` (or screenshot the
 renderer result panel) and verify:
 - **Named features present and on the correct side** (the opening, ladder, ledge, machine globe).
+- **Every feature the scene/note NAMES is actually in this clay frame** — the clay is the spatial
+  authority, and a feature behind/beside the camera won't appear no matter what the prose says. If the
+  scene names a feature the shot can't show (a behind-camera exit: the Dreamhold alcove ladder/archway
+  that projected *behind* the camera while the prose said "overhead"/"reveals stairs"), either re-aim
+  the camera to include it or SCREEN it — drop it from BOTH the scene and the `notes[slug]` line. A text
+  lint can't catch this (a position word can be present but geometrically false); only this vision check
+  can.
 - **No hallucinations** — the crypt-under-seats class (featureless region invented something).
 - **No blocky artifacts** from hard edges; **continuity** — does the shared mass (dome, machine,
   stage) read as the SAME object across every member's shot?

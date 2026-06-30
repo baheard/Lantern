@@ -542,14 +542,14 @@
     },
     "south-alcove": {
       "pos": [
-        0,
-        2,
-        8.4
+        -0.81,
+        1.47,
+        10.45
       ],
       "look": [
-        -2,
-        5.5,
-        0
+        -1.36,
+        2.88,
+        4.65
       ],
       "fov": 56
     },
@@ -574,7 +574,7 @@
   ],
   "notes": {
     "orrery": "DIM, deeply shadowed chamber — faint light, brass catching low warm highlights, high vault lost in blackness. From the entry the great disk reads as a CLEAN, free-spinning PERFECT CIRCLE turning on its central hub, lifted clear of the floor, caught MID-ROTATION (in motion, NOT a fixed dial/plaque/astrolabe). ALL the gear machinery is tucked BEHIND the disk — render rich gears/shafts glimpsed at the disk's edges, in the gap beneath it, and not breaking the clean circular silhouette. The two sub-wheels stand PROUD of the disk's face and turn FREELY, each carrying its globe around a hub (tan around violet; green around red) — not flat inlays. Blue hub globe fixed at centre. The sub-wheels are SMALL relative to the great disk (do not let them read as a second competing circle). A thin grey RIBBON/cord of soft cloth-like material hangs limp from the dark vault, dangling over the disk's upper edge, out of reach — a soft hanging strip, NOT a rigid pole, axle or strut. Eye-level, pressed back against the entry (east) wall, the disk filling the frame.",
-    "south-alcove": "stand in the small alcove looking through the archway at the SAME machine turning in the chamber, its gearwork visible from this side; iron ladder up a shaft beside you.",
+    "south-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. DIM, deeply shadowed — faint light, brass catching low warm highlights.",
     "north-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. DIM, deeply shadowed — faint light, brass catching low warm highlights."
   }
 }

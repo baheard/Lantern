@@ -497,11 +497,17 @@ one strong shared register, authored once here:
   the sky/light change. Render the red racing sky as the dominant note.
 
 ### south-alcove  — member: Orrery
-- **Vantage:** a small curved alcove off the large chamber; a plain iron ladder rises up a shaft. Through
-  the opening, the **SAME orrery** turns in the chamber (10g), seen three-quarter from the side: the
-  tilted brass disk, the fixed central **blue** island-globe, the **silver wheel** (violet hub + tan rim)
-  and **copper wheel** (red hub + green rim), gears/shafts below. Pull the full machine in as the thing
-  seen beyond — not a generic gear-wheel.
+- **Vantage (10a, facing pinned):** facing the orrery through the chamber-mouth (the signature feature),
+  the SUBJECT ahead — mirror of `north-alcove`, viewing the SAME machine three-quarter from the opposite
+  side. Standing in the small alcove looking back into the great chamber.
+- **Exits (10d) — SCREEN the ladder.** The `up` exit is a plain iron ladder rising a shaft, but it sits
+  **behind the camera** (verified against the blockout geometry — ladder at z≈9.6, camera z=8.4 facing
+  −z; the ladder projects behind the view plane), so it is NOT in frame. Drop it from the scene AND the
+  vantage note — do not describe it ("overhead" reads plausible but is geometrically false here, and a
+  behind-camera feature named in prose floats into the image). Same resolution as `north-alcove`.
+- **Shared volume (10g):** the orrery seen through the opening — full component set: tilted brass disk,
+  fixed central **blue** island-globe, **silver wheel** (violet hub + tan rim) and **copper wheel** (red
+  hub + green rim), gears/shafts below. Not a generic gear-wheel.
 
 ### orrery  — member: Orrery (ANCHOR)
 - **Vantage (10a):** standing on the six-sided chamber's floor, the **vast machine** filling the frame
