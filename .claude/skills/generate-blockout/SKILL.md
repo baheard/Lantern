@@ -120,6 +120,22 @@ renderer's **"✓ Update vantage"** button lets you (or the human) refine each c
 it back. Optionally seed `notes[<slug>]` with a one-line vantage reminder; it is appended to that
 view's render as an ADJUSTMENTS line.
 
+**Camera, scene and note must AGREE on the subject — the clay is the spatial authority.** The render
+SCENE layer comes from `style.json scenes[slug]` (the `/scene` distillation) and the `notes[slug]`
+ADJUSTMENTS line is layered on top, but **the clay image overrides any prose** placement. So if the
+camera points one way and the scene/note describe a feature the camera can't see, the image wins and
+the prose is wasted (or fights it). Before saving a camera, reconcile all three:
+- **Pass-through / opposite-wall members** (an alcove with the chamber-mouth on one wall and an exit
+  archway on the opposite wall; any room with openings on facing walls) — the camera faces ONE. Pick
+  the subject the member's framing pinned, aim the camera there, and **screen the opposite opening**:
+  do NOT describe it in the scene OR the note (a behind-camera feature named in prose floats into the
+  image). This is the `/frame` 10d pass-through rule, enforced at camera-time. (Dreamhold `north-alcove`
+  2026-06-30: camera faced the orrery while the scene still claimed "an archway reveals stairs ahead" —
+  an impossible both-walls-in-frame; fix was to screen the archway, not re-aim.)
+- A `notes[slug]` reminder must match where the camera actually points — re-aiming the camera (or
+  flipping the framing's chosen subject) means rewriting the note too, or it feeds stale placement
+  into every render.
+
 Write the file to `docs/games/images/<game>/_blockout/<volume>.scene.json` with `$schema`,
 `game`, `volume`, `title`, `source` (the framing header), `frame`, `background` (keep the neutral
 `#9a9a9a` clay grey so edit-mode tonality stays grey for the artist to colour), `fog`, `parts`,

@@ -810,5 +810,15 @@ opposing horizontal walls**.
 - `/frame` 10d — a SHOWN exit MUST carry a frame position derived from the pinned facing; added the
   **pass-through / opposite-wall rule**: pin which opening is the subject (ahead), side-place the other
   (a curved alcove swings its far opening to a SIDE) or screen it (a straight one puts it behind-camera).
-- north-alcove reframed: face NORTH, archway+stairs AHEAD as subject, orrery glimpsed three-quarter
-  through the side opening on the RIGHT, de-emphasised.
+- north-alcove resolved by SCREENING (10d's conservative branch), NOT re-aiming: the camera keeps
+  facing the orrery (south, through the chamber-mouth) as the subject; the archway+stairs (north `up`
+  exit) is behind the camera → dropped from the scene AND the vantage note entirely. The bug was never
+  "orrery ahead" — it was the prose ALSO claiming the behind-camera archway was visible.
+
+**The clay is the spatial authority — a scene-only fix can't move a feature the camera can't see.** The
+blockout render layers `style.json` scene (from `/scene`) + the `notes[slug]` ADJUSTMENTS line on top
+of the clay, but the image overrides any prose placement. So {blockout camera, scene, note} must all
+agree on the subject. Fixing the north-alcove scene was insufficient until the camera was confirmed
+(it already faced the orrery — so we screened the archway rather than re-aim) and the vantage note,
+which still described the old "archway onto ascending stairs," was rewritten to match.
+`/generate-blockout` Step 2b now carries this camera/scene/note-agreement rule.

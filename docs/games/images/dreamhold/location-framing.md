@@ -522,20 +522,18 @@ one strong shared register, authored once here:
 - **Persistence:** DROP the blue mask fluttering on a globe (takeable). KEEP the machine/disk/globes.
 
 ### north-alcove  — member: Orrery
-- **Vantage (10a, facing pinned):** facing **NORTH** (`defaultFacing`; also the alcove's own signature
-  feature) — standing in the small curved alcove looking at its far curved wall. The chamber (with the
-  orrery) is to the SOUTH = behind; the **archway with ascending stairs** is the SUBJECT.
+- **Vantage (10a, facing pinned):** facing **SOUTH** — a departure from `defaultFacing` (north) for the
+  stated reason that the signature feature is the **orrery seen through the chamber-mouth**, not the
+  bare alcove wall. Standing in the small alcove looking back through the south opening into the great
+  chamber; the orrery is the SUBJECT, ahead.
 - **Facing→frame (10b) + Exits (10d) — the pass-through pin:** this alcove has openings on OPPOSING
-  walls, so the camera faces only one. **Archway + ascending stairs (the `up` exit, north) = AHEAD,
-  background** — set in the curved far wall, the arch framing a few stone steps rising out of sight
-  (show the arch + steps, not a flat doorway). The **chamber-mouth (south) is behind** the camera, but
-  the alcove curves, swinging that opening to the camera's **RIGHT** — so the **orrery is glimpsed
-  three-quarter through the side opening on the right**, midground, de-emphasised (the machine in the
-  chamber you just left, NOT the focal subject). No other openings.
-- **Shared volume (10g):** the side-glimpsed orrery is the SAME machine — carry the component set but
-  smaller/peripheral: tilted brass disk, fixed central **blue** island-globe, **silver wheel** (violet
-  hub + tan rim) and **copper wheel** (red hub + green rim), gears/shafts below. Smaller than the anchor;
-  it must not compete with the archway for the eye.
+  walls; the camera faces one. **Orrery (south, through the chamber-mouth) = AHEAD.** The **archway +
+  ascending stairs (the `up` exit, north) is BEHIND the camera → SCREEN it** (out of frame entirely; do
+  NOT describe it — a behind-camera feature named in prose floats into the image). No other openings.
+- **Shared volume (10g):** the orrery seen through the opening is the SAME machine, three-quarter from
+  THIS side (mirror of south-alcove, which views it from the opposite side): tilted brass disk, fixed
+  central **blue** island-globe, **silver wheel** (violet hub + tan rim) and **copper wheel** (red hub +
+  green rim), gears/shafts below. Carry the full component set — not a generic gear-wheel.
 - **Persistence:** DROP the pale gauzy rag at the alcove's edge (takeable).
 
 ### curving-hall-west-end
