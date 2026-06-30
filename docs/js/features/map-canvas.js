@@ -20,7 +20,7 @@ import {
   mapState, canvas, ctx, container, domRefs, isVisible, timers,
   setCanvas, setCtx, setContainer, setIsVisible, setDomRefs,
   GRID_SIZE, DIRECTION_OFFSETS, DIRECTION_OPPOSITES, COMMAND_DIRECTIONS, DIRECTION_TO_TYPE, NODE_RADIUS, FIRST_USE_KEY,
-  NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX, PORTALS_ENABLED
+  NODE_COUNT_WARNING, NODE_COUNT_MAX, EDGE_COUNT_MAX
 } from './map-config.js';
 import { render, resizeCanvas, zoom, screenToCanvas } from './map-render.js';
 import {
@@ -33,7 +33,7 @@ import {
   createNodeEditSheet, openNodeSheet, closeNodeSheet, dismissNodeSheet,
   handleNodeNameChange, handleNodeNotesChange, handleNodeTypeChange, handleNodeSmallToggle,
   handleNodeDelete, startConnectionFromSheet, startMergeFromSheet, setSheetCallbacks, handleNodeMerge, handleNodeNotDuplicate,
-  setupSheetDragHandlers, getSheetTopForViewport, toggleShareMapMenu
+  setupSheetDragHandlers, getSheetTopForViewport
 } from './map-sheet.js';
 
 // ============================================================================
@@ -42,14 +42,6 @@ import {
 
 // Store resize state for cleanup
 let resizeState = null;
-
-// In-memory cache of all maps' raw data for the current game (keyed by mapId).
-// Active map data is always the live mapState fields; this holds the rest.
-let _allMapsData = {};
-
-// Set when a scene break arrives in a non-empty map and the new location is unknown.
-// Cleared when the hint is shown, the user adds a map, or the game resets.
-let _pendingNewAreaHint = false;
 
 let _initialized = false;
 
@@ -99,9 +91,6 @@ function setupCallbacks() {
     showHint,
     saveMapForGame,
     snapshotForUndo,
-    shareNodeToMap,
-    syncSharedNode,
-    recomputeSharedIds,
     startConnectionFromSheetCallback: (nodeId) => {
       mapState.isCreatingEdge = true;
       mapState.edgeStartNode = nodeId;
@@ -134,11 +123,7 @@ function createMapUI() {
       <div class="map-resize-handle" id="mapResizeHandle"></div>
       <div class="map-toolbar">
         <div class="map-title">
-          <button class="map-name-btn" id="mapNameBtn" aria-haspopup="listbox" aria-label="Select map">
-            <span id="mapNameText">Map 1</span>
-            <span class="material-icons map-chevron">arrow_drop_down</span>
-          </button>
-          <div class="map-picker-dropdown hidden" id="mapPickerDropdown" role="listbox"></div>
+          <span class="map-name-label" id="mapNameText">Game Map</span>
         </div>
         <div class="map-toolbar-actions">
           <div class="map-zoom-controls">
@@ -153,6 +138,9 @@ function createMapUI() {
                   title="Toggle auto-mapping" aria-label="Toggle auto-mapping">
             <span class="material-icons">auto_fix_high</span>
             <span class="toggle-label">Auto</span>
+          </button>
+          <button class="map-btn map-btn-small" id="mapClearBtn" title="Clear map" aria-label="Clear map">
+            <span class="material-icons">delete_sweep</span>
           </button>
         </div>
         <button class="map-btn map-close-btn" id="mapCloseBtn" aria-label="Close map">
@@ -173,9 +161,6 @@ function createMapUI() {
           </button>
           <button class="map-fab map-fab-select" id="mapSelectBtn" title="Select nodes" aria-label="Select nodes">
             <span class="material-icons">select_all</span>
-          </button>
-          <button class="map-fab map-fab-secondary hidden" id="mapSendToMapBtn" title="Send selection to a new map" aria-label="Send selection to a new map">
-            <span class="material-icons">open_in_new</span>
           </button>
           <button class="map-fab map-fab-secondary" id="mapAddEdgeBtn" title="Add connection" aria-label="Add connection">
             <span class="material-icons">timeline</span>
@@ -263,18 +248,12 @@ function setupEventListeners() {
     zoom(0.7, centerX, centerY);
   });
   document.getElementById('mapAutoToggle').addEventListener('click', toggleAutoMap);
-  document.getElementById('mapNameBtn').addEventListener('click', toggleMapPicker);
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#mapNameBtn') && !e.target.closest('#mapPickerDropdown')) {
-      closeMapPicker();
-    }
-  }, true);
+  document.getElementById('mapClearBtn').addEventListener('click', clearMapWithConfirm);
 
   // FAB & Mode
   document.getElementById('mapAddNodeBtn').addEventListener('click', enterAddNodeMode);
   document.getElementById('mapAddEdgeBtn').addEventListener('click', enterAddEdgeMode);
   document.getElementById('mapSelectBtn').addEventListener('click', toggleSelectMode);
-  document.getElementById('mapSendToMapBtn').addEventListener('click', handleSendSelectionToNewMap);
   document.getElementById('mapCenterBtn').addEventListener('click', () => centerOnCurrentLocation());
   document.getElementById('modeCancelBtn').addEventListener('click', exitAddMode);
 
@@ -333,12 +312,6 @@ function setupEventListeners() {
     btn.addEventListener('click', () => handleNodeTypeChange(btn.dataset.type));
   });
   document.getElementById('nodeSmallToggle').addEventListener('click', handleNodeSmallToggle);
-  document.getElementById('nodeShareMapBtn').addEventListener('click', toggleShareMapMenu);
-  document.getElementById('nodeSwitchToMapBtn').addEventListener('click', () => {
-    const id = mapState.selectedNode;
-    closeNodeSheet();
-    switchToSharedNodeMap(id);
-  });
 
   // Global — only redraw the canvas when the map is actually showing.
   window.addEventListener('resize', () => { if (isVisible) resizeCanvas(); });
@@ -576,6 +549,29 @@ function toggleAutoMap() {
   saveMapForGame();
 }
 
+// Clear the whole map for this game after confirmation, then re-seed the current
+// location (when automap is on) so the map isn't left blank — mirrors the reset
+// the old delete-last-map path did. clearActiveMapData() handles undo/redo + the
+// automap-pref reset; we also drop the stashed auto-mapper journey/restore so a
+// cleared map doesn't immediately repopulate from buffered moves.
+async function clearMapWithConfirm() {
+  if (mapState.nodes.size === 0) { showHint('Map is already empty'); return; }
+  const { confirmDialog } = await import('../ui/confirm-dialog.js');
+  const ok = await confirmDialog('Clear the entire map for this game? This cannot be undone.', {
+    title: 'Clear Map', okText: 'Clear', cancelText: 'Cancel'
+  });
+  if (!ok) return;
+  clearActiveMapData();
+  if (mapState.gameName) localStorage.removeItem(`lantern_automapper_restore_${mapState.gameName}`);
+  clearJourney();
+  if (mapState.autoMapEnabled) seedCurrentLocation();
+  saveMapForGame(true);
+  updateNodeCount();
+  updateMapBadge();
+  render();
+  showHint('Map cleared');
+}
+
 // Add the current game location as a node at origin if automap is on and it isn't
 // already mapped. Used when toggling automap on and when a fresh default map is
 // created (e.g. after deleting the last map). Returns true if a node was added.
@@ -634,7 +630,6 @@ export function toggleSelectMode() {
   domRefs.modeIndicator.classList.remove('hidden');
   domRefs.modeIndicator.querySelector('span:nth-child(2)').textContent = 'Tap nodes to select, drag canvas to box-select';
   document.getElementById('mapSelectBtn')?.classList.add('active');
-  document.getElementById('mapSendToMapBtn')?.classList.remove('hidden');
   canvas.style.cursor = 'default';
 }
 
@@ -660,7 +655,6 @@ export function exitAddMode() {
   mapState.rectSelectStart = null;
   mapState.rectSelectEnd = null;
   document.getElementById('mapSelectBtn')?.classList.remove('active');
-  document.getElementById('mapSendToMapBtn')?.classList.add('hidden');
   domRefs.modeIndicator?.classList.add('hidden');
   canvas.style.cursor = 'grab';
   hideHint();
@@ -705,51 +699,16 @@ function handleLocationChange(e) {
   // the journey buffer is cleared (scene break, or transfer-to-canvas on map open).
   rememberDirection(getDirectionFromCommand(command));
 
-  // Scene break into an unmapped area: when map is hidden, buffer until the user decides
-  // which map to put the new area on. When map is visible, fall through and add node without
-  // an edge so the user sees it immediately; hint still offers to create a new map.
-  if (command === null && mapState.nodes.size > 0
-      && !mapState.nodes.has(locationName) && !mapState.deletedNodes.has(locationName)) {
-    if (!_pendingNewAreaHint) {
-      _pendingNewAreaHint = true;
-      setSuppressJourneyClear(true);
-      if (isVisible) showNewAreaHint();
-    }
-    if (!isVisible) return;
-    // Map is visible — fall through and add the node (no edge since command is null)
-  }
-
-  // While hint is pending and map is hidden, keep buffering
-  if (_pendingNewAreaHint && !isVisible) return;
-
   // locationId is now the location NAME (name-based tracking)
   // Check if we already have a node with this name
   const existingNode = mapState.nodes.get(locationName);
-
-  // Portal auto-switch (#144): if we're leaving a PORTAL toward a room that isn't
-  // on this map but already exists + is connected on another map the portal spans,
-  // switch to that map instead of duplicating the room/edge here. Runs BEFORE the
-  // deletedNodes guard on purpose — a room sent to another map is marked deleted
-  // here, and that's exactly the case we want to follow across the portal.
-  // ON HOLD: gated by PORTALS_ENABLED (#144) — see map-config.js.
-  if (PORTALS_ENABLED && command !== null && previousLocationId && !existingNode) {
-    const targetMap = findPortalTargetMap(previousLocationId, locationName);
-    if (targetMap) {
-      switchMap(targetMap);
-      mapState.currentNodeId = locationName;
-      mapState.selectedNode = locationName;
-      if (isVisible) { render(); centerOnCurrentLocation(); }
-      saveMapForGame();
-      return;
-    }
-  }
 
   // Safety: Never add deleted nodes
   if (mapState.deletedNodes.has(locationName)) return;
 
   // Auto-mapping is about to (possibly) mutate the map outside the snapshot
   // system; any pending undo/redo snapshots predate this change and are no
-  // longer safe to restore. (Scene break above is already handled by resetMap.)
+  // longer safe to restore.
   invalidateUndoHistory();
 
   // If node exists and is protected, just select it and maybe add edge
@@ -1251,55 +1210,6 @@ export function hideHint() {
   domRefs.hint?.classList.add('hidden');
 }
 
-// Dismiss handler for the new-area hint's close button. Tracked at module
-// level because showNewAreaHint() re-runs on every map open while the hint is
-// pending — without removing the previous listener first, dismiss handlers
-// accumulate on the persistent close button, and the "Add map" path would
-// leave a stale one armed to fire on a later unrelated hint close.
-let _newAreaDismissHandler = null;
-
-function _clearNewAreaDismissHandler(closeBtn) {
-  if (_newAreaDismissHandler && closeBtn) {
-    closeBtn.removeEventListener('click', _newAreaDismissHandler);
-  }
-  _newAreaDismissHandler = null;
-}
-
-function showNewAreaHint() {
-  if (!domRefs.hint) return;
-  clearTimeout(timers.hintTimeout);  // no auto-hide — user must decide
-
-  const textEl = domRefs.hint.querySelector('.map-hint-text');
-  if (textEl) textEl.textContent = 'Looks like a new area.';
-
-  const closeBtn = domRefs.hint.querySelector('.map-hint-close');
-  _clearNewAreaDismissHandler(closeBtn);
-
-  domRefs.hint.querySelector('.map-hint-action')?.remove();
-  const addBtn = document.createElement('button');
-  addBtn.className = 'map-hint-action';
-  addBtn.textContent = 'Add map';
-  addBtn.addEventListener('click', () => {
-    _clearNewAreaDismissHandler(closeBtn);
-    setSuppressJourneyClear(false);
-    addMap();
-    syncFromAutoMapper();  // replay buffered journey into the new map
-    hideHint();
-  });
-  closeBtn.before(addBtn);
-
-  // Dismissing (X) flushes the buffered journey into the current map
-  _newAreaDismissHandler = () => {
-    _newAreaDismissHandler = null;
-    _pendingNewAreaHint = false;
-    setSuppressJourneyClear(false);
-    syncFromAutoMapper();
-  };
-  closeBtn.addEventListener('click', _newAreaDismissHandler, { once: true });
-
-  domRefs.hint.classList.remove('hidden');
-}
-
 function updateNodeCount() { /* node count display removed */ }
 
 // ============================================================================
@@ -1657,8 +1567,7 @@ export function showMap() {
   }
 
   resizeCanvas(); updateNodeCount(); centerOnCurrentLocation({ instant: true });
-  if (_pendingNewAreaHint) { showNewAreaHint(); }
-  else { showOnboardingOrHint(); }
+  showOnboardingOrHint();
 
   // The first centerOnCurrentLocation() above runs while the panel is still
   // opening (mid CSS transition) — on mobile its dimensions/viewport aren't
@@ -1682,7 +1591,6 @@ export async function hideMap() {
   clearTimeout(timers.onboardingTimeout);
   clearTimeout(timers.fabHideTimer);
   clearAllToasts();
-  closeMapPicker();
   exitAddMode();
   mapState.selectedNode = null;
   mapState.selectedNodes.clear();
@@ -1838,13 +1746,6 @@ export function centerOnCurrentLocation(options = {}) {
 // MAP MANAGEMENT
 // ============================================================================
 
-function generateMapId() { return 'map_' + Date.now(); }
-
-function getCurrentMapName() {
-  const entry = mapState.mapOrder.find(m => m.id === mapState.activeMapId);
-  return entry ? entry.name : 'Map 1';
-}
-
 function extractMapData() {
   return {
     nodes: Array.from(mapState.nodes.values()),
@@ -1881,8 +1782,6 @@ function applyMapData(data) {
   }
   if (typeof data.autoMapEnabled === 'boolean') mapState.autoMapEnabled = data.autoMapEnabled;
   mapState.currentNodeId = data.currentNodeId || null;
-  // Refresh the shared-node set whenever a map is loaded/switched (#144).
-  recomputeSharedIds();
 }
 
 function clearActiveMapData() {
@@ -1899,486 +1798,6 @@ function clearActiveMapData() {
   updateUndoButton();
 }
 
-function initFirstMap() {
-  const mapId = 'map_1';
-  mapState.activeMapId = mapId;
-  mapState.mapOrder = [{ id: mapId, name: 'Map 1' }];
-  _allMapsData = {};
-  clearActiveMapData();
-}
-
-function switchMap(mapId) {
-  if (mapId === mapState.activeMapId) return;
-  if (!mapState.mapOrder.find(m => m.id === mapId)) return;
-
-  _allMapsData[mapState.activeMapId] = extractMapData();
-  mapState.activeMapId = mapId;
-  mapState.undoStack = [];
-  mapState.redoStack = [];
-  mapState.selectedNode = null;
-  mapState.hasUnsavedChanges = false;
-  updateUndoButton();
-
-  const data = _allMapsData[mapId];
-  if (data) { applyMapData(data); }
-  else { clearActiveMapData(); }
-
-  saveMapForGame(true);
-  updateMapNameDisplay();
-  updateNodeCount();
-  updateMapBadge();
-  if (isVisible) { render(); centerOnCurrentLocation({ instant: true }); }
-}
-
-function addMap() {
-  _pendingNewAreaHint = false;
-  setSuppressJourneyClear(false);
-  const sourceMapId = mapState.activeMapId;
-  _allMapsData[sourceMapId] = extractMapData();
-
-  const mapId = generateMapId();
-  const name = `Map ${mapState.mapOrder.length + 1}`;
-  mapState.mapOrder.push({ id: mapId, name });
-  _allMapsData[mapId] = {
-    nodes: [], edges: [], protectedNodes: [], protectedEdges: [],
-    deletedEdges: [], deletedNodes: [],
-    viewport: { x: 0, y: 0, scale: 1 },
-    autoMapEnabled: mapState.autoMapEnabled,
-    currentNodeId: null
-  };
-  mapState.activeMapId = mapId;
-  mapState.undoStack = [];
-  mapState.redoStack = [];
-  mapState.selectedNode = null;
-  mapState.hasUnsavedChanges = false;
-  updateUndoButton();
-  applyMapData(_allMapsData[mapId]);
-
-  // Phase 1 of multi-map (#144): a brand-new map should immediately carry the
-  // current location instead of starting empty, so the user has an anchor. Gate
-  // on automap like the delete-last-map reset path does.
-  if (mapState.autoMapEnabled && seedCurrentLocation() && PORTALS_ENABLED) {
-    // ON HOLD (#144): the seeded location also exists on the source map (it's
-    // where you were), so link the two copies with a sharedId — the current
-    // location becomes the shared PORTAL between the old and new map. Gated off
-    // for now; the new map still seeds the (unshared) current location above.
-    const id = mapState.currentNodeId;
-    const newNode = mapState.nodes.get(id);
-    const srcNode = (_allMapsData[sourceMapId]?.nodes || []).find(n => n.id === id);
-    if (newNode && srcNode) {
-      const sid = srcNode.sharedId || generateSharedId();
-      srcNode.sharedId = sid;
-      newNode.sharedId = sid;
-      recomputeSharedIds();
-    }
-  }
-
-  saveMapForGame(true);
-  updateMapNameDisplay();
-  updateNodeCount();
-  updateMapBadge();
-  if (isVisible) render();
-}
-
-function generateSharedId() { return 'shared_' + Date.now() + '_' + Math.floor(Math.random() * 1e6); }
-
-// Fields that are conceptually the NODE's (its identity/content) and therefore
-// kept in sync across every map a shared node appears on. Placement (x/y) and
-// edges stay per-map and are deliberately NOT synced. See #144.
-const SHARED_SYNC_FIELDS = ['name', 'type', 'notes', 'isSmall', 'isEdited'];
-
-// Recompute which sharedIds currently live on >1 map. A node only reads as
-// "shared" (gets the indicator, gets per-map delete semantics) while at least
-// two maps carry its sharedId — so deleting the last extra copy demotes it back
-// to an ordinary node. The active map is counted live (its _allMapsData entry
-// may be stale between saves); other maps are counted from their stashed data.
-function recomputeSharedIds() {
-  const counts = new Map();
-  const bump = (nodes) => {
-    for (const n of nodes) if (n && n.sharedId) counts.set(n.sharedId, (counts.get(n.sharedId) || 0) + 1);
-  };
-  bump(mapState.nodes.values());
-  for (const [mapId, data] of Object.entries(_allMapsData)) {
-    if (mapId === mapState.activeMapId) continue;
-    if (Array.isArray(data.nodes)) bump(data.nodes);
-  }
-  mapState.sharedNodeIds = new Set([...counts.entries()].filter(([, c]) => c >= 2).map(([id]) => id));
-  computePortalExits();
-}
-
-// For each portal node on the ACTIVE map, compute the directions that lead to
-// another map — an edge from the portal on some other map, in a heading not
-// already present here. Stored transiently on the node as `_portalExits` and
-// drawn as dashed-amber stubs so auto-switch isn't a surprise (#144).
-function computePortalExits() {
-  // Always clear any stale spokes; only recompute them while portals are enabled.
-  for (const n of mapState.nodes.values()) { if (n._portalExits) delete n._portalExits; }
-  if (!PORTALS_ENABLED) return; // ON HOLD (#144)
-  if (!mapState.sharedNodeIds || mapState.sharedNodeIds.size === 0) return;
-  for (const node of mapState.nodes.values()) {
-    if (!node.sharedId || !mapState.sharedNodeIds.has(node.sharedId)) continue;
-    // Headings that already have an edge on THIS map — don't flag those.
-    const activeDirs = new Set();
-    for (const e of mapState.edges.values()) {
-      if (e.from === node.id || e.to === node.id) {
-        const d = COMMAND_DIRECTIONS[(e.command || '').toLowerCase().trim()];
-        if (d) activeDirs.add(d);
-      }
-    }
-    const exits = [], seen = new Set();
-    for (const [mapId, data] of Object.entries(_allMapsData)) {
-      if (mapId === mapState.activeMapId || !data) continue;
-      if (!(data.nodes || []).some(n => n.id === node.id || n.sharedId === node.sharedId)) continue;
-      const mapName = (mapState.mapOrder.find(m => m.id === mapId) || {}).name || 'map';
-      for (const e of (data.edges || [])) {
-        if (e.from !== node.id && e.to !== node.id) continue;
-        const d = COMMAND_DIRECTIONS[((e.command || e.cmd) || '').toLowerCase().trim()];
-        if (d && !activeDirs.has(d) && !seen.has(d)) { seen.add(d); exits.push({ dir: d, mapId, mapName }); }
-      }
-    }
-    if (exits.length) node._portalExits = exits;
-  }
-}
-
-// Find another map this portal spans where the destination already exists and is
-// connected to the portal — the auto-switch target. Null if none. See #144.
-function findPortalTargetMap(portalId, destId) {
-  const portal = mapState.nodes.get(portalId);
-  if (!portal || !portal.sharedId) return null;
-  if (!(mapState.sharedNodeIds && mapState.sharedNodeIds.has(portal.sharedId))) return null;
-  for (const [mapId, data] of Object.entries(_allMapsData)) {
-    if (mapId === mapState.activeMapId || !data) continue;
-    const nodes = data.nodes || [], edges = data.edges || [];
-    const hasPortal = nodes.some(n => n.id === portalId || n.sharedId === portal.sharedId);
-    const hasDest = nodes.some(n => n.id === destId);
-    if (!hasPortal || !hasDest) continue;
-    if (edges.some(e => (e.from === portalId && e.to === destId) || (e.from === destId && e.to === portalId))) return mapId;
-  }
-  return null;
-}
-
-// Propagate the content fields of an edited shared node to its copies on the
-// OTHER maps (in-memory; persistence rides the normal save). Called from the
-// sheet's content-edit handlers so a rename/note/type change shows everywhere.
-function syncSharedNode(nodeId) {
-  const src = mapState.nodes.get(nodeId);
-  if (!src || !src.sharedId) return;
-  for (const [mapId, data] of Object.entries(_allMapsData)) {
-    if (mapId === mapState.activeMapId || !Array.isArray(data.nodes)) continue;
-    for (const n of data.nodes) {
-      if (n.sharedId === src.sharedId) {
-        for (const f of SHARED_SYNC_FIELDS) n[f] = src[f];
-      }
-    }
-  }
-}
-
-// Share a node onto another (stashed) map: it stays on the source AND gains a
-// linked copy on the target, joined by a sharedId so content syncs (#144). The
-// copy keeps its own position; edges are per-map and not copied. If the target
-// already has this location, we link rather than duplicate (the merge-warning
-// case collapses to a no-op when the ids already match).
-function shareNodeToMap(nodeId, targetMapId) {
-  if (!nodeId || targetMapId === mapState.activeMapId) return;
-  const node = mapState.nodes.get(nodeId);
-  const target = _allMapsData[targetMapId];
-  if (!node || !target) return;
-
-  const targetName = mapState.mapOrder.find(m => m.id === targetMapId)?.name || 'map';
-  if (!node.sharedId) node.sharedId = generateSharedId();
-
-  target.nodes = target.nodes || [];
-  const existing = target.nodes.find(n => n.id === nodeId || (n.sharedId && n.sharedId === node.sharedId));
-  if (existing) {
-    // Target already has this location — link the two instead of duplicating.
-    existing.sharedId = node.sharedId;
-    recomputeSharedIds();
-    saveMapForGame(true);
-    render();
-    showHint(`"${node.name}" is already on ${targetName} — linked them`);
-    return;
-  }
-
-  snapshotForUndo();
-  target.nodes.push({ ...node });
-  target.protectedNodes = target.protectedNodes || [];
-  if (!target.protectedNodes.includes(nodeId)) target.protectedNodes.push(nodeId);
-  if (Array.isArray(target.deletedNodes)) {
-    target.deletedNodes = target.deletedNodes.filter(id => id !== nodeId);
-  }
-
-  mapState.hasUnsavedChanges = true;
-  recomputeSharedIds();
-  saveMapForGame(true);
-  render();
-  updateNodeCount();
-  showHint(`Shared "${node.name}" to ${targetName}`);
-}
-
-// Send the current multi-selection to a brand-new map (#144). The selected
-// nodes (and the edges among them) move to the new map; any BOUNDARY node — a
-// selected node still connected to a node left behind — stays on the source map
-// AND on the new map, linked by a sharedId. That shared boundary node is the
-// portal between the two maps, so splitting a region off keeps its doorway.
-function handleSendSelectionToNewMap() {
-  const selected = [...(mapState.selectedNodes || [])];
-  if (selected.length === 0) { showHint('Select some locations first'); return; }
-  const selectedSet = new Set(selected);
-
-  // Boundary = selected node with an edge to a non-selected node; it stays shared
-  // on both maps as the PORTAL. ON HOLD (#144): with portals disabled the boundary
-  // set is empty, so EVERY selected node moves cleanly to the new map and nothing
-  // stays shared — i.e. "Send to new map" is a plain move. Flip PORTALS_ENABLED
-  // (map-config.js) to restore the shared-boundary/portal behavior.
-  const boundary = new Set();
-  if (PORTALS_ENABLED) {
-    for (const edge of mapState.edges.values()) {
-      const fromSel = selectedSet.has(edge.from), toSel = selectedSet.has(edge.to);
-      if (fromSel !== toSel) { if (fromSel) boundary.add(edge.from); if (toSel) boundary.add(edge.to); }
-    }
-  }
-
-  snapshotForUndo();
-
-  // Stamp boundary nodes with a sharedId BEFORE copying, so source + copy link.
-  for (const id of boundary) {
-    const n = mapState.nodes.get(id);
-    if (n && !n.sharedId) n.sharedId = generateSharedId();
-  }
-
-  // New map = copies of every selected node + the edges among them.
-  const newNodes = selected.map(id => mapState.nodes.get(id)).filter(Boolean).map(n => ({ ...n }));
-  const newEdges = [];
-  for (const edge of mapState.edges.values()) {
-    if (selectedSet.has(edge.from) && selectedSet.has(edge.to)) newEdges.push({ ...edge });
-  }
-
-  const mapId = generateMapId();
-  const name = `Map ${mapState.mapOrder.length + 1}`;
-  mapState.mapOrder.push({ id: mapId, name });
-  _allMapsData[mapId] = {
-    nodes: newNodes,
-    edges: newEdges,
-    protectedNodes: selected.slice(),
-    protectedEdges: newEdges.map(e => `${e.from}-${e.to}`),
-    deletedEdges: [], deletedNodes: [],
-    viewport: { x: 0, y: 0, scale: 1 },
-    autoMapEnabled: mapState.autoMapEnabled,
-    currentNodeId: null
-  };
-
-  // On the source map: remove INTERIOR selected nodes (+ their edges). Boundary
-  // nodes stay (now shared); their crossing edges to remaining nodes stay too.
-  for (const id of selected) {
-    if (boundary.has(id)) continue;
-    for (const [key, edge] of mapState.edges) {
-      if (edge.from === id || edge.to === id) { mapState.edges.delete(key); mapState.deletedEdges.add(key); }
-    }
-    mapState.nodes.delete(id);
-    mapState.deletedNodes.add(id);
-    mapState.protectedNodes.delete(id);
-    if (mapState.currentNodeId === id) mapState.currentNodeId = null;
-  }
-
-  exitAddMode(); // leaves select mode, clears selection, hides the FAB, renders
-  // Switch into the new map (re-extracts + stashes the now-mutated source).
-  switchMap(mapId);
-  recomputeSharedIds();
-  saveMapForGame(true);
-  const n = selected.length, s = boundary.size;
-  showHint(`Sent ${n} location${n === 1 ? '' : 's'} to ${name}${s ? ` (${s} shared)` : ''}`);
-}
-
-// Portal navigation (#144): jump the active map to another map that holds this
-// shared node, then select + center the same node there. Cycles to the next
-// such map when the node spans more than two.
-function switchToSharedNodeMap(nodeId) {
-  const node = mapState.nodes.get(nodeId);
-  if (!node || !node.sharedId) return;
-  for (const [mapId, data] of Object.entries(_allMapsData)) {
-    if (mapId === mapState.activeMapId || !Array.isArray(data.nodes)) continue;
-    if (!data.nodes.some(n => n.sharedId === node.sharedId)) continue;
-    switchMap(mapId);
-    const t = mapState.nodes.get(nodeId) || [...mapState.nodes.values()].find(n => n.sharedId === node.sharedId);
-    if (t) {
-      mapState.selectedNode = t.id;
-      const scale = mapState.viewport.scale;
-      panViewportTo(-t.x * scale, -t.y * scale, true);
-      render();
-    }
-    const mapName = mapState.mapOrder.find(m => m.id === mapId)?.name || 'map';
-    showHint(`Switched to ${mapName}`);
-    return;
-  }
-}
-
-function renameCurrentMap(name) {
-  const entry = mapState.mapOrder.find(m => m.id === mapState.activeMapId);
-  if (entry) { entry.name = name; saveMapForGame(true); }
-}
-
-async function deleteMapWithConfirm(mapId, mapName) {
-  const { confirmDialog } = await import('../ui/confirm-dialog.js');
-  const ok = await confirmDialog(`Delete "${mapName}"? This cannot be undone.`, {
-    title: 'Delete Map', okText: 'Delete', cancelText: 'Cancel'
-  });
-  if (!ok) return;
-  deleteMap(mapId);
-  closeMapPicker();
-}
-
-function deleteMap(mapId) {
-  const idx = mapState.mapOrder.findIndex(m => m.id === mapId);
-  if (idx === -1) return;
-
-  // Capture the name before splicing — deleteMap takes only mapId, but the hint below
-  // needs the name (it isn't a parameter; referencing the caller's was a ReferenceError).
-  const deletedName = mapState.mapOrder[idx].name || 'map';
-
-  delete _allMapsData[mapId];
-  mapState.mapOrder.splice(idx, 1);
-
-  if (mapState.mapOrder.length === 0) {
-    // Deleted the last map — reset to a fresh default "Map 1", seeding the
-    // current location if automap is on (like any other new map).
-    const newId = 'map_1';
-    mapState.activeMapId = newId;
-    mapState.mapOrder = [{ id: newId, name: 'Map 1' }];
-    _allMapsData = {};
-    clearActiveMapData();          // resets nodes/viewport and restores the automap pref
-    if (mapState.gameName) localStorage.removeItem(`lantern_automapper_restore_${mapState.gameName}`);
-    clearJourney();
-    if (mapState.autoMapEnabled) seedCurrentLocation();
-  } else if (mapState.activeMapId === mapId) {
-    // Active (but not last) map deleted — switch to the previous remaining map.
-    const fallback = mapState.mapOrder[Math.max(0, idx - 1)];
-    mapState.activeMapId = fallback.id;
-    mapState.undoStack = []; mapState.redoStack = [];
-    mapState.selectedNode = null; mapState.hasUnsavedChanges = false;
-    updateUndoButton();
-    const data = _allMapsData[fallback.id];
-    if (data) { applyMapData(data); } else { clearActiveMapData(); }
-  }
-
-  saveMapForGame(true);
-  updateMapNameDisplay();
-  updateNodeCount();
-  updateMapBadge();
-  if (isVisible) { render(); centerOnCurrentLocation({ instant: true }); }
-  showHint(`Deleted "${deletedName}"`);
-}
-
-// ============================================================================
-// MAP PICKER UI
-// ============================================================================
-
-function updateMapNameDisplay() {
-  const el = document.getElementById('mapNameText');
-  if (el) el.textContent = getCurrentMapName();
-}
-
-function buildPickerDropdown() {
-  const dropdown = document.getElementById('mapPickerDropdown');
-  if (!dropdown) return;
-  dropdown.innerHTML = '';
-
-  for (const { id, name } of mapState.mapOrder) {
-    const row = document.createElement('div');
-    row.className = 'map-picker-row' + (id === mapState.activeMapId ? ' active' : '');
-    row.dataset.mapId = id;
-
-    const nameBtn = document.createElement('button');
-    nameBtn.className = 'map-picker-item';
-    nameBtn.textContent = name;
-    nameBtn.addEventListener('click', () => { switchMap(id); closeMapPicker(); });
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'map-picker-edit';
-    editBtn.title = 'Rename';
-    editBtn.setAttribute('aria-label', 'Rename map');
-    editBtn.innerHTML = '<span class="material-icons">edit</span>';
-    editBtn.addEventListener('click', (e) => { e.stopPropagation(); startMapRenameInRow(row, id, name); });
-
-    row.appendChild(nameBtn);
-    row.appendChild(editBtn);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'map-picker-edit map-picker-delete';
-    deleteBtn.title = 'Delete map';
-    deleteBtn.setAttribute('aria-label', 'Delete map');
-    deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
-    deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteMapWithConfirm(id, name); });
-    row.appendChild(deleteBtn);
-
-    dropdown.appendChild(row);
-  }
-
-  const divider = document.createElement('div');
-  divider.className = 'map-picker-divider';
-  dropdown.appendChild(divider);
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'map-picker-add';
-  addBtn.innerHTML = '<span class="material-icons">add</span> Add map';
-  addBtn.addEventListener('click', () => { addMap(); closeMapPicker(); });
-  dropdown.appendChild(addBtn);
-}
-
-function startMapRenameInRow(row, mapId, currentName) {
-  const nameBtn = row.querySelector('.map-picker-item');
-  const editBtn = row.querySelector('.map-picker-edit');
-  if (!nameBtn || !editBtn) return;
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'map-picker-rename-input';
-  input.value = currentName;
-  input.maxLength = 30;
-
-  nameBtn.replaceWith(input);
-  editBtn.innerHTML = '<span class="material-icons">check</span>';
-  editBtn.classList.add('map-picker-confirm');
-  input.focus();
-  input.select();
-
-  function commit() {
-    input.removeEventListener('keydown', onKeyDown);
-    const newName = input.value.trim() || currentName;
-    const entry = mapState.mapOrder.find(m => m.id === mapId);
-    if (entry) { entry.name = newName; saveMapForGame(true); }
-    nameBtn.textContent = newName;
-    input.replaceWith(nameBtn);
-    editBtn.innerHTML = '<span class="material-icons">edit</span>';
-    editBtn.classList.remove('map-picker-confirm');
-    if (mapId === mapState.activeMapId) updateMapNameDisplay();
-    // Close the picker after a rename so a stray second tap on the pencil
-    // can't land on the just-committed row and revert it.
-    closeMapPicker();
-  }
-  function onKeyDown(e) {
-    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-    if (e.key === 'Escape') { input.value = currentName; input.blur(); }
-  }
-  editBtn.onclick = (e) => { e.stopPropagation(); input.blur(); };
-  input.addEventListener('keydown', onKeyDown);
-  input.addEventListener('blur', commit, { once: true });
-}
-
-function toggleMapPicker() {
-  const dropdown = document.getElementById('mapPickerDropdown');
-  if (!dropdown) return;
-  if (dropdown.classList.contains('hidden')) {
-    buildPickerDropdown();
-    dropdown.classList.remove('hidden');
-  } else {
-    dropdown.classList.add('hidden');
-  }
-}
-
-function closeMapPicker() {
-  document.getElementById('mapPickerDropdown')?.classList.add('hidden');
-}
-
 
 // ============================================================================
 // PERSISTENCE
@@ -2392,46 +1811,31 @@ function loadMapForGame(gameName) {
   mapState.selectedNode = null;
   mapState.hasUnsavedChanges = false;
   updateUndoButton();
-  _allMapsData = {};
-  _pendingNewAreaHint = false;
   setSuppressJourneyClear(false);
 
   const saved = localStorage.getItem(`lantern_map_${gameName}`);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      let v2;
+      // Read both the legacy multi-map wrapper (v2 {maps}) and the flat
+      // single-map format, collapsing v2 to its active (or first) map. Multiple
+      // maps are no longer supported — extra maps in old saves are dropped.
+      let data = null;
       if (parsed.v === 2 && parsed.maps) {
-        v2 = parsed;
+        data = parsed.maps[parsed.activeMapId] || Object.values(parsed.maps)[0] || null;
       } else if (parsed.nodes !== undefined || parsed.edges !== undefined) {
-        // Migrate v1 single-map format
-        const mapId = 'map_1';
-        v2 = { v: 2, activeMapId: mapId, mapOrder: [{ id: mapId, name: 'Map 1' }], maps: { [mapId]: parsed } };
-      } else {
-        v2 = null;
+        data = parsed;
       }
-
-      if (v2) {
-        mapState.activeMapId = v2.activeMapId;
-        mapState.mapOrder = v2.mapOrder || [];
-        for (const [id, data] of Object.entries(v2.maps || {})) {
-          _allMapsData[id] = data;
-        }
-        const activeData = _allMapsData[mapState.activeMapId];
-        if (activeData) { applyMapData(activeData); }
-        else { clearActiveMapData(); }
-      } else {
-        initFirstMap();
-      }
-    } catch (e) { initFirstMap(); }
+      if (data) { applyMapData(data); }
+      else { clearActiveMapData(); }
+    } catch (e) { clearActiveMapData(); }
   } else {
-    initFirstMap();
+    clearActiveMapData();
   }
 
   syncFromAutoMapper();
   updateNodeCount();
   updateMapBadge();
-  updateMapNameDisplay();
   if (isVisible) render();
 }
 
@@ -2614,16 +2018,9 @@ function syncFromAutoMapper() {
  * @returns {boolean} True if save succeeded, false otherwise
  */
 function saveMapImmediately() {
-  if (!mapState.gameName || !mapState.activeMapId) return false;
+  if (!mapState.gameName) return false;
   try {
-    _allMapsData[mapState.activeMapId] = extractMapData();
-    const dataToSave = {
-      v: 2,
-      activeMapId: mapState.activeMapId,
-      mapOrder: mapState.mapOrder,
-      maps: _allMapsData
-    };
-    localStorage.setItem(`lantern_map_${mapState.gameName}`, JSON.stringify(dataToSave));
+    localStorage.setItem(`lantern_map_${mapState.gameName}`, JSON.stringify(extractMapData()));
     updateMapBadge();
     return true;
   } catch (e) {
@@ -2684,7 +2081,6 @@ function optimizeMapData(mapData) {
     if (node.isManual === true) opt.isManual = true;
     if (node.isEdited === true) opt.isEdited = true;
     if (node.isSmall === true) opt.isSmall = true;
-    if (node.sharedId) opt.sharedId = node.sharedId; // cross-map link (#144) — must survive save-file round-trip
     return opt;
   });
   const edges = (mapData.edges || []).map(edge => {
@@ -2708,8 +2104,7 @@ function expandMapData(opt) {
   const nodes = (opt.nodes || []).map(n => ({
     id: n.id, name: n.name, x: n.x, y: n.y,
     type: n.type || 'room', notes: n.notes || '',
-    isManual: n.isManual || false, isEdited: n.isEdited || false, isSmall: n.isSmall || false,
-    ...(n.sharedId ? { sharedId: n.sharedId } : {})
+    isManual: n.isManual || false, isEdited: n.isEdited || false, isSmall: n.isSmall || false
   }));
   const edges = (opt.edges || []).map(e => ({
     from: e.from, to: e.to, command: e.cmd || e.command,
@@ -2737,21 +2132,12 @@ export function exportMapState(gameName) {
   let stored;
   try { stored = JSON.parse(raw); } catch { return null; }
 
-  if (stored.v === 2 && stored.maps) {
-    const optimizedMaps = {};
-    for (const [mapId, data] of Object.entries(stored.maps)) {
-      optimizedMaps[mapId] = optimizeMapData(data);
-    }
-    return { v: 2, activeMapId: stored.activeMapId, mapOrder: stored.mapOrder, maps: optimizedMaps };
-  }
-
-  // Migrate v1 — wrap as v2
-  const mapId = 'map_1';
-  return {
-    v: 2, activeMapId: mapId,
-    mapOrder: [{ id: mapId, name: 'Map 1' }],
-    maps: { [mapId]: optimizeMapData(stored) }
-  };
+  // Collapse the legacy multi-map wrapper to its active (or first) map; flat
+  // single-map saves pass through. Output is always a flat optimized object.
+  const data = (stored.v === 2 && stored.maps)
+    ? (stored.maps[stored.activeMapId] || Object.values(stored.maps)[0] || {})
+    : stored;
+  return optimizeMapData(data);
 }
 
 /**
@@ -2761,28 +2147,13 @@ export function exportMapState(gameName) {
 export function importMapState(optimizedData, gameName) {
   if (!optimizedData || !gameName) return;
 
-  let v2;
-  if (optimizedData.v === 2 && optimizedData.maps) {
-    const maps = {};
-    for (const [mapId, data] of Object.entries(optimizedData.maps)) {
-      maps[mapId] = expandMapData(data);
-    }
-    v2 = { v: 2, activeMapId: optimizedData.activeMapId, mapOrder: optimizedData.mapOrder, maps };
-  } else {
-    // Migrate v1
-    const mapId = 'map_1';
-    v2 = { v: 2, activeMapId: mapId, mapOrder: [{ id: mapId, name: 'Map 1' }], maps: { [mapId]: expandMapData(optimizedData) } };
-  }
+  // Collapse the legacy multi-map wrapper to its active (or first) map; flat
+  // single-map data passes through. Stored flat.
+  const data = (optimizedData.v === 2 && optimizedData.maps)
+    ? (optimizedData.maps[optimizedData.activeMapId] || Object.values(optimizedData.maps)[0] || {})
+    : optimizedData;
 
-  localStorage.setItem(`lantern_map_${gameName}`, JSON.stringify(v2));
-}
-
-function resetMap() {
-  clearActiveMapData();
-  const mapId = 'map_1';
-  mapState.activeMapId = mapId;
-  mapState.mapOrder = [{ id: mapId, name: 'Map 1' }];
-  _allMapsData = {};
+  localStorage.setItem(`lantern_map_${gameName}`, JSON.stringify(expandMapData(data)));
 }
 
 // ============================================================================
@@ -2981,6 +2352,13 @@ export async function syncMapFromAutoMapper(gameName) {
 
   let mapData;
   try { mapData = JSON.parse(existing); } catch { return; }
+  // Collapse a legacy multi-map wrapper to its active (or first) map; writing
+  // back below stores the flat form, migrating the save in passing.
+  if (mapData.v === 2 && mapData.maps) {
+    mapData = mapData.maps[mapData.activeMapId] || Object.values(mapData.maps)[0] || null;
+    if (!mapData) return;
+  }
+  if (!Array.isArray(mapData.nodes) || !Array.isArray(mapData.edges)) return;
   const existingNodes = new Map(mapData.nodes.map(n => [n.id, n]));
   const existingEdges = new Map(mapData.edges.map(e => [e.from + '-' + e.to, e]));
 

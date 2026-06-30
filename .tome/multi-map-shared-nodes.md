@@ -1,21 +1,69 @@
 ---
-title: Multi-map shared nodes (portal groundwork)
-tags: [map-canvas, multi-map, shared-nodes, portals, sharedId, design]
+title: Multi-map + shared nodes — REMOVED (v1.5.719)
+tags: [map-canvas, multi-map, shared-nodes, portals, sharedId, design, removed]
 created: 2026-06-29
 updated: 2026-06-29
-aliases: [portals, share to map, move to map, sharedId, cross-map nodes]
+aliases: [portals, share to map, move to map, sharedId, cross-map nodes, multi-map]
 ---
 
-# Multi-map shared nodes (portal groundwork)
+# Multi-map + shared nodes — REMOVED in v1.5.719
 
-> **STATUS (v1.5.718): portals ON HOLD.** The whole portal layer is gated behind
-> `PORTALS_ENABLED` (map-config.js, currently `false`) — code intact + commented,
-> flip the flag to revive (last working: v1.5.717). What's LIVE with the flag off:
-> manual **Share to map** (shared nodes) + live content sync + the amber shared-node
-> ring, and **Send to new map** as a *pure bulk move* (no shared boundary). What's
-> GATED OFF: auto-switch on traversal, cross-map exit spokes, the "Go to other map"
-> switch button, auto-sharing the seeded node on add-map, and the boundary-share on
-> send. The rest of this entry describes the full design as built before the hold.
+> **STATUS (v1.5.719): the entire multi-map feature is RIPPED OUT.** Not just
+> portals (#144) — the whole multi-map layer that predated it back to **v1.5.450**
+> (map picker, add/switch/delete maps, the v2 `{maps:{…}}` save wrapper, shared
+> nodes, `sharedId`, portals). The map canvas is now **single-map only**. Everything
+> below the line is **historical** — recoverable from git before v1.5.719 if ever
+> wanted; do not treat it as a description of current code.
+
+## Why removed (the reasoning that settled it)
+
+The decision chain, from the user:
+1. **Portals (auto-switch on traversal) were the only non-jarring way to move
+   between maps — and they were jarring anyway.** The map changing under your feet
+   as you walked through a seam room felt wrong. That's why portals went on hold in
+   v1.5.718 (`PORTALS_ENABLED=false`).
+2. **Without acceptable auto-traversal, multiple maps can't model a connected
+   world** — you're left flipping canvases by hand, which is strictly worse friction
+   than one canvas.
+3. **The canvas is infinite** — clutter is solved by spreading out + zoom, so
+   "map-as-organization" is beaten by the single canvas too.
+4. → No surviving sweet spot. Multi-map's whole value proposition collapses, so it
+   goes entirely, not just the portal layer.
+
+## What "rip it out" touched (v1.5.719)
+
+- **map-config.js** — dropped `PORTALS_ENABLED`, and `activeMapId`/`mapOrder` from `mapState`.
+- **map-canvas.js** — deleted the whole MAP MANAGEMENT + MAP PICKER block
+  (`switchMap`/`addMap`/`deleteMap`/`renameCurrentMap`/`generateMapId`/picker UI),
+  all shared-node/portal fns (`shareNodeToMap`, `syncSharedNode`, `recomputeSharedIds`,
+  `computePortalExits`, `findPortalTargetMap`, `switchToSharedNodeMap`,
+  `handleSendSelectionToNewMap`, `generateSharedId`), the new-area-hint buffering
+  (`showNewAreaHint`/`_pendingNewAreaHint`), and the portal auto-switch block in
+  `handleLocationChange`. The map title is now a static `#mapNameText` label ("Game Map").
+- **map-sheet.js** — removed "Share to map"/"Go to other map" buttons, the share
+  submenu, `toggleShareMapMenu`, the `syncSharedNode` calls in edit handlers, and the
+  `wasShared`/`recomputeSharedIds` branch in delete (now a plain delete).
+- **map-render.js** — removed the amber shared-node ring + cross-map exit spokes.
+- **CSS** — removed `.map-name-btn`/`.map-chevron`/`.map-picker-*`, added `.map-name-label`.
+- **Kept:** the "portal" *edge type* (`getConnectionTypeFromCommand` → dotted edges for
+  `in`/`out`/`enter`/`exit`/`go to`, `tryUpgradePortalEdge`, the "Portal" legend item).
+  That's core single-map auto-mapping, unrelated to multi-map. Don't confuse the two.
+
+## Save-format compatibility (the one real gotcha of the removal)
+
+Existing saves (localStorage + Drive-embedded) store the **v2 `{v:2, activeMapId,
+mapOrder, maps:{…}}`** wrapper. The removal keeps the **read** path: `loadMapForGame`,
+`exportMapState`, `importMapState`, and the standalone `syncMapFromAutoMapper` all
+**collapse v2 → the active (or first) map** and otherwise treat data as flat. New
+writes are **flat single-map** (`saveMapImmediately` just stores `extractMapData()`),
+so a v2 save migrates to flat in passing. **Extra maps in an old v2 save are silently
+dropped** on load — acceptable given the feature is gone. `save-manager.js` already
+read both shapes (`mc.v===2 ? mc.maps[…].currentNodeId : mc.currentNodeId`), so it
+needed no change.
+
+---
+
+# Historical: how multi-map + shared nodes worked (pre-v1.5.719)
 
 Issue #144. The auto-mapper supports multiple maps per game, but they were fully
 **siloed** — independent blobs in `_allMapsData[mapId]` (each its own `nodes`/`edges`

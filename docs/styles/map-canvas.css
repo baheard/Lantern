@@ -138,170 +138,15 @@ body.map-resizing .map-canvas-overlay * {
   position: relative;
 }
 
-.map-name-btn {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: none;
-  border: none;
+.map-name-label {
+  display: block;
   color: #ffffff;
-  cursor: pointer;
-  padding: 4px 0;
   font-size: 16px;
   font-weight: 600;
-  min-height: 44px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.map-name-btn:hover .map-chevron,
-.map-name-btn:focus .map-chevron {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.map-chevron {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-
-.map-picker-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  min-width: 160px;
-  max-width: 240px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  line-height: 44px;
+  white-space: nowrap;
   overflow: hidden;
-  padding: 4px 0;
-}
-
-.map-picker-row {
-  display: flex;
-  align-items: center;
-  padding-right: 6px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.map-picker-row:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.map-picker-row.active .map-picker-item {
-  color: #60a5fa;
-  font-weight: 600;
-}
-
-.map-picker-item {
-  flex: 1;
-  padding: 10px 4px 10px 16px;
-  text-align: left;
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 14px;
-  cursor: pointer;
-  min-height: 44px;
-  -webkit-tap-highlight-color: transparent;
-  /* Clamp to 4 lines */
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  word-break: break-word;
-}
-
-.map-picker-item:focus {
-  outline: none;
-}
-
-.map-picker-edit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  padding: 0;
-}
-
-.map-picker-edit:hover,
-.map-picker-edit:focus {
-  color: #ffffff;
-  outline: none;
-}
-
-.map-picker-edit .material-icons {
-  font-size: 16px;
-}
-
-.map-picker-confirm {
-  color: #4ade80;
-}
-
-.map-picker-confirm:hover,
-.map-picker-confirm:focus {
-  color: #86efac;
-}
-
-.map-picker-delete:hover,
-.map-picker-delete:focus {
-  color: #f87171;
-}
-
-.map-picker-rename-input {
-  flex: 1;
-  min-width: 0; /* Allow the input to shrink so the confirm button stays inside the dropdown */
-  font-size: 14px;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(96, 165, 250, 0.6);
-  border-radius: 4px;
-  padding: 6px 8px;
-  margin: 4px 0 4px 16px;
-  min-height: 36px;
-  outline: none;
-}
-
-.map-picker-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 4px 0;
-}
-
-.map-picker-add {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 16px;
-  text-align: left;
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 14px;
-  cursor: pointer;
-  min-height: 44px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.map-picker-add:hover,
-.map-picker-add:focus {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  outline: none;
-}
-
-.map-picker-add .material-icons {
-  font-size: 18px;
+  text-overflow: ellipsis;
 }
 
 .map-toolbar-actions {
@@ -1625,8 +1470,9 @@ body.map-resizing .map-canvas-overlay * {
     padding: 6px 10px;
   }
 
-  .map-name-btn {
+  .map-name-label {
     font-size: 14px;
+    line-height: 40px;
   }
 
   .map-btn {

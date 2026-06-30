@@ -6,21 +6,6 @@
 // CONSTANTS
 // ============================================================================
 
-// ── Cross-map PORTAL behavior — ON HOLD (#144) ──────────────────────────────
-// Master switch for the portal layer. When false, the multi-map feature set is
-// capped at *shared nodes between maps* (manual "Share to map" + live content
-// sync + the amber shared-node ring) plus plain node-moving via "Send to new
-// map". Everything PAST shared nodes is gated off:
-//   • auto-switch maps when you traverse a portal (handleLocationChange)
-//   • the dashed-amber cross-map exit spokes (computePortalExits + map-render)
-//   • the "Go to other map" switch button in the node sheet
-//   • auto-sharing the seeded current-location node when a new map is added
-//   • auto-sharing the boundary node on "Send to new map" (so it becomes a pure move)
-// The code for all of the above is intact and commented — flip this to true to
-// re-enable the full portal experience (last working: v1.5.717). See
-// .tome/multi-map-shared-nodes.md.
-export const PORTALS_ENABLED = false;
-
 export const GRID_SIZE = 160;
 
 export const DIRECTION_OFFSETS = {
@@ -129,8 +114,6 @@ export const EDGE_COUNT_MAX = 1000;      // Hard limit for edges
 
 export const mapState = {
   gameName: null,
-  activeMapId: null,       // ID of the currently active map
-  mapOrder: [],            // [{id, name}, ...] ordered list of maps for this game
   nodes: new Map(),
   edges: new Map(),
   protectedNodes: new Set(),
