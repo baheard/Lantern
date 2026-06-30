@@ -181,7 +181,14 @@ one strong shared register, authored once here:
   the same machine spinning in the chamber through the opening*. Each alcove view shows the SAME orrery
   (disk + blue hub + silver/copper wheels + the four coloured globes), seen three-quarter from the side.
 - **Exits:** south-alcove has an iron ladder up a shaft (→ Starry Dome North); north-alcove an archway
-  to ascending stairs (→ Curving Hall West End). Render minimally (shaft mouth / stair archway).
+  to ascending stairs (→ Curving Hall West End).
+  - **Ladder:** mounted flat against the south alcove's **WEST wall** — i.e. on the viewer's **LEFT**
+    when standing in the alcove looking north out toward the orrery. Reads as a runged iron ladder
+    climbing a shaft.
+  - **Stairs:** a **large** ascending flight (NOT a minimal archway). The two alcoves face each other
+    down the chamber's N–S axis, so the north stairs are seen — small and distant — across the whole
+    chamber from the **south** alcove view, and large up-close from the north alcove view. Model/scale
+    them big enough to read as a real extending staircase at both distances.
 
 ---
 

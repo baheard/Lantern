@@ -2,7 +2,7 @@
 title: blockout-3d-continuity
 tags: [location-art, blockout, 3d, continuity, mold, theatre, img2img, artview]
 created: 2026-06-24
-updated: 2026-06-24
+updated: 2026-06-29
 aliases: [3d blockout, clay render, geometric continuity, scene blockout, volume blockout]
 ---
 
@@ -162,6 +162,18 @@ locked renderer: dome+walkway+opening+valley and the brass disk+globe all build 
   is human-only (inspect panel) — it is NOT sent to the model; only the role legend + scene prose
   + notes reach the model. So SHAPE comes from the blockout, IDENTITY from the scene prose, and
   the legend is the bridge.
+- **SCALE/EXTENT is geometry too — "model it, don't prompt it" (orrery, 2026-06-29).** The img2img
+  restyle conforms to the clay SILHOUETTE, so a feature's *size and extent* are set by the blockout,
+  not the prose. The orrery's north exit was one `[3,1.2,2.5]` box tagged `role:"steps"`; it restyled
+  as a stubby block and prose calling it "a flight of ascending stairs" could not grow it. Fix = model
+  the actual extending geometry (a stack of rising step boxes climbing back + up), and it reads as a
+  real staircase — both up-close (north alcove) and small-across-the-chamber (south alcove, since the
+  two alcoves face down one N–S axis). The `role` tag and scene prose only drive material/identity;
+  they cannot inflate a small mass. Corollary to "placement must be blocked out, not described": so
+  must scale. Also relocating by side is pure geometry — the orrery ladder moved onto the alcove's
+  WEST wall (viewer's LEFT looking north out of the south alcove: `+X east, +Z south` → facing −Z, left
+  = −X) rather than re-described. After any such edit the clay must be RE-CAPTURED in the browser
+  renderer (clay is browser-only); position-in-frame may then need a camera nudge, not a geometry move.
 - **The renderer's default static src path 404s on :3009.** `renderer.html` falls back to
   `/games/images/<g>/_blockout/<v>.scene.json`, which the review-server does NOT serve statically.
   artview (client.js ~L284) always loads it as `/blockout?src=<URL-encoded /api/blockout?game=&volume=>&game=&volume=`.
@@ -196,8 +208,54 @@ a chosen blockout shot into the committed game image just like render-rooms does
 - **Gallery scrollbar fix** — `#gallery` height bumped so the horizontal scrollbar no longer
   clips the thumbnail bottoms.
 
+### Dollhouse cull is PER-WALL, not all-or-nothing (2026-06-29, `cullShell()`)
+
+Original behaviour dropped the ENTIRE `shellGroup` the instant `camera.position` left the world
+`bounds` (`shellGroup.visible = bounds.containsPoint(...)`) — so backing up to frame a shot also
+killed the far backdrop walls, not just the near one in the way. Replaced with `cullShell()`: when
+the camera is outside the box, hide a shell wall only if the camera and the box CENTRE are on
+opposite sides of it (inward·toCamera < 0 → it's a near/occluding wall); keep walls on the same
+side as the centre (the far backdrop). Camera inside the box → every wall kept (old behaviour). Side
+walls correctly stay (dot > 0). `shellGroup.visible` is no longer toggled anywhere — visibility is
+per-child now, so `captureClay()` had to change from forcing the GROUP visible to forcing every
+CHILD visible (save/restore the children's `.visible` array) — clay always renders all walls
+(interior member cams keep them all anyway). `visibleInWorld()` picking still works since it walks
+`.visible` up the parent chain and now reads each wall's own flag. renderer.html is served from disk
+(`/blockout`), so changes need only a renderer reload — NO server restart (unlike client.js).
+
 ## When NOT to use it
 
 Most rooms: skip. Players see one room at a time; text-layer consistency is enough. Reserve
 blockouts for volumes where multi-vantage continuity is actually visible/complained about.
 Authoring geometry per volume is the real ongoing cost.
+
+## Unstable restyle reads = under-determined clay + structure-via-text (2026-06-30)
+
+Hit a cluster of run-to-run instabilities on `dreamhold/orrery.scene.json` **north-alcove** that
+all share ONE root cause, worth naming because the symptoms look unrelated:
+
+| Symptom | Cause |
+|---|---|
+| A ladder wanders / lands on the wrong wall each run | No ladder **geometry** in the clay — requested only via the `ADJUSTMENTS` text, so the model invents placement every sample |
+| A flat wall becomes "an opening to another room" | The text asked for structure not in the clay (`"on the far side is another alcove … through a duct"`) → the model converts a blank wall/recess into the requested opening |
+| A near wall reads as a bigger wall farther away | Flat even-grey planes carry **no depth/scale cue**; monocular depth is ambiguous, so near-small vs far-large flips between samples |
+
+**Rule:** the restyle anchors STRUCTURE to the clay geometry and STYLE to the text. Anything you
+need read reliably must EXIST in the clay as unambiguous geometry. Describing structure in
+`ADJUSTMENTS`/SCENE that isn't modelled doesn't add it — it makes the model freelance, differently
+each run. This is the same lesson as "placement-critical features must be BLOCKED OUT, not
+described" and "grazing/flat clay → the model freelances," extended to: **text that requests
+absent structure actively destabilises the read** (it's worse than silence — it gives the
+hallucination a target).
+
+**Concrete fixes (engine, not prompt):**
+- DELETE `ADJUSTMENTS` lines that request structure the clay doesn't contain. (The orrery north
+  `"another alcove … through a duct"` line was the direct cause of walls becoming doorways.)
+- Model the wanted object (ladder rails+rungs) as real geometry where the camera sees it; then it
+  anchors instead of being invented. NB from north-alcove the across-chamber south ladder lands in
+  the CENTRAL recess (the sightline), NOT on the right — the right is the orrery. r17 placed it in
+  the recess and it read fine; that's the geometrically honest spot.
+- Kill depth ambiguity: give walls surface relief (courses/panel lines) AND a tonal/AO gradient so
+  far surfaces read darker/smaller. Flat uniform grey is what lets a near wall pose as a far one.
+- The colour legend lists ladder/steps even when this vantage's clay contains neither → either put
+  them in the geometry or they're hallucination bait.

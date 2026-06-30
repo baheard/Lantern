@@ -179,6 +179,16 @@ Review mode grades each. Grouped:
     spanning several rooms is seen ACROSS in any room's establishing shot; pull visible far features
     from sibling rooms' prose. Boundary: include a feature because it's genuinely VISIBLE, never by
     reverse-engineering a puzzle.
+    **Every member faces the SHARED HERO from its own approach — not its local exit.** In a shared
+    volume the differentiation between members comes from *which approach/threshold you're standing on*,
+    NOT from each member shooting a different object. Each member's vantage = that member's entry POV
+    (10a) aimed at the volume's hero; its own local exit (the stairs/ladder/door you arrived through)
+    reads INCIDENTALLY — framing the foreground, or small in the distance — never as the subject. Do
+    NOT turn a member to face its local exit just to make it "different" from the hero shot; that
+    produces a wrong, redundant view. (Dreamhold Orrery 2026-06-30: the north-alcove member was briefly
+    aimed at its own stair archway *away* from the orrery — wrong; corrected to look down the entry
+    stairs AT the orrery, with the stair-foot framing the foreground and the far ladder small across
+    the chamber. South-alcove = the same orrery from the ladder approach. Same hero, two approaches.)
 11. **Scale cues.** "cramped" / "vast" so the model doesn't render a cathedral for a closet.
 12. **Layer discipline.** Framing decisions = literal, source-grounded facts ONLY. World+mood →
     Aesthetic; medium/palette/contrast → Artist. Don't bake style/palette/mood into a framing bullet. A

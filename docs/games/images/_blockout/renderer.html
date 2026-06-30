@@ -164,8 +164,9 @@
 <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
 <script>
 // Generic blockout renderer + clay→image generator + per-volume gallery/notes/prompt.
-// Shell parts (walls/ceiling) auto-hide when the camera leaves the volume → "look in" from
-// outside, walls intact from interior vantages. See .tome/blockout-3d-continuity.md.
+// Shell parts (walls/ceiling) dollhouse-cull when the camera leaves the volume → "look in" from
+// outside. PER-WALL: only the near walls the camera is outside of are hidden; the far backdrop
+// stays. Interior vantages keep every wall. See cullShell() and .tome/blockout-3d-continuity.md.
 const params = new URLSearchParams(location.search);
 const lock = params.get('lock') === '1';
 const startView = params.get('view') || null;
@@ -203,13 +204,38 @@ function ensureComposer(w, h) {
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
     ssaoPass = new THREE.SSAOPass(scene, camera, w, h);
-    ssaoPass.kernelRadius = 8; ssaoPass.minDistance = 0.002; ssaoPass.maxDistance = 0.12;
+    ssaoPass.kernelRadius = 5; ssaoPass.minDistance = 0.002; ssaoPass.maxDistance = 0.06;
     composer.addPass(ssaoPass);
   } catch (e) { composer = null; ssaoPass = null; console.warn('SSAO unavailable:', e.message); }
 }
 function renderFrame() { if (composer) composer.render(); else renderer.render(scene, camera); }
 
-const clay = (hex) => new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
+// Wall surface INDICATOR (2026-06-30): a flat coloured wall plane gives the restyle no surface cue,
+// so a distant/recessed wall reads as an opening. This adds a very faint, NEUTRAL fine hatch — JUST
+// enough to read the region as a solid surface (not a void), NOT a literal material. It must stay
+// subtle/low-contrast so edit-mode does NOT transfer it as real masonry: the SCENE/artist prompt
+// owns the actual wall material (plaster/stone/wood/etc.), the clay only marks "this is a wall".
+let _wallTex = null;
+function wallTex() {
+  if (_wallTex) return _wallTex;
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d');
+  x.fillStyle = '#efefef'; x.fillRect(0, 0, N, N);            // base (multiplies with role colour)
+  x.strokeStyle = '#e3e3e6'; x.lineWidth = 1;                  // barely-there joints, material-neutral
+  const step = N / 16;                                         // fine, even grid — reads as "surface", not "brick"
+  for (let i = 0; i <= 16; i++) {
+    const p = Math.round(i * step) + 0.5;
+    x.beginPath(); x.moveTo(0, p); x.lineTo(N, p); x.stroke();   // horizontal
+    x.beginPath(); x.moveTo(p, 0); x.lineTo(p, N); x.stroke();   // vertical
+  }
+  _wallTex = new THREE.CanvasTexture(c);
+  _wallTex.colorSpace = THREE.SRGBColorSpace; _wallTex.anisotropy = 8;
+  return _wallTex;
+}
+const clay = (hex, role) => {
+  const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex || '#b0b0b0'), roughness: 0.96, metalness: 0 });
+  if (role === 'wall') mat.map = wallTex();
+  return mat;
+};
 // Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
 // stage from seats from boxes). MUST match ROLE_LEGEND in review-server.cjs.
 const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#161318', floor: '#9c9c9c', dome: '#cdd0da', rock: '#7a7066', valley: '#6f8f5a', machine: '#b0863a', ladder: '#5a5a62', steps: '#9a948a', opening: '#161318' };
@@ -218,8 +244,8 @@ const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
 const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;
 function fail(msg) { const e = document.getElementById('err'); e.style.display = 'grid'; e.textContent = msg; console.error(msg); }
 
-function mesh(geom, at, color, tag) {
-  const m = new THREE.Mesh(geom, clay(color));
+function mesh(geom, at, color, tag, role) {
+  const m = new THREE.Mesh(geom, clay(color, role));
   if (at) m.position.set(at[0], at[1], at[2]);
   m.castShadow = true; m.receiveShadow = true;
   if (tag) m.userData.part = tag;   // source scene-def part, for click-to-inspect
@@ -239,11 +265,12 @@ function buildPart(p, parent, offset, inherit, tagPart) {
   const off = offset || [0, 0, 0];
   const at = p.at ? [p.at[0] + off[0], p.at[1] + off[1], p.at[2] + off[2]] : off.slice();
   const col = roleColor(p, inherit);
+  const role = p.role || inherit;   // resolved role → drives wall texturing in clay()
   const tag = tagPart || p;   // grid sub-parts inherit the top grid part as their inspect tag
-  if (p.box) { const m = mesh(new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]), at, col, tag); orient(m, p); parent.add(m); }
-  else if (p.sphere) { const m = mesh(new THREE.IcosahedronGeometry(p.sphere, 1), at, col, tag); orient(m, p); parent.add(m); }
+  if (p.box) { const m = mesh(new THREE.BoxGeometry(p.box[0], p.box[1], p.box[2]), at, col, tag, role); orient(m, p); parent.add(m); }
+  else if (p.sphere) { const m = mesh(new THREE.IcosahedronGeometry(p.sphere, 1), at, col, tag, role); orient(m, p); parent.add(m); }
   else if (p.cyl) {
-    const c = p.cyl, m = mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 16, 1, false, 0, c.half ? Math.PI : Math.PI * 2), at, col, tag);
+    const c = p.cyl, m = mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 16, 1, false, 0, c.half ? Math.PI : Math.PI * 2), at, col, tag, role);
     orient(m, p); parent.add(m);
   } else if (p.grid) {
     const g = p.grid, [x0, x1, dx] = g.x, [z0, z1, dz] = g.z; let row = 0;
@@ -455,14 +482,34 @@ function inspectAt(clientX, clientY) {
   highlight(hit.object); showPick(hit.object.userData.part, hit.object);
 }
 function addLights() {
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x404040, 0.7));
-  const key = new THREE.DirectionalLight(0xffffff, 0.45); key.position.set(7, 16, 9); key.castShadow = true;
+  // Flatter clay lighting (2026-06-30): walls were sinking into shadow toward the near-black
+  // `opening` colour, so the restyle misread distant/recessed walls as openings. Lifted ambient +
+  // hemisphere and dropped the key (incl. cast-shadow intensity) so wall surfaces hold their
+  // assigned cool-grey at any distance. Soft modelling stays via the weak key + SSAO seams.
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x6e6e76, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 0.22); key.position.set(7, 16, 9); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 90 }); key.shadow.bias = -0.0006; scene.add(key);
-  const fill = new THREE.DirectionalLight(0xffffff, 0.18); fill.position.set(-8, 6, 10); scene.add(fill);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  const fill = new THREE.DirectionalLight(0xffffff, 0.16); fill.position.set(-8, 6, 10); scene.add(fill);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
 }
 
 let CAMERAS = {}, currentView = null, INFO = {}, GENS = [], shellGroup = null, worldGroup = null, bounds = null;
+// Per-wall dollhouse cull: instead of dropping ALL shell parts the moment the camera leaves the
+// box (which also kills the far backdrop), hide only the walls the camera is OUTSIDE of — the near,
+// occluding ones. A wall is "near" when the camera and the box centre sit on OPPOSITE sides of it
+// (inward vector · camera vector < 0). Camera inside the box → every wall kept (= old behaviour).
+const _cullBC = new THREE.Vector3(), _cullWC = new THREE.Vector3();
+function cullShell() {
+  const inside = bounds.containsPoint(camera.position);
+  bounds.getCenter(_cullBC);
+  for (const c of shellGroup.children) {
+    if (inside) { c.visible = true; continue; }
+    c.getWorldPosition(_cullWC);
+    const ix = _cullBC.x - _cullWC.x, iy = _cullBC.y - _cullWC.y, iz = _cullBC.z - _cullWC.z;   // wall → centre (inward)
+    const cx = camera.position.x - _cullWC.x, cy = camera.position.y - _cullWC.y, cz = camera.position.z - _cullWC.z;   // wall → camera
+    c.visible = (ix * cx + iy * cy + iz * cz) >= 0;   // keep far walls (same side as centre); hide near ones
+  }
+}
 // Update Vantage is only meaningful once the camera has moved off the saved vantage.
 let vantageDirty = false;
 function updUpd() { const b = document.getElementById('upd'); if (b) b.disabled = !(liveTool && vantageDirty); }
@@ -570,14 +617,15 @@ async function refineImage() {
   finally { genInFlight--; }
 }
 function captureClay() {
-  const wasVis = shellGroup ? shellGroup.visible : true; if (shellGroup) shellGroup.visible = true;   // clay always keeps walls
+  const shellSaved = shellGroup ? shellGroup.children.map((c) => c.visible) : null;   // clay always keeps ALL walls
+  if (shellGroup) shellGroup.children.forEach((c) => { c.visible = true; });
   const gv = gizmo && gizmo.visible; if (gizmo) gizmo.visible = false;                                 // no gizmo in the render
   const pe = pickedMesh; if (pe) pe.material.emissive.setHex(pickedEmissive);                          // no selection tint either
   renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix();
   ensureComposer(CW, CH); if (composer) { composer.setSize(CW, CH); ssaoPass.setSize(CW, CH); }
   renderFrame();
   const url = canvas.toDataURL('image/png');
-  if (shellGroup) shellGroup.visible = wasVis; if (gizmo && gv) gizmo.visible = true; if (pe) pe.material.emissive.setHex(0x2c5a2c);
+  if (shellGroup && shellSaved) shellGroup.children.forEach((c, i) => { c.visible = shellSaved[i]; }); if (gizmo && gv) gizmo.visible = true; if (pe) pe.material.emissive.setHex(0x2c5a2c);
   sizeToViewport(); return url;
 }
 function sizeToViewport() { const vp = document.getElementById('viewport'); const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); ensureComposer(w, h); if (composer) { composer.setSize(w, h); ssaoPass.setSize(w, h); } }
@@ -742,7 +790,7 @@ async function boot() {
   const move = installNav();
   (function loop() {
     requestAnimationFrame(loop); move();
-    if (shellGroup && bounds) shellGroup.visible = bounds.containsPoint(camera.position);   // dollhouse from outside
+    if (shellGroup && bounds) cullShell();   // dollhouse from outside — hide only NEAR walls, keep far backdrop
     renderFrame();
   })();
   window.__ready = true;

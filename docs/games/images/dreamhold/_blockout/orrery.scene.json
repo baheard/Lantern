@@ -456,86 +456,301 @@
       "box": [
         4,
         0.4,
-        4
+        6
       ],
       "at": [
         0,
         -0.2,
-        8.6
+        9.6
       ],
       "role": "floor",
-      "detail": "small curved alcove off the south side"
+      "detail": "small curved alcove off the south side (deepened back so the camera fits inside)"
     },
     {
-      "name": "south alcove ladder rail E",
+      "name": "south alcove ladder rail front",
       "cyl": {
-        "r": 0.12,
+        "r": 0.1,
         "len": 7,
         "axis": "y"
       },
       "at": [
-        0.45,
+        -1.78,
+        3.3,
+        9.95
+      ],
+      "role": "ladder",
+      "detail": "iron ladder up a shaft, mounted flat against the WEST wall of the south alcove — on the viewer's LEFT when standing in the alcove looking north out toward the orrery (→ Starry Dome North)"
+    },
+    {
+      "name": "south alcove ladder rail back",
+      "cyl": {
+        "r": 0.1,
+        "len": 7,
+        "axis": "y"
+      },
+      "at": [
+        -1.78,
+        3.3,
+        9.25
+      ],
+      "role": "ladder"
+    },
+    {
+      "name": "south alcove ladder rung 1",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
+        0.9,
+        9.6
+      ],
+      "role": "ladder"
+    },
+    {
+      "name": "south alcove ladder rung 2",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
+        2.1,
+        9.6
+      ],
+      "role": "ladder"
+    },
+    {
+      "name": "south alcove ladder rung 3",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
         3.3,
         9.6
       ],
       "role": "ladder"
     },
     {
-      "name": "south alcove ladder rail W",
+      "name": "south alcove ladder rung 4",
       "cyl": {
-        "r": 0.12,
-        "len": 7,
-        "axis": "y"
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
       },
       "at": [
-        -0.45,
-        3.3,
+        -1.78,
+        4.5,
         9.6
       ],
-      "role": "ladder",
-      "detail": "iron ladder up a shaft (→ Starry Dome North)"
+      "role": "ladder"
+    },
+    {
+      "name": "south alcove ladder rung 5",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
+        5.7,
+        9.6
+      ],
+      "role": "ladder"
     },
     {
       "name": "north alcove floor",
       "box": [
         4,
         0.4,
-        4
+        11
       ],
       "at": [
         0,
         -0.2,
-        -8.6
+        -12.1
       ],
       "role": "floor",
-      "detail": "small curved alcove off the north side"
+      "detail": "small curved alcove off the north side (deepened back to set the stairs behind an archway)"
     },
     {
-      "name": "north alcove stairs",
+      "name": "north stair archway jamb west",
       "box": [
-        3,
-        1.2,
-        2.5
+        0.5,
+        5,
+        0.6
+      ],
+      "at": [
+        -1.85,
+        2.5,
+        -12.4
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north stair archway jamb east",
+      "box": [
+        0.5,
+        5,
+        0.6
+      ],
+      "at": [
+        1.85,
+        2.5,
+        -12.4
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north stair archway lintel",
+      "box": [
+        4.2,
+        1.6,
+        0.6
       ],
       "at": [
         0,
-        0.6,
-        -9.6
+        5.8,
+        -12.4
+      ],
+      "role": "wall",
+      "shell": true,
+      "detail": "stone ARCHWAY at the back of the north alcove framing the ascending stairs beyond it (→ Curving Hall West End); the flight rises up through it and out of view"
+    },
+    {
+      "name": "north alcove stairs step 1",
+      "box": [
+        3.2,
+        0.7,
+        0.6
+      ],
+      "at": [
+        0,
+        0.35,
+        -13.9
       ],
       "role": "steps",
-      "detail": "archway onto a flight of ascending stairs (→ Curving Hall West End)"
+      "detail": "front (lowest) tread of a BIG ascending stone staircase filling the north archway, rising away to the north and up out of view (→ Curving Hall West End). Modelled as real rising steps (not a single block) so the flight reads as a large extending staircase both up-close from the north alcove AND seen small across the whole chamber from the south alcove."
+    },
+    {
+      "name": "north alcove stairs step 2",
+      "box": [
+        3.2,
+        1.4,
+        0.6
+      ],
+      "at": [
+        0,
+        0.7,
+        -14.3
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 3",
+      "box": [
+        3.2,
+        2.1,
+        0.6
+      ],
+      "at": [
+        0,
+        1.05,
+        -14.7
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 4",
+      "box": [
+        3.2,
+        2.8,
+        0.6
+      ],
+      "at": [
+        0,
+        1.4,
+        -15.1
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 5",
+      "box": [
+        3.2,
+        3.6,
+        0.6
+      ],
+      "at": [
+        0,
+        1.8,
+        -15.5
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 6",
+      "box": [
+        3.2,
+        4.6,
+        0.6
+      ],
+      "at": [
+        0,
+        2.3,
+        -15.9
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 7",
+      "box": [
+        3.2,
+        5.8,
+        0.6
+      ],
+      "at": [
+        0,
+        2.9,
+        -16.3
+      ],
+      "role": "steps"
+    },
+    {
+      "name": "north alcove stairs step 8",
+      "box": [
+        3.2,
+        7.2,
+        0.6
+      ],
+      "at": [
+        0,
+        3.6,
+        -16.7
+      ],
+      "role": "steps",
+      "detail": "topmost treads climb up past the top of the frame — the flight continues out of view (→ Curving Hall West End)"
     },
     {
       "name": "south alcove wall west",
       "box": [
         0.4,
         6.5,
-        4
+        6
       ],
       "at": [
         -2,
         3.25,
-        8.6
+        9.6
       ],
       "role": "wall",
       "shell": true
@@ -545,12 +760,12 @@
       "box": [
         0.4,
         6.5,
-        4
+        6
       ],
       "at": [
         2,
         3.25,
-        8.6
+        9.6
       ],
       "role": "wall",
       "shell": true
@@ -565,7 +780,7 @@
       "at": [
         0,
         3.25,
-        10.6
+        12.6
       ],
       "role": "wall",
       "shell": true
@@ -575,12 +790,12 @@
       "box": [
         4,
         0.4,
-        4
+        6
       ],
       "at": [
         0,
         6.5,
-        8.6
+        9.6
       ],
       "role": "ceiling",
       "shell": true
@@ -590,12 +805,12 @@
       "box": [
         0.4,
         6.5,
-        4
+        11
       ],
       "at": [
         -2,
         3.25,
-        -8.6
+        -12.1
       ],
       "role": "wall",
       "shell": true
@@ -605,12 +820,27 @@
       "box": [
         0.4,
         6.5,
-        4
+        11
       ],
       "at": [
         2,
         3.25,
-        -8.6
+        -12.1
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove back wall",
+      "box": [
+        4,
+        6.5,
+        0.4
+      ],
+      "at": [
+        0,
+        3.25,
+        -17.6
       ],
       "role": "wall",
       "shell": true
@@ -620,15 +850,16 @@
       "box": [
         4,
         0.4,
-        4
+        1.8
       ],
       "at": [
         0,
         6.5,
-        -8.6
+        -7.5
       ],
       "role": "ceiling",
-      "shell": true
+      "shell": true,
+      "detail": "ceiling covers only the FRONT (chamber side) of the alcove; the back is left OPEN as a stair shaft so the ascending flight climbs up out of view (→ Curving Hall West End)"
     }
   ],
   "cameras": {
@@ -647,29 +878,29 @@
     },
     "south-alcove": {
       "pos": [
-        -0.81,
-        1.47,
-        10.45
+        -0.59,
+        2.82,
+        12.78
       ],
       "look": [
-        -1.36,
-        2.88,
-        4.65
+        -1.13,
+        3.01,
+        6.81
       ],
       "fov": 56
     },
     "north-alcove": {
       "pos": [
-        0.09,
-        1.93,
-        -10.67
+        1.27,
+        3.07,
+        -11.7
       ],
       "look": [
-        -1.14,
-        2.83,
-        -4.86
+        0.41,
+        4.26,
+        -5.88
       ],
-      "fov": 56
+      "fov": 48
     }
   },
   "members": [
@@ -679,7 +910,6 @@
   ],
   "notes": {
     "orrery": "DIM, deeply shadowed chamber — faint light, brass catching low warm highlights, high vault lost in blackness. From the entry the great disk reads as a CLEAN, free-spinning PERFECT CIRCLE turning on its central hub, lifted clear of the floor, caught MID-ROTATION (in motion, NOT a fixed dial/plaque/astrolabe). ALL the gear machinery is tucked BEHIND the disk — render rich gears/shafts glimpsed at the disk's edges, in the gap beneath it, and not breaking the clean circular silhouette. The two sub-wheels stand PROUD of the disk's face and turn FREELY, each carrying its globe around a hub (tan around violet; green around red) — not flat inlays. Blue hub globe fixed at centre. The sub-wheels are SMALL relative to the great disk (do not let them read as a second competing circle). A thin grey RIBBON/cord of soft cloth-like material hangs limp from the dark vault, dangling over the disk's upper edge, out of reach — a soft hanging strip, NOT a rigid pole, axle or strut. Eye-level, pressed back against the entry (east) wall, the disk filling the frame.",
-    "south-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. DIM, deeply shadowed — faint light, brass catching low warm highlights.",
-    "north-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. DIM, deeply shadowed — faint light, brass catching low warm highlights."
+    "south-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. A runged iron LADDER climbs a shaft against the WEST wall — on the LEFT of the frame. Far across the chamber, in the north alcove, a stone ARCHWAY frames a big ascending STAIRCASE rising up out of sight — small and distant, straight ahead. DIM, deeply shadowed — faint light, brass catching low warm highlights."
   }
 }

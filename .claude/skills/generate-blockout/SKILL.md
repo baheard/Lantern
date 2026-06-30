@@ -98,6 +98,16 @@ nearly VANISHED — the prose alone did not produce them. So:
 - Rule of thumb: if you'd notice it MISSING from the final image, block it out. If it only changes
   the *surface* of something already blocked, leave it to the prompt. When unsure, block it — a
   rough mass that the model elaborates beats a confident prose cue the model ignores.
+- **Scale/extent is geometry too — not just presence (Dreamhold Orrery 2026-06-30).** The restyle
+  conforms to the clay SILHOUETTE, so a feature renders at its MODELLED size. A feature whose
+  *bigness* matters must be modelled at true extent — a "grand staircase" blocked as one short
+  `[3,1.2,2.5]` box restyles into a stubby lump no matter what the prose says; model it as a real
+  rising stack of step boxes. Same rule as "model placement, not compass," extended to size: model
+  scale, don't prompt it.
+- **A feature that should continue OUT of frame needs its cap OPENED.** To read as stairs/a ladder
+  climbing away out of view, the geometry above it must be open — shorten the ceiling to a front-only
+  slab and leave the back as an open shaft, or the (force-visible-in-clay) ceiling caps it and the
+  ascent reads as ending at a lid.
 
 **Apply the baked gotchas up front** (from the tome):
 - **Fill the frame** — a big featureless foreground or bare pit makes the model hallucinate
@@ -119,6 +129,14 @@ with named foreground features actually in frame. Camera framing is the part tha
 renderer's **"✓ Update vantage"** button lets you (or the human) refine each camera live and save
 it back. Optionally seed `notes[<slug>]` with a one-line vantage reminder; it is appended to that
 view's render as an ADJUSTMENTS line.
+
+**Size the pocket to fit the camera — leave standoff behind the vantage.** A small room/alcove
+modelled only to its literal walls can be too shallow to stand the camera in: the vantage ends up
+pinned against the back wall (no framing room) or, once nudged back, OUTSIDE the volume — which
+trips the dollhouse cull and clips. When a member's vantage needs to sit deep in a pocket, deepen
+the pocket (extend the floor/walls and add a back wall) so the camera has breathing room behind it.
+(Dreamhold Orrery 2026-06-30: the south alcove camera was 0.15u off the back wall; the alcove was
+deepened ~2u to give it standoff.)
 
 **Camera, scene and note must AGREE on the subject — the clay is the spatial authority.** The render
 SCENE layer comes from `style.json scenes[slug]` (the `/scene` distillation) and the `notes[slug]`

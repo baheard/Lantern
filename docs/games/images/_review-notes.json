@@ -102,5 +102,7 @@
   "aud:theatre:spirit-copy__above-the-pit__oai-low-r1.png": "stairs, visibilibty. ",
   "aud:theatre:sumi-rubbing__above-the-pit__oai-low-r1.png": "this is pretty good, but by chance. ",
   "aud:theatre:pastel-nocturne__above-the-pit__oai-low-r1.png": "why stairs? visibility. ",
-  "aud:theatre:silver-plate__above-the-pit__oai-low-r1.png": "stairs, visibility"
+  "aud:theatre:silver-plate__above-the-pit__oai-low-r1.png": "stairs, visibility",
+  "game:dreamhold:north-alcove:north-alcove__oai-low-r5.png": "The far end shouldn't look like an open hallway- it's just an alcove with a ladder",
+  "game:dreamhold:north-alcove:north-alcove__oai-low-refine-r6.png": "Better, ladder on the right wall, alcove is deeper"
 }
