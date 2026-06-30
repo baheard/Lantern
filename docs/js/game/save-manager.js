@@ -370,12 +370,27 @@ async function performSave(storageKey, displayName = null, additionalData = {}) 
         const mapDataStr = optimizedMapData ? JSON.stringify(optimizedMapData) : '';
         const compressedMapData = mapDataStr ? compressString(mapDataStr) : '';
 
+        // Verification data so a restore can confirm the engine's boot-time do_autorestore
+        // ACTUALLY took before performRestore paints the saved displayHTML. Captured for
+        // EVERY slot (not just autosave) — otherwise a quicksave/customsave whose engine
+        // snapshot silently failed to apply at boot (e.g. iOS Safari evicting/truncating
+        // storage) lands at the game's fresh intro, and performRestore's pc-mismatch gate
+        // is skipped for want of this block → it paints the deep transcript over the intro
+        // and reports success ("looks correct, then asks the opening question, then back to
+        // the start"). #186. A caller may still override via additionalData.
+        const verification = {
+            pc: window.zvmInstance?.pc || 0,
+            stackDepth: window.zvmInstance?.stack?.length || 0,
+            callStackDepth: window.zvmInstance?.callstack?.length || 0
+        };
+
         // Build save data object with compressed data
         const saveData = {
             timestamp: new Date().toISOString(),
             gameName: state.currentGameName,
             gameSignature: gameSignature,
             appMoveCount: state.appMoveCount,
+            verification,
             ...payloadFields, // engine snapshot OR legacy quetzalData + voxglkState
             displayHTML: {
                 statusBar: displayHTML.statusBarHTML,
@@ -794,15 +809,9 @@ export async function autoSave() {
         return false;
     }
 
-    // Verification data to confirm successful restore
-    const verification = {
-        pc: window.zvmInstance?.pc || 0,
-        stackDepth: window.zvmInstance?.stack?.length || 0,
-        callStackDepth: window.zvmInstance?.callstack?.length || 0
-    };
-
+    // verification is captured for every slot inside performSave() now.
     const key = `lantern_autosave_${state.currentGameName}`;
-    const success = await performSave(key, null, { verification });
+    const success = await performSave(key, null);
 
     if (success) {
         state.appMoveCount++;

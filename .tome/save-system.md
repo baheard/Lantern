@@ -131,6 +131,31 @@ at creation closes the hole regardless of delivery path.
   line turns, so it never captures the intro state (see the autosave-timing section
   above). The hole was the manual paths only.
 
+## Verification block is captured for EVERY slot (#186, v1.5.730)
+
+`performRestore` has a gate (since #174) that, before painting a save's `displayHTML`,
+compares the save's `verification.pc` against the LIVE VM pc to confirm the engine's
+boot-time `do_autorestore` actually applied the snapshot. If `do_autorestore` silently
+failed (e.g. iOS Safari evicted/truncated the `engineSnapshot` so `autosave_read`'s
+ungzip/parse throws → null → fresh intro), the VM is at the game's opening prompt and
+the gate refuses rather than paint the saved transcript over it.
+
+**The hole (fixed v1.5.730):** the gate is guarded on `savedPc !== null`, and only
+`autoSave()` used to attach a `verification` block — `quickSave()`/`customSave()` did
+not. So a quicksave/customsave whose engine snapshot failed to apply at boot slipped
+past the gate: performRestore painted the deep transcript over the fresh intro and
+reported success → **"looked correct, then asked the opening question, then went back
+to the start."** This is distinct from the intro-state-save guard above (that one stops
+*creating* a bad save; this one stops *restoring* into a failed boot).
+
+**Fix:** `verification` is now built inside `performSave()` (before the `additionalData`
+spread), so every slot carries it and the gate protects quick/custom restore too.
+Removed the now-redundant local capture in `autoSave()`. Verified browser (v1.5.730):
+corrupting a quicksave's `engineSnapshot` (envelope stays engine-format + verification)
+→ quick restore shows "Could not load this save (the game state failed to restore)"
+and leaves the honest intro, instead of faking success; an UNcorrupted quicksave still
+"Quick loaded" cleanly with no false rejection.
+
 ## Autorestore (engine path — bootstrap is HISTORICAL)
 
 ⚠️ **As of Phase 6b (v1.5.582), restore runs entirely on ZVM's built-in
