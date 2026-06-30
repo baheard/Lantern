@@ -214,6 +214,17 @@
   letter-spacing: 0.01em;
 }
 
+.welcome-subtitle {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: #8a8270;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 34rem;
+  margin: 10px auto 0 auto;
+}
+
 .game-list {
   max-width: 800px;
   display: flex;
