@@ -83,14 +83,16 @@ function _doSilentRefresh() {
       if (!settled) { settled = true; resolve(false); }
     }
 
-    // Timeout after 8 seconds in case the callback never fires
+    // Timeout in case the callback never fires. Kept under Safari's ~5s transient
+    // activation window so that, on the interactive path, a hung silent refresh
+    // can't expire the user gesture before the subsequent sign-in popup opens.
     setTimeout(() => {
       if (!settled) {
         settled = true;
         tokenClient.callback = originalCallback;
         resolve(false);
       }
-    }, 8000);
+    }, 3500);
   });
 }
 
@@ -240,15 +242,18 @@ async function fetchUserInfo() {
 /**
  * Sign in — uses select_account on first auth, empty prompt on subsequent
  * (consent was already granted; no need to show it again).
+ *
+ * IMPORTANT (iOS Safari): requestAccessToken() opens a popup, which Safari only
+ * permits while the page has transient activation (~5s after a user tap). Do NOT
+ * await anything slow here first — a preceding silentRefresh() can burn up to 8s
+ * on a dead Google session and expire the activation window, so the popup is
+ * blocked ([GSI_LOGGER]: Failed to open popup window … Maybe blocked by the
+ * browser?). signIn() is the interactive (tap-driven) entry point, so we open the
+ * popup promptly. Callers that want the silent-first optimisation use
+ * ensureAuthenticated(), which tries silentRefresh() before the user-facing tap.
  */
 export async function signIn() {
   if (!tokenClient) throw new Error('Google Drive sync not initialized');
-
-  // Try silent refresh first — avoids popup flash when the Google session is still alive
-  if (!hasValidToken()) {
-    const refreshed = await silentRefresh();
-    if (refreshed) return;
-  }
 
   const tokenData = JSON.parse(localStorage.getItem('gdrive_token') || '{}');
   // Only force account selection on very first sign-in; after that go straight through

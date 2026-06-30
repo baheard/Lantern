@@ -2,8 +2,8 @@
 title: Google Drive Auth Strategy
 tags: [gdrive, auth, oauth, design]
 created: 2026-06-03
-updated: 2026-06-03
-aliases: [drive auth, token refresh, oauth refresh, silent refresh]
+updated: 2026-06-30
+aliases: [drive auth, token refresh, oauth refresh, silent refresh, popup blocked, ios safari popup, transient activation]
 ---
 
 # Google Drive Auth Strategy
@@ -56,3 +56,29 @@ The on-demand `silentRefresh()` uses the same `prompt: 'none'` call that
 flickered. If a flicker still appears, it's now tied to a real user sync action
 (acceptable), not idle. A lingering flicker on actual syncs would point at a
 GIS third-party-cookie quirk — a separate issue from the timer removal.
+
+## iOS Safari popup blocked — don't await before requestAccessToken (#185, v1.5.727)
+
+**Symptom:** `[GSI_LOGGER]: Failed to open popup window … display=popup … Maybe
+blocked by the browser?` on iPhone/Safari; interactive sign-in never completes.
+
+**Cause:** `requestAccessToken()` opens a popup, and Safari only allows it while
+the page holds **transient activation** — a ~5s window after a user tap. The old
+`signIn()` did `await silentRefresh()` *first*, which on a dead Google session
+can run up to its safety-net timeout (was **8s**) and **expire the activation
+window** before the popup ever opens. In the reported first-time path the user's
+tap on the confirm dialog's "Connect" button granted a *fresh* gesture, but
+`signIn()` immediately squandered it on another silent refresh → popup blocked.
+(`prompt=select_account` in the URL = first-time path, set at the `tokenData.email`
+-falsy branch — confirms it.)
+
+**Fix:** `signIn()` is the interactive (tap-driven) entry point, so it now calls
+`requestAccessToken()` **promptly** — no preceding `silentRefresh()` await. The
+silent-first optimisation still lives in `ensureAuthenticated()` (tries
+`silentRefresh()` *before* the user-facing tap). Belt-and-suspenders: the
+`_doSilentRefresh()` safety-net timeout was cut **8s → 3.5s** so a hung silent
+refresh can't outlast the 5s activation window on any path.
+
+**Rule:** never `await` anything slow (silent refresh, dynamic `import()` of a
+cold module, a network call) on the synchronous path between a user gesture and
+`requestAccessToken()`. GIS popups need the gesture *fresh*.
