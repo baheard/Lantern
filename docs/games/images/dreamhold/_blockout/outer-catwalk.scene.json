@@ -6,12 +6,23 @@
   "source": "location-framing.md → Volume: Outer Catwalk (anchor catwalk-south)",
   "frame": "+X east, +Z south, +Y up; north (mountain side) at -Z. Geometry is state-independent: day/night/unearthly differ only in sky+light, so one blockout serves all three states (relight on the clay).",
   "background": "#9a9a9a",
-  "fog": { "near": 45, "far": 140 },
+  "fog": {
+    "near": 45,
+    "far": 140
+  },
   "parts": [
     {
       "name": "promontory + iron walkway disk",
-      "cyl": { "r": 7, "len": 0.5, "axis": "y" },
-      "at": [0, -0.25, 0],
+      "cyl": {
+        "r": 7,
+        "len": 0.5,
+        "axis": "y"
+      },
+      "at": [
+        0,
+        -0.25,
+        0
+      ],
       "color": "#6c6c74",
       "role": "floor",
       "detail": "railless iron catwalk girdling the dome — its outer ring IS the walkway, edges drop straight off"
@@ -19,28 +30,56 @@
     {
       "name": "translucent dome",
       "sphere": 5,
-      "at": [0, 4.4, 0],
+      "at": [
+        0,
+        4.4,
+        0
+      ],
       "role": "dome",
       "detail": "small pale translucent dome the catwalk circles"
     },
     {
       "name": "round opening (ladder down) - south flank",
-      "box": [1.3, 1.3, 0.4],
-      "at": [0, 1.9, 4.7],
+      "box": [
+        1.3,
+        1.3,
+        0.4
+      ],
+      "at": [
+        0,
+        1.9,
+        4.7
+      ],
       "role": "opening",
       "detail": "round opening in the dome's south flank, ladder down inside"
     },
     {
       "name": "iron steps to opening - south",
-      "box": [1.5, 0.5, 1.3],
-      "at": [0, 0.4, 5.7],
+      "box": [
+        1.5,
+        0.5,
+        1.3
+      ],
+      "at": [
+        0,
+        0.4,
+        5.7
+      ],
       "role": "steps",
       "detail": "few iron steps climbing the dome flank to the opening"
     },
     {
       "name": "mountain cliff (north, across ravine)",
-      "box": [44, 42, 9],
-      "at": [0, 13, -18],
+      "box": [
+        44,
+        42,
+        9
+      ],
+      "at": [
+        0,
+        13,
+        -18
+      ],
       "color": "#73695e",
       "role": "rock",
       "shell": true,
@@ -48,52 +87,116 @@
     },
     {
       "name": "ledge on cliff face - north",
-      "box": [2.4, 0.4, 1.3],
-      "at": [0, 6.5, -13.2],
+      "box": [
+        2.4,
+        0.4,
+        1.3
+      ],
+      "at": [
+        0,
+        6.5,
+        -13.2
+      ],
       "color": "#7a7066",
       "role": "rock",
       "detail": "tiny ledge just visible on the cliff face across the ravine"
     },
     {
       "name": "valley floor far below",
-      "box": [90, 1, 90],
-      "at": [0, -26, 18],
+      "box": [
+        90,
+        1,
+        90
+      ],
+      "at": [
+        0,
+        -26,
+        18
+      ],
       "role": "valley",
       "detail": "vast bright-green valley a long way down on the open side"
     },
     {
       "name": "terraced garden below (south)",
-      "box": [12, 0.6, 7],
-      "at": [0, -7, 12],
+      "box": [
+        12,
+        0.6,
+        7
+      ],
+      "at": [
+        0,
+        -7,
+        12
+      ],
       "role": "valley",
       "detail": "small terraced garden of knotted spiralled paths, just below the south edge"
     },
     {
       "name": "terraced garden lower step (south)",
-      "box": [9, 0.6, 5],
-      "at": [0, -14, 16],
+      "box": [
+        9,
+        0.6,
+        5
+      ],
+      "at": [
+        0,
+        -14,
+        16
+      ],
       "role": "valley"
     }
   ],
   "cameras": {
     "catwalk-south": {
-      "pos": [-3.5, 1.3, 5.2],
-      "look": [3.2, -0.4, 5.9],
+      "pos": [
+        -2.89,
+        2.55,
+        11.28
+      ],
+      "look": [
+        -0.35,
+        1.94,
+        5.88
+      ],
       "fov": 62
     },
     "catwalk-west": {
-      "pos": [-6, 1.3, -1.2],
-      "look": [-5.4, -0.4, 5],
+      "pos": [
+        -6,
+        1.3,
+        -1.2
+      ],
+      "look": [
+        -5.4,
+        -0.4,
+        5
+      ],
       "fov": 60
     },
     "catwalk-north": {
-      "pos": [0, 1.4, -5.8],
-      "look": [0, 2.2, -13],
+      "pos": [
+        7.23,
+        1.61,
+        -1.08
+      ],
+      "look": [
+        2.94,
+        1.62,
+        -5.27
+      ],
       "fov": 64
     },
     "catwalk-east": {
-      "pos": [6, 1.3, 1.2],
-      "look": [5.4, -0.4, -5],
+      "pos": [
+        2.83,
+        3.45,
+        7.85
+      ],
+      "look": [
+        5.3,
+        2.69,
+        2.44
+      ],
       "fov": 60
     }
   },
@@ -104,7 +207,9 @@
     "catwalk-east"
   ],
   "notes": {
-    "catwalk-south": "anchor (day). dome at left shoulder; iron steps + round opening on the dome; terraced garden and bright valley falling away on the open (right) side under unclouded blue afternoon sky.",
-    "catwalk-north": "the mountain cliff rises close across the deep ravine ahead; the tiny ledge sits on the cliff face. dome at your back/shoulder."
+    "catwalk-south": "anchor (day). dome at left shoulder; iron steps + round opening on the dome; terraced garden and bright valley falling away on the open (right) side under unclouded blue afternoon sky. SHARED FINISH (identical at every station): the whole walkway deck is dark riveted IRON GRATING underfoot — NOT stone, planks or flagstone; NO railing, posts, ropes or parapet of any kind (railless — the edge drops straight away into air). The dome is a smooth, plain, pale translucent shell — NO ornamental band, ring, moulding, gilt course, ridge or seam.",
+    "catwalk-north": "the mountain cliff rises close across the deep ravine ahead; the tiny ledge sits on the cliff face. dome at your back/shoulder. SHARED FINISH (identical at every station): the whole walkway deck is dark riveted IRON GRATING underfoot — NOT stone, planks or flagstone; NO railing, posts, ropes or parapet of any kind (railless — the edge drops straight away into air). The dome is a smooth, plain, pale translucent shell — NO ornamental band, ring, moulding, gilt course, ridge or seam.",
+    "catwalk-west": "SHARED FINISH (identical at every station): the whole walkway deck is dark riveted IRON GRATING underfoot — NOT stone, planks or flagstone; NO railing, posts, ropes or parapet of any kind (railless — the edge drops straight away into air). The dome is a smooth, plain, pale translucent shell — NO ornamental band, ring, moulding, gilt course, ridge or seam.",
+    "catwalk-east": "SHARED FINISH (identical at every station): the whole walkway deck is dark riveted IRON GRATING underfoot — NOT stone, planks or flagstone; NO railing, posts, ropes or parapet of any kind (railless — the edge drops straight away into air). The dome is a smooth, plain, pale translucent shell — NO ornamental band, ring, moulding, gilt course, ridge or seam."
   }
 }

@@ -96,6 +96,19 @@ exists in the dark states.
   on its own promontory high on the mountain. To the mountain side the cliff towers close but separated
   by a deep jagged ravine; to the open side the slope falls away to a vast green valley far below. A
   few iron steps climb the dome's flank to a round opening (ladder down inside) at the south station.
+- **Shared FEATURE descriptions (factor 7 — author ONCE here, carry into EVERY member scene + note).**
+  These are single physical objects seen from all four stations; describe each IDENTICALLY everywhere or
+  the vantages invent conflicting finishes (seen live: west rendered the deck stone, east a gilt-ringed
+  dome, north a railed plank causeway — one object, four materials). State the POSITIVE finish AND the
+  NEGATIONS that stop the model embellishing — a loose positive-only phrase ("iron catwalk") is not
+  enough; the model attaches "iron" to just an edge, or adds rails/ornament:
+  - **Walkway** = a narrow **railless catwalk of dark riveted IRON GRATING** — the *entire walking
+    surface* is open iron grating/mesh underfoot, NOT stone, planks or flagstone; **NO railing, posts,
+    ropes, balustrade or parapet of any kind** (railless — the outer edge simply drops away into air).
+    The few steps up to the dome opening are the same dark iron.
+  - **Dome** = a small, **smooth, plain, pale translucent shell** — bare and unadorned; **NO ornamental
+    band, ring, moulding, gilt course, ridge, rib or seam** at base, crown or anywhere. A clean pale
+    hemisphere and nothing more.
 - **Sky-states (factor 8 — paint each in its own):** **Day** = unclouded blue sky, exuberant
   early-afternoon sun, valley bright green (canonical first state). **Night** = black star-thick sky,
   risen moon ringed by a halo; the dome glows from the fire lit inside it, and the copper sail's
