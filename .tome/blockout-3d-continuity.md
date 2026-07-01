@@ -162,6 +162,23 @@ locked renderer: dome+walkway+opening+valley and the brass disk+globe all build 
   is human-only (inspect panel) — it is NOT sent to the model; only the role legend + scene prose
   + notes reach the model. So SHAPE comes from the blockout, IDENTITY from the scene prose, and
   the legend is the bridge.
+- **Legend roles must be MATERIAL-NEUTRAL — defer material to the scene, never prescribe it (2026-07-01).**
+  The `floor` legend used to say "the warm **stone-grey** ground is the FLOOR" — asserting stone. For a
+  game whose floor is iron (Dreamhold catwalk: "railless iron catwalk"), that FOUGHT the scene: the
+  model got "stone floor" (legend) vs "iron catwalk" (scene) and flip-flopped — usually stone (the
+  legend says the word outright), occasionally iron. Fixed by making `floor` defer to the scene exactly
+  like `wall` already does ("the tone is only a marker, NOT a material; render in whatever the scene
+  implies"). Rule: a role legend states WHAT a region is (floor/wall/opening) and how to read the clay
+  tone (a marker, not paint), never WHAT MATERIAL — material is the scene's/artist's job. Any legend
+  line naming a material noun is a latent version of this bug.
+- **Why per-part `detail` is NOT auto-appended to the prompt (considered + rejected 2026-07-01).** It's
+  tempting to send each part's `detail` (it often has the precise material/identity, e.g. "railless
+  iron catwalk"). But detail is free-form AUTHOR reasoning — much of it is model-hostile ("occluded by
+  disk from front", "edges drop straight off", placement notes) — and it is NOT vantage-scoped, so
+  auto-appending it re-introduces the exact cross-vantage bleed the per-vantage legend gate just fixed
+  (an off-frame part's detail would leak into every shot). Identity belongs in the SCENE (curated,
+  per-vantage); material belongs in the scene + a neutral legend. If a per-object model hint is ever
+  truly needed, add a SEPARATE model-facing field that is vantage-scoped — do not repurpose `detail`.
 - **SCALE/EXTENT is geometry too — "model it, don't prompt it" (orrery, 2026-06-29).** The img2img
   restyle conforms to the clay SILHOUETTE, so a feature's *size and extent* are set by the blockout,
   not the prose. The orrery's north exit was one `[3,1.2,2.5]` box tagged `role:"steps"`; it restyled
@@ -257,5 +274,14 @@ hallucination a target).
   the recess and it read fine; that's the geometrically honest spot.
 - Kill depth ambiguity: give walls surface relief (courses/panel lines) AND a tonal/AO gradient so
   far surfaces read darker/smaller. Flat uniform grey is what lets a near wall pose as a far one.
-- The colour legend lists ladder/steps even when this vantage's clay contains neither → either put
-  them in the geometry or they're hallucination bait.
+- The colour legend lists ladder/steps even when this vantage's clay contains neither → hallucination
+  bait. **RESOLVED (2026-07-01): the legend is now SCOPED PER VANTAGE in `blockoutGen` (core.cjs).** A
+  discrete FEATURE role's legend line (`opening/ladder/steps/hole/door/…`) is emitted only if that
+  vantage's SCENE prose (`style.json` scenes[view], already per-vantage-correct via /frame+/scene)
+  actually names the feature; pervasive ENVIRONMENT/surface roles (`floor/ceiling/wall/dome/rock/valley`)
+  always list because they disambiguate the gridded clay ("grey plane = solid wall, not an opening").
+  WHY scene-text and not a camera frustum: a frustum test was tried first but is fragile approximate
+  geometry; the scene is a more trustworthy signal. WHY omission and not a conditional legend ("if a
+  recess appears, render it as an opening"): image models in guide mode PAINT THE WORDS — a prose "if"
+  collapses to the imperative and the doorway bleeds anyway. Silence is the only robust guard. Verified
+  on the catwalk: the single south-flank `opening` now lists on `catwalk-south` only, not west/north/east.
