@@ -117,14 +117,55 @@
       "shell": true
     },
     {
+      "name": "south arch chamfer west",
+      "box": [
+        1.6,
+        1.6,
+        0.42
+      ],
+      "at": [
+        -2,
+        6.5,
+        6.5
+      ],
+      "rot": [
+        0,
+        0,
+        45
+      ],
+      "role": "wall",
+      "shell": true,
+      "detail": "wall wedge cutting the upper-left corner of the south opening so its top reads as an ARCH, not a rectangle — render the doorway head as a curved/round arch"
+    },
+    {
+      "name": "south arch chamfer east",
+      "box": [
+        1.6,
+        1.6,
+        0.42
+      ],
+      "at": [
+        2,
+        6.5,
+        6.5
+      ],
+      "rot": [
+        0,
+        0,
+        45
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
       "name": "north jamb west",
       "box": [
-        4.5,
+        5,
         15,
         0.4
       ],
       "at": [
-        -4.25,
+        -4,
         7.5,
         -6.5
       ],
@@ -134,12 +175,12 @@
     {
       "name": "north jamb east",
       "box": [
-        4.5,
+        5,
         15,
         0.4
       ],
       "at": [
-        4.25,
+        4,
         7.5,
         -6.5
       ],
@@ -149,14 +190,55 @@
     {
       "name": "north lintel",
       "box": [
-        4,
-        8.5,
+        3,
+        10.5,
         0.4
       ],
       "at": [
         0,
-        10.75,
+        9.75,
         -6.5
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north arch chamfer west",
+      "box": [
+        1.2,
+        1.2,
+        0.42
+      ],
+      "at": [
+        -1.5,
+        4.5,
+        -6.5
+      ],
+      "rot": [
+        0,
+        0,
+        45
+      ],
+      "role": "wall",
+      "shell": true,
+      "detail": "wall wedge cutting the upper-left corner of the north opening (the stair archway) so its top reads as an ARCH, not a rectangle — render the doorway head as a curved/round arch"
+    },
+    {
+      "name": "north arch chamfer east",
+      "box": [
+        1.2,
+        1.2,
+        0.42
+      ],
+      "at": [
+        1.5,
+        4.5,
+        -6.5
+      ],
+      "rot": [
+        0,
+        0,
+        45
       ],
       "role": "wall",
       "shell": true
@@ -470,12 +552,12 @@
       "name": "south alcove ladder rail front",
       "cyl": {
         "r": 0.1,
-        "len": 7,
+        "len": 9,
         "axis": "y"
       },
       "at": [
         -1.78,
-        3.3,
+        4.3,
         9.95
       ],
       "role": "ladder",
@@ -485,12 +567,12 @@
       "name": "south alcove ladder rail back",
       "cyl": {
         "r": 0.1,
-        "len": 7,
+        "len": 9,
         "axis": "y"
       },
       "at": [
         -1.78,
-        3.3,
+        4.3,
         9.25
       ],
       "role": "ladder"
@@ -566,31 +648,260 @@
       "role": "ladder"
     },
     {
+      "name": "south alcove ladder rung 6",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
+        6.9,
+        9.6
+      ],
+      "role": "ladder"
+    },
+    {
+      "name": "south alcove ladder rung 7",
+      "cyl": {
+        "r": 0.05,
+        "len": 0.7,
+        "axis": "z"
+      },
+      "at": [
+        -1.78,
+        8.1,
+        9.6
+      ],
+      "role": "ladder"
+    },
+    {
       "name": "north alcove floor",
       "box": [
-        4,
+        5.8,
         0.4,
-        11
+        13.2
       ],
       "at": [
         0,
         -0.2,
-        -12.1
+        -12.9
       ],
       "role": "floor",
-      "detail": "small curved alcove off the north side (deepened back to set the stairs behind an archway)"
+      "detail": "floor of the small CURVED alcove (rounded niche), longer/wider for a roomier space"
+    },
+    {
+      "name": "north alcove wall seg 1",
+      "box": [
+        2.48,
+        6.5,
+        0.4
+      ],
+      "at": [
+        2.1,
+        3.25,
+        -7.5
+      ],
+      "rot": [
+        0,
+        59.04,
+        0
+      ],
+      "role": "wall",
+      "shell": true,
+      "detail": "SOLID curved alcove wall — the alcove is a ROUNDED niche (apse-like), render its walls as one smoothly CURVING surface, not flat panels meeting at corners"
+    },
+    {
+      "name": "north alcove wall seg 2",
+      "box": [
+        6.65,
+        6.5,
+        0.4
+      ],
+      "at": [
+        2.7,
+        3.25,
+        -11.75
+      ],
+      "rot": [
+        0,
+        90,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 3",
+      "box": [
+        2.17,
+        6.5,
+        0.4
+      ],
+      "at": [
+        2.55,
+        3.25,
+        -16
+      ],
+      "rot": [
+        0,
+        98.53,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 4",
+      "box": [
+        1.85,
+        6.5,
+        0.4
+      ],
+      "at": [
+        2,
+        3.25,
+        -17.75
+      ],
+      "rot": [
+        0,
+        118.07,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 5",
+      "box": [
+        1.9,
+        6.5,
+        0.4
+      ],
+      "at": [
+        0.8,
+        3.25,
+        -18.85
+      ],
+      "rot": [
+        0,
+        156.37,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 6",
+      "box": [
+        1.9,
+        6.5,
+        0.4
+      ],
+      "at": [
+        -0.8,
+        3.25,
+        -18.85
+      ],
+      "rot": [
+        0,
+        -156.37,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 7",
+      "box": [
+        1.85,
+        6.5,
+        0.4
+      ],
+      "at": [
+        -2,
+        3.25,
+        -17.75
+      ],
+      "rot": [
+        0,
+        -118.07,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 8",
+      "box": [
+        2.17,
+        6.5,
+        0.4
+      ],
+      "at": [
+        -2.55,
+        3.25,
+        -16
+      ],
+      "rot": [
+        0,
+        -98.53,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 9",
+      "box": [
+        6.65,
+        6.5,
+        0.4
+      ],
+      "at": [
+        -2.7,
+        3.25,
+        -11.75
+      ],
+      "rot": [
+        0,
+        -90,
+        0
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
+      "name": "north alcove wall seg 10",
+      "box": [
+        2.48,
+        6.5,
+        0.4
+      ],
+      "at": [
+        -2.1,
+        3.25,
+        -7.5
+      ],
+      "rot": [
+        0,
+        -59.04,
+        0
+      ],
+      "role": "wall",
+      "shell": true
     },
     {
       "name": "north stair archway jamb west",
       "box": [
         0.5,
-        5,
+        3.6,
         0.6
       ],
       "at": [
-        -1.85,
-        2.5,
-        -12.4
+        -0.9,
+        1.8,
+        -17.2
       ],
       "role": "wall",
       "shell": true
@@ -599,13 +910,13 @@
       "name": "north stair archway jamb east",
       "box": [
         0.5,
-        5,
+        3.6,
         0.6
       ],
       "at": [
-        1.85,
-        2.5,
-        -12.4
+        0.9,
+        1.8,
+        -17.2
       ],
       "role": "wall",
       "shell": true
@@ -613,132 +924,213 @@
     {
       "name": "north stair archway lintel",
       "box": [
-        4.2,
-        1.6,
+        2.2,
+        1,
         0.6
       ],
       "at": [
         0,
-        5.8,
-        -12.4
+        4.1,
+        -17.2
       ],
       "role": "wall",
       "shell": true,
       "detail": "stone ARCHWAY at the back of the north alcove framing the ascending stairs beyond it (→ Curving Hall West End); the flight rises up through it and out of view"
     },
     {
+      "name": "north stair archway chamfer west",
+      "box": [
+        0.7,
+        0.7,
+        0.62
+      ],
+      "at": [
+        -0.9,
+        3.6,
+        -17.2
+      ],
+      "rot": [
+        0,
+        0,
+        45
+      ],
+      "role": "wall",
+      "shell": true,
+      "detail": "wall wedge rounding the upper-left corner of the stair archway so its head reads as a true curved ARCH, not a rectangle"
+    },
+    {
+      "name": "north stair archway chamfer east",
+      "box": [
+        0.7,
+        0.7,
+        0.62
+      ],
+      "at": [
+        0.9,
+        3.6,
+        -17.2
+      ],
+      "rot": [
+        0,
+        0,
+        45
+      ],
+      "role": "wall",
+      "shell": true
+    },
+    {
       "name": "north alcove stairs step 1",
       "box": [
-        3.2,
-        0.7,
-        0.6
+        1.5,
+        0.25,
+        0.75
       ],
       "at": [
         0,
-        0.35,
-        -13.9
+        0.125,
+        -13.5
+      ],
+      "rot": [
+        0,
+        0,
+        0
       ],
       "role": "steps",
-      "detail": "front (lowest) tread of a BIG ascending stone staircase filling the north archway, rising away to the north and up out of view (→ Curving Hall West End). Modelled as real rising steps (not a single block) so the flight reads as a large extending staircase both up-close from the north alcove AND seen small across the whole chamber from the south alcove."
+      "detail": "lowest tread of a SHALLOW, LONG-tread curving stone staircase — a gentle grand stair, low rise and deep treads, rising gradually north and curving slightly, up through the archway out of view (→ Curving Hall West End). Render real shallow steps, a curving flight, not a steep ramp."
     },
     {
       "name": "north alcove stairs step 2",
       "box": [
-        3.2,
-        1.4,
-        0.6
+        1.5,
+        0.5,
+        0.75
       ],
       "at": [
+        0.03,
+        0.25,
+        -14.25
+      ],
+      "rot": [
         0,
-        0.7,
-        -14.3
+        5,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 3",
       "box": [
-        3.2,
-        2.1,
-        0.6
+        1.5,
+        0.75,
+        0.75
       ],
       "at": [
+        0.08,
+        0.375,
+        -15
+      ],
+      "rot": [
         0,
-        1.05,
-        -14.7
+        10,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 4",
       "box": [
-        3.2,
-        2.8,
-        0.6
+        1.5,
+        1,
+        0.75
       ],
       "at": [
+        0.15,
+        0.5,
+        -15.75
+      ],
+      "rot": [
         0,
-        1.4,
-        -15.1
+        15,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 5",
       "box": [
-        3.2,
-        3.6,
-        0.6
+        1.5,
+        1.25,
+        0.75
       ],
       "at": [
+        0.24,
+        0.625,
+        -16.5
+      ],
+      "rot": [
         0,
-        1.8,
-        -15.5
+        21,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 6",
       "box": [
-        3.2,
-        4.6,
-        0.6
+        1.5,
+        1.5,
+        0.75
       ],
       "at": [
+        0.35,
+        0.75,
+        -17.25
+      ],
+      "rot": [
         0,
-        2.3,
-        -15.9
+        27,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 7",
       "box": [
-        3.2,
-        5.8,
-        0.6
+        1.5,
+        1.75,
+        0.75
       ],
       "at": [
+        0.48,
+        0.875,
+        -18
+      ],
+      "rot": [
         0,
-        2.9,
-        -16.3
+        33,
+        0
       ],
       "role": "steps"
     },
     {
       "name": "north alcove stairs step 8",
       "box": [
-        3.2,
-        7.2,
-        0.6
+        1.5,
+        2,
+        0.75
       ],
       "at": [
+        0.62,
+        1,
+        -18.75
+      ],
+      "rot": [
         0,
-        3.6,
-        -16.7
+        40,
+        0
       ],
       "role": "steps",
-      "detail": "topmost treads climb up past the top of the frame — the flight continues out of view (→ Curving Hall West End)"
+      "detail": "topmost visible tread; the narrow curving flight continues up past the top of the frame (→ Curving Hall West End)"
     },
     {
       "name": "south alcove wall west",
@@ -786,14 +1178,14 @@
       "shell": true
     },
     {
-      "name": "south alcove ceiling",
+      "name": "south alcove ceiling (east of shaft)",
       "box": [
-        4,
+        3,
         0.4,
         6
       ],
       "at": [
-        0,
+        0.5,
         6.5,
         9.6
       ],
@@ -801,54 +1193,39 @@
       "shell": true
     },
     {
-      "name": "north alcove wall west",
+      "name": "south alcove ceiling (front of shaft)",
       "box": [
+        1,
         0.4,
-        6.5,
-        11
+        2.4
       ],
       "at": [
-        -2,
-        3.25,
-        -12.1
+        -1.5,
+        6.5,
+        7.8
       ],
-      "role": "wall",
+      "role": "ceiling",
       "shell": true
     },
     {
-      "name": "north alcove wall east",
+      "name": "south alcove ceiling (back of shaft)",
       "box": [
+        1,
         0.4,
-        6.5,
-        11
+        2.4
       ],
       "at": [
-        2,
-        3.25,
-        -12.1
-      ],
-      "role": "wall",
-      "shell": true
-    },
-    {
-      "name": "north alcove back wall",
-      "box": [
-        4,
+        -1.5,
         6.5,
-        0.4
+        11.4
       ],
-      "at": [
-        0,
-        3.25,
-        -17.6
-      ],
-      "role": "wall",
+      "role": "ceiling",
       "shell": true
     },
     {
       "name": "north alcove ceiling",
       "box": [
-        4,
+        5.8,
         0.4,
         1.8
       ],
@@ -860,6 +1237,21 @@
       "role": "ceiling",
       "shell": true,
       "detail": "ceiling covers only the FRONT (chamber side) of the alcove; the back is left OPEN as a stair shaft so the ascending flight climbs up out of view (→ Curving Hall West End)"
+    },
+    {
+      "name": "south alcove ladder shaft (open duct up)",
+      "box": [
+        1,
+        2.6,
+        1.2
+      ],
+      "at": [
+        -1.5,
+        8,
+        9.6
+      ],
+      "role": "opening",
+      "detail": "OPEN vertical duct/shaft in the ceiling above the ladder — the ladder climbs up through it and out of sight; render as a dark open shaft, NOT a capped ceiling"
     }
   ],
   "cameras": {
@@ -879,28 +1271,28 @@
     "south-alcove": {
       "pos": [
         -0.59,
-        2.82,
+        2.2,
         12.78
       ],
       "look": [
-        -1.13,
-        3.01,
-        6.81
+        -1.19,
+        2.69,
+        6.83
       ],
       "fov": 56
     },
     "north-alcove": {
       "pos": [
-        1.27,
-        3.07,
-        -11.7
+        -0.6,
+        2.4,
+        -10.5
       ],
       "look": [
-        0.41,
-        4.26,
-        -5.88
+        -2,
+        5.2,
+        0
       ],
-      "fov": 48
+      "fov": 58
     }
   },
   "members": [
@@ -910,6 +1302,7 @@
   ],
   "notes": {
     "orrery": "DIM, deeply shadowed chamber — faint light, brass catching low warm highlights, high vault lost in blackness. From the entry the great disk reads as a CLEAN, free-spinning PERFECT CIRCLE turning on its central hub, lifted clear of the floor, caught MID-ROTATION (in motion, NOT a fixed dial/plaque/astrolabe). ALL the gear machinery is tucked BEHIND the disk — render rich gears/shafts glimpsed at the disk's edges, in the gap beneath it, and not breaking the clean circular silhouette. The two sub-wheels stand PROUD of the disk's face and turn FREELY, each carrying its globe around a hub (tan around violet; green around red) — not flat inlays. Blue hub globe fixed at centre. The sub-wheels are SMALL relative to the great disk (do not let them read as a second competing circle). A thin grey RIBBON/cord of soft cloth-like material hangs limp from the dark vault, dangling over the disk's upper edge, out of reach — a soft hanging strip, NOT a rigid pole, axle or strut. Eye-level, pressed back against the entry (east) wall, the disk filling the frame.",
-    "south-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. A runged iron LADDER climbs a shaft against the WEST wall — on the LEFT of the frame. Far across the chamber, in the north alcove, a stone ARCHWAY frames a big ascending STAIRCASE rising up out of sight — small and distant, straight ahead. DIM, deeply shadowed — faint light, brass catching low warm highlights."
+    "south-alcove": "Stand in the small alcove looking through the opening at the SAME great machine turning in the chamber, seen three-quarter from this side; its gearwork visible. A runged iron LADDER climbs a shaft against the WEST wall — on the LEFT of the frame, rising up through an OPEN DUCT in the ceiling (the shaft continues up out of sight) — it does NOT stop short or cap against the ceiling. Far across the chamber, past the edge of the great disk, the opposite (north) alcove's stone ARCHWAY shows only as a small, distant sliver — mostly occluded by the disk, a depth cue, not a subject. DIM, deeply shadowed — faint light, brass catching low warm highlights.",
+    "north-alcove": "Stand in the small curved stone alcove looking SOUTH through the chamber-mouth opening at the SAME great machine turning in the chamber beyond, seen three-quarter from THIS (north) side — the tilted brass disk, fixed central blue island-globe, the silver wheel (violet hub, tan rim) and copper wheel (red hub, green rim) standing proud on its face, gears and shafts turning below. Far beyond, past the edge of the great disk, the opposite (south) alcove opens small and distant across the chamber, an iron ladder climbing its shaft. The alcove you stand in is a curved niche framing the view. The ascending stairs and their archway are BEHIND the viewpoint — do NOT render any stairs, steps or archway. DIM, deeply shadowed — faint light, brass catching low warm highlights."
   }
 }

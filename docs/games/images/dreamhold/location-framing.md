@@ -180,15 +180,25 @@ one strong shared register, authored once here:
 - **Alcoves (10g — pull the machine in):** the two small curved alcoves open north and south and *see
   the same machine spinning in the chamber through the opening*. Each alcove view shows the SAME orrery
   (disk + blue hub + silver/copper wheels + the four coloured globes), seen three-quarter from the side.
-- **Exits:** south-alcove has an iron ladder up a shaft (→ Starry Dome North); north-alcove an archway
-  to ascending stairs (→ Curving Hall West End).
-  - **Ladder:** mounted flat against the south alcove's **WEST wall** — i.e. on the viewer's **LEFT**
-    when standing in the alcove looking north out toward the orrery. Reads as a runged iron ladder
-    climbing a shaft.
-  - **Stairs:** a **large** ascending flight (NOT a minimal archway). The two alcoves face each other
-    down the chamber's N–S axis, so the north stairs are seen — small and distant — across the whole
-    chamber from the **south** alcove view, and large up-close from the north alcove view. Model/scale
-    them big enough to read as a real extending staircase at both distances.
+- **Vantage convention (10a + 10g):** each alcove is a pass-through — the chamber-mouth (onto the orrery)
+  on one wall, its own `up` exit on another. **Both members FACE THE ORRERY through the chamber-mouth**
+  (the shared hero, ahead); neither faces its own exit. The two alcoves face each other down the
+  chamber's N–S axis with the disk between them.
+- **Exits (10d) — each alcove's own exit, by wall:**
+  - **south-alcove `up` = iron ladder up a shaft (→ Starry Dome North):** on the alcove's **WEST (side)
+    wall** — i.e. the viewer's **LEFT** when facing north at the orrery. Not the subject, but on a SIDE
+    wall so it reads INCIDENTALLY: show it small on the left, a runged iron ladder climbing a shaft up
+    out of frame. (10g incidental-own-exit, not screened — it's a side wall, not behind.)
+  - **north-alcove `up` = archway + ascending stairs (→ Curving Hall West End):** on the alcove's **NORTH
+    wall — directly BEHIND the camera** when facing south at the orrery → **SCREEN it** (do NOT describe
+    the archway/stairs; a behind-camera feature named in prose floats into the frame). This is the
+    asymmetry with the ladder: the ladder is on a side wall (showable), the stairs are on the opposite
+    wall (behind → screened). NOT shown large up-close — that was the trashed stairs-facing framing.
+- **Cross-member visibility (10g):** the disk **nearly fills the room**, so each alcove's view of the FAR
+  opposite alcove across the chamber is LARGELY OCCLUDED by the disk. Record only a **small, distant
+  sliver** of the far opening past the disk's edge, symmetric on both: from north-alcove a sliver of the
+  far south alcove's mouth/ladder; from south-alcove a sliver of the far north alcove's archway. A depth
+  cue past the disk's edge — never a second subject.
 
 ---
 
@@ -504,17 +514,20 @@ one strong shared register, authored once here:
   the sky/light change. Render the red racing sky as the dominant note.
 
 ### south-alcove  — member: Orrery
-- **Vantage (10a, facing pinned):** facing the orrery through the chamber-mouth (the signature feature),
-  the SUBJECT ahead — mirror of `north-alcove`, viewing the SAME machine three-quarter from the opposite
-  side. Standing in the small alcove looking back into the great chamber.
-- **Exits (10d) — SCREEN the ladder.** The `up` exit is a plain iron ladder rising a shaft, but it sits
-  **behind the camera** (verified against the blockout geometry — ladder at z≈9.6, camera z=8.4 facing
-  −z; the ladder projects behind the view plane), so it is NOT in frame. Drop it from the scene AND the
-  vantage note — do not describe it ("overhead" reads plausible but is geometrically false here, and a
-  behind-camera feature named in prose floats into the image). Same resolution as `north-alcove`.
-- **Shared volume (10g):** the orrery seen through the opening — full component set: tilted brass disk,
+- **Vantage (10a, facing pinned):** `defaultFacing` is undefined (entered by `down` from Starry Dome), so
+  face the SHARED HERO — standing in the small curved alcove looking **NORTH** through the chamber-mouth
+  at the orrery in the chamber beyond, seen three-quarter from this (south) side. The alcove is a curved
+  niche framing the view.
+- **Facing→frame (10b, facing north):** E=right, W=left, S=behind. Ahead = the orrery through the mouth;
+  the ladder = LEFT (west wall); the alcove's own exit shaft rises out of frame overhead-left.
+- **Exits (10d) — SHOW the ladder incidentally (left).** The `up` ladder is on the alcove's WEST wall,
+  the viewer's LEFT — a SIDE wall, so it is in frame (not behind): a small runged iron ladder climbing a
+  shaft up out of the top of the frame. Incidental, not the subject (10g). No other openings.
+- **Shared volume (10g):** the orrery seen through the mouth — full component set: tilted brass disk,
   fixed central **blue** island-globe, **silver wheel** (violet hub + tan rim) and **copper wheel** (red
   hub + green rim), gears/shafts below. Not a generic gear-wheel.
+- **Cross-member (10g):** the far **north alcove's archway** shows only as a small, distant sliver past
+  the disk's edge — mostly occluded by the disk. A depth cue, not a subject.
 
 ### orrery  — member: Orrery (ANCHOR)
 - **Vantage (10a):** standing on the six-sided chamber's floor, the **vast machine** filling the frame
@@ -536,17 +549,22 @@ one strong shared register, authored once here:
 
 ### north-alcove  — member: Orrery
 - **Vantage (10a, facing pinned):** facing **SOUTH** — a departure from `defaultFacing` (north) for the
-  stated reason that the signature feature is the **orrery seen through the chamber-mouth**, not the
-  bare alcove wall. Standing in the small alcove looking back through the south opening into the great
-  chamber; the orrery is the SUBJECT, ahead.
-- **Facing→frame (10b) + Exits (10d) — the pass-through pin:** this alcove has openings on OPPOSING
-  walls; the camera faces one. **Orrery (south, through the chamber-mouth) = AHEAD.** The **archway +
-  ascending stairs (the `up` exit, north) is BEHIND the camera → SCREEN it** (out of frame entirely; do
-  NOT describe it — a behind-camera feature named in prose floats into the image). No other openings.
-- **Shared volume (10g):** the orrery seen through the opening is the SAME machine, three-quarter from
-  THIS side (mirror of south-alcove, which views it from the opposite side): tilted brass disk, fixed
-  central **blue** island-globe, **silver wheel** (violet hub + tan rim) and **copper wheel** (red hub +
-  green rim), gears/shafts below. Carry the full component set — not a generic gear-wheel.
+  stated reason that the signature feature is the **orrery seen through the chamber-mouth**, not the bare
+  alcove wall (10g: every member faces the shared hero). Standing in the small curved alcove looking back
+  through the south opening at the orrery in the great chamber; the orrery is the SUBJECT, ahead.
+- **Facing→frame (10b, facing south):** E=left, W=right, N=behind. Ahead = the orrery through the mouth;
+  the archway + stairs = directly behind.
+- **Exits (10d) — the pass-through pin, SCREEN the stairs.** Openings on OPPOSING walls; the camera faces
+  the chamber-mouth. **Orrery (south) = AHEAD.** The **archway + ascending stairs (`up`, north) is
+  directly BEHIND the camera → SCREEN it** (out of frame entirely; do NOT describe it — a behind-camera
+  feature named in prose floats into the image). This is the opposite-wall case (unlike south-alcove's
+  ladder, which is on a SIDE wall and so shows on the left). No other openings.
+- **Shared volume (10g):** the orrery seen through the mouth is the SAME machine, three-quarter from THIS
+  (north) side (mirror of south-alcove): tilted brass disk, fixed central **blue** island-globe, **silver
+  wheel** (violet hub + tan rim) and **copper wheel** (red hub + green rim), gears/shafts below. Carry the
+  full component set — not a generic gear-wheel.
+- **Cross-member (10g):** the far **south alcove's mouth/ladder** shows only as a small, distant sliver
+  past the disk's edge — mostly occluded by the disk. A depth cue, not a subject.
 - **Persistence:** DROP the pale gauzy rag at the alcove's edge (takeable).
 
 ### curving-hall-west-end

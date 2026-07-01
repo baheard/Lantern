@@ -117,6 +117,8 @@
 <div id="bar">
   <span id="modeToggle"><button data-m="blockout" class="on" title="3D viewport + scene/notes">📦 Blockout</button><button data-m="image" title="Result, gallery + shot note">🖼 Image</button></span>
   <span id="views"></span>
+  <label id="ambWrap" title="Clay brightness — the generator imports this as the scene's mood. Lower = darker, moodier render; also keeps walls reading solid. Saved per room.">☀<input type="range" id="amb" min="0.12" max="1.30" step="0.04" value="0.6" style="width:90px;vertical-align:middle"></label>
+  <label id="ndWrap" title="Foreground depth — darkens geometry CLOSE to the camera toward silhouette (fog inverted). Whatever's nearest the lens reads as a deep-shadow foreground frame. View-correct automatically. Saved per room.">🌑<input type="range" id="nd" min="0" max="1" step="0.05" value="0" style="width:90px;vertical-align:middle"></label>
   <button id="upd" title="Save the current camera as this room’s vantage" style="display:none">✓ Update vantage</button>
   <button id="addblk" title="Drop a 1×1×1 block in front of the camera, then edit it" style="display:none">➕ Add block</button>
   <button id="saveAll" title="Save all pending block changes to the scene" style="display:none" disabled>💾 Save all</button>
@@ -197,8 +199,17 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 // --- SSAO postprocessing: contact-shadow seams where two blocks meet -----------------
 // (gives the block-intersection lines EdgesGeometry can't). Falls back to plain render if
 // the postprocessing modules failed to load, so a CDN miss can never break the viewer.
+// FLAT clay mode (2026-06-30): the restyle is a 2D model that imports whatever lighting the clay
+// shows — SSAO darkening + the directional key were being read as the SCENE's real lighting (visible
+// as arbitrary shadow in the restyle). Flat mode forgoes ALL lighting/shadows so lighting is fully
+// delegated to the generator/prompt; the clay carries ONLY structure (region colours + black voids).
+// Trade-off: with no shading, same-value planes merge, so role colours must carry the structure —
+// see ROLE_COLORS value-separation below. Flip to false to restore the lit/SSAO clay.
+const FLAT = true;
+const CLAY_BLUR = 3;   // px of blur applied to the captured clay (0 = off) — softens hard cube edges so the model stops tracing facets
 let composer = null, ssaoPass = null;
 function ensureComposer(w, h) {
+  if (FLAT) return;   // flat mode: no SSAO, plain render
   if (composer || !(THREE.EffectComposer && THREE.SSAOPass && THREE.RenderPass)) return;
   try {
     composer = new THREE.EffectComposer(renderer);
@@ -208,7 +219,48 @@ function ensureComposer(w, h) {
     composer.addPass(ssaoPass);
   } catch (e) { composer = null; ssaoPass = null; console.warn('SSAO unavailable:', e.message); }
 }
-function renderFrame() { if (composer) composer.render(); else renderer.render(scene, camera); }
+function renderFrame() { applyNearDark(); if (composer) composer.render(); else renderer.render(scene, camera); }
+
+// Ambient/brightness knob (FLAT mode): ONE slider the generator reads as scene mood — it imports the
+// clay's overall luminance, so darker clay → darker, moodier render AND walls hold as solid (bright
+// flat walls were being misread as openings). Hemisphere tracks ambient at a fixed ratio to stay one
+// control. Persisted per game+volume so each room's authored brightness round-trips across reloads.
+let _ambient = null, _hemi = null;
+const AMB_KEY = `blockout-amb:${G}:${VOL}`;
+const AMB_DEFAULT = 0.6;
+function applyAmbient(v) {
+  if (_ambient) _ambient.intensity = v;
+  if (_hemi) _hemi.intensity = v * 0.65;
+  renderFrame();
+}
+
+// Near-darkening = fog INVERTED (FLAT mode): geometry CLOSE to the camera is tinted toward black so it
+// reads as a deep-shadow FOREGROUND silhouette; far geometry keeps its true role colour. Computed from
+// live camera distance each frame, so it is automatically view-correct — the same part is dark when you
+// stand next to it and normal-coloured from across the room. The model imports the clay's luminance, so
+// a dark near-frame in the clay → a dark near-frame in the render. One slider ("foreground depth").
+let _nearStrength = 0;
+const NEARDARK_KEY = `blockout-near:${G}:${VOL}`;
+const _ndTmp = new THREE.Vector3(), _ndView = new THREE.Vector3(), _ndBlack = new THREE.Color(0x000000);
+const ND_REACH_MAX = 18;   // at slider=1, darkening fades out this many units DEEP into the scene
+const ND_MAX_DARK = 0.85;  // cap so the near frame stays a deep shadow, not pure black (still readable)
+function applyNearDark() {
+  if (!worldGroup) return;
+  const off = !FLAT || _nearStrength <= 0;
+  camera.getWorldDirection(_ndView);                 // normalised view axis
+  const reach = _nearStrength * ND_REACH_MAX;
+  worldGroup.traverse((m) => {
+    if (!m.isMesh || !m.userData.baseColor) return;
+    if (off) { m.material.color.copy(m.userData.baseColor); return; }
+    // DEPTH along the view axis (not euclidean) — the whole doorway plane shares one depth, so jambs
+    // AND lintel darken together even though the lintel is higher/farther on the diagonal.
+    m.getWorldPosition(_ndTmp).sub(camera.position);
+    const depth = Math.max(0, _ndTmp.dot(_ndView));
+    let t = (reach - depth) / reach;                  // 1 at the lens, 0 at the reach depth
+    t = Math.max(0, Math.min(1, t));
+    m.material.color.copy(m.userData.baseColor).lerp(_ndBlack, t * ND_MAX_DARK);
+  });
+}
 
 // Wall surface INDICATOR (2026-06-30): a flat coloured wall plane gives the restyle no surface cue,
 // so a distant/recessed wall reads as an opening. This adds a very faint, NEUTRAL fine hatch — JUST
@@ -238,7 +290,12 @@ const clay = (hex, role) => {
 };
 // Semantic colour-coding so the blockout reads as a segmentation map (model + human can tell
 // stage from seats from boxes). MUST match ROLE_LEGEND in review-server.cjs.
-const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0aa', ceiling: '#c2c2c2', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#161318', floor: '#9c9c9c', dome: '#cdd0da', rock: '#7a7066', valley: '#6f8f5a', machine: '#b0863a', ladder: '#5a5a62', steps: '#9a948a', opening: '#161318' };
+// MUTED, PLAUSIBLE material tones (2026-06-30). This 2D model COPIES the clay surface literally (no
+// segmentation channel), so bold label-colours bleed straight into the render as wrong-coloured
+// materials. The fix: tones close to the real material, so any bleed-through is already roughly right
+// (stone-grey walls → grey stone; brass machine → brass). Roles stay distinguishable by gentle value/
+// warmth + the legend (ROLE_LEGEND in core.cjs — keep WORDS in sync). Voids are near-black (a passage).
+const ROLE_COLORS = { stage: '#c9a86a', seat: '#8c3a3a', wall: '#9aa0a8', ceiling: '#c0c2c8', balcony: '#6a5a8a', pit: '#5a4a3a', door: '#6f6f40', curtain: '#7a2030', chandelier: '#d9cf9a', rail: '#a87b3a', brick: '#9c5440', hole: '#0a0a0c', floor: '#8f877a', dome: '#cdd0da', rock: '#7a7066', valley: '#6f8f5a', machine: '#b0863a', ladder: '#5c606a', steps: '#a39a8c', framefg: '#14110e', opening: '#0a0a0c' };
 const roleColor = (p, inherit) => ROLE_COLORS[p.role || inherit] || p.color;
 const setMsg = (t) => { document.getElementById('msg').textContent = t || ''; };
 const imgUrl = (file) => `/img/blockout?game=${encodeURIComponent(G)}&volume=${encodeURIComponent(VOL)}&f=${encodeURIComponent(file)}`;
@@ -247,7 +304,8 @@ function fail(msg) { const e = document.getElementById('err'); e.style.display =
 function mesh(geom, at, color, tag, role) {
   const m = new THREE.Mesh(geom, clay(color, role));
   if (at) m.position.set(at[0], at[1], at[2]);
-  m.castShadow = true; m.receiveShadow = true;
+  m.userData.baseColor = m.material.color.clone();   // for near-dark restore (distance darkening)
+  m.castShadow = !FLAT; m.receiveShadow = !FLAT;
   if (tag) m.userData.part = tag;   // source scene-def part, for click-to-inspect
   // Dark edge lines so corners read clearly (cel-shaded look) — helps the human and the model see structure.
   m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 20), new THREE.LineBasicMaterial({ color: 0x141414 })));
@@ -316,6 +374,7 @@ function applyPartToMesh(m, p) {
   if (p.at) m.position.set(p.at[0], p.at[1], p.at[2]);
   orient(m, p);
   m.material.color.set(roleColor(p, null) || '#b0b0b0');
+  m.userData.baseColor = m.material.color.clone();   // keep near-dark's restore colour in sync with edits
 }
 
 let selPart = null, selName = null, editMesh = null;
@@ -482,10 +541,20 @@ function inspectAt(clientX, clientY) {
   highlight(hit.object); showPick(hit.object.userData.part, hit.object);
 }
 function addLights() {
-  // Flatter clay lighting (2026-06-30): walls were sinking into shadow toward the near-black
-  // `opening` colour, so the restyle misread distant/recessed walls as openings. Lifted ambient +
-  // hemisphere and dropped the key (incl. cast-shadow intensity) so wall surfaces hold their
-  // assigned cool-grey at any distance. Soft modelling stays via the weak key + SSAO seams.
+  if (FLAT) {
+    // Shadowless: even skylight only — NO directional key, NO cast shadows, NO SSAO. Every face shows
+    // its true role colour with at most a gentle top/bottom gradient (hemisphere) for minimal form.
+    // All real lighting/mood is delegated to the generator prompt. Drop the hemisphere too for a
+    // perfectly flat segmentation look if even the vertical gradient reads as scene light.
+    _hemi = new THREE.HemisphereLight(0xffffff, 0xc8c8cc, 0.55); scene.add(_hemi);
+    _ambient = new THREE.AmbientLight(0xffffff, AMB_DEFAULT); scene.add(_ambient);
+    const stored = parseFloat(localStorage.getItem(AMB_KEY));
+    applyAmbient(!isNaN(stored) ? stored : AMB_DEFAULT);
+    return;
+  }
+  // Lit clay (legacy): walls were sinking into shadow toward the near-black `opening` colour, so the
+  // restyle misread distant/recessed walls as openings. Lifted ambient + hemisphere and dropped the
+  // key so wall surfaces hold their cool-grey at any distance. Soft modelling via the weak key + SSAO.
   scene.add(new THREE.HemisphereLight(0xffffff, 0x6e6e76, 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 0.22); key.position.set(7, 16, 9); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 90 }); key.shadow.bias = -0.0006; scene.add(key);
@@ -616,15 +685,33 @@ async function refineImage() {
   } catch (e) { setMsg('⚠ refine: ' + e.message); }
   finally { genInFlight--; }
 }
+// Soften the captured clay so the 2D model stops tracing crisp cube facets / hard lines: a light blur
+// removes the high-frequency edge detail it copies while keeping the low-frequency structure (region
+// layout, where things are). This is the direct fix for "follows the geometry too precisely → hard
+// edges / cubes / lines". Viewport stays sharp; only the image SENT to the generator is softened.
+let _blurCanvas = null;
+function blurClay(src, px) {
+  if (!px) return src.toDataURL('image/png');
+  if (!_blurCanvas) _blurCanvas = document.createElement('canvas');
+  _blurCanvas.width = src.width; _blurCanvas.height = src.height;
+  const cx = _blurCanvas.getContext('2d');
+  cx.filter = `blur(${px}px)`; cx.drawImage(src, 0, 0); cx.filter = 'none';
+  return _blurCanvas.toDataURL('image/png');
+}
 function captureClay() {
   const shellSaved = shellGroup ? shellGroup.children.map((c) => c.visible) : null;   // clay always keeps ALL walls
   if (shellGroup) shellGroup.children.forEach((c) => { c.visible = true; });
   const gv = gizmo && gizmo.visible; if (gizmo) gizmo.visible = false;                                 // no gizmo in the render
   const pe = pickedMesh; if (pe) pe.material.emissive.setHex(pickedEmissive);                          // no selection tint either
+  // Hide the dark edge outlines for the CAPTURE only — this is a 2D model that copies the clay surface
+  // literally, so visible edge lines bleed through as random dark seams/contours in the generation.
+  // They stay on in the viewport (they help while editing); we just strip them from what's sent.
+  const edgesHidden = []; if (worldGroup) worldGroup.traverse((o) => { if (o.isLineSegments && o.visible) { edgesHidden.push(o); o.visible = false; } });
   renderer.setSize(CW, CH, false); camera.aspect = CW / CH; camera.updateProjectionMatrix();
   ensureComposer(CW, CH); if (composer) { composer.setSize(CW, CH); ssaoPass.setSize(CW, CH); }
   renderFrame();
-  const url = canvas.toDataURL('image/png');
+  const url = blurClay(canvas, CLAY_BLUR);
+  edgesHidden.forEach((o) => { o.visible = true; });
   if (shellGroup && shellSaved) shellGroup.children.forEach((c, i) => { c.visible = shellSaved[i]; }); if (gizmo && gv) gizmo.visible = true; if (pe) pe.material.emissive.setHex(0x2c5a2c);
   sizeToViewport(); return url;
 }
@@ -730,11 +817,27 @@ async function boot() {
   if (!srcUrl) return fail('No scene. Use ?game=&volume= or ?src=.');
   let def; try { const res = await fetch(srcUrl); if (!res.ok) throw new Error('HTTP ' + res.status); def = await res.json(); } catch (e) { return fail('Could not load scene: ' + srcUrl + '\n' + e.message); }
   scene.background = new THREE.Color(def.background || '#9a9a9a');
-  if (def.fog) scene.fog = new THREE.Fog(new THREE.Color(def.background || '#9a9a9a'), def.fog.near, def.fog.far);
+  // Fog OFF in flat mode: it washes the role-colour code toward the background grey at distance,
+  // making colours converge AND distant/recessed walls fade to a hazy mid-grey that reads as OPEN
+  // space. Flat mode relies on crisp distinct colours instead; foreground depth comes from the
+  // framefg silhouette role, not atmospheric haze. Keep fog only for the legacy lit path.
+  if (def.fog && !FLAT) scene.fog = new THREE.Fog(new THREE.Color(def.background || '#9a9a9a'), def.fog.near, def.fog.far);
   document.title = (def.title || def.volume || 'Blockout') + ' — blockout';
   const world = new THREE.Group(); worldGroup = world; shellGroup = new THREE.Group(); world.add(shellGroup);
   for (const p of (def.parts || [])) buildPart(p, p.shell ? shellGroup : world);
   scene.add(world); addLights();
+  const ambEl = document.getElementById('amb');
+  if (ambEl) {
+    const stored = parseFloat(localStorage.getItem(AMB_KEY));
+    if (!isNaN(stored)) ambEl.value = stored;
+    ambEl.oninput = () => { const v = parseFloat(ambEl.value); applyAmbient(v); localStorage.setItem(AMB_KEY, String(v)); };
+  }
+  const ndEl = document.getElementById('nd');
+  if (ndEl) {
+    const storedNd = parseFloat(localStorage.getItem(NEARDARK_KEY));
+    if (!isNaN(storedNd)) { ndEl.value = storedNd; _nearStrength = storedNd; }
+    ndEl.oninput = () => { _nearStrength = parseFloat(ndEl.value); localStorage.setItem(NEARDARK_KEY, String(_nearStrength)); renderFrame(); };
+  }
   bounds = new THREE.Box3().setFromObject(world);   // hide shell when camera leaves this
 
   CAMERAS = def.cameras || {}; const names = Object.keys(CAMERAS); if (!names.length) return fail('Scene has no cameras.');
