@@ -76,6 +76,13 @@ a new kind of mass, add the role to BOTH `ROLE_COLORS` (renderer.html) and `ROLE
 (tools/artview/lib/core.cjs) — they must stay in sync** — rather than leaning on a one-off
 `color`. A role with no legend entry renders as a coloured blob the model can't name.
 
+**The legend is SCOPED PER VANTAGE by the scene text.** A discrete *feature* role's legend line
+(`opening/ladder/steps/hole/door/…`) is emitted for a shot ONLY if that vantage's scene prose
+(`style.json` scenes[view]) names the feature; environment/surface roles always list. So if a feature
+is genuinely in a member's frame, its scene MUST name it — otherwise its legend line is dropped and the
+model gets no hint what the clay blob is. (Conversely, a feature only on another member's flank stops
+leaking into this one — the catwalk "doorway on every vantage" bug.) Rationale: `.tome/blockout-3d-continuity.md`.
+
 **Probe moving/multi-part MECHANISMS empirically.** If a volume centres on a machine or linked
 mechanism (the orrery disk + wheels + globes, a lever-driven contraption), the framing only
 *summarises* it — drive `tools/play.cjs` to that room and `examine` each component over a few

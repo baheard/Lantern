@@ -230,7 +230,12 @@ async function selectTopic(t, wantItem){
   if(target) await openItem(target); else { $('#detail').innerHTML='<p class="none">Nothing here yet.</p>'; saveNav(); pushHist(); }
 }
 function items(){
-  if(isGame(topic)) return (GAMES[curGame]||[]).map(l=>({id:l.slug,name:l.name,mark:l.committed?'●':(l.candidates.length?'○':'·'),has:!!l.committed,count:l.candidates.length}));
+  if(isGame(topic)){
+    const locs=(GAMES[curGame]||[]);
+    const bulkCount=locs.filter(l=>l.committed).length;
+    return [{id:'__bulk__',name:'Selected Images',mark:'▤',has:bulkCount>0,count:bulkCount}]
+      .concat(locs.map(l=>({id:l.slug,name:l.name,mark:l.committed?'●':(l.candidates.length?'○':'·'),has:!!l.committed,count:l.candidates.length})));
+  }
   if(topic==='placeholders') return (GLYPHS.glyphs||[]).map(g=>({id:g.id,name:g.id,mark:g.id===GLYPHS.selected?'●':'·',has:g.id===GLYPHS.selected}));
   // Audition / Sandbox are per-game → the item list is the games (pick one to work on).
   if(topic==='audition'||topic==='sandbox') return (STATE.games||[]).map(g=>({id:g,name:g,mark:'·',has:false}));
@@ -250,7 +255,7 @@ let itemFilter='';
 function renderItems(){
   const il=$('#itemlist');
   const q=itemFilter.trim().toLowerCase();
-  const list=q?items().filter(it=>it.header||(it.name||'').toLowerCase().includes(q)):items();
+  const list=q?items().filter(it=>it.header||it.id==='__bulk__'||(it.name||'').toLowerCase().includes(q)):items();
   il.innerHTML=list.map(it=>it.header
     ?'<div style="padding:10px 10px 2px;font-size:11px;color:#8a8398;text-transform:uppercase;letter-spacing:.06em">'+esc(it.name)+'</div>'
     :'<div class="item'+(it.id===curItem?' active':'')+'" data-id="'+it.id+'"><span>'+esc(it.name)+'</span>'+
@@ -267,7 +272,8 @@ let curTitleArtist=null, curTitleArtists=null, curHeroPrompt='';
 async function openItem(id){ curItem=id; renderItems(); saveNav();
   if(topic==='titles'){ await detailTitle(id); pushHist(); return; }
   curTitleAspect=null; curTitleArtist=null; curTitleArtists=null;
-  if(isGame(topic)) await detailLocation((GAMES[curGame]||[]).find(l=>l.slug===id));
+  if(isGame(topic)&&id==='__bulk__') detailBulk();
+  else if(isGame(topic)) await detailLocation((GAMES[curGame]||[]).find(l=>l.slug===id));
   else if(topic==='placeholders') detailGlyph((GLYPHS.glyphs||[]).find(g=>g.id===id));
   else if(topic==='audition') await detailAudition(id);
   else if(topic==='sandbox') await detailSandbox(id);
@@ -289,6 +295,69 @@ function detailBlockout(id){
 }
 function noteSection(key){return '<div class="sec"><label class="ed">Notes / feedback</label><textarea class="edit" id="inote" placeholder="What you think — usually means: regen. (Claude reads these to tune the artist.)">'+esc(noteVal(key))+'</textarea></div>';}
 function wireNote(key){const n=$('#inote');if(n)n.onblur=()=>saveNote(key,n.value);}
+
+// "Selected Images" — a synthetic pinned nav item (id '__bulk__') showing every committed
+// in-game image for the current game as a shift-click multi-select grid, with bulk Demote/Delete
+// acting on the selection. Both bulk actions call the SAME /api/demote-bulk (→ core's demote()) —
+// non-destructive, moves each <slug>.png to _demoted/ and unpublishes it; "Delete" is just a
+// stronger-worded confirm on the identical safe action (see .tome note on why: never rm, always move).
+let bulkSel=new Set(), bulkLastIdx=null, bulkGame=null;
+function bulkList(){
+  return (GAMES[curGame]||[]).filter(l=>l.committed).slice()
+    .sort((a,b)=>(a.name||a.slug).localeCompare(b.name||b.slug));
+}
+function detailBulk(){
+  curLoc=null; sel=null;
+  if(bulkGame!==curGame){ bulkSel=new Set(); bulkLastIdx=null; bulkGame=curGame; }
+  const list=bulkList();
+  const cells=list.map((l,i)=>{
+    const on=bulkSel.has(l.slug);
+    return '<div class="cand bulkcell'+(on?' msel':'')+'" data-slug="'+esc(l.slug)+'" data-i="'+i+'" title="'+esc(l.name)+'">'+
+      '<img src="/img/committed?game='+encodeURIComponent(curGame)+'&f='+encodeURIComponent(l.committed)+'&v='+ver+'">'+
+      '<div class="cap"><span class="meta">'+esc(l.name)+'</span></div></div>';
+  }).join('');
+  const count=bulkSel.size;
+  $('#detail').innerHTML='<div class="loc-wrap" style="flex-direction:column;height:100%;overflow:auto"><div class="loc-left" style="max-width:none">'+
+    '<h1>Selected Images</h1><div class="sub">'+list.length+' committed image(s) in '+esc(curGame)+'</div>'+
+    '<div class="btns">'+
+      '<button id="bulkAll">Select all</button>'+
+      '<button id="bulkNone">Clear</button>'+
+      '<span id="bulkCount" style="margin-left:8px;color:#8a8398">'+count+' selected</span>'+
+      '<button id="bulkDemote" style="margin-left:auto" '+(count?'':'disabled')+' title="Un-publish the selected images and unlock them for re-rendering (moved to _demoted/, not deleted)">▽ Bulk Demote</button>'+
+      '<button class="danger" id="bulkDelete" '+(count?'':'disabled')+' title="Remove the selected images from the game (moved to _demoted/, not deleted)">🗑 Bulk Delete</button>'+
+    '</div>'+
+    '<div class="cands">'+(cells||'<span class="none">No committed images yet.</span>')+'</div>'+
+    '</div></div>';
+  document.querySelectorAll('.bulkcell').forEach(c=>{
+    c.onclick=(e)=>{
+      const i=+c.dataset.i, slug=c.dataset.slug;
+      if(e.shiftKey && bulkLastIdx!=null){
+        const lo=Math.min(bulkLastIdx,i), hi=Math.max(bulkLastIdx,i);
+        for(let k=lo;k<=hi;k++) bulkSel.add(list[k].slug);
+      } else {
+        if(bulkSel.has(slug)) bulkSel.delete(slug); else bulkSel.add(slug);
+        bulkLastIdx=i;
+      }
+      detailBulk();
+    };
+  });
+  $('#bulkAll').onclick=()=>{ list.forEach(l=>bulkSel.add(l.slug)); detailBulk(); };
+  $('#bulkNone').onclick=()=>{ bulkSel.clear(); bulkLastIdx=null; detailBulk(); };
+  $('#bulkDemote').onclick=()=>bulkAct('demote');
+  $('#bulkDelete').onclick=()=>bulkAct('delete');
+  afterDetailRender();
+}
+async function bulkAct(kind){
+  const slugs=[...bulkSel]; if(!slugs.length) return;
+  const word=kind==='delete'?'Delete':'Demote';
+  if(!confirm(word+' '+slugs.length+' image(s)?\n\nUn-publishes them and unlocks them for re-rendering. The current images are moved to _demoted/, not deleted.')) return;
+  const r=await (await postJSON('/api/demote-bulk',{game:curGame,slugs})).json();
+  if(r.ok){
+    toast(word+'d '+slugs.length+' image(s)');
+    bulkSel.clear(); bulkLastIdx=null; ver++;
+    await loadGame(curGame); renderItems(); openItem('__bulk__');
+  } else toast('Error: '+(r.error||'failed'));
+}
 
 let curLoc=null, curArtist=null, artSel=null, AUD=null, audLBList=[], audGrid=[], audFinalistsOnly=false;
 // Candidate-strip sort (persists across re-renders). 'date' = newest first; 'model' groups by
@@ -335,6 +404,7 @@ function detailLocation(l){
     '<div class="btns"><button id="bSetTitle" '+(l.committed?'':'disabled')+' title="Make this LOCATION the game\'s cover (shown on the home game card). Tracks the location\'s current image — re-rendering it updates the cover automatically.">★ Set as title</button>'+
       '<button id="bSandbox" title="Open the Sandbox pre-loaded with this location\'s layers to play freely">⚗ Sandbox!</button>'+boBtn+
       '<button class="primary" id="bProm" '+(sel?'':'disabled')+'>Promote → in game</button>'+
+      '<button id="bDemote" '+(l.committed?'':'disabled')+' title="Un-publish this room\'s committed in-game image and unlock it for re-rendering (the old image is moved to _demoted/, not deleted)">▽ Demote</button>'+
       '<button class="danger" id="bRej" '+(sel?'':'disabled')+'>Delete selected</button>'+
       '<span class="segmode" id="regenSeg" title="How the selected image\'s note feeds Generate">'+
         '<button data-rm="clean" title="Composed prompt only — ignores the note">Clean</button>'+
@@ -388,6 +458,7 @@ function detailLocation(l){
   document.querySelectorAll('#detail .cand').forEach(c=>c.onclick=()=>selectCand(c.dataset.f));
   document.querySelectorAll('#detail .zoom').forEach(b=>b.onclick=(e)=>{e.stopPropagation();openLB(b.dataset.zoom);});
   $('#bProm').onclick=()=>act('/api/promote',{game:curGame,slug:l.slug,candidate:sel},'Promoted '+sel);
+  { const bd=$('#bDemote'); if(bd) bd.onclick=()=>{ if(!l.committed) return; if(!confirm('Demote "'+l.name+'"?\n\nUn-publishes its in-game image (moved to _demoted/, not deleted) and unlocks it for re-rendering.')) return; act('/api/demote',{game:curGame,slug:l.slug},'Demoted '+l.name+' — unlocked'); }; }
   $('#bRej').onclick=()=>rejectSelected();
   { const bt=$('#bSetTitle'); if(bt) bt.onclick=()=>{ if(!l.committed) return; act('/api/set-title',{game:curGame,slug:l.slug},'Set '+l.name+' as title for '+curGame); }; }
   const gm=$('#genMode'); if(gm){ gm.value=genMode; gm.onchange=()=>{genMode=gm.value;}; }

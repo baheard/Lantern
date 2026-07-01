@@ -103,7 +103,7 @@ const ROLE_LEGEND = {
   steps: 'the pale stone-grey stacked blocks are STEPS / a flight of stairs — render the real rise, and where the scene curves them, a curving/sweeping flight, NOT a literal faceted zigzag',
   opening: 'the dark recess set into a surface is an OPENING — a round hatch or doorway leading through; render it as a dark hole into shadow, not a solid panel',
   framefg: 'the very dark mass hugging the EDGE of the frame is EXTREME FOREGROUND — a near doorway, arch or pillar you are looking PAST/THROUGH into the scene beyond; render it large, close and deeply shadowed (a framing silhouette in the immediate foreground), NEVER a small or distant element',
-  wall: 'the cool stone-grey planes are SOLID WALLS — the faint surface grid is only a marker that the plane is solid (NOT a material; render the wall in whatever material the scene/artist implies — plaster, stone, panelling, etc.). Even far or dim walls are unbroken solid surfaces, NEVER an opening, doorway or passage; only a part explicitly marked as an opening/hole/door is a way through', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the warm stone-grey ground is the FLOOR',
+  wall: 'the cool stone-grey planes are SOLID WALLS — the faint surface grid is only a marker that the plane is solid (NOT a material; render the wall in whatever material the scene/artist implies — plaster, stone, panelling, etc.). Even far or dim walls are unbroken solid surfaces, NEVER an opening, doorway or passage; only a part explicitly marked as an opening/hole/door is a way through', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the warm-grey ground is the FLOOR — the tone is only a marker, NOT a material; render the floor in whatever material the scene/artist implies (stone, timber, iron grating, tile, earth, etc.), never defaulting to stone when the scene says otherwise',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
   return new Promise((resolve, reject) => {
@@ -124,9 +124,40 @@ function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, fac
     // Append this vantage's saved note (if any) as an Adjustments line — the "notes feed the next render" loop.
     const def = readJSON(path.join(gamePaths(game).blockout, path.basename(volume || '') + '.scene.json'), {});
     const note = (def.notes || {})[view] || '';
-    // Colour legend for the roles actually present in this volume's blockout.
-    const roles = new Set(); (def.parts || []).forEach((p) => { if (p.role) roles.add(p.role); (p.of || []).forEach((s) => { if (s.role) roles.add(s.role); }); });
-    const legendParts = [...roles].filter((r) => ROLE_LEGEND[r]).map((r) => ROLE_LEGEND[r]);
+    // Colour legend, SCOPED TO THIS VANTAGE. A legend line like "the dark recess is an OPENING — render
+    // it as a dark hole" is an IMPERATIVE the model obeys even when that feature isn't in this shot's
+    // clay — so a single south-flank opening painted a phantom doorway onto every catwalk vantage. The
+    // robust fix is OMISSION, not a conditional ("if present…" doesn't work — image models paint the
+    // words). We decide what to omit from the per-vantage SCENE, which /frame + /scene already scoped
+    // correctly: a discrete FEATURE role's legend line is included only if that vantage's scene prose
+    // actually names the feature. Pervasive ENVIRONMENT/surface roles always list — they disambiguate
+    // the gridded clay ("this grey plane is a solid wall, NOT an opening"), which is load-bearing
+    // regardless of what's in frame. (Replaces an earlier camera-frustum test — same goal, but the
+    // scene is a more trustworthy, less fragile signal than approximate geometry.)
+    const effScene = (((typeof sceneOverride === 'string' && sceneOverride.trim()) ? sceneOverride : sceneForRoom(game, view)) || '').toLowerCase();
+    const ALWAYS_ON = new Set(['floor', 'ceiling', 'wall', 'dome', 'rock', 'valley']);
+    // Feature role → words whose presence in the scene means "this feature is in THIS shot". A role with
+    // no entry here is never gated (safe default — include it).
+    const FEATURE_WORDS = {
+      opening: ['opening', 'hatch', 'doorway', 'aperture', 'porthole', 'duct', 'mouth'],
+      ladder: ['ladder', 'rung'],
+      steps: ['stair', 'step', 'flight'],
+      hole: ['hole', 'breach', 'smashed', 'busted', 'broken through'],
+      door: ['door', 'doorway'],
+      curtain: ['curtain'],
+      chandelier: ['chandelier'],
+      brick: ['brick'],
+      rail: ['rail', 'balustrade', 'banister'],
+      pit: ['pit'],
+      balcony: ['balcony', 'box'],
+      seat: ['seat', 'pew', 'bench'],
+      stage: ['stage', 'proscenium'],
+      framefg: ['foreground', 'archway', 'pillar', 'past', 'through'],
+    };
+    const roleInScene = (r) => { const w = FEATURE_WORDS[r]; return !w || w.some((k) => effScene.includes(k)); };
+    const roles = new Set();
+    (def.parts || []).forEach((p) => { if (p.role) roles.add(p.role); (p.of || []).forEach((s) => { if (s.role) roles.add(s.role); }); });
+    const legendParts = [...roles].filter((r) => ROLE_LEGEND[r] && (ALWAYS_ON.has(r) || roleInScene(r))).map((r) => ROLE_LEGEND[r]);
     const legend = legendParts.length ? ('Blockout colour legend — render each coloured region as what it denotes: ' + legendParts.join('; ') + '. ') : '';
     const blocks = [];
     // NOTE: we deliberately do NOT send the camera's compass facing — image models can't map
@@ -522,6 +553,43 @@ function promoteBlockout({ game, volume, view, file }) {
   manifest.images[name] = destFile;
   fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
   return { name, file: destFile };
+}
+// Inverse of promote()/promoteBlockout(): UNPUBLISH a committed room image the user rejects and UNLOCK
+// the room so a batch render can replace it. Non-destructive — the committed <slug>.png is MOVED into
+// <game>/_demoted/ (never deleted, per the "user deletes, not the tool" rule), and its manifest.images
+// entry is removed so the app falls back to no art. Works for both normal rooms and blockout members
+// (a member's `view` IS its slug, so demote is keyed by slug only). Presence in manifest.images is what
+// gen-room-images treats as the promoted-winner LOCK, so removing it re-enables re-rendering.
+function demote({ game, slug }) {
+  const g = gamePaths(game);
+  if (!slug) throw new Error('no slug');
+  const name = ((readJSON(g.pack, { rooms: [] }).rooms.find((r) => r.slug === slug)) || {}).name || slug;
+  const manifest = readJSON(g.manifest, { game, images: {} });
+  manifest.images = manifest.images || {};
+  const wasPublished = Object.prototype.hasOwnProperty.call(manifest.images, name);
+  delete manifest.images[name];
+  fs.writeFileSync(g.manifest, JSON.stringify(manifest, null, 2));
+  let moved = null;
+  const committed = path.join(g.dir, `${slug}.png`);
+  if (fs.existsSync(committed)) {
+    const demDir = path.join(g.dir, '_demoted');
+    fs.mkdirSync(demDir, { recursive: true });
+    let n = 0; const re = new RegExp('^' + slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.demoted-(\\d+)\\.png$');
+    for (const f of fs.readdirSync(demDir)) { const m = f.match(re); if (m) n = Math.max(n, +m[1]); }
+    const dest = path.join(demDir, `${slug}.demoted-${n + 1}.png`);
+    fs.renameSync(committed, dest);
+    moved = path.relative(g.dir, dest);
+  }
+  logLine(`DEMOTE ${game}/${slug}${wasPublished ? '' : ' (was not published)'}${moved ? ' → ' + moved : ''}`);
+  return { name, slug, wasPublished, moved };
+}
+// Bulk demote — the "Selected Images" multi-select Demote/Delete actions both funnel here
+// (same non-destructive move-to-_demoted/ semantics as the single-room demote(); "Delete" is
+// just a stronger-worded confirm on the SAME safe action, per the "never rm, always move" rule).
+function demoteBulk({ game, slugs }) {
+  const list = Array.isArray(slugs) ? slugs : [];
+  const results = list.map((slug) => { try { return demote({ game, slug }); } catch (e) { return { slug, error: e.message }; } });
+  return { results };
 }
 // ---------------------------------------------------------------------------
 // Title images — a top-level "Title Images" rail topic. One title per game (the
@@ -1145,4 +1213,4 @@ function setNoteStatus(key, status, appliedTo, stamp) {
 }
 
 
-module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, blockoutRefine, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationName, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };
+module.exports = { REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, blockoutRefine, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, demote, demoteBulk, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationName, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus };

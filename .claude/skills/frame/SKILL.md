@@ -114,6 +114,25 @@ Review mode grades each. Grouped:
 7. **Shared-landmark consistency.** A feature visible from several rooms (obelisk, lighthouse, a
    portrait on a landing seen from the hall below) is described consistently — pull its content from
    the `landmarks` glossary so every room that sees it renders the same thing.
+   **MATERIAL is part of "the same thing" — carry it into EVERY member, not just the anchor.** A shared
+   feature's material/finish (a *railless IRON catwalk*, a *brass* machine, a *marble* stair) must be
+   stated in every member's scene, or the members render the SAME object in different materials. It's
+   not enough for the Volume header to mention it once — the per-member distillation drops any attribute
+   the framing doesn't pin as must-carry (Dreamhold outer-catwalk 2026-07-01: only the anchor `catwalk-south`
+   said "iron"; west/north/east said just "railless catwalk" and rendered the walkway as stone). Pin the
+   material in the `### Volume` block as a carry-into-every-member attribute, exactly like the full
+   component set of a multi-part machine (factor 1) — material and part-set are the same class of shared
+   attribute. This is distinct from the surface/floor legend, which must stay material-NEUTRAL and defer
+   to whatever the scene states here.
+   **A positive phrase alone under-constrains — state the FINISH and the NEGATIONS.** "iron catwalk" let
+   the model attach iron to just an edge (deck stayed stone) and add rope rails to a "railless" walkway;
+   a "pale dome" grew a gilt ornamental ring on one vantage and a ridge on another. For any shared
+   feature that keeps drifting, author in the `### Volume` block a single explicit description with (a)
+   the concrete finish ("dark riveted iron GRATING underfoot", "smooth plain pale translucent shell")
+   and (b) the negations that stop embellishment ("NO railing, posts or ropes"; "NO ornamental band,
+   ring, moulding or ridge"), and carry it verbatim to every member's scene AND its per-vantage note (the
+   note is appended to every render, so it's the strongest place to hold a negation the scene alone
+   can't). (Dreamhold outer-catwalk 2026-07-01.)
 
 **State — which moment do we paint?**
 8. **Canonical state.** Paint the FIRST normal-exploration state and state it explicitly; never a

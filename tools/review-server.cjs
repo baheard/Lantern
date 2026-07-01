@@ -37,7 +37,7 @@ const port = parseInt((args.find((a) => a.startsWith('--port=')) || '').split('=
 
 // All data + generation logic lives in the core module; the server is transport only.
 const {
-  REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, blockoutRefine, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus
+  REPO, IMAGES_ROOT, notesPath, glyphsDir, glyphSelPath, artistsDir, artistsPath, appDir, appPromptPath, readJSON, listGames, gamePaths, blockoutsFor, composeForRoom, sceneForRoom, blockoutGenDir, blockoutInfo, ROLE_LEGEND, blockoutGen, blockoutRefine, saveBlockoutCamera, saveBlockoutPart, deleteBlockoutGen, saveBlockoutNote, cap, ARTIST_LEAD, candidatesFor, appPrompt, saveAppPrompt, gameStyle, saveStyle, saveScene, saveDescription, artistSignatureFor, saveArtistStyle, saveArtistStyleById, locationsFor, modelTag, nextRegenName, promote, promoteBlockout, demote, demoteBulk, TITLE_HEROES, titleSlot, titleArtistFor, saveTitleArtist, titleCommitted, titleLocationObj, setGameTitle, clearTitle, reject, LOG_RING, LOG_RING_MAX, logLine, JOBS, jobSeq, MAX_CONCURRENT_GENS, _genActive, _genQueue, scheduleGen, jobsList, regen, listGlyphs, selectGlyph, listArtists, createArtist, selectArtist, composedFor, classifyRoom, suggestScenes, listAuditionImages, scanTaggedImages, auditionState, saveAuditionCfg, toggleFinalist, auditionGen, composeInline, sbxRev, sandboxState, sandboxReject, sandboxAdopt, sandboxGen, noteText, noteStatus, saveNote, setNoteStatus
 } = require('./artview/lib/core.cjs');
 
 // --- HTTP -------------------------------------------------------------------
@@ -159,6 +159,8 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/api/blockout-part') return wrap(() => saveBlockoutPart(body));
       if (u.pathname === '/api/blockout-gen-delete') return wrap(() => deleteBlockoutGen(body));
       if (u.pathname === '/api/blockout-promote') return wrap(() => promoteBlockout(body));
+      if (u.pathname === '/api/demote') return wrap(() => demote(body));
+      if (u.pathname === '/api/demote-bulk') return wrap(() => demoteBulk(body));
       if (u.pathname === '/api/blockout-note') return wrap(() => saveBlockoutNote(body));
       if (u.pathname === '/api/blockout-gen') {
         try { const r = await blockoutGen(body); return sendJSON(res, 200, { ok: true, ...r }); }

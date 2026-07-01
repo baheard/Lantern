@@ -134,7 +134,7 @@ function parseArgs(argv) {
     const t = argv[i];
     if (t.startsWith('--')) {
       const key = t.slice(2);
-      const flagsNoVal = ['force', 'regen', 'sandbox'];
+      const flagsNoVal = ['force', 'regen', 'sandbox', 'force-locked'];
       if (flagsNoVal.includes(key)) { a[key] = true; }
       else { a[key] = argv[++i]; }
     } else {
@@ -450,10 +450,23 @@ async function main() {
   }
   const sbxRendered = new Map(); // slug -> sandbox png path rendered THIS run (so a variant can relight off an anchor we just put in the sandbox)
 
+  // Promoted winners are LOCKED against clobbering. A committed image is recorded in manifest.images
+  // (keyed by room NAME), so that presence = "this room's art was chosen." A full batch (no --only)
+  // skips locked rooms even under --force, so "re-render everything" never destroys a hand-picked
+  // winner. Overrides: name the room explicitly via --only (deliberate re-roll of that room), or pass
+  // --force-locked to re-render locked rooms too. Demoting a room (artview) removes it from
+  // manifest.images, which lifts the lock. Sandbox renders never touch committed art, so they ignore it.
+  const promotedNames = new Set(Object.keys((readJSON(path.join(gameDir, 'manifest.json'), { images: {} }).images) || {}));
+  const lockedSlugs = new Set(rooms.filter((r) => promotedNames.has(r.name)).map((r) => r.slug));
+
   const qualNote = provider === 'openai' ? `, ${quality}` : '';
   console.log(`Generating ${rooms.length} image(s) for ${game} → ${toSandbox ? '_sandbox/' : '_review/'}  (${provider}: ${model}, ${aspect}${qualNote})${regen ? ' [regen]' : ''}`);
   let ok = 0, skip = 0, fail = 0;
   for (const room of rooms) {
+    // Locked promoted winner — skip in a full batch unless explicitly targeted or force-unlocked.
+    if (!toSandbox && lockedSlugs.has(room.slug) && !args.only && !args['force-locked']) {
+      console.log(`  lock  ${room.slug} (promoted winner — --only ${room.slug} or --force-locked to re-render)`); skip++; continue;
+    }
     // Sandbox renders are always-new numbered takes (never overwrite, no exists-skip); review
     // renders write the canonical <slug>.png and respect --force/--regen.
     const sbxName = toSandbox ? `sbx-r${++sbxMax}` : null;

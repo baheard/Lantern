@@ -69,6 +69,8 @@
   #imgDel:disabled{opacity:.4;cursor:default}
   #imgProm{float:right;margin-left:10px;font:12px system-ui;font-weight:600;padding:1px 9px;border:1px solid #5ab06a;border-radius:5px;background:#2c5a3a;color:#bdecc8;cursor:pointer}
   #imgProm:disabled{opacity:.4;cursor:default}
+  #imgDemote{float:right;margin-left:10px;font:12px system-ui;padding:1px 7px;border:1px solid #b08a44;border-radius:5px;background:#4a3a1e;color:#ecd6a0;cursor:pointer}
+  #imgDemote:disabled{opacity:.4;cursor:default}
   #imgRefine{float:right;margin-left:10px;font:12px system-ui;font-weight:600;padding:1px 9px;border:1px solid #7a5ec5;border-radius:5px;background:#33285a;color:#cfc0f0;cursor:pointer}
   #imgRefine:disabled{opacity:.4;cursor:default}
   #imgnote{flex:1;min-height:0;width:100%;resize:none;background:#120f18;color:#e8e4ee;border:1px solid #3a3450;border-radius:6px;padding:8px;font:15px system-ui}
@@ -139,7 +141,7 @@
     <div id="gallery"></div>
   </div>
   <div id="colImgNote">
-    <label>Note on the selected shot <button id="imgRefine" title="Regenerate this shot applying the note as a correction — surgical img2img off THIS image (not the clay)" disabled>↻ Refine from note</button><button id="imgProm" title="Promote this shot to the in-game image for this room" disabled>★ Promote → in game</button><button id="imgDel" title="Permanently delete the selected shot" disabled>🗑 Delete</button><label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
+    <label>Note on the selected shot <button id="imgRefine" title="Regenerate this shot applying the note as a correction — surgical img2img off THIS image (not the clay)" disabled>↻ Refine from note</button><button id="imgProm" title="Promote this shot to the in-game image for this room" disabled>★ Promote → in game</button><button id="imgDemote" title="Un-publish this room's committed in-game image and unlock it for re-rendering (the old image is moved to _demoted/, not deleted)" disabled>▽ Demote</button><button id="imgDel" title="Permanently delete the selected shot" disabled>🗑 Delete</button><label class="resolve"><input type="checkbox" id="imgResolve"> Resolve</label></label>
     <textarea id="imgnote" placeholder="What you think of THIS shot (saved to review-notes)"></textarea>
     <label>Actual prompt sent to the model</label>
     <textarea id="actualPrompt" readonly placeholder="(generate a shot to see its prompt)"></textarea>
@@ -629,6 +631,9 @@ function setResult(file) {
   const idel = document.getElementById('imgDel'); if (idel) idel.disabled = !file;
   const iprom = document.getElementById('imgProm'); if (iprom) iprom.disabled = !file;
   const iref = document.getElementById('imgRefine'); if (iref) iref.disabled = !file;
+  // Demote acts on the VANTAGE (un-publishes the committed room image), so it's enabled whenever a
+  // vantage is selected — independent of whether a shot is currently shown.
+  const idem = document.getElementById('imgDemote'); if (idem) idem.disabled = !(liveTool && currentView);
   if (g) { inote.value = g.note || ''; ir.checked = (g.status === 'resolved' || g.status === 'wontfix'); inote.disabled = false; ir.disabled = false; selKey = g.key; ap.value = g.prompt || '(no saved prompt)'; }
   else { inote.value = ''; ir.checked = false; inote.disabled = true; ir.disabled = true; selKey = null; ap.value = ''; }
   saveNav();
@@ -663,6 +668,19 @@ async function promoteImage() {
     const j = await (await fetch('/api/blockout-promote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view, file }) })).json();
     if (!j.ok) throw new Error(j.error || 'failed');
     setMsg('★ promoted → in game (' + (j.name || view) + ')');
+  } catch (e) { setMsg('⚠ ' + e.message); }
+}
+// Demote: un-publish this room's committed in-game image (move it to _demoted/, remove the manifest
+// entry) and lift its promoted-winner lock so a batch render can replace it. Acts on the VANTAGE
+// (currentView = the member's slug), not a specific shot. Non-destructive — the old image is kept.
+async function demoteImage() {
+  if (!liveTool || !currentView) return;
+  const view = currentView;
+  if (!confirm('Demote "' + view + '"?\n\nThis un-publishes its in-game image (moved to _demoted/, not deleted) and unlocks the room for re-rendering.')) return;
+  try {
+    const j = await (await fetch('/api/demote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, slug: view }) })).json();
+    if (!j.ok) throw new Error(j.error || 'failed');
+    setMsg(j.wasPublished ? ('▽ demoted "' + (j.name || view) + '" — unlocked' + (j.moved ? ' (kept ' + j.moved + ')' : '')) : ('"' + view + '" was not published'));
   } catch (e) { setMsg('⚠ ' + e.message); }
 }
 // Refine the selected shot: feed THIS render back to the model as an edit-ref with the shot note as
@@ -755,11 +773,15 @@ async function generate() {
   const gen = document.getElementById('gen'), model = MODEL, sceneText = document.getElementById('prompt').value;
   const view = currentView;                       // snapshot — currentView may change while this awaits
   const png = captureClay();                      // capture the clay for THIS vantage now, before any await
+  // Send the LIVE camera (not just the saved one) so the server's per-vantage legend is computed
+  // against the EXACT camera that shot this clay — even if the vantage was moved but not yet saved.
+  const _cp = camera.position, _cf = new THREE.Vector3(); camera.getWorldDirection(_cf); const _r2 = (n) => +n.toFixed(2);
+  const cam = { pos: [_r2(_cp.x), _r2(_cp.y), _r2(_cp.z)], look: [_r2(_cp.x + _cf.x * 6), _r2(_cp.y + _cf.y * 6), _r2(_cp.z + _cf.z * 6)], fov: Math.round(camera.fov) };
   gen.disabled = true; setTimeout(() => { gen.disabled = false; }, 2000);
   genInFlight++;
   setMsg(genInFlight > 1 ? `Generating · ${model} … (${genInFlight} in flight)` : 'Generating · ' + model + ' … (~10–20s)');
   try {
-    const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view, model, png, scene: sceneText, facing: facingString() }) })).json();
+    const j = await (await fetch('/api/blockout-gen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: G, volume: VOL, view, model, png, scene: sceneText, facing: facingString(), cam }) })).json();
     if (!j.ok) throw new Error(j.error || 'failed');
     await loadGallery();
     if (currentView === view) setResult(j.file);  // only swap the shown shot if still on this vantage
@@ -866,6 +888,7 @@ async function boot() {
     document.getElementById('imgResolve').addEventListener('change', toggleImgResolve);
     document.getElementById('imgDel').onclick = deleteImage;
     document.getElementById('imgProm').onclick = promoteImage;
+    document.getElementById('imgDemote').onclick = demoteImage;
     document.getElementById('imgRefine').onclick = refineImage;
   } else { document.getElementById('gen').disabled = true; setMsg('(standalone — open via artview to generate)'); }
   document.getElementById('gen').onclick = generate;

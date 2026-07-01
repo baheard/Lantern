@@ -24,6 +24,12 @@ generate-room-facts → mold → [render-rooms]
    - a named subset (comma-separated slugs): `node tools/gen-room-images.cjs <game> --only a,b,c`
    - The renderer **skips rooms that already have a `_review/<slug>.png`** unless `--force`/`--regen`,
      so "render the missing ones" is just the plain all-rooms call.
+   - **Promoted winners are LOCKED against a full batch — even under `--force`.** A committed image is
+     recorded in `manifest.images`, and a full batch (no `--only`) now skips any such room so
+     "re-render everything" can't clobber a hand-picked winner. Overrides: name the room explicitly
+     (`--only <slug>`) to deliberately re-roll it, or pass `--force-locked` to re-render all locked
+     rooms. To make a locked room re-renderable again permanently, **demote** it (below) — that removes
+     the manifest entry and lifts the lock. Sandbox renders ignore the lock (they never touch committed art).
    - **PROTOTYPES / "render X again to see" / iteration → `--sandbox --provider openai --quality low`.**
      Always both: route into `<game>/_sandbox` as `sbx-rN` (artview Sandbox panel, full layer
      composition + auto-relight preserved, never overwrites) AND use the cheapest OpenAI model —
@@ -54,6 +60,18 @@ candidates in artview first, then promote the winners.
 
 Promote only commits an existing `_review/` candidate — it never generates. If a room has no
 candidate yet, render it first (above).
+
+## Action: Demote (un-publish a committed image you no longer want)
+
+**Demote** is the inverse of promote: it un-publishes a room's committed in-game image and lifts its
+render lock. Non-destructive — the committed `<slug>.png` is MOVED to `<game>/_demoted/` (never
+deleted), and its `manifest.images` entry is removed, so the app falls back to no art and a batch
+render can replace the room.
+
+- Reviewer's **▽ Demote** button per room (`/api/demote` → `demote({game, slug})` in core.cjs); the
+  blockout renderer has the same button per vantage. (Bulk demote via a "Selected Images" view is a
+  queued follow-on — see the bulk-demote ember.)
+- Use it when a promoted winner turned out wrong: demote → the lock lifts → re-render → re-promote.
 
 ## Notes
 - This skill owns the committed room **images**: generate candidates into `_review/`, then promote
