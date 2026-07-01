@@ -111,7 +111,11 @@ export function scrollToNewContent(newElement, container) {
   // position:sticky inside the scroll container and overlays the top of the
   // visible area, so without this the echoed command hides behind it in games
   // with an upper window (e.g. Bronze). See issue #181.
-  const bufferFromTop = 60 + viewportOffset + getStickyHeaderHeight();
+  // Cap the total so a tall header (e.g. Bronze's compass on a narrow phone)
+  // can't push the buffer past roughly half the visible area — otherwise the
+  // new content lands too low, leaving a large dead gap above it (issue #187).
+  const rawBuffer = 60 + viewportOffset + getStickyHeaderHeight();
+  const bufferFromTop = Math.min(rawBuffer, visibleHeight * 0.5);
 
   const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
 
@@ -142,9 +146,12 @@ function scrollToNewContentDelayed(newElement, container) {
 
   // After keyboard closes, use full window height
   const vv = window.visualViewport;
+  const visibleHeight = vv ? vv.height : window.innerHeight;
   const viewportOffset = vv ? vv.offsetTop : 0;
-  // Include sticky header height so the command isn't hidden behind it (see #181)
-  const bufferFromTop = 60 + viewportOffset + getStickyHeaderHeight();
+  // Include sticky header height so the command isn't hidden behind it (see #181),
+  // capped so a tall header can't leave a large dead gap above it (issue #187)
+  const rawBuffer = 60 + viewportOffset + getStickyHeaderHeight();
+  const bufferFromTop = Math.min(rawBuffer, visibleHeight * 0.5);
 
   const targetScroll = Math.max(0, targetPositionInContent - bufferFromTop);
   const scrollToBottom = container.scrollHeight - container.clientHeight;

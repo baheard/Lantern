@@ -540,15 +540,10 @@
   letter-spacing: 0.5px;
 }
 
-/* Status Bar — removed from the layout (#182) to reclaim vertical space. The
-   #status element stays in the DOM as a sink for updateStatus() (its messages
-   are now logged and folded into feedback), but is never painted. The version
-   number lives in the welcome screen and Settings instead. */
-.status {
-  display: none !important;
-}
-
-/* Legacy styling kept below for reference; the rule above wins. */
+/* Status Bar — shown on desktop/wide screens: gives a little buffer space
+   under the playback controls and surfaces updateStatus() messages + version.
+   Hidden on narrow/phone screens (see mobile.css) to reclaim vertical space
+   there (#182); re-shown on desktop per #187. */
 .status:not(.hidden) {
   position: relative; /* For ::after pseudo-element */
   padding: 4px 16px;

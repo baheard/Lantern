@@ -289,13 +289,9 @@
     height: 14px;
   }
 
-  /* Status bar - slim */
-  .status:not(.hidden) {
-    padding: 4px 12px;
-    font-size: 11px;
-    line-height: 1;
-    display: flex !important;
-    justify-content: space-between !important;
+  /* Status bar - hidden on phone to reclaim vertical space (#182, #187) */
+  .status {
+    display: none !important;
   }
 
   .status-version {
