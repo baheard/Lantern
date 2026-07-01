@@ -99,10 +99,11 @@ const ROLE_LEGEND = {
   rock: 'the brown-grey mass is natural ROCK — a cliff face, mountain, or boulder (rough, irregular stone)',
   valley: 'the green plane far below is a distant VALLEY floor seen from a height (treetops/fields receding into haze, NOT a nearby lawn)',
   machine: 'the brass-coloured disk/mass is a large intricate BRASS MACHINE — a great tilted engraved disk on an axis, bearing small glass globes (an orrery), turning slowly',
-  ladder: 'the dark vertical bars are an iron LADDER (two uprights with rungs)',
-  steps: 'the stacked blocks are STEPS / a short flight of stairs',
+  ladder: 'the dark iron-grey vertical bars are an iron LADDER (two uprights with rungs)',
+  steps: 'the pale stone-grey stacked blocks are STEPS / a flight of stairs — render the real rise, and where the scene curves them, a curving/sweeping flight, NOT a literal faceted zigzag',
   opening: 'the dark recess set into a surface is an OPENING — a round hatch or doorway leading through; render it as a dark hole into shadow, not a solid panel',
-  wall: 'the cool-grey planes are SOLID WALLS — the faint surface grid is only a marker that the plane is solid (NOT a material; render the wall in whatever material the scene/artist implies — plaster, stone, panelling, etc.). Even far or dim walls are unbroken solid surfaces, NEVER an opening, doorway or passage; only a part explicitly marked as an opening/hole/door is a way through', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the plain grey ground is the floor',
+  framefg: 'the very dark mass hugging the EDGE of the frame is EXTREME FOREGROUND — a near doorway, arch or pillar you are looking PAST/THROUGH into the scene beyond; render it large, close and deeply shadowed (a framing silhouette in the immediate foreground), NEVER a small or distant element',
+  wall: 'the cool stone-grey planes are SOLID WALLS — the faint surface grid is only a marker that the plane is solid (NOT a material; render the wall in whatever material the scene/artist implies — plaster, stone, panelling, etc.). Even far or dim walls are unbroken solid surfaces, NEVER an opening, doorway or passage; only a part explicitly marked as an opening/hole/door is a way through', ceiling: 'the pale-grey overhead plane is the CEILING', floor: 'the warm stone-grey ground is the FLOOR',
 };
 function blockoutGen({ game, volume, view, model, png, scene: sceneOverride, facing }) {
   return new Promise((resolve, reject) => {

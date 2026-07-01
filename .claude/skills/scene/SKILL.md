@@ -134,6 +134,14 @@ Quick check across a whole game: `node -e "const s=require('./docs/games/images/
    verbatim, translate the framing's facing→frame map into placed image-relative prose, apply surface
    defaults only where a bare surface would render wrong, hold layer discipline. Write directly to
    `style.json` → `scenes[slug]` (the review server re-reads it; or POST `/api/scene` if running).
+   **Don't silently clobber a hand-tuned scene.** Before overwriting an EXISTING scene, check whether it
+   diverges from a clean distill of the current framing in ways that look deliberately hand-tuned (extra
+   detail the framing doesn't justify, or a scene with no backing framing bullet = "un-backed"). If so,
+   show the before→after and confirm before replacing — same rule review mode already applies (never
+   silently overwrite a human-tuned override). The durable home for custom intent is NOT an inline scene
+   edit — it's `_review-notes.json` (so `/frame` re-derives it every mold) or the per-vantage
+   `scene.json` note (which the engine never touches). Steer custom content there; treat an un-backed
+   inline scene edit as a signal that its reasoning was never recorded upstream.
 3. **Run the lint** on each scene before saving. Fix compass survivors; place any flagged hedge or kick
    it back to `/frame`.
 4. Report a one-line summary per room (flag any room you bounced back to `/frame` for a missing facing).

@@ -185,10 +185,23 @@ Review mode grades each. Grouped:
     (10a) aimed at the volume's hero; its own local exit (the stairs/ladder/door you arrived through)
     reads INCIDENTALLY — framing the foreground, or small in the distance — never as the subject. Do
     NOT turn a member to face its local exit just to make it "different" from the hero shot; that
-    produces a wrong, redundant view. (Dreamhold Orrery 2026-06-30: the north-alcove member was briefly
-    aimed at its own stair archway *away* from the orrery — wrong; corrected to look down the entry
-    stairs AT the orrery, with the stair-foot framing the foreground and the far ladder small across
-    the chamber. South-alcove = the same orrery from the ladder approach. Same hero, two approaches.)
+    produces a wrong, redundant view. (Dreamhold Orrery: the north-alcove member was briefly aimed at its
+    own stair archway *away* from the orrery — wrong; corrected so BOTH alcoves face the orrery through
+    the chamber-mouth. The differentiation is the approach, and how each alcove's OWN exit lands relative
+    to that facing: south-alcove's ladder is on a SIDE wall → shows incidentally on the left; north-
+    alcove's stairs are on the OPPOSITE wall → directly behind the camera → screened. Same hero, two
+    approaches — not two subjects.)
+    **Cross-member visibility — mirror it symmetrically, or explicitly occlude.** After aiming each
+    member at the hero, test whether ANOTHER member's threshold/opening (the far alcove mouth, the
+    opposite doorway, a sibling's stair-head or ladder) falls inside THIS vantage's frustum, past or
+    around the hero. If it survives the hero's occlusion, record it as a SMALL, DISTANT background
+    feature — AND record the mirror on that other member too, so paired vantages agree (north-alcove
+    sees the far south alcove's ladder small across the chamber ⇔ south-alcove sees the far north
+    alcove's stair-archway). If the hero occludes it, SAY SO and omit it — an explicit call, never
+    silence. This is the systematic form of the "far ladder small across the chamber" detail in the
+    example above: without it, cross-member context lands only where someone happens to hand-edit a
+    render note. (Dreamhold orrery, 2026-07-01: south-alcove got its far-north-alcove line from a manual
+    note edit; north-alcove never got the mirror — the asymmetry this rule exists to prevent.)
 11. **Scale cues.** "cramped" / "vast" so the model doesn't render a cathedral for a closet.
 12. **Layer discipline.** Framing decisions = literal, source-grounded facts ONLY. World+mood →
     Aesthetic; medium/palette/contrast → Artist. Don't bake style/palette/mood into a framing bullet. A
