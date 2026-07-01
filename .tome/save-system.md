@@ -258,3 +258,36 @@ All restore paths (`handleRestoreResponse`, `handleGameRestoreResponse`, Quick L
 
 ## Security note (v1.5.222)
 Save files contain HTML for status/upper/lower windows. On restore, that HTML is sanitized via `sanitizeRestoredHTML()` in `utils/text-processing.js` — strips `<script>`, `<iframe>`, `on*` handlers, `javascript:` URLs. The realistic XSS vector is a malicious save file imported from disk or shared via someone's Drive folder.
+
+## Quick/custom restore silently failed on deployed site but not localhost (#186 follow-up, v1.5.732)
+
+`dialog-stub.js`'s `autosave_read(key)` (called by zvm's `vm.start()` at boot, inside
+`Glk.init()`) used to bail with `if (!gameName) return null` **before** even checking
+`window.__engineRestoreKey` — even though `__engineRestoreKey` (set synchronously by
+`game-loader.js` right before `Glk.init()`) already fully determines the restore slot on
+its own. `gameName` comes from `window.state.currentGameName`, a side effect of the
+`core/state.js` ES module finishing evaluation — timing-dependent and NOT guaranteed to
+have run yet when `vm.start()`'s early, synchronous autorestore check fires.
+
+**Symptom:** quicksave a deep save (e.g. after 3+ moves) → quickrestore → page reloads →
+lands back at the game's opening intro instead of the saved point. The v1.5.730
+verification gate correctly detects the mismatch and shows "Could not load this save (the
+game state failed to restore)" in the status bar — but that status text isn't visible in
+an accessibility snapshot/toast, so it read as a silent full restart.
+
+**Reproduced deterministically on the deployed GH Pages build, but NOT on `localhost:3002`
+with byte-identical `docs/lib/*.js` + game files** (confirmed via `curl` diff) — pure
+load-order timing difference between hosts, not stale cache (ruled out: unregistered SW +
+cleared Cache Storage on the GH Pages tab, bug persisted). Confirmed via console:
+`window.state` was `undefined` on the GH Pages tab post-boot-failure while
+`window.__engineRestoreKey` was already correctly set to `lantern_quicksave_<game>`.
+
+**Fix:** `autosave_read` now resolves `restoreKey` from `window.__engineRestoreKey` first;
+`gameName`/`window.state.currentGameName` is only consulted for the fallback
+`'lantern_autosave_' + gameName` expression, and the null-guard checks `restoreKey` itself
+rather than `gameName`. See `docs/lib/dialog-stub.js` `autosave_read`.
+
+**Debugging note:** GH Pages (production) can't be locally patched to add console logging
+— `zvm.js`'s `this.log()` routes through `VoxGlk.log()` in `docs/js/game/voxglk.js`, which
+is a no-op stub (`// Silent logging`). Temporarily flip it to `console.error` on the LOCAL
+dev server to see autorestore's swallowed exceptions; revert before committing.

@@ -243,13 +243,17 @@ function autosave_write(key, snapshot) {
  */
 function autosave_read(key) {
     try {
-        var gameName = (window.state && window.state.currentGameName) || null;
-        if (!gameName) return null;
-
         // Read the slot game-loader resolved for this boot (autosave by default, or the
         // quicksave/customsave slot the user asked to restore). All restores now reuse
-        // boot-time do_autorestore.
-        var restoreKey = window.__engineRestoreKey || ('lantern_autosave_' + gameName);
+        // boot-time do_autorestore. Prefer window.__engineRestoreKey (set synchronously by
+        // game-loader.js right before Glk.init) over window.state.currentGameName, which is
+        // a side effect of the core/state.js ES module finishing its (async, load-order-
+        // dependent) evaluation — on some builds/hosts that hasn't happened yet by the time
+        // vm.start() calls this, which silently failed every restore (state.currentGameName
+        // was undefined) even though __engineRestoreKey was already correctly resolved.
+        var gameName = (window.state && window.state.currentGameName) || null;
+        var restoreKey = window.__engineRestoreKey || (gameName ? 'lantern_autosave_' + gameName : null);
+        if (!restoreKey) return null;
         var raw = localStorage.getItem(restoreKey);
         if (!raw) return null;
 
