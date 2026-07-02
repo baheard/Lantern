@@ -580,12 +580,28 @@
         "north → Mountain Garden"
       ],
       "description": "Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air.\n\nIn the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face.",
-      "scene": "Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask.",
-      "prompt": "Scene: Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask.",
+      "scene": "Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask. The mask looks like a paper cutout of a human face, half life size, not so much worn as balanced on the statue’s brow. The broad balcony is tiled in white marble; its balustrade is carved in a decorative pattern of arches, all from a single immense piece of marble. The valley trees are spread in afternoon sunlight.",
+      "prompt": "Scene: Below this gently curved balcony, the world drops away into a green vista. The stony slopes of the mountainside beneath you crumble, invaded by bracken and tree, until the mountain pines merge into verdant forest and a lush valley floor. A bright thread marks a stream; a distant valley lake is a silver arc. Beyond the valley, and around it, taller mountains stand like patient shadows in the blue air. In the center of the balcony, looking out -- as you are -- over the valley, a white marble statue towers over you. Incongruously, you can see a small gold mask balanced on the statue's face. The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask. The mask looks like a paper cutout of a human face, half life size, not so much worn as balanced on the statue’s brow. The broad balcony is tiled in white marble; its balustrade is carved in a decorative pattern of arches, all from a single immense piece of marble. The valley trees are spread in afternoon sunlight.",
       "sceneExtras": [
         {
           "cmd": "examine statue",
           "text": "The statue is twice life size; it dwarfs you. Its form is curiously abstract. You can make out no gender, no personality in the marble curves. But... the statue gazes out from the balcony. Its weight is forward, its head turned, as if something in the distant valley had just caught its attention. Or... something rising from the valley, perhaps. For the chin is raised; the eyes, if you could see them, would be level. Those eyes are hidden by an absurdly small gold mask. The mask would not fit a child, and is unusually flat besides. It's not so much worn as balanced on the statue's brow."
+        },
+        {
+          "cmd": "examine gold mask",
+          "text": "The gold mask rests on the statue’s brow, high above you. It looks like a paper cutout of a human face, half life size. Balanced on the immense statue, it looks rather silly."
+        },
+        {
+          "cmd": "examine balustrade",
+          "text": "The balustrade is carved in a decorative pattern of arches... although, now that you look, it seems to have been carved from a single immense piece of marble."
+        },
+        {
+          "cmd": "examine valley",
+          "text": "The valley is infinite in detail, though bounded by stone. The trees are spread in afternoon sunlight."
+        },
+        {
+          "cmd": "examine balcony",
+          "text": "It’s a broad balcony, tiled in white marble, at the southern edge of the garden."
         }
       ],
       "exitFacts": [
@@ -603,7 +619,8 @@
       "enteredBy": [
         "south ← Mountain Garden"
       ],
-      "defaultFacing": "south"
+      "defaultFacing": "south",
+      "recapturedFrom": "manual-probe 2026-07-02 (snapshot at pristine balcony visit; x gold mask / balustrade / valley / balcony via play.cjs)"
     },
     {
       "name": "Mosaic Room",
