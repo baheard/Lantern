@@ -1,0 +1,125 @@
+# Photopia — verified command list
+# Build: docs/games/photopia.z5, release 1, serial 120416 (in-game banner: "Photopia 1.30").
+# Seed: --seed 1 (no @random-dependent content found in this game; seed included per convention).
+# Verify: node tools/play.cjs photopia --strict --seed 1 --file docs/games/walkthroughs/photopia.cmds.txt
+#
+# Structure: Photopia has no deaths/game-overs and almost no true puzzles. It's ~9 narrative
+# vignettes told out of chronological order. Three vignettes are exploration "mazes" that all
+# turn out to be scripted/direction-word-agnostic once probed (any valid compass direction just
+# advances one step through a fixed sequence): the Mars landing-site corridor, the undersea
+# castle corridor, and the crystal labyrinth (whose real gate is removing the spacesuit to fly,
+# not navigation at all).
+#
+# Menu system: "talk to <character>" opens a numbered TALK TO menu; the reply is the option
+# NUMBER (as its own line), not the verb text.
+
+## [opening] Car with Rob / red-light transition
+no
+wait
+wait
+
+## [mars-greenhouse] Red planet (Wendy Mackaye) — find the seed pod container, return to ship
+n
+n
+n
+n
+n
+get undamaged container
+s
+s
+s
+s
+s
+up
+
+## [pool-cpr] Splashdown flashback — rescue Alley from the pool (CPR sequence, exact phrasing required)
+exit
+exit
+get in pool
+tilt her head back
+breathe into her mouth
+press her chest
+
+## [castle-escape] Undersea castle — get pickaxe (triggers hidden shovel + unlocks keep stairs), escape
+press button
+n
+s
+s
+s
+get pickaxe
+get shovel
+n
+n
+n
+up
+
+## [gold-beach] Golden beach — recover seed pod, dig up treasure chest, exit via the northwest pass
+wait
+wait
+wait
+wait
+wait
+wait
+look
+get seed pod
+get shovel
+get coin
+n
+dig
+get chest
+n
+nw
+
+## [garage-alley] Garage / front yard — coax Alley inside via the TALK TO menu (Space Camp branch)
+exit
+talk to alley
+3
+talk to alley
+1
+talk to alley
+1
+
+## [crystal-labyrinth] Crystal labyrinth (sky-blue) — a scripted flight beat, not a real maze.
+# All compass directions inside the labyrinth are interchangeable (any exit just advances one
+# fixed step; navigation choice doesn't matter). The actual gate is removing the spacesuit,
+# which lets Wendy grow wings and fly. Two "up"s show the flight + an invisible planet-spanning
+# crystal barrier; "down" is refused ("too exhilarating to go back to trudging through the
+# labyrinth") — the way onward is flying WEST through the gap a bird is shown using.
+w
+take off spacesuit
+up
+up
+w
+
+## [gym-spotlight] Queensport Middle School gym — turn off the spotlight, ask Alley to the dance
+turn off spotlight
+talk to alley
+4
+
+## [car-crash] Driving Alley home — small talk, then the fatal Montgomery Blvd intersection
+talk to alley
+3
+wait
+wait
+wait
+wait
+wait
+wait
+
+## [forest-wolf] Petrified forest (green) — feed the emaciated wolf via a seed pod + rain trade
+examine trees
+open chest
+get dirt
+drop dirt
+plant seed pod
+talk to salesman
+2
+give coin to salesman
+
+## [nursery-photopia] Wendy's bedroom -> Alley's nursery (purple) — the framing/finale scene
+talk to alley
+3
+wait
+press white button
+press white button
+turn off light

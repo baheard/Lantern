@@ -1,0 +1,465 @@
+GALATEA by Emily Short — Walkthrough / Ending Notes
+====================================================
+
+SOURCES (retrieved 2026-07-01):
+- Primary compiled walkthrough (PDF, aggregates the sources below, by user heasm66):
+  https://github.com/heasm66/walkthroughs/raw/main/galatea_walkthrough.pdf
+  (local copy of extracted text is this file's content below)
+- Emily Short's own "Cheats and Walkthroughs" page (author-sanctioned hints):
+  https://web.archive.org/web/20180929015031/http://emshort.home.mindspring.com/cheats.htm
+- IFWiki, "User:Cassandra Palop/Galatea" (ending list source ordering):
+  http://ifwiki.org/index.php/User:Cassandra_Palop/Galatea
+- "Endings" catalogue (rbishopgalatea):
+  https://rbishopgalatea.wordpress.com/endings/
+- IFDB game page (confirms walkthrough link, author, release year):
+  https://ifdb.org/viewgame?id=urxrv27t7qtu52lb
+- ClubFloyd transcript (a real played session reaching a "Friendship" ending),
+  useful for confirming conversational flow and topic-based mechanic:
+  https://allthingsjacq.com/intfic_clubfloyd_20091202.html
+
+TARGETED BUILD: Galatea, Release 3 / Serial number 040208, by Emily Short,
+Copyright (c) 2000-4. Confirmed via our exact game file's banner
+(docs/games/galatea.zblorb) — matches the walkthrough sources above, which
+all target the same canonical release (this is the final released version;
+no divergent editions are documented for this game).
+
+ABOUT THIS GAME'S STRUCTURE:
+Galatea is a single-room, single-NPC conversation game (the "Cocktail Party
+of the Gods" or "conversational puzzle" subgenre Emily Short pioneered). There
+is no map, no inventory puzzles, no traditional parser navigation — the whole
+game is ASK/TELL/TOUCH/THINK ABOUT conversation with the statue Galatea, who
+has mutable internal state (Mood, Sympathy, Tension, Segue distance — visible
+via the debug command VISORX) that shapes her responses and gates ~70 documented
+endings. The author has explicitly said she does NOT want players optimizing
+toward specific endings — the game is designed to reward organic, curious
+conversation. This walkthrough documents ending #64 "Patience" (one of the
+warmest, least contentious , and non-randomized endings) as our verified trunk,
+while cataloguing the other documented endings/branches for reference.
+
+Below is the full extracted text of the compiled PDF walkthrough (all 70
+catalogued endings with whatever command sequences the compiler was able to
+verify; entries marked "???" are endings the compiler could not reconstruct
+exact commands for and are listed by description only).
+
+====================================================================
+[Full text as extracted from the PDF — see below for our verified trunk]
+====================================================================
+
+1. The protagonist grasps the curtain.
+   look behind curtain / get curtain / again
+   -> "Not stopping to question..." / heavy tread of approaching feet /
+      "You'll never be able to explain this..."
+
+2. Galatea steps off the pedestal and walks away to show the protagonist
+   that she is able to walk.
+   tell her about exhibit / ask her about pedestal
+   -> She steps off and walks away around the corner.
+
+3. Galatea steps off the pedestal and the protagonist escorts her to another
+   place so as to talk at length with her.  [commands not reconstructed]
+
+4. Galatea breaks the wrist of the protagonist for turning her a few degrees
+   toward himself (for the second time).
+   turn her / turn her
+   -> She catches your wrist; speaks the reset code EUDOXIA, no response;
+      "Broken."
+
+5. Galatea steps off the pedestal to escort the protagonist to someplace so
+   as to strip off her gown.
+   x placard / a him / z / z / a him / a waking / x her / touch back / x back
+   / touch spine / x hair / touch hair / a hair / x dress / touch dress /
+   a dress / x hand / touch hand / a hand / kiss hand / galatea, turn / g / g
+   / look at her / touch mouth (raises Tension to Considerable) /
+   galatea, look at me / z (x100, Sympathy +1 per 5th turn, needs 35+) /
+   galatea, take off dress
+   -> "It's sewn on. But if you know of someplace quiet where there's a pair
+      of scissors..."
+
+6. Galatea steps off the pedestal to run away from the tactless requests of
+   the protagonist.  [commands not reconstructed]
+
+7. The protagonist challenges her to infringe the first law of robotics.
+   t exhibition / Galatea, kill me
+   -> She cannot; philosophical exchange about whether either of them is a
+      machine; "You win. For now." — you leave amicably.
+
+8-13. Various "protagonist goes away" endings with different closing
+   reflections (remorse over review, adage about details, etc).
+   [commands not reconstructed for most; general form is examine/converse a
+   little then LEAVE]
+
+14. They both end up talking about their countless experiences. The
+    protagonist notes down his phone number to her.
+    ("Friendship, with potential: like the former, but not.")
+    x her. touch her. galatea, hello. touch back. touch hair. x back.
+    touch spine. a her. read placard. a waking. experience. z. x her.
+    touch ear. a life. a childhood. a him. a nightmares. a her. z. z.
+    galatea, turn around. touch chin. stare at her. g. galatea, turn around.
+    x her. x eyes. stare at her. galatea, look at me. t childhood in general.
+    t family. t relatives.
+    -> She sits on the pedestal, talks about rain/TV; at closing time you
+       leave her your phone number on a napkin.
+
+15. They both end up talking about their countless experiences. The
+    protagonist does not mind hugging her in front of the caterers.
+    ("Friendship: confiding in her.")
+    a her. read it. t me. a waking. experience. z. a life. a childhood.
+    t childhood. t family. t parents.
+    Alternative: t me / t family / again
+    -> Ends in a hug goodbye under the caterers' gaze.
+
+16. The protagonist takes her place on the pedestal: he receives deficient
+    reviews and Galatea is hired as a helper at the gallery.
+    ("Exchange of Places: making yourself the object of inspection.")
+    x galatea. touch her. galatea, hello. x placard. a waking. z. a artist.
+    g. a sale. a inspection. a travel. a customs. a owners. a exhibit.
+    t exhibit. t suicide. hug her. think about owners. enter pedestal.
+    -> You trade places with her; she leaves, is later hired by the gallery.
+
+17. While hugging her, Galatea steps off the pedestal and into his arms.
+    The protagonist takes her with him.
+    ("Hug: ending up on friendly terms, in a different form.")
+    NOTE: many routes reach this — hug Galatea any time Mood is not
+    Hostile/Sad and Sympathy > 35 (check via VISORX). One verified route:
+    x her. a her. read placard. a artist. z. z. a cyprus. a garden. a flowers.
+    a smell. a stone. a quarries. a carving. z. a secrets. a carving. x her.
+    a punch. a tools. a chisel. g. a polish. a hammer. a marble. a reliefs.
+    think about tools. a claw. a drill. a hand. x hand. touch hand. a doubt.
+    look at her. a backdrop. g. a pedestal. a spotlight. a air conditioner.
+    look. a artist. a sale. a him. a death. t death. z. a screaming.
+    a nightmares. a shades. a afterlife. a gods. a prayers. a muses.
+    a madness. a drink. a prophecy. a apollo. a delphi. a pythia. a priests.
+    a hexameters. a civilization. a anarchy. think about anarchy.
+    think about gods. a aphrodite. a love. a pantheon. a hades. z.
+    galatea, turn around. a artemis. a zeus. z. a hera. a seduction.
+    a dionysus. a drama. a illusions. a freedom. a grief. touch her.
+    t grief. t jenny. a him. Recap. think about zeus. a justice.
+    a vocabulary. a speech. a breathing. x her. x eyes. x face.
+    think about sculpture. a sculpture. a art. a painting. a woman.
+    galatea, sorry. hug her.
+    -> She steps off the pedestal into your arms; you lead her away.
+
+18. The candor of Galatea comes to the surface; she steps off the pedestal
+    and the protagonist takes her elsewhere to talk at length.
+    [commands not reconstructed]
+
+19. The protagonist goes away, scared of his own sinister impulse to kill
+    her. ("Shame: running up against your own less pleasant qualities.")
+    x her. a backdrop. a placard. read placard. a carving. g. a pain.
+    a drill. x hands. a hands. a fear. a waking. a death. kill her.
+    -> You don't, but the impulse disturbs you; you leave shaken.
+
+20. Galatea admits she was in love with the artist; the protagonist doesn't
+    care.
+    hello / wait / a love
+    -> "So now you know... All the rest of my life's just circumstance."
+       You walk away, thinking of the buffet.
+
+21. Galatea admits she was in love with the artist. The protagonist corrects
+    her closing statement, giving her back a real smile.
+    x her. a her. read placard. a pygmalion. g. a loneliness. a suicide.
+    a suicide. think about her. touch her. touch back. touch gown. a gown.
+    a owners. a backdrop. x cheek. touch cheek. a carving. g. a pain.
+    a polish. a him. a love.
+    -> "So far," you reply, and she smiles for real.
+
+22. The protagonist hurts her feelings; she asks him to leave her alone.
+    x placard / t it / a him / a him
+    -> "Please -- just leave me alone now." You nod and go.
+
+23. Galatea kisses the protagonist (she is crying); he takes her elsewhere
+    to talk.
+    ("Kiss: just what it sounds like.")
+    NOTE: reachable multiple ways — kiss Galatea any time you've decided
+    she's not an animate, have a three-quarter view or better, and Tension
+    is Considerable (check via VISORX). One verified route:
+    x her. a her. touch her. touch her back. a artist. z. z. a studio.
+    a ocean. z. x her. x hair. touch hair. a hair. x hand. touch hand.
+    a hand. x her. kiss hand. a backdrop. x ear. touch ear. x cheek.
+    touch cheek. think about animates. think about her. read placard.
+    a waking experience. galatea, turn around. kiss her. g.
+    -> She kisses you; "There are things we should discuss, and this is not
+       the place."
+
+24-27. Various indifferent/dutiful/burdened farewell variants.
+    [commands not reconstructed]
+
+28. Galatea asks if the protagonist is bored; he leaves with a jab about her
+    rough edges.
+    leave
+    -> "Bored so soon?" / "...even your creator would admit you're a bit
+       rough around the edges."
+
+29. Galatea asks if he's bored; he leaves, remarking someone else will find
+    her. (Sympathy >= 6.)
+    read placard. a him. again. a her. x her. touch her. touch back. x back.
+    touch spine. x hair. touch hair. leave
+    -> "I'm sure someone else will find you before too much longer."
+
+30. Galatea thanks him for the Pygmalion info; he doesn't react.
+    read placard / t placard / leave
+    -> "Thanks for telling me about Pygmalion" — first time she names him;
+       you don't break stride.
+
+31. Same as #30, but with Sympathy >= 6 and having discussed suicide — he
+    hesitates half a second before continuing on.
+    read placard. a him. again. t suicide. x her. a her. touch her.
+    touch back. x back. touch spine. leave
+    -> Brief hesitation, then: "This is not your tragedy, you tell yourself
+       firmly..."
+
+32. The protagonist leaves while Galatea (now uncooperative) says nothing to
+    hold him.
+    t exhibit / t komininsky
+    -> "Why do you ask me?... my collection of facts to share?" — tense
+       silence as you leave.
+
+33. The protagonist invites Galatea to step off the pedestal; she descends.
+    ("Invitation: asking her to step out of her milieu.")
+    x her. a her. read placard. a suicide. t suicide. galatea, get down. g.
+    Alternative: x placard / t placard / galatea, down / again
+    -> "Leap of faith," you say. She jumps down; you walk out together.
+
+34. Invited down, she instead becomes nearly obsessed with the artist and
+    leaves the protagonist behind.
+    [commands not reconstructed]
+
+35. Invited down, she is joyful and intends to confront/reprimand the
+    artist.
+    a journey. a customs. a sex. galatea, down
+    -> She steps down, eager to find and confront Pygmalion, seeming
+       younger and more alive.
+
+36. Galatea kills the protagonist.
+    ("Pushing Your Luck Too Far: getting yourself killed.")
+    x her. touch her. read placard. t suicide. a exhibit. t exhibit.
+    a carving. g. g. g. a placard.
+    -> You provoke her about the Turing Test / whether the placard is a
+       trick; she strangles you.
+
+37. Galatea kills herself.
+    ("Delusions: challenging Galatea about her own status.")
+    x her. galatea, hello. read placard. a exhibit. t exhibit.
+    think about exhibit. think about komininsky. think about galatea.
+    galatea, look at galatea.
+    Alternative: read placard / t placard / a marble
+    -> She demonstrates she can self-terminate and does; only cold marble
+       remains.
+
+38. Galatea gets angry with the protagonist because he considers her an
+    animate.  [commands not reconstructed]
+
+39. Without warning, Galatea kisses the protagonist.
+    ("Exchange of Glances: extremely thorough inspection of the piece.")
+    x her. a curtain. x her. x cheek. x ear. touch ear. touch cheek. x her.
+    x cheek. touch cheek. x gown. x back. x spine. x head. x arms. x mole.
+    a mole. x hand. a hand. a tools. a chisel. a eyes. a drill.
+    galatea, turn. x her. x throat. x chin. x nose. x mouth. touch mouth.
+    galatea, turn. x her. x eyes. x eyelids. x face. galatea, look at me.
+    look at her. look at eyes. galatea, look at me. again.
+    -> "Galatea. Look at me." — she meets your eyes and kisses you.
+
+40. Galatea steps off the pedestal, curious to see the other exhibits; the
+    protagonist becomes her guide.
+    ("Curiosity: getting Galatea interested in something other than
+    herself.")
+    galatea, hello. t job. x galatea. x shoulder. touch shoulder.
+    think about hazar. t hazar. a her. read placard. a marble.
+    think about vanitallie. t vanitallie. touch back. x back. touch spine.
+    think about animates. think about exhibit. a exhibit. t exhibit.
+    kiss hand. galatea, sorry. t hazar. think about exhibit. think about her.
+    x her. galatea, turn around. g. x face. think. think about exhibit.
+    t fairy queen. z. t bhattacharyya. t komininsky.
+    -> She's curious about Komininsky's piece next door and jumps down,
+       asking for a tour.
+
+41. Galatea becomes sad after the protagonist confesses he is a critic.
+    [commands not reconstructed]
+
+42. Galatea prays to Zeus and is made human, then is sick on the
+    protagonist.
+    ("Mortality: appealing to higher powers.")
+    a her. x placard. a him. a afterward. a him. a woman. a church.
+    a exorcism. a god. a prayers. a muses. a madness. a prophecy.
+    think about the gods. a pantheon. a artemis. a zeus. a hera.
+    think about pantheon. a hades. a death. t death. touch her.
+    galatea, sorry. a her. a stories. a travels. a numen. x her.
+    galatea, turn. a memories. z. a loneliness. z. think. think about her.
+    galatea, turn. a death. a thasos. think about gods. galatea, pray to
+    zeus.
+    -> Zeus answers her prayer; she becomes mortal and immediately vomits
+       on you.
+
+43. Galatea prays to Aphrodite; the goddess appears and expresses
+    condolences over Pygmalion's death.
+    ("Address to Kypris: catching the attention of a deity.")
+    x her. x placard. a artist. a carving. z. a him. a fits. a secrets.
+    a pirates. a dionysus. a anarchy. a suicide. t suicide. z. a nightmares.
+    a moon. a gods. a aphrodite. g.
+    -> Aphrodite materializes, denies responsibility for Pygmalion's death,
+       comforts Galatea.
+
+44. As #43, but (Mood: Sad, Sympathy: 20, Tension: Considerable, Segue
+    distance: 2) Aphrodite hints the protagonist himself is Galatea's hope.
+    a aphrodite
+    -> Aphrodite: "while you are alive there are always consolations" —
+       whispers something to Galatea, whose gaze flickers to you.
+
+45. Aphrodite appears and turns Galatea to stone; the protagonist complains,
+    then falls silent.  [commands not reconstructed]
+
+46. As #45, but the protagonist complains more, and Aphrodite mocks him
+    ("plenty more fish in the sea").
+    Same lead-in as #5, but end on "ask her about Aphrodite" (a aphrodite)
+    instead of "galatea, take off dress":
+    a aphrodite / a aphrodite
+    -> Aphrodite turns Galatea back to lifeless stone and departs, taunting
+       the protagonist.
+
+47. As #45/46, but the protagonist is too appalled to speak and huddles
+    against the wall.
+    a aphrodite / again
+    -> Same as #46 but protagonist's reaction is silent horror rather than
+       verbal complaint.
+
+48. Galatea discusses sex; the protagonist loses interest in the topic.
+    a sex
+    -> "No, he didn't [sleep with me]." You get bored of the "sexual angst"
+       topic and move on mentally.
+
+49. Galatea prays to Dionysus; the god takes her, offers the same to the
+    protagonist, who declines (self-discipline/reluctance).
+    ("Bacchanal: catching the attention of a different deity.")
+    x placard. a thasos. a gods. a muses. a apollo. a dionysus. a bonds.
+    a inhibition. a pain. galatea, pray to dionysus.
+    -> Dionysus manifests, frees Galatea, offers the same to the
+       protagonist, who (implicitly) doesn't follow.
+
+50. As #49, but the protagonist accepts Dionysus's offer.
+    a dionysus. galatea, pray. yes
+    -> Protagonist says "yes" to the god's offer and is swept into
+       Bacchanalian revelry.
+
+51. As #50 but with hesitation before agreeing (or Dionysus doesn't take
+    Galatea at all) — similar dissolution of self either way.
+    [commands not reconstructed]
+
+52. The protagonist discovers Galatea is an avatar operated by a human, and
+    meets the real "artist."
+    ("Wizard of Oz: the 'avatar' ending.")
+    x galatea. galatea, hello. x dress. a artist. a waking. z. a him.
+    a fits. a nightmares. a shades. a afterlife. a gods. a apollo.
+    a dionysus. a illusions. z. a masks.
+    -> "You're an avatar, you've got someone controlling you in realtime!"
+       — the real operator reveals herself.
+
+53. The protagonist gets angry with Galatea over her inability to grasp his
+    views on suicide.  [commands not reconstructed]
+
+54. The protagonist's obsession with the artist tires Galatea; she asks him
+    to leave.  [commands not reconstructed]
+
+55. The protagonist gains heightened, uncanny sensitivity to omens from
+    Galatea's rambling anecdotes about the artist.
+    ("Portents and Omens: access to strange visions.")
+    x her. a her. read placard. a artist. z. z. z. a reliefs. a childhood. z.
+    (Branches: if she mentions the Tiber -> "a bridge"; the mountains ->
+    "a lightning"; the Piraeus -> "a ferry".)
+    -> She rambles in increasingly strange, portentous anecdotes; the
+       protagonist is left seeing omens everywhere for weeks after.
+
+56-58. Galatea bursts into tears remembering the artist's trip to Crete;
+    three variant protagonist reactions (flippant remark and looking away;
+    stern rebuke that backfires into her freezing up; stern rebuke followed
+    by a comforting touch and hug that succeeds).
+    [commands not reconstructed]
+
+59. Asked about her nature, Galatea cycles through material
+    transformations (wood, glass, sand, salt, water, flame) before answering
+    as a voice: she is what the protagonist thinks she is.
+    ("Reflection: confronting her inherent strangeness.")
+    x galatea. touch back. touch spine. a her. read placard. a marble.
+    a sparkle.
+    -> A cascade of "what are you" questions ending in transformations and
+       "I am what you think I am; I am what your treatment makes of me."
+
+60. The protagonist condemns the artist's treatment of Galatea until her
+    self-esteem rises.  [commands not reconstructed]
+
+61. Galatea confesses she didn't much like the artist but loved his energy,
+    and won't lower her expectations of a partner.  [commands not
+    reconstructed]
+
+62. The protagonist persuades Galatea to eat (cheese).
+    ("Stilton: getting her to eat.")
+    galatea, hello. read placard. t suicide. hug her. a her. a waking.
+    a sight. a hearing. a sleeping. g. a food. g. g. z. z. t processes.
+    -> She samples crackers/Stilton/caviar in the next room, chokes a
+       little, then: "This is AMAZING." / "Welcome to humanity."
+
+63. Galatea feels guilty for treating the protagonist unfairly, but still
+    asks to be left alone with her thoughts.  [commands not reconstructed]
+
+64. Galatea talks without break; noticing her lack of knowledge, the
+    protagonist devotedly decides to instruct her.
+    ("Patience: becoming her confidant and teacher.") — OUR VERIFIED TRUNK
+    x her. a her. x placard. a artist. a strangeness. a him. t suicide. z.
+    a her. a stories. a maxims. a personality. z. z.
+    -> Your patient silence acts as a catalyst; she talks and talks. By
+       evening's end you're sitting beside her on the pedestal, starting a
+       reading list for her education.
+
+65. The protagonist is forced to recall his sister's fatal illness at a bad
+    moment; Galatea reaches out but he turns away.
+    ("Upset: raising some memories you can't quite handle.")
+    x her. a her. read placard. a artist. hug her. attack her.
+    think about cancer.
+    -> Painful memories of his sister Jenny's death surface; he turns aside
+       from Galatea's concern.
+
+66. The protagonist uses Galatea as an ELIZA-style therapist, unburdening
+    himself about his losses.
+    ("Eliza: using her as a psychiatry program.")
+    x galatea. x backdrop. a her. read placard. a artist. a waking. a pain.
+    a artist. a loneliness. t suicide. z. a him. a fits. a childhood. z.
+    a memories. t me. t family. t parents.
+    Alternative: t me / t sister / t family
+    -> He pours out losses/frustrations/isolation since "Jenny died"; ends
+       feeling wrung out but strangely healed.
+
+67. As #66, but the protagonist ends up disappointing Galatea instead.
+    [commands not reconstructed]
+
+68. Using out-of-session knowledge, the player has the protagonist speak the
+    reset code "eudoxia," then asks Galatea to list scenarios; she recites
+    the first eight before her voice module fails.
+    eudoxia / yes
+    -> She freezes, then lists: (1) she kills herself, (2) she kills you,
+       (3) she departs seeking her artist, (4) she departs seeking other
+       exhibits, (5) you end as friends/confidants, (6) you end as lovers,
+       (7) you take her place on the pedestal, (8) you offer her a home with
+       you — then her voice module stutters out.
+
+69. As #68, but answering "no" to listing scenarios: she resets and erases
+    her memory of the encounter.
+    eudoxia / no
+    -> She begins resetting herself for the next visitor, forgetting
+       everything.
+
+70. The player has the protagonist speak a magic word (xyzzy/zork/plugh),
+    breaking the fourth wall entirely.
+    xyzzy
+    -> Reveals the protagonist is themselves an avatar operated remotely by
+       an unseen tester/player, mid-experiment, being asked whether the
+       Galatea "product" will sell. ("Too cerebral.")
+
+====================================================================
+DEBUG / META COMMANDS mentioned by the compiled walkthrough (author-provided,
+useful for probing the conversation state during hint authoring — NOT part
+of ordinary play and should not be taught to players as "the" solution):
+- TOPICLISTX — lists all topics in the game and the verbs that work with
+  them.
+- VISORX — switches the status bar to display live stats on the conversation
+  (Mood, Sympathy, Tension, Segue distance, etc.) which many endings are
+  gated on.
+====================================================================

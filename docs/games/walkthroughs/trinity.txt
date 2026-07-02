@@ -1,0 +1,1290 @@
+================================================================================
+TRINITY (Brian Moriarty / Infocom, 1986) — Raw walkthrough sources
+================================================================================
+Our build: trinity.z4 — Z-machine v4, Release 15, Serial 870628
+  (This is Infocom's standard/only release of Trinity; no known re-release
+  divergence like Wishbringer's. David Welbourn's solution below states it
+  targets "Release 12" per the Masterpieces of Infocom CD — treat any
+  divergence as a possible build risk, but Trinity's puzzle logic and parser
+  vocabulary are stable across the Infocom-era releases we're aware of.)
+Retrieved: 2026-07-01
+
+SOURCES (kept verbatim, in full, below):
+  1. Scorpia's 4-part walkthrough (1986; prose style; complete linear trunk)
+     https://www.ifarchive.org/if-archive/infocom/hints/solutions/trinity.txt
+     local file: trinity_ifarchive.txt (fetched copy)
+  2. The Walkthrough King (compressed action-list style; useful cross-check,
+     especially for the randomized wire/dial puzzle in the endgame)
+     https://www.walkthroughking.com/text/trinity.aspx
+     local file: trinity_wtk.txt (fetched copy, HTML stripped)
+  3. David Welbourn / Key & Compass — "Trinity - map and walkthrough"
+     (most authoritative: exact commands, room names, maps, explicit call-outs
+     of the two randomized elements — the jeep radio dial number and the
+     wire-color/wire-function legend on the cardboard slip)
+     http://www.plover.net/~davidw/sol/t/trini86.html
+     (fetched via Wayback Machine snapshot 20260403125758 — direct fetch
+     blocked by the origin server's mod_security/cert config)
+     local file: trinity_welbourn.txt (fetched copy, HTML stripped)
+
+CROSS-REFERENCE NOTES:
+  - All three agree on the overall structure: Prologue (Kensington Gardens) →
+    hub Garden ("the Wabe") with a sundial/gnomon that opens 6 toadstool doors
+    (symbols 2-7; symbol 1 is the entry door) to surreal historical-bomb-site
+    vignettes → return to the Wabe between each → River Styx crossing (symbol 7)
+    → New Mexico/Trinity Test finale → Epilogue (Kensington Gardens again).
+  - Order of vignettes visited is flexible except for a few hard prerequisites
+    (see puzzle-notes.md); all three sources visit them in a similar but not
+    identical order. Welbourn's order was used as the trunk since his source
+    gives exact commands and explicitly separates optional vs. required
+    sub-steps.
+  - TWO RANDOMIZED ELEMENTS confirmed by both Welbourn and Walkthrough King:
+      (a) the jeep's radio dial number (tune the walkie-talkie to match it)
+      (b) the wire-color/wire-function legend printed on the cardboard slip
+          combined with which line the breaker-room dialogue names — together
+          they determine which of the four wires (red/blue/striped/white) is
+          safe to cut at the finale.
+    Neither is optional flavor — both gate forward progress. See
+    trinity.puzzle-notes.md's "RANDOMIZED BETWEEN PLAYS" section.
+
+================================================================================
+SOURCE 1 of 3 — Scorpia's walkthrough (ifarchive.org)
+================================================================================
+
+                         TRINITY
+                          Part I
+
+
+As you'll see, Trinity is not all that difficult a game, although there are a
+few tricky parts to it. Thus, you would be wise to save your position from time
+to time, in case you make an error along the way. Apple owners should note that
+they can get only 3 positions on the save disk, even tho the docs say 4. A
+second save disk may therefore come in handy. Also, from time to time in some
+places, little quotes will pop up in your screen. These are meant to give a
+little flavor to the game; they are not really clues or hints. So if you don't
+know French (or Latin, for that matter), don't worry about it. Finally, this
+walkthru shows only one way of completing the game, so don't be afraid to
+experiment on your own.
+
+Ok, here you are in London, on the last day of your $599 package tour,
+strolling around the Kensington Gardens. All seems well, but in a short time,
+World War III is going to start, and you certainly don't want to be around when
+that happens. From the Palace Gate, go NE to The Wabe and the sundial. It looks
+just like the one that comes in the game package, so you needn't spend precious
+time admiring it.
+
+Instead, unscrew the gnomon from the dial and get it (and be prepared for some
+really awful gnomon jokes later on). With that in hand, saunter on SE to the
+Flower Walk, where you find a soccer ball someone left behind. Pick that up,
+then continue North along Lancaster Walk until you reach Lancaster Gate.
+
+Here you see an old woman struggling with an umbrella. As you step forward to
+help her, you are momentarily frozen in your tracks by the sight of her face,
+which is horribly scarred, possibly from some accident. While you stare at her,
+the umbrella flies loose and lodges in the branches of a tree. The old woman
+cries a little, kicks the tree, and shuffles away.
+
+All of that happens automatically; there is nothing you can do to stop it from
+happening. Just as well, since you will be needing that umbrella later on. So,
+throw the soccer ball at the umbrella. Once you have the umbrella (or brolly,
+as they sometimes say in London), head along West past the Round Pond, admiring
+the toy boats, and stop a moment at the Broad Walk, where another old woman is
+selling bags of crumbs for the pigeons.
+
+Buy a bag, but don't do anything with it just yet. Make sure you take the bag
+before you leave (you can take the coin, too, although I never did find a use
+for it). Go North to the Black Lion Gate, where you find an unattended
+perambulator (which, fortunately, you can abbreviate to PRAM in the game). Open
+it (there is nothing inside, but you want the Pram for itself), then push it SE
+to the Round Pond again (the boy blowing soap bubbles at Inverness Terrace is
+not important in this area, but you'll meet him again later).
+
+This time, you see a graceful paper crane swimming in the Pond. Get that and
+open it up. Aha, a message! Long Water, 4 o'clock. Put the paper in your pocket
+while you think on that a moment. Long Water is off to the east, but there
+seems no way of reaching it. The only route is across the grass at the
+Lancaster Walk, but the sign there says: "Do not walk on the grass", and they
+mean it (try it, if you haven't already).
+
+However, you've noticed that bicycles are able to roll over the grass; now, if
+you could stuff yourself in the Pram, and open the umbrella, the wind might
+blow you over to Long Water. Unfortunately, the wind is coming from the east,
+so that idea seems out. Or does it? Push the Pram over to Lancaster Walk, get
+inside, and now put your hand in the bag of crumbs.
+
+A ruby slips out! Wow, how about that? But before you can do anything about it,
+a bird that looks suspiciously like a road runner picks it up and darts away to
+the east. And at that moment, the winds die down briefly, then start up again
+from the west (finding the ruby triggers the wind change). Now, open your
+umbrella, and you're off to Long Water.
+
+CRASH! Oooops, you went a little too quickly there, eh? No matter, you aren't
+hurt at all. Pick up anything you may have dropped, then just hang around for a
+little while. It won't be long before you notice a missile overhead, falling
+with excruciating slowness. However, don't stand there gawking; as the missile
+approaches, you notice a door has appeared, hovering in the air just above the
+water's surface. That's what you've been waiting for, so move quickly East and
+through the door (no, you can't take the Pram with you, and you don't need it
+any more, anyway). The real game is about to begin.....
+
+Trinity is copyrighted 1986 by Infocom Inc.
+
+This walkthru is copyrighted 1986 by Scorpia, all rights reserved.
+
+
+                     TRINITY
+                     Part II
+
+
+You find youself stepping out of a door set in the stem of an enormous
+toadstool that is growing in a pleasant Meadow. Even as you turn to look, the
+door fades away into the mushroom. Hmmmm. But there is no time to worry about
+that, you have much to do here.
+
+From the Meadow, walk North to the Summit. After admiring the view, tramp NE
+the South Bog. Not a very pretty place, especially with that decaying log
+at your feet. Try getting the log, and it falls to pieces, leaving behind only
+a single splinter, edged with phosphoresence. This is your first light source.
+Pick up the splinter, then go SE past the Trellis, SE again to the Arbor
+Vitaes, and West to the Arboretum.
+
+Here you find a bizarre glass sculpture, with Felix Klein 1849-1925 on the
+base. The bottle itself is not important in the game, but the inscription is.
+Now, go South up the South Arbor, then up again to the top. A pretty dizzy
+climb, eh? But look what's here: a silver axe. Take that, then go NORTH and
+down to the Arboretum again.
+
+Ummm...something is not right here. The inscription on the base of the
+sculpture is now backwards!!! In fact, if you start wandering around the area,
+you'll find that everything is now reversed! But, don't panic! You have just
+solved a tidy little problem. Drop the gnomon, then go back up the pergola.
+The trick here is to make a complete circuit, in either direction. You can go
+North and come back South, or go South and come back North. Either route will
+set things to rights again. Just make sure you drop the gnomon before you make
+the second trip.
+
+Ok, pick up the gnomon and make your way back to the Trellis. From there, go
+due North to the Stair Bottom (this, by the way, is a good place to leave
+various items that you don't immediately need). Climb the stairs all the way to
+the top (brr, it's a bit chilly up here) where you find another sundial,
+although it's a bit larger than the other one was. No matter, screw the gnomon
+into the face of the dial....and a lever pops up from the platform (a terrible
+pun pops up, too).
+
+This lever is quite important, and controls the dial. Examine the dial, and
+you will see the shadow of the gnomon advancing along towards the symbols.
+When you push the lever, the shadow will stop; when you pull the lever, the
+shadow begins moving again. Any time the shadow is directly on a symbol, the
+door in a particular toadstoll will open. Therefore, you must wait for the
+shadow to reach a symbol, then push the lever.
+
+Symbol #1 represents the door you arrived through, and will not be used again.
+Symbol #2 is the toadstool at the Waterfall; symbol #3 is the one in the
+Ossuary; symbol #4 is the Mesa; symbol #5 is the cottage Garden; symbol #6 is
+the Moor, and symbol #7 is across the River Styx.
+
+It is not possible to go through the doors in order to complete the game; you
+will need objects from different places in order to finish. So, as usual, you
+are going to have to do a bit of waiting here (this is an Infocom game, so you
+knew this sort of thing would happen sooner or later).
+
+Anyway, now that you have the sundial set up, take out some time to map the
+area thoroughly. There is no funny business here; the mapping is all very
+straighforward, and it's important that you know where everything is and how
+to get somewhere quickly. Along the way, you'll find an oak tree at the Chasm's
+Brink; chop that down with the axe (but hang on to the axe).
+
+You will also find a cottage; by all means, go inside. Listen to the Magpie
+(take the cage) while you read the Book of Hours (can you guess what it
+represents?), and examine the map on the wall (it's your own map, hehehe). Poke
+around in the Garden back of the cottage, too, where you'll find some garlic in
+the trash pile. However, you might want to stay out of the Barrow for awhile.
+And I'd recommend you not try to disturb the boy blowing bubbles at the
+Promontory; he's quite a bit larger than when you last saw him. But keep him in
+mind; later he will be very important to you.
+
+While you're becoming familiar with the area, you might want to do a few other
+things, too, such as getting the metal from the crater. Visit the Ice Cavern
+West of the Waterfall, bringing the axe with you. Throw the axe at the icicles
+on the ceiling, and one of them will break off. Get that and go straight East
+to the Stair Bottom.
+
+The icicle is beginning to melt, and if you go much further, it won't last
+until you reach the metal. However, it's pretty cool up at the top, so climb
+up to the dial, where the icicle freezes up again. Now you can go down again
+and you'll have just enough time to get into the crater and put the icicle
+on the metal. Once it's cool, just pick it up with your bare hands.
+
+On your way back, stop off Under The Cliff, where the bee hive is located.
+Honey is usually found in some places, so put your hand in the hole. OUCH!
+Maybe that wasn't such a great idea after all; now you have a giant bee after
+you. But he's really no problem: nip along SW to the Stair Bottom, then NW to
+the North Bog and the giant Venus Fly Trap. The bee comes buzzing after you,
+but is sidetracked and eaten by the Plant. Whew! Now you can go back to the
+hive (drop off the metal at the stairs on the way) and get the honey.
+
+Ok, now that you've done your mapping, it's time to get busy. Back at the
+sundial, wait until the shadow is on the third symbol. Push the lever, then
+head along to the Ossuary (at the Stair Bottom, you can drop off the cage and
+the axe, which you won't need for awhile, also the bag of crumbs and the
+umbrella).
+
+The Ossuary is not a nice place, especially with a Barrow Wight in residence.
+However, since you have light with you, he is relatively harmless. Proceed
+through the door in the toadstool, which transports you to an underground
+tunnel, where a nuclear test is in progress. Get the lamp, and keep going.
+Pick up the walkie talkie and turn it on. Sooner or later, a small lizard will
+make it's appearance.
+
+The skink runs past you to the next room, and you'll find he's a slippery
+little devil. But you can fool him! Turn on the lamp and drop it. Then go to
+the next room, where the skink is hiding in a crevice. Push your splinter into
+the crevice, and wait. The lizard will run out to the previous room...but your
+lamp is there, and now the poor thing is confused. It comes rushing back in,
+to run wildly around your feet. Pick it up and put it in your pocket (the skink
+will not escape, and will remain alive).
+
+Now return the way you came (the door is still there) to the Ossuary. Since
+you have the lamp, you are safe from the Wight. Search among the bones, and
+you'll find a key. This key fits in the hole in the other room. Turning the
+key opens a secret passage in the floor to a room below. Go down that into
+the Ice Cavern while the Wight stomps about in rage at your escape. Turn off
+the lamp, and return to the Stair Bottom.
+
+Drop off the walkie-talkie and the lamp here. Then up you go, pull the lever,
+and wait for the shadow to touch the fourth symbol, after which you traipse
+on over to the Mesa, walk carefully across the tree, and through the open
+door.
+
+You're in some kind of building. Climb down the ladder, open the box, push the
+red button and the switch, and step outside. Ah, the South Pacific! However,
+I wouldn't stick around too long, if I were you: the world's first H-Bomb is
+going to explode soon. Make a quick circuit of the area; it's pretty small,
+eh? And what about that ominous fin that seems to follow you around?
+
+On the West Beach, you spy a small islet offshore, with nothing more than a
+small palm tree on it. Palm trees are noted for having coconuts, amd coconuts,
+as we all know, contain milk (aha!). I'll bet you could swim there...OUCH!
+Nasty crabs! In fact, a whole lot of nasty crabs! You'll never get to that
+islet now, as they cover the beach, clicking their claws at you.
+
+And now, to make your day, a huge mouthful of sharp teeth erupts from the
+water. But wait...it's not a shark, it's a dolphin!! Whew! Good thing dolphins
+are friendly...and playful...and smart, too. Just point to the coconut that's
+floating around, and the dolphin will throw it to you. It's as simple as that.
+Then run quickly back to the door and step through it.
+
+
+Trinity is copyrighted 1986 by Infocom Inc.
+
+This walkthru is copyrighted 1986 by Scorpia, all rights reserved.
+
+
+                         TRINITY
+                         PART III
+
+
+All right, we're making some progress here. Drop off the coconut at the Stair
+Bottom, get the cage, and release the Magpie (you don't need him anymore). Up
+at the top, wait for the shadow to reach the fifth symbol, then hop on down and
+over to the Garden and into the toadstool.
+
+BRRRRR! It's cold around here, and no wonder: you're in Siberia now (America
+isn't the only country that conducts nuclear tests). Climb down the ladder, and
+you'll see that the area is over-run with rodents, all dashing madly off across
+the tundra. Whatever could they be doing? The only way to find out is to follow
+them, so do just that.
+
+Eventually you come to a cliff, but the rodents don't stop...they just keep
+right on going, over the edge to their doom. Now you know what they are:
+lemmings! And you can see that one of them is stuck in a fissure. Grab him
+quick and stick him in the cage, then return to the door (freezing to death
+isn't pleasant).
+
+Ahhh, that's better, nice and warm again. Drop off the cage at the stairs, and
+go to the top, where you wait for the shadow to touch the sixth symbol. On your
+way to the Moor, remember to pick up the umbrella, and also make sure you have
+the note with you (the one that used to be a crane). Step through the door
+and...
+
+Oh my, you seem to be falling....and falling pretty quickly, too! One move is
+all you have, so don't waste it: open that umbrella, fast!! OOOF! A hard
+landing, but you seem to be in one piece. Pick up anything you may have
+dropped, then take a look around.
+
+Children to the north, teachers to the south, a shelter to the east, and a
+building to the west. Very small place. Examining the decorations around the
+windows, you note they are Origami. Uh oh. You're in Nagasaki, only a few
+minutes before the bomb hits.
+
+Time is of the essence here, but just hang around awhile until the little girl
+shows up. She's about five and very cute. She's also entranced by your umbrella
+(guess who she is?). Give her the umbrella, and follow the girl into the
+shelter, where you see the spade. Take it.
+
+Now your only question is: how do I get back to the door, fourteen hundred feet
+overhead? Well, the solution (something of a cop-out, I think) is simple: give
+the note to the little girl. She recognizes it immediately as Origami, and
+deftly folds it back into a crane before returning it to you.
+
+As you watch, you see the crane glowing with magical energies. Step out of the
+shelter, and the crane begins to grow...and grow...and grow...until it's large
+enough for you to ride, back up to the doorway in the sky.
+
+That little episode may have left you with an unpleasant feeling, but things
+are going to get worse very shortly. Drop off the spade, climb up to the dial,
+and wait until it reaches symbol #2. Go down again, pick up the metal and the
+axe and head along to the Promontory where the giant boy is blowing bubbles.
+
+Climb into the dish of soapy water, and wait until you're inside a bubble. It
+won't hold up very long, so without wasting time, go South, then Southwest, and
+into the door, bubble and all.
+
+Look, you're in outer space! Fortunately, the bubble immediately freezes around
+you, providing protection for your frail body. Now you see two things: a
+crescent moon and a satellite. This is the place; take the skink from your
+pocket, and kill the poor thing, strangling it with your fingers. There is no
+way you can avoid doing this, so if you want to finish the game..well...
+
+Once that very unpleasant task is done, the satellite is much closer, and the
+metal (which is magnetic) pulls you right up to it and you stick to the side.
+Now the satellite is moving back the way you came. Again, there isn't much time
+here before you get vaporized, so when you see the door getting closer, break
+the bubble with the axe. Whooosh! You're blown right through the door to the
+Waterfall.
+
+Ok, you have everything now that the Magpie told you about. Get the coconut,
+and make your way to the cottage. Drop the coconut, hit it with the axe, get
+the coconut, and pour the last of the milk into the cauldron. Drop the axe and
+coconut, which you don't need any more, steel yourself, and put your
+honey-coated hand into the cauldron.
+
+OUCH! But at least the honey is off your hand and in the pot. Now drop in the
+skink, and the garlic, then leave and wait outside. When all the excitement
+dies down, go back in. Hmmm...not much left of the Book of Hours, but that's
+not important. Peek in the cauldron, and at the bottom, you see...an emerald!
+Take that, because now it's masquerade time.
+
+From the cottage, go to the Cemetary over the Waterfall. Pry the Crypt open
+with the spade (remember, it's sturdy enough...and how many of you out there
+thought it was for the metal? hehehe). Once the Crypt is open, look inside.
+Don't be afraid, it's only your own dead body (hmmm).
+
+Grave-robbing time. Take the shroud and the two crazy boots. Untie the bandage
+and the corpse's mouth falls open, revealing a silver coin. Get that too (you
+can drop the bandage). Examine the boots, and you see that each has a
+compartment in it. Put the emerald in the green boot. Aha, it's sprouted wings!
+Too bad you don't have something for the red boot, but maybe you'll come across
+it later. Put on the red boot and wear the shroud. You can drop the spade.
+
+Now, return to the sundial, and wait until the shadow is on the seventh symbol.
+Go down, and make sure you have the following with you before you go to the
+River: Shroud (worn), boots (worn), silver coin, cage (with lemming), the lamp,
+walkie-talkie, bag of crumbs.
+
+Ok, you stand on the shore of the River Styx, waiting for the dark oarsman to
+arrive, which he will do shortly. This time, with your vacation shorts hidden
+by a shroud, he lets you in the boat (you wonder why he doesn't notice the cage
+with the live lemming, or the hissing walkie-talkie...). Hand him the silver
+coin. In due time, the boat pushes off for the other side, and you are on your
+way to your destiny.....
+
+Trinity is copyrighted 1986 by Infocom, Inc.
+
+This walkthru is copyrighted 1986 by Scorpia, all rights reserved.
+
+
+                          TRINITY
+                          PART IV
+
+
+And so you step through the final door. New Mexico, 1945. In a short while, the
+first atomic bomb will be detonated, and the world will never be the same
+again. You are here to sabotage that explosion, but not for the reasons you may
+think. However, there's a long way to go before you can get around to doing
+that.
+
+Wait until the voices leave. While you wait, examine the paperbook book; inside
+is a very important piece of cardboard (you don't have to take it with you;
+just note down what's written on it). You might also want to take a look at
+that panel, too.
+
+Ok, climb down to the bottom of the tower, and there you see...the roadrunner!
+He's sitting on a mysterious locked box that you can't open (yet!), and in his
+beak, he holds the ruby, which he drops for you to take. Get that, and put it
+in the red boot. Now, you can move pretty quickly across the desert. Just as
+well, because, as always, time is short.
+
+Here you are going to need the map that came with the game. Study it carefully.
+From the Tower, zip across the sands to point Able (your faithful roadrunner
+will be following you wherever you go..he will be handy in several places).
+Don't go too close; what you're interested in here is the abandoned jeep. Get
+inside. You can ignore the wallet (it has a picture of a boy inside...guess
+who?). Look at the radio dial, and see what number it's set to. This number is
+random each time you visit the jeep. Now, tune the walkie-talkie to that same
+frequency, so you can hear what's going on.
+
+So far, so good. Now it's time to visit Old McDonald's ranch (sorry, no
+hamburgers). Check the floor plan on the map. Go to the Assembly Room. OOPS!
+Umm, there seems to be a rather vicious rattlesnake here. It would be a
+helluva thing if you came this far, only to die of a snakebite, so hop right
+into that closet and shut the door.
+
+Of course, this is only a temporary measure. You have to come out, sooner or
+later, and the rattler will still be there. So, you're going to have to give
+him something. That something, alas, is the lemming. Open the cage, and the
+lemming will jump out and begin scurrying around on the floor. Open the door,
+and it dashes out straight into the fangs of the snake. Poor lemming.
+
+After the snake leaves, examine the workbench (you can drop the cage, by the
+way). Here you find a screwdriver. Take that, then go to the kitchen, where
+you pick up a steak knife. Then it's outside, for a visit to the Reservoir
+and the Windmill.
+
+At the Reservoir, climb up and drop everything you're holding (no need to
+empty your pockets). Climb back down again, and go around to the Windmill.
+A creaky ladder leads up, and it doesn't look very safe. However, nothing
+ventured, nothing gained, so you go up the ladder. Just as you reach out to
+grab the binoculars....CRASH!!!!
+
+You fell through into the Reservoir. And what about the binoculars? Well,
+they're at the bottom. How to get them? Simple! Climb out, get the lamp, and
+jump back in again. Turn on the lamp, and swim down. Aha, there they are! Grab
+the binocs (you can abbreviate them like that in the game, too), and return to
+the surface. Pick up all your other stuff (you can drop the lamp), and make
+tracks for point Baker.
+
+There certainly is a lot of activity around this place. Better stay hidden
+behind the shed. While you're there, why not take a peek at the shelters with
+your binocs? Hmmm...isn't that interesting: looks like you just found the key
+to that mysterious locked box by the tower. On the other hand, there certainly
+isn't any way for YOU to get that key.
+
+Did you know that roadrunners understand English? This one, does, at least.
+When your speedy friend shows up, tell him to get the key and voila! he nips
+in, grabs it, and nips out again. Pretty speedy, all right!
+
+OK, we're approaching the big moment, but you have a little more to do first.
+Return to the Tower, and open the box (you can drop the key and padlock after
+that). Inside is a lot of electrical equipment, and a breaker. Open the
+breaker, then immediately close it again. Listen to the reactions over the
+walkie-talkie.
+
+Now, you need to get back up the Tower, but with the spotlight on, you're
+certain to be seen. Something will have to be done about this, so head
+along to point Pittsburg.
+
+Good doggie, nice doggie...be very quiet, and DON'T wake the German Shepherd
+that's sleeping outside the bunker. Instead, drop the bag of crumbs, and wait
+for the roadrunner to arrive. As soon as he does, run like the wind for the
+Tower. Waste no time here at all. Get to the Tower, and climb right up to the
+top and get inside while your friendly roadrunner is raising hell back at the
+bunker.
+
+Whew! Just made it. Ok, turn on the light (there's a chain switch you can pull)
+and unscrew the panel with the screwdriver. Look inside, and you'll see four
+wires. Only one is the right one to cut. But, don't be in a rush, you have a
+little time now, so wait. Wait until you hear over the walkie-talkie that the
+auto-sequencer is running. At that point, cut the RED wire!
+
+The countdown goes on...5..4..3..2..1...ZILCH. No explosion. And even as you
+wonder what it is you've just done, everything begins to melt away, and that
+strange voice you heard back at Long Water gives you an explanation, of sorts.
+So you've saved the entire state of New Mexico from being smeared off the map
+(the bomb was just a BIT stronger than expected). Cold comfort, when you begin
+to realize how nature is going to fix up this paradox. All prams lead to the
+Kensington Gardens, indeed......
+
+Trinity is copyrighted 1986 by Infocom, Inc.
+
+This walkthru is copyrighted 1986 by Scorpia, all rights reserved.
+
+[NOTE: Scorpia's walkthrough says "cut the RED wire" — this is a
+FIXED/INCORRECT simplification. Both other sources confirm the wire color is
+RANDOMIZED per playthrough via the jeep dial number + cardboard slip legend.
+Do not trust "RED" as a hardcoded answer — see puzzle-notes.md.]
+
+================================================================================
+SOURCE 2 of 3 — The Walkthrough King (compressed action-list style)
+================================================================================
+https://www.walkthroughking.com/text/trinity.aspx  (walkthrough updated 9/25/2001)
+
+Introduction
+
+Walk east and take the soccer ball, then go north twice and wait. Throw the ball at the umbrella, then take it. Go southwest, examine the boats, and take the paper bird. Next head south and examine the sundial. Turn the gnomon, then take it.
+
+Head southwest and north. Buy a bag of crumbs, then take the bag and change. Feed the birds and you will see a ruby. Try to pick it up, but it is stolen. Go north and push the perambulator east twice and south. Read the notice here, then open the perambulator and get inside. Open the umbrella. After the crash, get all, then go south and enter the water. Go east.
+
+Trinity
+
+Head north and northeast. Take the log, then take the splinter. Continue east and north twice. Examine the hole and try putting the gnomon inside. Next head south 3 times, southwest and east. Examine the sculpture, then go south and up, where you can get an axe. Go north, down, east, northwest and north 3 times, then put the gnomon in the hole.
+
+Head south 3 times, southwest, east, south, up, north, down, west, northeast and north 3 times. Set the ring to the sixth symbol, then turn the lever. Go south twice and drop all, then pick up the paper and umbrella. Walk east twice and enter the toadstool. Open the umbrella, then pick up the paper and umbrella again. Head east and get the spade, then go west and wait. Give the paper to the girl, then give her the umbrella. Sit on the bird and go through the door.
+
+Head west twice, drop the spade, and get the splinter. Next go north twice. Set the ring to the fifth symbol, and go south twice, east, northwest and northeast. Open the front door of the cottage, go east, and open the back door. Read the book, then wait while the magpie gives you clues. Open the cage and take the cage. Go east and search the pile, then take the garlic. Enter the toadstool, then head down and northeast twice. Examine the fissure, get the lemming from the fissure, and put it in the cage, then immediately close the cage. Return southwest twice and up. Go through the door and head west, then put the garlic in the cauldron.
+
+Go west, southwest, southeast and west. Drop the cage and pick up the axe. Go north twice and set the ring to the fourth symbol, then go south twice, east and northwest. Chop the tree with your axe, then push the tree north. Go north and enter the toadstool. Go down the stairs, open the box and press the red button. Now head south, northeast, northwest and west, then wait until the coconut floats out into the lagoon. Point at the coconut, then pick it up after the dolphin tosses it toward you. Walk southeast, north and up, then go through the door. Go south and east, then empty the hive twice - go west twice to get rid of the bee, then go east, northeast and east into the cottage. Hold you hand in the cauldron. Now drop the coconut and break it with your axe. Quickly pick it up and hold it over the cauldron.
+
+Walk west, southwest, southeast and west. Drop the coconut and axe, then go north twice. Set the ring to the third symbol. Walk south twice, west twice and north twice. Show the splinter to the barrow wight, then go north. Search the bones and take the key. Enter the toadstool. Get the lantern, then go west and get the walkie-talkie. Continue west, then go east, turn on the lantern and drop it. Go west again and put the splinter in the crevice, then take the skink and put it in your pocket. Return east and get the lantern, then go east and head through the door. Go south and put the key in the hole, then turn the key. Go down and turn off the lantern.
+
+Go east 3 times, then drop the lantern and walkie-talkie, and take the axe. Go north twice and set the ring to the second symbol. Head south twice and west 3 times. Throw the axe at the icicle, then get the icicle and the axe. Go east 3 times and north twice (so the icicle hardens again), then head south twice, east, northeast and east. Touch the lump with the icicle, then take the lump. Walk west 3 times and northwest, then enter the dish. Wait until you drift to the ground in the soap bubble, then head south and southwest. Enter the toadstool. Examine the moon, then take the skink and kill it. Wait until you are very close to the white door, then break the bubble with the axe. Head east, northeast twice and east again, then put the skink in the cauldron. Immediately go west, wait, and return east. Look in the cauldron and take the emerald.
+
+Head west, southwest, southeast and west. Drop the axe and emerald, and take the spade, then head north twice. Set the ring to the seventh symbol. Head south twice, west twice and north. Lift the slab with the spade. Now drop the spade and look in the crypt. Examine the corpse, then take the shroud and wear it. Take the boots and wear them both. Also take the bandage and wear it. Look in the mouth and get the coin.
+
+Go south and east twice. Examine the green boot, then get the emerald and place it in the green recess. Get the cage, walkie-talkie, bag and lantern, then go southeast and wait for the dory to land. Enter the dory and give the coin to the oarsman. Go south straight away, and enter the toadstool. Examine the box, then examine the panel. Open the book and examine the cardboard, then read the poetry. Now wait until you hear the motor fade into the distance. Head west and down twice, then drop the cage. Get the ruby and place it in the red recess. Take the cage again and head northwest 3 times. Open the jeep and enter it, then examine the radio and the dial. Set the slider to the number indicated on the dial. Extend the antenna, then turn on the radio and the walkie-talkie. Exit the jeep.
+
+Go southeast 5 times, east, south and west. Open the right door, then go west and north and close the door, with the snake waiting outside the closet! Drop the cage, turn on your lantern, open the cage, and turn the lantern off again. Now open the door, and the snake will eat the lemming. Go south and take the paper, then take the screwdriver. Go south and west, and take the knife. Now head east, north, east twice, south and east (you should be south of the reservoir).
+
+Drop all except your bag. Go up and drop the bag, then climb down again (this prevents the roadrunner from eating the crumbs). Head northeast and up, and try to take the binoculars, but you will fall in the water. Go south and down, then get the lantern and go up, north, and down. Turn the lantern on and get the binoculars. Go up and south, and get the bag. Turn the lantern off and drop it. Go down and get all, then go west 4 times and south twice.
+
+Examine the shelter through your binoculars. Wait until the roadrunner appears, then point at the key, and take it. Go north 4 times and unlock the box, then examine the panel. Turn the breaker, and carefully note which wire/line Able suggests checking. Turn the breaker again. Head southwest 4 times, then give the bag to the dog, and wait until the roadrunner starts pecking at the crumbs. Now go north, east, northeast twice, up twice and east. Get the cardboard, then read the cardboard and read the diagram. This indicates the color of the wire you need to cut shortly (red, blue, striped or white - depending on which wire was indicated by Able earlier - ground, information, detonator or positive). Unscrew the panel and pull the chain, then look in the panel. Now wait until the countdown reaches eleven seconds, then cut the appropriate wire with your knife.
+
+Back at the palace gates, go east and north twice, then wait for the game to end.
+
+================================================================================
+SOURCE 3 of 3 — David Welbourn / Key & Compass ("Trinity - map and walkthrough")
+================================================================================
+http://www.plover.net/~davidw/sol/t/trini86.html
+(fetched via Wayback Machine snapshot 20260403125758)
+"This solution is by David Welbourn, and is based on Release 12 of the game.
+This version of the game was available on the Masterpieces of Infocom CD."
+Last updated: 26 Mar 2020. First published 06-Nov-2018.
+
+--- Summary of the Walkthrough ---
+Note that UNDO isn't available, so SAVE often! And you can't use X for
+EXAMINE; that abbreviation hadn't been invented yet. Also using IT is awkward
+since it refers to the last item mentioned in the text, including moving
+shadows, lemmings, skinks, and roadrunners.
+
+Prologue: Get soccer ball, gnomon, bag of crumbs and 20p coin (losing 50p
+coin), paper, pram, umbrella (losing ball). Then escape (losing the pram).
+
+Wabe: Gain splinter, axe. Use gnomon. Gain cage (losing magpie), garlic.
+Gain icicle (with umbrella) and use it to get lump. Gain and use key. Gain
+and use honey.
+
+Playground: (Need umbrella, paper.) Gain spade. Lose umbrella and paper.
+
+Wabe: Use spade to open crypt. Take bandage, silver coin, shroud, boots.
+
+Underground: (Need splinter.) Gain skink (losing the splinter), walkie-talkie,
+lantern.
+
+Orbit: (Need skink, axe, lump, soap bubble.) Kill skink; lose lump.
+
+Island: Gain coconut.
+
+Wabe: Milk + honey + dead skink + garlic = emerald. Use it.
+
+Tundra: (Need cage.) Gain lemming.
+
+Wabe: Wear shroud and pay silver coin to cross river.
+
+Desert: (Need boots, caged lemming, walkie-talkie, lantern, bag of crumbs.)
+Open book; get slip. Read diagram. Get and use ruby.
+Run to jeep. Set slider setting and enable walkie-talkie.
+Run to ranch. Get knife. Lose lemming; drop cage. Get screwdriver. Get
+binoculars. Abandon lantern.
+Run to shed. Get key.
+Run to tower. Unlock box. Learn critical wire.
+Run to blockhouse. Drop bag.
+RUN TO TOWER. Unscrew panel. Pull chain. WAIT. Cut wire.
+
+Epilogue: Do the prologue again.
+
+--- Walkthrough (full, room-by-room) ---
+
+PROLOGUE: KENSINGTON PARK
+(Rooms: Palace Gate, Flower Walk, The Wabe, Broad Walk, Round Pond,
+Black Lion Gate, Inverness Terrace, Lancaster Gate, Lancaster Walk,
+Long Water, Wading.)
+
+We also have a credit card, but I prefer to examine it later.
+
+> verbose.
+(The game is in "brief" mode by default.)
+> i. examine watch.
+(It's 3:30:00 pm.)
+take coin. examine coin. e.
+
+Flower Walk
+> examine memorial. examine blossoms. take ball. (+1)
+nw.
+
+The Wabe
+> examine sundial. examine gnomon.
+> unscrew gnomon. take gnomon. (+5)
+nw.
+
+Broad Walk
+> examine woman. examine pigeons. buy bag. (+1)
+> take bag and coin. feed birds. take ruby.
+A roadrunner takes it and runs east! The woman yells, "It's time!" And a
+strong wind now blows towards the east.
+The woman is the only NPC in the game that you can talk to. You can ask her
+about several topics and show her most of your inventory.
+> ask woman about roadrunner. ask woman about ruby. e.
+
+Round Pond
+Roadrunner runs east! Don't forget to take the paper bird; you absolutely
+must take it.
+> examine boats. take bird. (+3)
+> examine bird. open bird. read paper.
+("Long Water, Four O'Clock")
+> nw.
+
+Black Lion Gate
+> examine pram. open it. look it in. (It's empty.)
+> push pram east.
+
+Inverness Terrace
+> examine boy. push pram east.
+
+Lancaster Gate
+> examine woman.
+(She loses her umbrella in the tree and she leaves.)
+> throw ball at umbrella. take umbrella. (+5)
+For what it's worth, you can exchange ball for umbrella and back again, but
+never have both.
+> push pram south.
+
+Lancaster Walk
+Roadrunner runs east!
+> examine notice. e. (The grass itself forces you back.)
+Note that bicycles are allowed on the grass; it's only walking on the grass
+that's denied.
+> enter pram. open umbrella. (You zoom across the grass!)
+
+Long Water
+Whatever extra time you might have had before 4 o'clock is gone. (Comic book
+feelie: the statue is Peter Pan, "the boy who would not grow up".)
+> take all but pram. examine statue.
+(A missile is in the sky!)
+> examine missile. (You spot a door above the water.)
+> e.
+
+Wading
+> e.
+(The roadrunner precedes you through the door to somewhere else...)
+
+--- THE WABE (hub garden) ---
+Who just spoke to us? That voice returns at odd moments, whispering
+comments — an unseen sidekick. The roadrunner is nowhere to be seen.
+
+Since we don't have unlimited carrying capacity, put small items in your
+pocket and drop larger items at the Bottom of Stairs (the obvious central
+cache point of the Wabe). "Wabe" = the plot around a sundial (Jabberwocky,
+Lewis Carroll).
+
+> save. i. fold paper. examine meteor.
+> put paper and coin in pocket. examine watch.
+> take card. read card. put card in pocket.
+> n.
+
+Summit
+(Toadstools are symbolic mushroom clouds; increasing count = increasing
+atomic bomb use over time.)
+> examine toadstools. ne.
+
+South Bog
+> examine log. take log. examine splinter. take splinter. (+1)
+> e.
+
+Bottom of Stairs (cache point)
+> drop bag. drop umbrella. u. u.
+
+Vertex
+(cold up here)
+> examine shadow. examine sundial. examine symbols.
+> examine rose. examine hole. examine ring.
+> put gnomon in hole. (Screw threads don't match.)
+> d. d. s. sw. e.
+
+Arboretum
+(a Klein bottle, per the sculpture/inscription)
+> examine sculpture. reach in it.
+> n. u.
+
+Top of Arbor
+(need a lightsource — e.g. splinter — to see the axe)
+> take axe. (+1) examine axe.
+> s. d.
+
+Arboretum
+(Passing through Top of Arbor flips the world left-right; check if the
+inscription is now backwards to detect flip state.)
+> w. ne. n. u. u.
+
+Vertex
+> put gnomon in hole. (+5; a lever appears, ring twinkles.)
+> push lever. (Shadow stops moving.)
+> turn ring. (The sun moves! — this selects which symbol the gnomon's
+  shadow points to, opening the corresponding toadstool's white door.)
+Revisit the arbor to flip back to normal, then ignore the arbor thereafter:
+> d. d. s. sw. e. n. u. s. d. w. ne. n.
+
+Bottom of Stairs
+(Axe: first/most obvious use — chopping down a tree.)
+> nw.
+
+North Bog
+(Don't put anything in the flytrap — it swallows things permanently; axe
+bounces off it, doesn't cut it.)
+> examine flytrap. e.
+
+Chasm's Brink
+> examine tree. examine chasm. examine mesa. examine toadstool.
+> chop tree. push tree north. (+3)
+> sw. e.
+
+Bottom of Stairs
+> drop axe. take umbrella. w. w.
+
+Waterfall
+(If shadow points to 2nd symbol, this toadstool's door is open — don't
+enter yet.)
+> examine waterfall. w. enter waterfall. search waterfall. w.
+
+Ice Cavern
+(NOTE: if umbrella already given away, throw the spade instead — axe isn't
+long enough to reach the icicles.)
+> examine icicles. hit icicle with umbrella. take icicle. (+1)
+(Icicle must reach the Crater via the Vertex — cold air rehardens it en
+route, or it melts.)
+> e. e. e. u. u.
+
+Vertex
+(icicle hardens again)
+> d. d. ne. e. e.
+
+Crater
+(Iron objects — umbrella, gnomon — are attracted to the lump; it's a strong
+magnet.)
+> put icicle on lump. (+3)
+> take lump. (+1) examine lump. w. w.
+
+Under Cliff
+(Don't disturb the bees yet — dangerous.)
+> examine hive. sw.
+
+Bottom of Stairs
+> drop lump. drop umbrella. w. w. n.
+
+Cemetery
+(Don't open the crypt with axe or umbrella — they break and become
+worthless. Bring a lightsource — e.g. splinter — before visiting the
+barrow.)
+> examine crypt. read crypt. open crypt.
+> examine statues. examine barrow. n.
+
+Barrow
+(A spiked door now blocks the south exit. Barrow wight here — acts like a
+grue, attacks without light. Kissing it is fatal — save first if curious.)
+> examine wight. examine hole. examine door. n.
+
+Ossuary
+> examine bones. search bones. take key. (+1)
+> examine key. s.
+
+Barrow
+(Key stays in the hole once placed; turning it opens a way down.)
+> put key in hole. turn key. (+1)
+d.
+
+Ice Cavern
+(This is also reachable via the skeleton key alone; no need to search the
+waterfall from this side.)
+> e. e. n. n.
+
+Promontory
+(Larger version of the boy first seen at Inverness Terrace, blowing soap
+bubbles.)
+> examine boy. examine bubble. examine wand. examine dish.
+> examine headphones. talk to boy.
+(Climbing him throws you away; climbing into his dish lets you float in a
+soap bubble for a few turns — useful later.)
+> se. ne.
+
+Bluff
+> examine cottage. knock on door. open door. e.
+
+Cottage
+> examine map. examine cauldron. look in cauldron. smell.
+> examine book. read book. (Your last three commands will be listed.)
+> examine pedestal. turn page. read book.
+> examine magpie. examine cage.
+(Magpie's recipe, learned by waiting/listening over several turns:
+  "Milk and honey, fresh whole lizard
+   Killed in the light of a crescent moon.
+   Mix 'em with a pinch of garlic
+   Then stand back! 'Cause it go BOOM.")
+> z. (repeat until recipe fully heard)
+(After learning the recipe, the magpie itself isn't needed — but its cage
+is.)
+> open cage. (Magpie flies away.)
+> take cage. (+1)
+> open back door. e.
+
+Herb Garden
+(All white-door toadstools look identical.)
+> examine herbs. examine fence. examine thyme. take thyme.
+> examine refuse. search refuse. take garlic. (+1) examine garlic.
+> examine toadstool. examine white door.
+(Get the honey now too — leave cottage doors open.)
+> w. w. se. w.
+
+Under Cliff
+(Careful: 3 bee stings = death; a swarm can also kill, e.g. if you hit the
+hive with the umbrella.)
+> put hand in hive. (Stung! An angry bee follows you.)
+> w. w.
+
+North Bog
+(Bee is swallowed by the flytrap.)
+> examine flytrap. e. e.
+
+Under Cliff
+> put hand in hive. (+3; hand covered in honey.)
+> e. nw. e.
+
+Cottage
+> put honey in cauldron. put hand in cauldron. (+1; honey added.)
+
+(Before entering any toadstool door: SAVE. Once through, you're racing the
+clock to finish and escape before the historical explosion, which always
+occurs right at the door's location.)
+
+--- MOOR TOADSTOOL (symbol 6, Mars — Nagasaki) ---
+Need: umbrella, paper (the folded crane). Lose both; gain a spade.
+> w. se. sw. w.
+
+Bottom of Stairs
+(Travel light before entering toadstools — full inventory risks trouble.)
+> drop garlic. drop birdcage. drop splinter. take umbrella.
+> u. u.
+
+Vertex
+> turn ring to sixth symbol. d. d. e. e.
+
+Moor
+> save. enter door.
+
+JAPANESE PLAYGROUND (Nagasaki)
+(Going north to children or south to teachers = fatal.)
+
+Thin Air
+> open umbrella. (Umbrella-as-parachute.)
+
+Playground (in a sandpile)
+(Don't go north/south — you're an obvious intruder; fatal if discovered.)
+> take all. examine teachers. examine children. e.
+
+Shelter
+> examine spade. take spade. (+1)
+w.
+
+Playground
+> z. (wait/examine until a girl finds you)
+> give umbrella to girl. (She takes it, goes into the Shelter.)
+(Possible bootstrap paradox: this girl likely grows up to become the old
+woman who loses her umbrella in Kensington Park — we got the umbrella from
+her, and now give it back to her.)
+> e.
+
+Shelter
+> give paper to girl. (+3; you get a paper bird again.)
+w.
+
+Playground
+(The paper bird enlarges to car size.)
+> ride bird.
+
+Thin Air, on the giant bird
+> enter door. (Returns to Moor.)
+
+Moor
+> w. w. w. w. n.
+
+Cemetery
+(A second bootstrap paradox: we're "Wabewalker" per the cottage's book, and
+this is Wabewalker's own corpse — we're robbing our own grave. Boots appear
+to be unique items surviving across the loop, unlike the shroud/coin.)
+> open lid with spade. (+3)
+> look in crypt. examine corpse. examine bandage. take bandage.
+> examine mouth. take silver coin. (+1) examine silver coin. put it in
+  pocket.
+> examine boots. take boots. wear boots.
+> examine shroud. take shroud. (+1)
+> examine corpse. kiss corpse. ("Sicko".)
+> s. e. e.
+
+Bottom of Stairs
+
+--- OSSUARY TOADSTOOL (symbol 3, Pluto — underground nuclear test) ---
+Need: splinter (light). Lose splinter; gain lantern, walkie-talkie, skink.
+> drop shroud, bandage, spade. take splinter. u. u.
+
+Vertex
+> turn ring to third symbol.
+> d. d. w. w. n. n. n.
+
+Ossuary
+> save. enter door.
+
+UNDERGROUND (east end)
+> examine cylinder. take lantern. w.
+
+Underground (middle)
+> turn on lantern. drop lantern. w.
+
+Underground (west end)
+(Note: skink can't be held in the birdcage — it slips out.)
+> put splinter into crevice. take skink. (+3)
+> put skink in pocket. (Stays in pocket, not hand.)
+> take splinter. (Can't — crevice too deep.)
+> e.
+
+Underground (middle)
+(Leave lantern on — still have to get past the wight again.)
+> take all. (+1 walkie-talkie; lantern retaken.)
+> e. e.
+
+Ossuary
+> s.
+
+Barrow
+> turn key. d. e. e. e.
+
+Bottom of Stairs
+(Don't carry the skink indefinitely — do the Waterfall toadstool next.)
+
+--- WATERFALL TOADSTOOL (symbol 2, Mercury — Earth Orbit) ---
+Need: skink, lump, axe (and a soap bubble from the Promontory). Lose lump;
+kill skink here.
+> turn off lantern. drop lantern. examine walkie. drop walkie.
+> take axe and lump. u. u.
+
+Vertex
+> turn ring to second symbol. d. d. nw. n.
+
+Promontory
+> enter dish. z. z. (wait until floating inside a bubble)
+> s. sw.
+
+Waterfall, in a soap bubble
+> save. enter door.
+
+EARTH ORBIT, in a soap bubble
+(Timing is critical.)
+> take skink. kill it. (+3; lump now pulls you toward the satellite.)
+> examine satellite. (Lump attaches to the hull.)
+> examine stars. examine door. break bubble with axe.
+(You're thrown through the door at the last possible moment.)
+
+Waterfall
+> e. e.
+
+Bottom of Stairs
+
+--- MESA TOADSTOOL (symbol 4, Neptune — Pacific H-bomb test) ---
+No tools needed; gain a coconut.
+> examine skink. drop skink, axe. u. u.
+
+Vertex
+> turn ring to fourth symbol. d. d. nw. e. n.
+
+Mesa
+> save. enter door.
+
+PACIFIC ISLAND
+> d.
+
+Bottom of Scaffold
+> open box. examine switch. push it. (You have seven minutes.)
+> push button. s. nw.
+
+West Beach
+(The fin/dolphin follows you once first seen.)
+> examine islet. examine tree. w. examine crabs.
+> examine fin. look. w. examine coconuts.
+> point at coconut. (Tide isn't high enough.)
+> examine tide. g. g. (coconut floats away from the islet)
+> point to coconut. (Dolphin tosses it to your feet.)
+> take coconut. (+3)
+> se. n. u. enter door.
+
+Mesa
+> s. w. se.
+
+Bottom of Stairs
+(Now finish the magpie's recipe: grab axe, dead skink, garlic.)
+> take axe, skink, garlic. ne. e. nw. e.
+
+Cottage
+(Chopping the coconut MUST happen in the Cottage — milk dribbles out too
+fast elsewhere; can't eat cracked coconut, chopping again reduces it to
+unusable fragments.)
+> drop coconut. cut coconut with axe. (+1)
+> take coconut. pour milk in cauldron. (+1)
+(Make sure the cage and other loose items aren't left in the cottage.)
+> put skink in cauldron. (+1)
+> put garlic in cauldron. (+1)
+w.
+
+Bluff
+> z. (Boom!)
+e.
+
+Cottage
+(Book, pedestal, and map are destroyed.)
+> look in cauldron. examine emerald. take emerald. (+1)
+> put emerald in green boot. (+1; boot seals up, grows wings.)
+> w. se. w. sw.
+
+Bottom of Stairs
+
+--- HERB GARDEN TOADSTOOL (symbol 5, Libra — Russian Tundra) ---
+Need: cage (for a lemming).
+> drop coconut, axe. take cage. u. u.
+
+Vertex
+> turn ring to fifth symbol. d. d. ne. e. nw. e. e.
+
+Herb Garden
+> save. enter white door.
+
+RUSSIAN TUNDRA
+(Entering Control Bunkers is fatal — soldiers shoot you.)
+
+Platform
+> d. ne. ne.
+
+Cliff Edge
+> look in fissure. take lemming. put lemming in cage. (+1)
+> close cage. sw. sw. u. enter door.
+
+Herb Garden
+> examine lemming. w. w. se. w. sw.
+
+Bottom of Stairs
+
+--- ISLET TOADSTOOL (symbol 7, Alpha — River Styx) ---
+This is the final toadstool and the hardest. Need: shroud, silver coin,
+boots (worn), walkie-talkie, lemming (caged), lantern, bag of crumbs. Travel
+light otherwise — speed matters.
+> take shroud. wear it. take walkie, lantern, and bag.
+> save. u. u.
+
+Vertex
+> turn ring to seventh symbol. d. d. se.
+
+The River
+(Dying anywhere in the game routes you here to ride the dory. The oarsman
+normally won't let you aboard unless you appear dead — hence shroud + silver
+coin payment. You may also amuse yourself giving him the credit card first.)
+> z. (wait for the dory to land)
+> enter dory. give silver coin to oarsman.
+
+Sand Bar
+> s.
+
+Islet
+(The roadrunner, still carrying the ruby, runs into the open white door.)
+> drop shroud. (Can't afford the extra weight.)
+> enter door.
+
+--- NEW MEXICO DESERT / TRINITY TEST FINALE ---
+
+Shack (Tower Platform)
+(Can't proceed past Tower Platform for several turns due to voices outside.
+Contains: light bulb + chain, screwed panel, paperback book.)
+> save.
+> open book. take slip. (+1)
+> examine slip. examine diagram. (+3)
+(*** RANDOMIZED: the diagram legend is randomized each game, e.g.:
+  RD=DET BL=GND ST=INF WH=POS
+Two-letter codes = wire colors (RD=RED, BL=BLUE, ST=STRIPED, WH=WHITE).
+Three-letter codes = wire functions (DET=DETONATOR, GND=GROUND,
+INF=INFORMER, POS=POSITIVE). ***)
+> drop slip. w.
+
+Tower Platform
+(Can't go down safely until the jeep is heard/seen leaving south.)
+> d. d.
+
+Base of Tower
+(The roadrunner is here again — with winged boots we can now keep pace.
+A padlocked box is here too — ignore it for now.)
+> take ruby. put ruby in red boot. (+1 +1)
+> nw. nw. nw.
+
+Paved Road
+> open jeep. in.
+
+Jeep
+(A wallet with a photo of a familiar boy holding a wand is inside — ignore,
+no time.)
+> examine radio. examine dial. (+1)
+(*** RANDOMIZED: the dial number is different every game. ***)
+> set slider to DIALNUMBER. (+1)
+> pull antenna. turn on walkie. out. se. se. se. se. se.
+
+McDonald Ranch
+> open gate. se. s.
+
+Hallway
+> open door. e.
+
+Kitchen
+> take knife. e. n.
+
+Assembly Room
+(CAUTION: staying in the room with the rattlesnake is fatal. Retreating
+saves you but doesn't help the mission — go into the closet instead.)
+> n.
+
+Closet
+> close door. open cage. (Lemming leaves the cage.)
+> open door. (+3; snake kills the lemming and takes it.)
+> drop cage. s.
+
+Assembly Room
+> search workbench. take screwdriver. (+1)
+> open front door. e. e. se.
+
+South of Reservoir
+> u.
+
+Edge of Reservoir
+(Drop anything water-sensitive — lemming would drown, walkie-talkie would
+short, crumbs get soggy. Watch is waterproof. Prefer to have dropped the
+walkie/bag earlier at South of Reservoir, but crumbs need to stay away from
+the roadrunner a bit longer.)
+> drop walkie and bag. d. ne. u.
+
+Windmill
+> turn on lantern. take binoculars.
+(You, the binoculars, and everything you're carrying fall into the
+reservoir.)
+
+Reservoir
+> d.
+
+Underwater
+(Normally pitch dark; the lantern lets you see the binoculars.)
+> take all but lantern. (Leave the lantern — dying soon anyway, and heavy.)
+> u. u.
+
+Edge of Reservoir
+> take all. s. w. w.
+
+Southwest of Ranch
+(Heading into the desert is slightly risky but should intersect the
+north-south road; run south down the road.)
+> sw. sw. s.
+
+Behind the Shed
+(General Groves leaves.)
+> look through binoculars at shelter. (+3; see key in padlock.)
+(May need to wait a turn or two for the roadrunner.)
+> point to key. (+3; roadrunner fetches it.)
+> take key. (+1)
+> examine thin man.
+> n. n. n. n.
+
+Base of Tower
+> unlock box with key. (+1)
+> examine panel. pull breaker.
+(*** RANDOMIZED, gate #2: listen for which line is mentioned over the
+walkie-talkie — "Ask the kid if he reconnected the [detonator, ground,
+informer, or positive] line on X after the continuity check." This tells
+you the WIRE FUNCTION that's critical; cross-reference with the legend from
+the cardboard slip to get the WIRE COLOR to cut. ***)
+> close breaker. (+1)
+(Must reclose immediately or be caught. Also listen for: "If it dies again
+before the sequencer takes over, we're gonna have to scrub" — this tells you
+WHEN it's safe to cut: only after the sequencer has taken over.)
+> sw. sw. sw. sw.
+
+Outside Blockhouse
+(Wait for the roadrunner to arrive.)
+> examine dog. examine searchlight.
+(Once the roadrunner appears, drop the bag of crumbs — a timed diversion to
+pull the searchlight off the tower. Run back before the crumbs run out!)
+> drop bag. ne. ne. ne. ne.
+
+Base of Tower
+(Searchlight beam sweeps away.)
+> u. u.
+
+Tower Platform
+(Beam returns — you were almost spotted.)
+> e.
+
+Shack
+(Don't leave again — you'll be spotted.)
+> examine enclosure. examine panel. unscrew panel. (+3)
+> look in panel. (Dark inside.)
+> turn on bulb. look in panel. (Now you can see four wires.)
+(Around Zero minus seven minutes. Wait for the sequencer; walkie-talkie
+timeline:
+  Zero minus five minutes: "assume safe positions"
+  Zero minus two minutes: siren
+  Zero minus forty-five seconds: auto-sequencer activates.
+Things to examine while waiting: bulb, rope, hardware, sphere, cables, book,
+poem [on the cardboard slip], the wires.)
+> z. (repeat until sequencer is active)
+> cut COLOUR wire. (+5)
+(COLOUR = cross-reference the wire FUNCTION named over the walkie-talkie
+during the breaker step with the legend printed on the cardboard slip.)
+
+(The mysterious voice congratulates you and says not to worry about the
+paradox. You're returned to the Palace Gate in Kensington Park.)
+
+--- EPILOGUE: KENSINGTON PARK AGAIN ---
+(Same actions as the Prologue essentially repeat, with minor variations —
+there's a bomb coming again.)
+> i. e.
+
+Flower Walk
+> take ball. nw.
+
+The Wabe
+> examine sundial. turn gnomon. take gnomon. nw.
+
+Broad Walk
+> ask woman about roadrunner. ask woman about ruby.
+> give card to woman. buy bag. take bag and coin.
+> feed birds. take ruby. ("It's happening again. All of it.")
+e.
+
+Round Pond
+> examine boats. take paper bird. open bird. read paper.
+> examine watch. nw.
+
+Black Lion Gate
+> open pram. push pram e.
+
+Inverness Terrace
+> take dish. push pram e.
+
+Lancaster Gate
+> examine woman.
+
+*** The End ***
+
+--- List of box quote triggers (flavor only, no clue value) ---
+examine sundial @ The Wabe — quote by Lewis Carroll.
+examine boy @ Inverness Terrace — quote by Alexander Pope.
+examine sundial @ Vertex — quote by Arthur Rimbaud.
+examine symbols @ Vertex — Biblical quote, Matthew 16:3.
+examine sculpture @ Arboretum — quotes by Arthur C. Clarke and P. David
+  Lebling.
+examine children @ Playground — quote by Nathaniel Hawthorne.
+examine thin man @ Behind the Shed — quote by Walt Whitman.
+examine sphere @ Shack — quote by Herman Melville.
+examine poem on cardboard slip — Los Alamos ditty, circa 1945.
+begin the epilogue @ Palace Gate — quote by Emily Dickinson.
+
+================================================================================
+END OF RAW SOURCES
+================================================================================

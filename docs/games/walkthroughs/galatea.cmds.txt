@@ -1,0 +1,31 @@
+# Galatea by Emily Short — verified command list (trunk: ending #64 "Patience")
+# Build: Release 3 / Serial 040208 (matches docs/games/galatea.zblorb banner)
+# No randomization: this trunk uses no @random-gated values (see puzzle-notes.md
+# "RANDOMIZED BETWEEN PLAYS" section — Galatea's *mood/sympathy/tension* state is
+# deterministic given a fixed command sequence; nothing here depends on the RNG).
+# Verified: node tools/play.cjs galatea --strict --file docs/games/walkthroughs/galatea.cmds.txt
+#   -> exit=0, no seed needed.
+#
+# This game has no map/navigation — the entire "walkthrough" is one continuous
+# ASK/TELL/TOUCH/THINK ABOUT conversation with the statue Galatea in a single room
+# (The Gallery's End). Sections below mark conversational movements, not locations.
+
+## [opening-inspection] Examine Galatea and the exhibit placard
+x her
+a her
+x placard
+
+## [artist-backstory] Ask about the artist and his suicide
+a artist
+a strangeness
+a him
+t suicide
+
+## [patient-silence] Hold silence (the core mechanic of this ending) to let her open up
+z
+a her
+a stories
+a maxims
+a personality
+z
+z

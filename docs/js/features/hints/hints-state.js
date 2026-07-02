@@ -52,6 +52,19 @@ export function getRevealedCount(questionId, gameName) {
 }
 
 /**
+ * Total hints revealed across every question for this game — the ambient
+ * self-tracking counter shown in the panel footer (ammient loss-aversion cue,
+ * not a gate: see .tome for the hint-discouragement design discussion).
+ *
+ * @param {string} [gameName]
+ * @returns {number}
+ */
+export function getTotalRevealedCount(gameName) {
+    const state = loadState(gameName);
+    return Object.values(state.revealed).reduce((sum, n) => sum + (n || 0), 0);
+}
+
+/**
  * Reveal the next hint for a question (increment count, persist).
  * Returns the new revealed count (capped at totalHints).
  *
@@ -74,7 +87,6 @@ export function revealNext(questionId, totalHints, gameName) {
 
 /**
  * Reset all revealed hints for the current game.
- * Does NOT reset seen-sections (those track visited rooms, not hint state).
  *
  * @param {string} [gameName]
  */
@@ -89,8 +101,10 @@ export function resetAll(gameName) {
  * mean "play this game as if from scratch": the Settings Restart button, a genuine
  * in-game RESTART (@restart opcode hook in game-loader.js), and "Reset game data".
  *
- * Distinct from the panel's "Reset revealed hints" (resetAll + resetSeenQuestions),
- * which deliberately keeps seen-sections so visited areas stay un-blurred.
+ * Distinct from the panel's "Reset revealed hints" (resetAll + resetSeenQuestions +
+ * resetSeenSections), which also re-locks previously-visited sections/questions —
+ * both reset every locked/blurred surface, but this one additionally zeroes the
+ * act milestone and the ack interstitial, which the panel button leaves alone.
  *
  * @param {string} [gameName]
  */
@@ -99,6 +113,7 @@ export function resetAllHintState(gameName) {
     setJSON(getGameKey('hints_seen', gameName), []);
     setJSON(getGameKey('hints_qseen', gameName), []);
     setJSON(getGameKey('hints_milestone', gameName), 0);
+    setJSON(getGameKey('hints_ack', gameName), false);
 }
 
 /**
@@ -125,6 +140,20 @@ export function markSectionsSeen(sectionIds, gameName) {
     const existing = getSeenSections(gameName);
     for (const id of sectionIds) existing.add(id);
     setJSON(key, [...existing]);
+}
+
+/**
+ * Clear the section-level seen latch (re-blurs every section except whichever
+ * currently matches the player's location — that one re-unlocks immediately via
+ * the normal location-match path). Paired with resetSeenQuestions so "Reset
+ * revealed hints" re-locks everything not currently in view, not just the
+ * revealed hint text.
+ *
+ * @param {string} [gameName]
+ */
+export function resetSeenSections(gameName) {
+    const key = getGameKey('hints_seen', gameName);
+    setJSON(key, []);
 }
 
 /**
@@ -168,6 +197,28 @@ export function markQuestionsSeen(questionIds, gameName) {
 export function resetSeenQuestions(gameName) {
     const key = getGameKey('hints_qseen', gameName);
     setJSON(key, []);
+}
+
+/**
+ * Whether the player has acknowledged the one-time "hints ahead" interstitial
+ * for this game. Per-game (not global) — acknowledging in one game doesn't
+ * skip the beat in another.
+ *
+ * @param {string} [gameName]
+ * @returns {boolean}
+ */
+export function getHintsAcknowledged(gameName) {
+    return getJSON(getGameKey('hints_ack', gameName), false) === true;
+}
+
+/**
+ * Persist that the player has acknowledged the one-time interstitial for this
+ * game. Never re-shown after this — see hints-panel.js showHints().
+ *
+ * @param {string} [gameName]
+ */
+export function setHintsAcknowledged(gameName) {
+    setJSON(getGameKey('hints_ack', gameName), true);
 }
 
 /**

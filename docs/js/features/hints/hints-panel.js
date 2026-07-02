@@ -15,7 +15,7 @@
  */
 
 import { loadHints, findCurrentTopics, updateMilestone } from './hints-data.js';
-import { getRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getSeenQuestions, markQuestionsSeen, resetSeenQuestions } from './hints-state.js';
+import { getRevealedCount, getTotalRevealedCount, revealNext, resetAll, getSeenSections, markSectionsSeen, getSeenQuestions, markQuestionsSeen, resetSeenQuestions, resetSeenSections, getHintsAcknowledged, setHintsAcknowledged } from './hints-state.js';
 import { confirmDialog } from '../../ui/confirm-dialog.js';
 import { submitHintFeedback } from '../feedback.js';
 import { openFeedbackModal } from '../../ui/feedback-modal.js';
@@ -96,7 +96,7 @@ export function initHintsPanel() {
             loadHints(gameName).then(data => {
                 _currentHintsData = data;
                 import('./voice-hints.js').then(m => m.setHintsData(gameName, data));
-                if (_isVisible) renderHintsContent();
+                if (_isVisible) renderHintsOrInterstitial();
             });
         }
     }
@@ -145,7 +145,7 @@ function handleGameLoaded(e) {
         _currentHintsData = data;
         import('./voice-hints.js').then(m => m.setHintsData(gameName, data));
         if (_isVisible) {
-            renderHintsContent();
+            renderHintsOrInterstitial();
         }
     });
 }
@@ -168,7 +168,8 @@ function createHintsUI() {
         <div class="hints-toolbar">
           <div class="hints-title">
             <span class="material-icons hints-title-icon">lightbulb</span>
-            <span class="hints-title-text">Hints</span>
+            <span class="hints-title-text" id="hintsTitleText">Hints</span>
+            <span class="hints-used-count" id="hintsUsedCount" title="Hints revealed so far this game"></span>
           </div>
           <button class="hints-close-btn" id="hintsCloseBtn" aria-label="Close hints">
             <span class="material-icons">close</span>
@@ -321,7 +322,7 @@ export function showHints() {
     // Render content while the panel is still off-screen (transform: 100%),
     // THEN force a reflow and slide in — avoids the content reflowing
     // mid-transition (the "slides and slides back" glitch).
-    renderHintsContent();
+    renderHintsOrInterstitial();
     _overlay.offsetHeight; // eslint-disable-line no-unused-expressions
     _overlay.classList.add('visible');
 
@@ -374,6 +375,40 @@ export function toggleHints() {
 // CONTENT RENDERING
 // ============================================================================
 
+/**
+ * Render the one-time "hints ahead" interstitial if this game hasn't
+ * acknowledged it yet, else the normal hint tree. Called everywhere the panel
+ * (re)renders while visible, so switching games mid-session re-gates per game.
+ */
+function renderHintsOrInterstitial() {
+    updateHintsUsedCount();
+    if (_currentGameName && !getHintsAcknowledged(_currentGameName)) {
+        renderAckInterstitial();
+    } else {
+        renderHintsContent();
+    }
+}
+
+/**
+ * One-time framing shown before a player's first hint reveal in a given game.
+ * Deliberately not a Yes/No confirm dialog — research on hint-discouragement
+ * patterns found repeated confirm prompts just train reflexive dismissal, so
+ * the friction is concentrated here (once) with a button that names the
+ * action, not "OK/Cancel". See .tome for the design discussion.
+ */
+function renderAckInterstitial() {
+    const contentEl = document.getElementById('hintsContent');
+    if (!contentEl) return;
+    document.getElementById('hintsFooter')?.classList.add('hidden');
+    contentEl.innerHTML = `
+      <div class="hints-ack">
+        <span class="material-icons hints-ack-icon">auto_awesome</span>
+        <p class="hints-ack-line">Hints are here if you get stuck.</p>
+        <p class="hints-ack-sub">They work best a little at a time — the puzzle's more fun when you solve most of it yourself.</p>
+        <button class="btn btn-primary hints-ack-btn" data-action="ack-hints">Peek anyway</button>
+      </div>`;
+}
+
 function renderHintsContent() {
     const contentEl = document.getElementById('hintsContent');
     if (!contentEl) return;
@@ -390,6 +425,7 @@ function renderHintsContent() {
     }
 
     document.getElementById('hintsFooter')?.classList.remove('hidden');
+    updateHintsUsedCount();
 
     // Determine matched sections/questions for the 📍 badge
     const { sectionIds, questionIds } = findCurrentTopics(_currentHintsData, _currentGameName);
@@ -539,6 +575,7 @@ function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
             ${escHtml(question.q)}
           </button>
           ${countHtml}
+          ${renderFeedbackBtn(question.id, sectionId, -1, total, 'Leave feedback on this question')}
           <button class="hints-question-close" data-action="close-question" data-question-id="${escHtml(question.id)}" aria-label="Collapse">
             <span class="material-icons">expand_less</span>
           </button>
@@ -558,15 +595,16 @@ function renderQuestion(question, isMatched, sectionId, isUnlocked = true) {
  *
  * @param {string} questionId
  * @param {string} sectionId
- * @param {number} hintIndex - 0-based
+ * @param {number} hintIndex - 0-based; -1 means the baseline question itself, not a revealed hint
  * @param {number} total
+ * @param {string} [label] - override aria-label/title (defaults to "Leave feedback")
  * @returns {string}
  */
-function renderFeedbackBtn(questionId, sectionId, hintIndex, total) {
+function renderFeedbackBtn(questionId, sectionId, hintIndex, total, label = 'Leave feedback') {
     const dataAttrs = `data-question-id="${escHtml(questionId)}" data-section-id="${escHtml(sectionId)}" data-hint-index="${hintIndex}" data-total="${total}"`;
     return `
       <div class="hints-feedback">
-        <button class="hints-feedback-btn" data-action="hint-feedback" ${dataAttrs} aria-label="Leave feedback" title="Leave feedback">
+        <button class="hints-feedback-btn" data-action="hint-feedback" ${dataAttrs} aria-label="${escHtml(label)}" title="${escHtml(label)}">
           <span class="material-icons">chat_bubble_outline</span>
         </button>
       </div>`;
@@ -594,6 +632,12 @@ function handleContentClick(e) {
 
     if (action === 'open-map') {
         openMap();
+        return;
+    }
+
+    if (action === 'ack-hints') {
+        if (_currentGameName) setHintsAcknowledged(_currentGameName);
+        renderHintsContent();
         return;
     }
 
@@ -635,6 +679,7 @@ function handleContentClick(e) {
         _openQuestionId = questionId;
         collapseOtherQuestions(questionId);
         rerenderQuestion(questionId);
+        updateHintsUsedCount();
     }
 
     if (action === 'toggle-question') {
@@ -677,6 +722,19 @@ function collapseOtherQuestions(exceptId) {
     });
 }
 
+/** Refresh the toolbar title ("Hints - Bronze") and its "(N used)" counter. */
+function updateHintsUsedCount() {
+    const titleEl = document.getElementById('hintsTitleText');
+    if (titleEl) {
+        const gameTitle = _currentHintsData?.title;
+        titleEl.textContent = gameTitle ? `Hints - ${gameTitle}` : 'Hints';
+    }
+    const countEl = document.getElementById('hintsUsedCount');
+    if (!countEl || !_currentGameName) return;
+    const count = getTotalRevealedCount(_currentGameName);
+    countEl.textContent = `(${count} used)`;
+}
+
 /** Re-render a single question's DOM in place from current state. */
 function rerenderQuestion(questionId) {
     const questionEl = _overlay.querySelector(`.hints-question[data-question-id="${questionId}"]`);
@@ -717,9 +775,15 @@ function openHintFeedback({ questionId, sectionId, hintIndex, total }) {
         || _currentHintsData?.meta?.generatedAt
         || '';
 
+    const subject = hintIndex === -1
+        ? `Hint question · ${qLabel}`
+        : `Hint · ${qLabel} (${hintIndex + 1}/${total})`;
+
     openFeedbackModal({
-        subject: `Hint · ${qLabel} (${hintIndex + 1}/${total})`,
-        placeholder: "What's wrong (or right) with this hint?",
+        subject,
+        placeholder: hintIndex === -1
+            ? "What's wrong (or right) with this question — e.g. should it even be a hint?"
+            : "What's wrong (or right) with this hint?",
         onSubmit: (comment) => submitHintFeedback({
             gameName: _currentGameName,
             sectionId,
@@ -733,10 +797,15 @@ function openHintFeedback({ questionId, sectionId, hintIndex, total }) {
     });
 }
 
-/** Look up the current text of a hint by question id + 0-based index ('' if absent). */
+/**
+ * Look up the current text of a hint by question id + 0-based index ('' if
+ * absent). hintIndex -1 means "the baseline question itself" (see
+ * renderFeedbackBtn), returning the question text rather than a hint line.
+ */
 function getHintText(questionId, hintIndex) {
     const section = findQuestionSection(questionId);
     const question = section?.questions.find(q => q.id === questionId);
+    if (hintIndex === -1) return question?.q || '';
     return Array.isArray(question?.hints) ? (question.hints[hintIndex] || '') : '';
 }
 
@@ -770,6 +839,7 @@ async function handleReset() {
     if (confirmed) {
         resetAll(_currentGameName);
         resetSeenQuestions(_currentGameName);
+        resetSeenSections(_currentGameName);
         renderHintsContent();
     }
 }

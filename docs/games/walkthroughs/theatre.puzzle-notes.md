@@ -396,7 +396,10 @@ each one as an "Eye of Power" with a rank:
 - Red = Eye of **Strength** ("right hand of all the other eyes")
 - Green = Eye of **Wisdom** ("stands beside Strength to help balance the other eyes")
 
-**These identities are fixed** (not randomized — confirmed in transcript). The *socket
+**These identities are RANDOMIZED per run** (probe 2026-07-01: `--xorshift 1` → violet =
+"Eye of Strength… right hand"; `--xorshift 7` → violet = "Eye of Wisdom… stands beside
+Strength". The earlier "fixed — confirmed in transcript" claim here was wrong; the
+top-of-file RANDOMIZED banner is the correct account.) The *socket
 positions* they map to in the statue are what varies by run. The player must note each
 pearl's "rank" from the goblin and match it to the diamond-shaped socket layout on the statue.
 

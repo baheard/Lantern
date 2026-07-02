@@ -1,0 +1,230 @@
+# Spider and Web (Andrew Plotkin) — verified command list
+# Targets Release 4 / Serial number 980226 (matches docs/games/spiderandweb.z5 exactly).
+# Verified with: node tools/play.cjs spiderandweb --strict --seed 1 --file docs/games/walkthroughs/spiderandweb.cmds.txt
+# --seed 1 is a test-determinism artifact only; nothing in this trunk is actually randomized
+# (no @random-driven puzzle exists in this game — see puzzle-notes.md).
+#
+# This is the "Made a difference" / "take it with you" ending trunk — the best of the
+# game's three endings (per the source .sol: Failure/death, Fail-to-make-a-difference
+# (left something behind), Made a difference (destroy the papers OR take them with you)).
+# The other two endings are NOT encoded here; see puzzle-notes.md for how they branch off
+# at the `## [ending-take-papers]` marker (both share everything up through `read papers`
+# in `## [lab-entry]`, then diverge).
+#
+# Game mechanic: nearly the whole game is a spy's FLASHBACK narrated to an interrogator
+# ("the man" / "with'"). Many `## [slug]` sections below end with the game printing a
+# different-style response and forcibly REPLAYING part of the scene (sometimes via an
+# in-chair "death" that is not a real death). This is intentional — see puzzle-notes.md.
+
+## [alley-door] The Door in the Alley
+i
+x door
+x plate
+push plate
+s
+s
+yes
+## [alley-door-retry] The Door in the Alley (again)
+i
+x door
+knock on door
+g
+g
+g
+g
+yes
+## [alley-door-lockpick] The Door in the Alley (yet again)
+i
+put rod on plate
+wait
+g
+no
+no
+## [white-junction] White Junction
+n
+jump
+n
+jump
+look in hole
+get package
+open vent
+d
+s
+e
+se
+no
+yes
+yes
+## [tee-junction] Tee Junction
+e
+w
+wait
+g
+throw rod east
+n
+yes
+yes
+no
+no
+no
+## [outside-laboratory] Outside Laboratory
+se
+listen
+g
+g
+e
+yes
+z
+no
+no
+## [annex-voice] Security Annex (voice module, exploring rooms)
+look in north room
+look in east room
+look in south room
+get scan
+get voice module
+x scan
+x voice module
+x voice transmitter
+read keywords
+connect voice module to scan
+drop scan
+say tango
+s
+say waltz
+get pen
+x pen
+x nib
+say tango
+n
+say waltz
+say tango
+n
+say waltz
+## [annex-chair-lie] Security Annex "north room" (the interrogation-chamber duplicate)
+x chair
+x acid
+sit in chair
+x bands
+look
+look
+look
+look
+x man
+look
+look
+look
+get up
+say tango
+s
+say waltz
+get all
+sw
+no
+## [annex-timer-retry] Security Annex (again, with timer)
+get scan
+get timer
+x timer
+x green
+x blue
+connect timer to scan
+turn green to 1
+turn blue to 1
+drop scan
+push green
+push blue
+s
+get pen
+n
+i
+e
+x plays
+w
+push green
+get all
+sw
+yes
+yes
+## [diagonal-branch-capture] Diagonal Branch (guard fight, hiding equipment, captured)
+s
+wait
+stab guard with pen
+climb cabinet
+x wall
+x vent
+open vent
+put all in vent
+d
+x guard
+get gun
+shoot guards with gun
+shoot guards with gun
+## [interrogation-escape] Interrogation Chamber escape (acid puzzle)
+no
+no
+look
+x desk
+x items
+say tango
+hit man
+search man
+get all from desk
+s
+sw
+## [wiring-blast] Wiring Closet (disconnect radio, blast tab, cut power)
+s
+e
+put rod on plate
+wait
+g
+g
+n
+disconnect radio
+connect button to blast
+push button
+s
+get rod
+## [lab-entry] Return past the vent and guards, into the Laboratory
+w
+w
+nw
+w
+n
+jump
+open vent
+get gun
+d
+e
+shoot guards
+shoot guards
+shoot guards
+se
+n
+nw
+put rod on plate
+wait
+g
+g
+get rod
+w
+open panel
+shoot layer
+search table
+get papers
+get plate
+read papers
+## [ending-take-papers] Ending: Made a difference (take the papers with you)
+open cabinet
+put plate in cabinet
+close cabinet
+x console
+push upper
+x display
+push oval
+open flap
+push lower
+enter platform
+close flap
+read papers
+wait
+g

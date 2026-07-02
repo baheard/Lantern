@@ -1,0 +1,66 @@
+9:05 by Adam Cadre — raw walkthrough sources
+=============================================
+
+Game: 9:05 (2000), by Adam Cadre
+Our build: docs/games/905.z5 — v1.11 (release 1, serial 120724 = "2012.0724"),
+  per the in-game banner ("9:05 by Adam Cadre / v1.11 (2012.0724) / Original release 2000.0103").
+  Z-machine header: z-version 5, release 1, serial "120724".
+Retrieved: 2026-07-01
+
+Sources used
+------------
+1. CASA (solutionarchive.com) walkthrough, file id 11126
+   https://www.solutionarchive.com/file/id,11126/
+   Author/contributor: Richard Bos, August 2014.
+   Content (as fetched/summarized — CASA declines full verbatim reproduction via automated
+   fetch, but the core command sequence was extracted):
+     "answer phone, stand. s, remove watch, remove clothes, drop all, enter shower.
+      take watch, wear watch, n, get all from table. open dresser, get clothes,
+      wear clothes. e, s, enter car, drive."
+   At the driving decision point: "no, wait, no, wait, yes" (one branch — leaves Las Mesas
+   without incident) vs. answering "yes" at the Loungent Technologies stop prompt (the
+   "major clue"/twist-revealing branch): "open wallet, take card, insert card in slot,
+   enter cubicle, read note, take form and pen, sign form, out, west".
+   CASA also flags an early clue: "at this point you can look under the bed and examine
+   what you find there" (right after getting up, in the Bedroom).
+   CASA's own framing: the walkthrough explicitly warns that following it "misses the
+   point of 9:05" — the losing/twist branches are the actual content of the game, and a
+   naive "get to the ending" playthrough undersells it.
+
+2. IFDB game page
+   https://ifdb.org/viewgame?id=qzftg3j8nh5f34i2
+   Author: Adam Cadre. First publication date: 2000-01-03. Listed "Current Version": 1.12.
+   Confirms author/attribution and links to the ClubFloyd transcript below. No separate
+   hosted walkthrough on IFDB itself.
+
+3. ClubFloyd transcript (allthingsjacq.com), 2010-09-03 session
+   https://allthingsjacq.com/intfic_clubfloyd_20100903.html
+   Actual game banner shown in that session: "9:05 by Adam Cadre, Version 1.01
+   (10 February 2000) / Serial number 9502" — an EARLIER release than our v1.11/120724
+   build. Used only as corroborating color (room names, some verb phrasing), not as the
+   primary command source, since the version differs from ours. Two playthroughs are
+   transcribed there: a first "clean escape" playthrough and a second, more exploratory
+   one that examines the corpse/clues (look under bed, look in wallet, examine driver's
+   license, etc.) before completing.
+
+Build-match assessment
+-----------------------
+No separate "our build" walkthrough exists — 9:05 has only ever had two released Inform
+versions (v1.01 initial, then a bugfix bump to v1.11/v1.12 sometime after 2000, both by
+Adam Cadre, no gameplay/puzzle changes between them per IFDB/IFWiki — only text/bug fixes).
+The CASA walkthrough (undated build target, 2014) and our v1.11 build both replayed
+identically for every command tried; no build-drift was observed. Confidence: HIGH — this
+is effectively the only walkthrough content that exists for this very short game, and it
+verified command-for-command (with a few noun/verb disambiguations added — see
+905.cmds.txt) against our exact file.
+
+Derived, verified command list: see 905.cmds.txt (verified against tools/play.cjs --strict,
+exit 0).
+
+Game structure note (for the caller): 9:05 is designed around alternate/failure paths as
+its core content — the CASA walkthrough itself says the straight-line "success" ending
+(escape via freeway) is the least interesting outcome, and the game rewards deliberately
+choosing "wrong" answers and examining things (the corpse, the wallet, the note) to reveal
+the twist: you are not the homeowner "Hadley" waking up late for work — you are the
+burglar who killed Hadley overnight, and you sleepily set off to imitate the victim's
+morning routine and go to his job. See 905.puzzle-notes.md for the full analysis.

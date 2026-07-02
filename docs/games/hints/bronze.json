@@ -17,43 +17,10 @@
       }
     ],
     "generatedBy": "generate-hints skill",
-    "generatedAt": "2026-06-14",
-    "appVersion": "1.5.630"
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.742"
   },
   "sections": [
-    {
-      "id": "getting-around",
-      "title": "Getting Around the Castle",
-      "verified": true,
-      "locations": ["Drawbridge", "Entrance Hall", "Central Courtyard"],
-      "questions": [
-        {
-          "id": "novice-prompt",
-          "q": "The game opens by asking whether I've played interactive fiction before. Does my answer change the game?",
-          "hints": [
-            "It's not a trick question — it only sets how much hand-holding you get.",
-            "Answer: Say YES for normal play, or NO to turn on novice mode, which adds extra inline guidance. Either way the story and puzzles are the same."
-          ]
-        },
-        {
-          "id": "navigation-tedious",
-          "q": "Trekking room by room across this castle is getting tedious. Is there a faster way?",
-          "hints": [
-            "Once you've stood somewhere, you needn't walk back to it step by step.",
-            "Answer: Type GO TO <place> — e.g. GO TO THE BELLROOM — to auto-walk to any room you've already visited. It prints the route as it takes you there. Use it freely after your first pass through the castle."
-          ]
-        },
-        {
-          "id": "reading-references",
-          "q": "There are books and records scattered around the castle. Are they worth reading?",
-          "hints": [
-            "These aren't just scenery — the castle's books and records can be queried for answers, if you know the right command.",
-            "Different reference works cover different ground: the castle's history, the souls bound to it, and an enchantress's private notes.",
-            "Answer: Use LOOK UP <topic> IN <book> — e.g. LOOK UP LUCREZIA IN THE RECORDS. Most of the hard puzzles are clued by one of these lookups, so when you're stuck, ask the books about whatever's puzzling you."
-          ]
-        }
-      ]
-    },
     {
       "id": "entrance-galleries",
       "title": "The Entrance & Galleries",
@@ -76,7 +43,7 @@
           "locations": ["Scarlet Tower"],
           "hints": [
             "You came back to this castle on purpose. The world outside isn't where your story is.",
-            "Answer: No — the forest is scenery you can look at, nothing more. (And don't read too much into which questions exist here: a puzzle isn't important just because it has a hint, nor unimportant because it doesn't.)"
+            "Answer: No — the forest is scenery you can look at, nothing more."
           ]
         },
         {
@@ -128,7 +95,7 @@
           "q": "A phantom guard appears whenever I try to head north, and drives me back!",
           "locations": ["Central Courtyard", "Great Dining Hall"],
           "hints": [
-            "The guard isn't really the problem — he answers to something you keep hearing. What summons him?",
+            "The guard isn't really the problem — he answers to something you keep hearing.",
             "With keen-enough hearing you can tell the chiming that calls him isn't coming from here at all. Track the sound down.",
             "The chimes hang in the Rose Garden, below the Cloister Walk. Silence them and the guard has nothing to answer to.",
             "They're up out of reach, and leaping for them gets you nowhere (\"you don't attain much height\"). You need something to stand on. They're also padlocked — a small key hangs in the Scrying Room.",
@@ -149,9 +116,9 @@
           "locations": ["Upper Bulb"],
           "hints": [
             "He's past words and past waking. Look at him closely — what does he actually need before anything else?",
-            "He needs feeding. But there's no food simply lying around a castle this size — you'll have to call for it.",
+            "He needs feeding — but there's no food simply lying around a castle this size.",
             "The castle's cooks still answer a summons, if you call them where they worked. Their meal then turns up where meals are served.",
-            "Answer: Take the gold dinner bell (from the Bellroom) to the Enormous Kitchen and RING GOLD BELL — it only works there. A feast appears in the Great Dining Hall; GET FEAST, GO TO THE BEAST, FEED BEAST. He revives, explains your task, and gives you the iron key."
+            "Answer: Take the gold dinner bell (from the Bellroom) to the Enormous Kitchen and RING GOLD BELL — it only works there. A feast appears in the Great Dining Hall; GET FEAST, GO TO THE BEAST, FEED BEAST. He revives and explains your task."
           ]
         }
       ]
@@ -215,7 +182,7 @@
           "hints": [
             "They were made for a foot that isn't yours. Someone in the castle's history did this kind of work — resizing footwear by magic.",
             "There's an image of a gnome shoemaker resizing shoes, and beside it an instrument. As with every bell here, his tool only works where he once worked.",
-            "His old workroom is the Empty Bedroom (\"here your father stayed\"). Lucrezia's own notes will confirm what the shoes do, if you want it.",
+            "His old workroom is the Empty Bedroom (\"here your father stayed\").",
             "Answer: Bring the leather tambourine (the shoemaker's, from the Bellroom) to the Empty Bedroom and HIT TAMBOURINE. A wind resizes the shoes. Now WEAR SHOES — they link your mind to the Beast and let you walk the castle's dead-spaces."
           ]
         },
@@ -225,7 +192,7 @@
           "locations": ["Private Parlor"],
           "hints": [
             "It's not a gate to anything — but it does have something to say if you complete it.",
-            "Answer: Optional. With the puzzle piece from the iron cage in hand, GO TO THE PARLOR and SOLVE PUZZLE, then READ IT — it completes into a lore picture (a devil and a king, \"TIME IS ON MY SIDE / BUT NOT FOR LONG\"). Skippable if you don't care about the backstory."
+            "Answer: Optional. With the puzzle piece from the iron cage in hand, GO TO THE PARLOR and SOLVE PUZZLE, then READ IT — it completes into a picture of backstory lore."
           ]
         }
       ]
@@ -242,9 +209,9 @@
           "locations": ["Tight Passage"],
           "hints": [
             "Holding the candle up the usual way isn't working. Notice where the lettering actually sits.",
-            "The writing is low on the wall, near knee height. Light striking it from the side — a raking angle — would throw the letters into relief. Your hand can't hold the candle low and steady enough.",
-            "You're carrying something you can set the candle down on, at just the right height.",
-            "Answer: DROP STOOL, then PUT CANDLE ON THE STOOL. The harsh raking light at knee height makes the inscription legible, and it tells you what the cord beside the door is for."
+            "The writing is low on the wall, near knee height. Light striking it from the side — a raking angle — would throw the letters into relief, but holding the candle there yourself, you can't read at the same time.",
+            "The light has to come from further off — from beyond the passage — and you're carrying something you can set the candle down on at just the right height.",
+            "Answer: Carry the candle and stool northeast into the Rooted Room. DROP STOOL, then PUT CANDLE ON THE STOOL. Go back southwest — the raking light from next door makes the inscription legible, and it tells you what the cord beside the door is for."
           ]
         },
         {
@@ -316,8 +283,8 @@
           "locations": ["Gallery of Historical Paintings"],
           "hints": [
             "You're approaching a fork, not a single solution. The castle offers you more than one way to end the Beast's story — and they are very different in spirit.",
-            "One instrument here is built for destruction; the same act, turned the other way, is built for love. The choice of which ending you want is yours to make.",
-            "Answer: Take the bronze gong from the Bellroom (LOOK UP HARNESS / ELEPHANT in the notes for its nature) and prime it: GO TO ELZIBAD, RING GONG. From here you choose — ring the gong at the Beast for vengeance (he is destroyed), or pursue the cure instead (contact Yvette and use her girdle). Neither is the \"correct\" answer; pick the ending you want."
+            "One path calls on an instrument built for destruction; the other calls for love — and the right preparation. The choice is yours to make.",
+            "Answer: For vengeance: take the bronze gong from the Bellroom, learn whose it is first (LOOK UP ELEPHANT IN THE NOTES), then GO TO THE BEAST and RING GONG — he is destroyed. To save him instead, pursue the cure: reach the one who laid the curse. Neither is the \"correct\" answer; pick the ending you want."
           ]
         },
         {
@@ -326,9 +293,9 @@
           "locations": ["Scrying Room", "Crystal Bedroom"],
           "hints": [
             "The curse has terms. It lifts only for someone bound by no magical contract who loves him — and who wields a particular power. A kiss alone meets none of that.",
-            "The woman who laid the curse can be reached. Her instrument is the cow bell, and she answers where reflections gather. She'll point you to the thing you must wear.",
+            "The woman who laid the curse can be reached. Her instrument is the cow bell, and she answers where reflections gather.",
             "What you need is a girdle, kept in the crypt — Yvette's, descended from Lucrezia.",
-            "Answer: RING THE COW BELL in the Scrying Room, then again at the Mirrors (Crystal Bedroom) to contact Yvette. Go to the crypt, GET THE GIRDLE, WEAR IT, then GO TO THE BEAST and KISS THE BEAST. Because you're under no contract and now wield the girdle's power, the curse breaks."
+            "Answer: RING THE COW BELL in the Crystal Bedroom, among the gathered mirrors — Yvette appears and promises you her girdle. GO TO VIRGIN'S END in the crypt, GET THE GIRDLE, WEAR IT, then GO TO THE BEAST and KISS THE BEAST."
           ]
         }
       ]

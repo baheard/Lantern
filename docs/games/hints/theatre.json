@@ -165,7 +165,7 @@
           "hints": [
             "The ghostly usher takes your ticket but the performance hasn't started. You can't wait it out — time in this place doesn't move on its own.",
             "If time won't pass on its own, you'll need to set it yourself — find something that keeps time.",
-            "What you need is hidden close to the lobby, and reaching it is a puzzle in itself.",
+            "What you need is hidden close to the lobby.",
             "Answer: With the watch in the booth: PULL DIAL, then TURN DIAL four times until it reads 7:40. Now it's late enough. Return to the aisle with your ticket — if you don't have one, there's an old ticket in the alley courtyard's rubbish bin — and DROP TICKET when the voice asks."
           ]
         },
@@ -225,7 +225,7 @@
           "q": "A huge slug is guarding a nest, and it won't let me near!",
           "locations": ["Southern End of the Library"],
           "hints": [
-            "Whatever is glinting in that nest, the slug won't let you near it. You need to neutralize the slug without touching it.",
+            "You won't get near while the slug lives — you need a way to neutralize it without touching it.",
             "Look around the room. What's tall, heavy, and standing right next to it?",
             "The bookcase — look closely. A long chain holds it in place.",
             "Answer: UNHOOK CHAIN, PUSH BOOKCASE — it falls on the slug. Then EXAMINE NEST and GET BLUE PEARL."

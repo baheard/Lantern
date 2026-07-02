@@ -1,0 +1,544 @@
+{
+  "schema": 1,
+  "game": "trinity",
+  "title": "Trinity",
+  "meta": {
+    "gameAuthor": "Brian Moriarty (Infocom, 1986)",
+    "sources": [
+      {
+        "name": "Scorpia's 4-part walkthrough",
+        "url": "https://www.ifarchive.org/if-archive/infocom/hints/solutions/trinity.txt",
+        "file": "docs/games/walkthroughs/trinity.txt"
+      },
+      {
+        "name": "The Walkthrough King",
+        "url": "https://www.walkthroughking.com/text/trinity.aspx",
+        "file": "docs/games/walkthroughs/trinity.txt"
+      },
+      {
+        "name": "David Welbourn / Key & Compass — \"Trinity - map and walkthrough\"",
+        "url": "http://www.plover.net/~davidw/sol/t/trini86.html",
+        "file": "docs/games/walkthroughs/trinity.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.737"
+  },
+  "sections": [
+    {
+      "id": "prologue",
+      "title": "Kensington Gardens",
+      "verified": true,
+      "locations": ["Palace Gate", "Flower Walk", "The Wabe", "Broad Walk", "Round Pond", "Black Lion Gate", "Inverness Terrace", "Lancaster Gate", "Lancaster Walk", "Long Water", "Wading"],
+      "questions": [
+        {
+          "id": "pro-purpose",
+          "q": "I'm just walking through a park. What am I supposed to be doing here?",
+          "hints": [
+            "There's no puzzle blocking you yet — you're a tourist with a free morning, and the game wants you to wander and pick things up before anything closes in.",
+            "Everything you find here — a ball, a small tool from the sundial, an umbrella, a paper bird, coins — turns out to matter later. None of it is obviously useful yet; take it anyway.",
+            "Keep an eye on the old woman under the tree near the end of your walk, and on the strange garden the path briefly detours through partway along — both come back around.",
+            "Answer: Explore the park fully before heading east to the memorial. Take the ball near the war memorial, unscrew and take the gnomon from the sundial in the walled garden, feed the pigeons for a coin and a ruby dropped by a scurrying bird, take the paper bird from the pond and read the note inside, then help the old woman with her umbrella and take it, and finally enter the pram at the pond's edge and open the umbrella to be carried off."
+          ]
+        },
+        {
+          "id": "pro-sundial",
+          "q": "Is the old sundial in the little garden clearing significant?",
+          "locations": ["The Wabe"],
+          "hints": [
+            "Look it over closely — one part of it is a separate piece, and it isn't fastened tight.",
+            "Answer: UNSCREW GNOMON, then TAKE GNOMON."
+          ]
+        },
+        {
+          "id": "pro-umbrella",
+          "q": "An old woman near the pond is struggling to open her umbrella in the wind. Should I help?",
+          "locations": ["Long Water"],
+          "hints": [
+            "She's fighting a losing battle with the wind. Something of hers is about to get away from her — be ready.",
+            "Don't just watch. Throw something of yours at the umbrella before it escapes her grip.",
+            "Answer: THROW BALL AT UMBRELLA, then TAKE UMBRELLA."
+          ]
+        },
+        {
+          "id": "pro-paperbird",
+          "q": "There's a paper bird floating on the pond. Worth fishing out?",
+          "locations": ["Long Water"],
+          "hints": [
+            "It's origami, and origami can be unfolded — or refolded.",
+            "Answer: TAKE BIRD, OPEN BIRD, and READ PAPER inside it."
+          ]
+        },
+        {
+          "id": "pro-pram-end",
+          "q": "There's a baby carriage at the water's edge and the path seems to end here. What now?",
+          "locations": ["Wading"],
+          "hints": [
+            "This isn't a dead end — it's a departure point. You'll need to be inside it, and you'll need to be sheltered.",
+            "Answer: ENTER PRAM, then OPEN UMBRELLA."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wabe-setup",
+      "title": "The Wabe — the hub garden",
+      "verified": true,
+      "locations": ["Meadow", "Summit", "South Bog", "Bottom of Stairs", "Halfway Up", "Vertex", "Halfway Down", "Trellises", "Arborvitaes", "Arboretum", "North Arbor", "Top of Arbor", "South Arbor"],
+      "questions": [
+        {
+          "id": "wabe-what-is-this",
+          "q": "I've arrived somewhere strange — a huge garden built around a giant sundial. What am I supposed to be doing here?",
+          "hints": [
+            "This is the hub of the whole game. Everything else you'll do branches out from here and comes back to here.",
+            "The sundial at the center is the key to it all — its gnomon casts a shadow that can be aimed at any of several strange doorways ringing the garden.",
+            "First get the sundial itself working, then explore the rest of the garden — there's a lot worth finding before you use any of the doorways.",
+            "Answer: Climb to the Vertex (the sundial platform) at the garden's high point and work on the sundial itself first — seat the gnomon properly and get the lever and ring working — then spend time mapping the rest of the Wabe — the bog, the arbor, the cliffs — before choosing a doorway to enter."
+          ]
+        },
+        {
+          "id": "wabe-gnomon-fit",
+          "q": "The little brass fitting I picked up in the park doesn't match the empty socket on this sundial. What's wrong with it?",
+          "locations": ["Vertex"],
+          "hints": [
+            "The threads are simply the wrong way round for this socket — as if the piece and the socket disagree about which way is clockwise.",
+            "Somewhere nearby is a place that reverses things that pass through it — not damages them, just flips their handedness, like a mirror you can walk through.",
+            "Look for a loop of trees you can walk all the way around. Notice anything printed on glass or stone near it — read it once, then read it again after you've circled back the other way.",
+            "One trip through the loop — in one end and out the other, without retracing your steps — is all it takes.",
+            "Answer: Carry the fitting to the Arboretum and go N into North Arbor, U over the Top of Arbor, and S down into South Arbor — that single pass flips its threads. Leave by South Arbor's other exit (D, back out to the Arboretum) rather than climbing back over, return to the Vertex, and PUT GNOMON IN HOLE."
+          ]
+        },
+        {
+          "id": "wabe-sundial-use",
+          "q": "The gnomon is finally seated in the sundial. How do I actually make it do anything?",
+          "locations": ["Vertex"],
+          "hints": [
+            "Once it's seated, look for a lever nearby — that's what sets the shadow moving.",
+            "There's also a ring around the dial's rim. It doesn't move the shadow itself, but it decides which of the symbols the shadow will eventually stop at.",
+            "Answer: PUT GNOMON IN HOLE (if you haven't already), PUSH LEVER to start the shadow crawling, and TURN RING to select whichever symbol's doorway you want to visit next."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wabe-explore",
+      "title": "The Wabe — mapping the garden",
+      "verified": true,
+      "locations": ["North Bog", "Chasm's Brink", "Waterfall", "Ice Cavern", "Under Cliff", "Crater's Edge", "Crater", "Cemetery", "Barrow", "Ossuary", "Promontory", "Bluff", "Cottage", "Herb Garden"],
+      "questions": [
+        {
+          "id": "wabe-barrow-dark",
+          "q": "There's an ancient burial mound in the garden, but it's pitch dark inside. Is it safe to go in without a light?",
+          "locations": ["Cemetery", "Barrow"],
+          "hints": [
+            "No. Whatever lives down there in the dark is not friendly, and darkness alone can kill you here.",
+            "You'll need a light source before you go in — something you can carry, not fixed in place.",
+            "There's a bog nearby with a rotting log; something inside it can be pulled free and will burn or glow.",
+            "Answer: Find the splinter in the rotting log at South Bog (TAKE LOG, then EXAMINE SPLINTER and TAKE SPLINTER) and carry it into the Barrow before you go further underground."
+          ]
+        },
+        {
+          "id": "wabe-lump-melt",
+          "q": "There's a lump of some magnetic metal down in a crater, but I can't pick it up bare-handed — and anything I bring to cool it melts before I get there. What's the trick?",
+          "locations": ["Crater's Edge", "Crater"],
+          "hints": [
+            "The lump needs to be cold, and whatever you're cooling it with needs to survive the trip, which it currently doesn't.",
+            "The garden's highest point is also its coldest. A detour there, rather than a straight line, might change things.",
+            "There's ice to be had elsewhere in the garden. Carry it up to the high ground at the sundial before heading down to the crater — the cold there should refresh it.",
+            "Answer: In the Ice Cavern, HIT ICICLE WITH UMBRELLA to knock one down (they hang out of reach), TAKE ICICLE, carry it up to the Vertex (this re-hardens it), then continue down to the Crater, PUT ICICLE ON LUMP, and TAKE LUMP."
+          ]
+        },
+        {
+          "id": "wabe-magpie",
+          "q": "A magpie in a cage near a cottage keeps muttering something over and over. Worth listening to?",
+          "locations": ["Cottage"],
+          "hints": [
+            "It's reciting something in pieces, a little more each time you wait nearby.",
+            "It sounds like a recipe — ingredients and an order to combine them.",
+            "You don't have to hear it all before freeing the bird — but the recitation is the only place the brewing instructions are spelled out, so it's worth waiting through.",
+            "Answer: Wait (Z) several times near the cage to hear the full recipe, then OPEN CAGE and TAKE CAGE to free (and keep) the magpie."
+          ]
+        },
+        {
+          "id": "wabe-honey",
+          "q": "There's a beehive near the cottage. How do I get honey out without getting stung to death?",
+          "locations": ["Cottage"],
+          "hints": [
+            "Reaching straight in seems reckless, but here it isn't punished.",
+            "Answer: PUT HAND IN HIVE (repeat if needed) to come away with honey on your hand, then at the cottage PUT HONEY IN CAULDRON and PUT HAND IN CAULDRON."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vignettes-general",
+      "title": "The Toadstool Doors — General Questions",
+      "verified": true,
+      "locations": [],
+      "questions": [
+        {
+          "id": "vig-what-are-these",
+          "q": "The shadow can point at strange toadstool-ringed doorways around the garden. What are these, and how do I use them?",
+          "hints": [
+            "Each doorway leads to a short, self-contained scene, and each is set at some real, historical place and moment — though not always an obvious one.",
+            "Every doorway has its own local danger and its own local clock, but that clock is generous and resets when you leave. Go in, do what the scene wants, and come back out through the same door before its own countdown runs out.",
+            "You return to the Wabe after every trip, so you can drop off or pick up whatever you're carrying between doorways. A few of the scenes even depend on things carried in from another one.",
+            "Answer: At the Vertex, TURN RING to a symbol and PUSH LEVER (or wait for the shadow to reach it), then go down and ENTER the matching toadstool door. Visit the five side doorways (symbols 2 through 6) before touching the seventh (Alpha) — that one is a one-way gate out of the hub, not another round trip."
+          ]
+        },
+        {
+          "id": "vig-carry-items",
+          "q": "Does it matter what I'm carrying when I step through a toadstool door?",
+          "hints": [
+            "Very much so — several of the scenes only work because of something you brought from another one, or from the prologue.",
+            "When in doubt before entering a door, take stock of what you're holding rather than dropping everything — a thing that finished its job in one scene may be exactly what the next one needs.",
+            "Answer: No fixed rule beyond \"don't assume you're done with something just because you're leaving its scene\" — items picked up in one vignette are frequently the whole reason a later one is solvable."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "moor-nagasaki",
+      "title": "The Moor — a strange playground",
+      "verified": true,
+      "locations": ["The Bend", "Moor", "Thin Air", "Playground", "Shelter"],
+      "questions": [
+        {
+          "id": "moor-girl",
+          "q": "There's a young girl playing alone here. Is she important?",
+          "locations": ["Playground"],
+          "hints": [
+            "She notices what you're carrying before she notices you. Trust is built with a gift, not with words.",
+            "You have two things worth giving away here — something from the park, and something folded from paper. Order matters: she needs a reason to trust you before the second gift means anything to her.",
+            "Answer: GIVE UMBRELLA TO GIRL first, then GIVE PAPER TO GIRL. In exchange she folds the paper into something that grows, and hands you a small digging tool."
+          ]
+        },
+        {
+          "id": "moor-bird-ride",
+          "q": "The girl folded my paper into something unexpected. What do I do with it?",
+          "locations": ["Playground"],
+          "hints": [
+            "It's not just a keepsake — look at what it's become and what something that size is normally used for.",
+            "Answer: RIDE BIRD to be carried back up through the toadstool door."
+          ]
+        },
+        {
+          "id": "moor-crypt",
+          "q": "There's a sealed stone crypt in the garden's cemetery. Can it be opened?",
+          "locations": ["Cemetery"],
+          "hints": [
+            "Not bare-handed — you'll want something made for digging or prying, if your travels have given you one.",
+            "What's inside is unsettling but not dangerous.",
+            "Answer: OPEN LID WITH SPADE, LOOK IN CRYPT, then TAKE BANDAGE (it holds the corpse's mouth shut — a silver coin is inside), TAKE SILVER COIN, TAKE BOOTS and WEAR BOOTS, and TAKE SHROUD."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ossuary-underground",
+      "title": "The Ossuary — underground test site",
+      "verified": true,
+      "locations": ["Ossuary", "Underground"],
+      "questions": [
+        {
+          "id": "oss-skink-chase",
+          "q": "There's a lizard-like creature hiding in a crevice down here and it bolts whenever I get close. How do I actually catch it?",
+          "locations": ["Underground"],
+          "hints": [
+            "Chasing it directly will never work — it's faster than you and it knows the ground better.",
+            "It's drawn to light. If you could make it run toward a light that isn't you, and away from something poking at it from the other direction, it might run itself right into your hands.",
+            "You have a lantern and a splinter, and this puzzle plays out across two adjoining rooms. Leave the light behind you, lit, then go to where the creature is hiding and drive it out from the front.",
+            "Answer: TURN ON LANTERN and DROP LANTERN in one room, move to the next room where the creature hides, then PUT SPLINTER INTO CREVICE. Startled, it runs back toward the light — straight into you — and you can TAKE SKINK."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "waterfall-orbit",
+      "title": "The Waterfall — Earth orbit",
+      "verified": true,
+      "locations": ["Earth Orbit"],
+      "questions": [
+        {
+          "id": "orbit-skink",
+          "q": "I'm somewhere impossibly high up with the creature I caught earlier. What does this scene want from me?",
+          "hints": [
+            "There isn't a gentler path through this one — the game is quite deliberate that this scene has exactly one way through, and it isn't pleasant.",
+            "Whatever you're carrying from the underground scene has a part to play here, and it doesn't end well for it.",
+            "Answer: TAKE SKINK (it's in your pocket), then KILL SKINK. This is the one truly unavoidable act in the game — there is no alternate, kinder solution here."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mesa-pacific",
+      "title": "The Mesa — a Pacific island",
+      "verified": true,
+      "locations": ["Mesa", "Scaffold", "Bottom of Scaffold", "South Beach", "West Beach"],
+      "questions": [
+        {
+          "id": "mesa-coconut",
+          "q": "There's a coconut out on an islet, and a dolphin nearby, but nothing happens when I point at it. Why won't this work?",
+          "locations": ["West Beach"],
+          "hints": [
+            "You're not too far away — you're too early. The water hasn't done its part yet.",
+            "This spot has its own tide. Give it a couple of turns before trying again.",
+            "Answer: WAIT (Z) once or twice until the tide brings the coconut in close enough, then POINT AT COCONUT (or POINT TO COCONUT) so the dolphin tosses it to you, and TAKE COCONUT."
+          ]
+        },
+        {
+          "id": "mesa-scaffold",
+          "q": "There's a scaffold with a box and a switch. Is it safe to fiddle with?",
+          "locations": ["Scaffold"],
+          "hints": [
+            "It starts a clock of its own, separate from anything else running in this scene — so don't linger here once you've touched it.",
+            "Answer: OPEN BOX, EXAMINE SWITCH, PUSH SWITCH, then PUSH BUTTON, and move on toward the beach promptly afterward."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emerald-recipe",
+      "title": "Completing the Recipe",
+      "verified": true,
+      "locations": ["Under Cliff"],
+      "questions": [
+        {
+          "id": "emerald-brew",
+          "q": "I've gathered milk, honey, a lizard, and garlic from different scenes. What do they combine into?",
+          "hints": [
+            "Whatever the magpie recited back at the cottage is the order you want — this is exactly what that recipe was for.",
+            "Coconut milk, the honey, a dead lizard, and a pinch of garlic — all of it goes into the cauldron at the cottage.",
+            "Answer: CUT COCONUT WITH AXE to get milk, then at the cottage (with the honey already in the cauldron): POUR MILK IN CAULDRON, PUT SKINK IN CAULDRON, PUT GARLIC IN CAULDRON, then step out of the room for a turn — it goes off with a bang — before returning to LOOK IN CAULDRON, TAKE EMERALD, and PUT EMERALD IN GREEN BOOT (one of the pair from the crypt)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tundra-lemming",
+      "title": "The Herb Garden — Russian tundra",
+      "verified": true,
+      "locations": ["Platform", "Under Platform", "Tundra", "Cliff Edge"],
+      "questions": [
+        {
+          "id": "tundra-lemmings",
+          "q": "There's a stampede of small rodents running somewhere. What am I meant to do with them?",
+          "hints": [
+            "Follow where they're heading rather than trying to stop them — the scene wants you to see where this ends.",
+            "One of them gets stuck at the edge of a fissure while the rest carry on. That's the one you want.",
+            "You'll need something to hold it before it frees itself — bring a container with you into this scene.",
+            "Answer: Follow the stampede to the Cliff Edge, LOOK IN FISSURE, TAKE LEMMING, PUT LEMMING IN CAGE, and CLOSE CAGE. Carry the caged lemming out with you, alive."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "river-styx",
+      "title": "The River Styx crossing",
+      "verified": true,
+      "locations": ["The River", "Sand Bar", "Islet"],
+      "questions": [
+        {
+          "id": "styx-oarsman",
+          "q": "There's a boat and an oarsman here, but he won't let me board. What does he want?",
+          "locations": ["The River"],
+          "hints": [
+            "He's ferrying the dead, and right now you very obviously aren't one.",
+            "The crypt in the garden's cemetery held burial props — if you haven't claimed them yet, do that before trying to cross.",
+            "He'll also want paying, the old way — not with anything modern.",
+            "Answer: WEAR SHROUD, then wait a couple of turns before boarding — trying too early just gets you turned away. ENTER DORY, then GIVE SILVER COIN TO OARSMAN."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tower-platform",
+      "title": "New Mexico — Tower Platform",
+      "verified": true,
+      "locations": ["Tower Platform", "Tower Landing", "Northwest of Tower", "Paved Road"],
+      "questions": [
+        {
+          "id": "nm-what-is-this",
+          "q": "I've arrived somewhere very different from the Wabe — a real military test tower in the middle of a desert. What am I supposed to be doing here?",
+          "hints": [
+            "This is the endgame. Everything you've gathered along the way comes into play from here on — very little needs to be found from scratch.",
+            "You're here to disarm something, but you'll need information you don't have yet, gathered in stages: a legend hidden nearby, a radio tuned to the right frequency, and a message you'll only get one chance to hear. Handle those carefully and in order rather than rushing to the finish.",
+            "Time moves against you continuously from here to the end — more so than anywhere in the Wabe's side-scenes. Don't linger on anything that isn't moving you forward; every extra turn is borrowed against a deadline you can't see.",
+            "Answer: Start at the Tower Platform with the paperback book someone left behind, then work outward — the jeep, the ranch, and finally the tower's base and the shack — gathering what each place offers along the way."
+          ]
+        },
+        {
+          "id": "nm-slip",
+          "q": "Someone left a paperback book up here. Worth checking?",
+          "locations": ["Tower Platform"],
+          "hints": [
+            "Yes — it's hiding a small card with markings on both sides.",
+            "It's a legend: colors on one side, what they mean on the other. Memorize it, or come back to it — you won't be able to guess this safely later.",
+            "Answer: OPEN BOOK, TAKE SLIP, EXAMINE SLIP, EXAMINE DIAGRAM. This slip's legend maps four wire colors to four functions — but the mapping is different every game, so read your own slip rather than trusting anything you've heard about a specific color."
+          ]
+        },
+        {
+          "id": "nm-ruby-boot",
+          "q": "A familiar bird is here again, this time holding something shiny. What's it want?",
+          "locations": ["Tower Platform"],
+          "hints": [
+            "It's offering, not hoarding — it wants to trade the shiny thing to you, and you already have a place ready to put it.",
+            "One of your boots already holds a gem from an earlier scene; the other one is still empty.",
+            "Answer: TAKE RUBY (from the roadrunner), and PUT RUBY IN the boot that doesn't already have the emerald. With both boots filled, your descriptions of movement in the desert change — you'll be moving fast."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jeep-dial",
+      "title": "New Mexico — the Jeep",
+      "verified": true,
+      "locations": ["Jeep", "Shallow Crater"],
+      "questions": [
+        {
+          "id": "nm-jeep-radio",
+          "q": "There's an abandoned jeep with a radio inside. Is it useful?",
+          "hints": [
+            "Very — but only once it's tuned correctly, and the correct number is different every time you play. Don't trust any number you've heard mentioned outside this exact playthrough.",
+            "The dial in the jeep itself shows you the number you need. Read it in your own game before touching your walkie-talkie's slider.",
+            "Answer: OPEN JEEP, go IN, EXAMINE RADIO, EXAMINE DIAL to read the number shown, then SET SLIDER TO <that number> on your walkie-talkie, PULL ANTENNA, and TURN ON WALKIE. Do this before you leave the jeep — you'll need the tuned radio picking up chatter later at the tower."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ranch-snake",
+      "title": "New Mexico — McDonald Ranch",
+      "verified": true,
+      "locations": ["Northwest of Ranch", "Back Yard", "Hallway", "Kitchen", "Southeast Room", "Assembly Room", "Closet", "Darkness", "Front Deck", "Front Yard"],
+      "questions": [
+        {
+          "id": "nm-rattlesnake",
+          "q": "There's a rattlesnake in one of the ranch rooms and it feels instantly lethal. How do I get past it?",
+          "locations": ["Assembly Room", "Closet"],
+          "hints": [
+            "Don't linger in the room with it — retreat to the closet next door immediately. That's safe, but it doesn't solve anything by itself.",
+            "You're carrying something else that can occupy the snake's attention in your place — something you caught alive a while back, in a very different climate.",
+            "Let your caged passenger take the risk instead of you, then close the door on it and the snake together.",
+            "Answer: Duck into the closet and CLOSE DOOR, then OPEN CAGE to release the lemming, and OPEN DOOR — the lemming draws the snake's strike instead of you, clearing the room. Before you leave the ranch, pick up the knife in the kitchen, and SEARCH WORKBENCH then TAKE SCREWDRIVER in the room the snake was guarding."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reservoir-binoculars",
+      "title": "New Mexico — Reservoir & Windmill",
+      "verified": true,
+      "locations": ["South of Reservoir", "Edge of Reservoir", "Under the Windmill", "Windmill", "Reservoir", "Underwater", "Southeast of Ranch"],
+      "questions": [
+        {
+          "id": "nm-windmill-fall",
+          "q": "Climbing the windmill ladder to reach some binoculars keeps dumping me into the water below instead. Am I doing something wrong?",
+          "locations": ["Edge of Reservoir", "Windmill"],
+          "hints": [
+            "No — this happens every time, on purpose. Fighting it or trying to climb more carefully won't change the outcome.",
+            "The fall isn't a failure, it's the actual route. What you need is now underwater, not up on the windmill.",
+            "You'll need a light to see anything down there, and you'll need to protect anything of yours that water would ruin before you ever go up the ladder.",
+            "Answer: Before climbing, drop anything water-sensitive (the walkie-talkie, the bag of crumbs) at the Edge of Reservoir. Then go up (climbing the windmill dumps you into the Reservoir), TURN ON LANTERN, and TAKE BINOCULARS while underwater — then climb out and pick your things back up."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shed-key",
+      "title": "New Mexico — Behind the Shed",
+      "verified": true,
+      "locations": ["Southwest of Ranch", "Desert", "Behind the Shed", "South of Tower"],
+      "questions": [
+        {
+          "id": "nm-shelter-key",
+          "q": "There's a guarded shelter I can't approach directly, and I need whatever key opens it. How do I even find the key, let alone take it?",
+          "locations": ["Behind the Shed"],
+          "hints": [
+            "Don't try to walk up to it — the guard makes that a bad idea. You need to solve this from a distance.",
+            "You're carrying something made for seeing things far away. Use it on the shelter itself, not the guard.",
+            "Once you've spotted where the key actually is, you'll want a moment before acting — and you have a helper nearby who's good at fetching shiny things.",
+            "Answer: LOOK THROUGH BINOCULARS AT SHELTER to spot the key in a padlock, wait a turn (Z), then POINT TO KEY to send the roadrunner in after it, and TAKE KEY once it returns."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "breaker-listen",
+      "title": "New Mexico — Base of Tower",
+      "verified": true,
+      "locations": ["Base of Tower"],
+      "questions": [
+        {
+          "id": "nm-breaker",
+          "q": "There's a locked box with a breaker switch at the base of the tower. What happens if I use it?",
+          "locations": ["Base of Tower"],
+          "hints": [
+            "This is a one-shot moment — whatever it reveals, it reveals exactly once, and you cannot repeat it.",
+            "Listen very carefully to whatever comes over the radio the instant you throw the switch. It names something you'll need to cross-reference against the slip you read earlier.",
+            "Whatever you do, don't leave the breaker open and don't touch it a second time once you've closed it — both are fatal.",
+            "Answer: UNLOCK BOX WITH KEY, EXAMINE PANEL, PULL BREAKER — listen closely to the radio chatter that plays, it names which wire function has a problem — then immediately CLOSE BREAKER. Cross-reference that function against your slip's legend to learn which wire color is safe to cut at the very end; never guess a color outright."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "searchlight-diversion",
+      "title": "New Mexico — Outside the Blockhouse",
+      "verified": true,
+      "locations": ["Southwest of Tower", "Crossroads", "Outside Blockhouse"],
+      "questions": [
+        {
+          "id": "nm-searchlight",
+          "q": "There's a sweeping searchlight and a guard dog near the blockhouse. How do I get past them to climb the tower?",
+          "locations": ["Outside Blockhouse"],
+          "hints": [
+            "Don't try to outrun the light directly — you need to make it look somewhere else for a moment.",
+            "You're carrying something a certain bird finds irresistible. Give it a reason to make noise and draw attention away from you.",
+            "The moment the beam swings away is short. Don't waste it — climb the moment it's clear, not a turn later.",
+            "Answer: DROP BAG (of crumbs) to lure the roadrunner, which distracts the dog and pulls the searchlight's attention away — then hurry straight back northeast to the Base of Tower and climb (U, U) before the beam swings back."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cut-wire",
+      "title": "New Mexico — The Shack",
+      "verified": true,
+      "locations": ["Shack"],
+      "questions": [
+        {
+          "id": "nm-final-wire",
+          "q": "I've reached a panel of wires and I know their colors from the slip and the breaker. When and how do I actually cut one?",
+          "hints": [
+            "Not yet, whatever you do — cutting even the exactly right wire too early is just as fatal as cutting the wrong one at any time.",
+            "Get the panel open and lit first, then wait and listen. The radio counts down toward the moment that matters; don't act until it tells you the automatic sequence has taken over.",
+            "Cutting too late, after that automatic sequence finishes on its own, is just as fatal as cutting too early — there's a real, narrow window, not an open-ended one.",
+            "Cross-reference the function the breaker revealed against your slip's color legend one last time before you commit — this is the one moment in the game with no second attempt.",
+            "Answer: UNSCREW PANEL, LOOK IN PANEL, TURN ON BULB, LOOK IN PANEL again, then wait (Z) repeatedly, listening to the escalating countdown, until you hear it announce that the automatic sequence has begun. The instant that announcement plays, CUT the wire (with the knife from the ranch in hand) whose color matches your slip's legend for the function the breaker revealed — your color will depend on your own slip and your own breaker message, so read both again if you're unsure rather than guessing."
+          ],
+          "locations": ["Shack"]
+        }
+      ]
+    },
+    {
+      "id": "epilogue",
+      "title": "Kensington Gardens — Epilogue",
+      "verified": true,
+      "locations": [],
+      "questions": [
+        {
+          "id": "epi-again",
+          "q": "I'm back in the park where I started, doing everything over again. Is there anything new to actually do here?",
+          "hints": [
+            "No new puzzles wait for you here — this is a deliberate echo of the prologue, not a second act. Repeat roughly what you did the first time through.",
+            "One small addition this time: you're carrying something from your travels worth giving to someone you met right at the start.",
+            "The scene ends itself the moment you take a second, closer look at someone specific near the end of the walk — you don't need to force anything further.",
+            "Answer: Retrace the prologue — take the ball, take the gnomon, buy crumbs and feed the birds, take the ruby — and GIVE CARD TO WOMAN when you meet the old bird-woman again. Then follow the pram east as before; the story ends on its own when you EXAMINE WOMAN a second time near Lancaster Gate."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -34,7 +34,7 @@
           "hints": [
             "There's no key to the front door and it won't budge. Stop trying the front.",
             "Try the alley around the side of the building.",
-            "There's a high transom window you could reach if you had something to stand on. Something's lying in the alley to climb.",
+            "There's a high transom window you could reach if you had something to stand on.",
             "Answer: From Outside the Real Estate Office, go SE into the alley. PUSH CAN AGAINST WALL, CLIMB CAN, UP through the transom, then WEST into the office."
           ]
         },
@@ -83,7 +83,7 @@
             "Bookshelves in old houses don't always hold only books.",
             "Examining the shelf closely reveals a safe set into the wall behind it.",
             "You can't open it by guessing — the combination is written down somewhere else in the house.",
-            "Try the dining room. The back of that cupboard isn't as solid as it looks — there's something to find behind the lining.",
+            "Try the dining room. The back of that cupboard isn't as solid as it looks.",
             "Answer: In the dining room, OPEN CUPBOARD, PULL LINING, then READ JOURNAL — it records the safe's three numbers (yours will differ from anyone else's, so note them down). Back in the library, LOOK AT BOOKSHELF to reveal the safe, TURN THE DIAL TO each number in turn, LOOK IN SAFE, then GET PUZZLE BOX AND FLUTE."
           ]
         },
@@ -92,7 +92,7 @@
           "q": "I feel like I'm missing something in the children's bedroom. Am I?",
           "locations": ["Children's Bedroom"],
           "hints": [
-            "Heavy furniture can be moved. What might be hidden under or behind the bed?",
+            "Heavy furniture can be moved.",
             "Push the bed aside — there's a hole in the floor beneath it.",
             "Answer: PUSH BED, LOOK IN HOLE, GET PAGES, READ PAGES — they name an ancestor, William, you'll want at the family crypt. Also OPEN JEWELRY BOX and GET SILVER LOCKET."
           ]
@@ -115,13 +115,13 @@
           "locations": ["Courthouse Basement", "Birth Records", "Death Records"],
           "hints": [
             "The records are searchable by name — but only by names you actually know.",
-            "If the clerk doesn't recognize a name, you haven't learned it yet. Old newspaper clippings in the house cellar name the Verlac ancestors.",
+            "If a name draws a blank, you haven't learned it yet. Old newspaper clippings in the house cellar name the Verlac ancestors.",
             "Answer: First read the clippings in the cellar (SEARCH CRATES, GET BOX, READ CLIPPINGS — page through to the very end) to learn the ancestors' names. In the courthouse basement, LOOK UP each name IN RECORD in both Birth Records and Death Records. The exit from Death Records is NORTHEAST."
           ]
         },
         {
           "id": "d2-records-names",
-          "q": "The clerk says some of the names I look up aren't familiar. Am I doing something wrong?",
+          "q": "Some of the names I try to look up in the records aren't familiar to me. Am I doing something wrong?",
           "locations": ["Birth Records", "Death Records"],
           "hints": [
             "Trying names and watching which ones turn up is the puzzle, not a fault.",
@@ -134,7 +134,7 @@
           "locations": ["Circulation Desk", "Library"],
           "hints": [
             "You need to prove you're entitled to borrow — some identification.",
-            "There's a library card to be found early on; check your wallet. Ring for service first.",
+            "There's a library card to be found early on; check your wallet.",
             "Answer: RING BELL, SHOW CARD TO LIBRARIAN, ASK LIBRARIAN FOR BOOK. Then OPEN HISTORICAL, GET SLIP OF PAPER, READ IT, and READ HISTORICAL — page through to the end."
           ]
         },
@@ -154,8 +154,8 @@
           "locations": ["Wharf"],
           "hints": [
             "He knows far more about the Verlac family than he first lets on. You'll have to earn his trust.",
-            "He's thirsty, and he responds to proof you've been down to the crypt. There's a flask under a table nearby.",
-            "Answer: GIVE FLASK TO BUM, then ASK BUM ABOUT brother / anna / crypt and SHOW SKULL TO BUM. Once he's talking, GIVE AMULET TO BUM."
+            "He's thirsty, and he responds to proof you've been down to the crypt.",
+            "Answer: GET FLASK (it's under a table nearby), GIVE FLASK TO BUM, then ASK BUM ABOUT brother / anna / crypt and SHOW SKULL TO BUM. Once he's talking, GIVE AMULET TO BUM."
           ]
         },
         {
@@ -163,7 +163,7 @@
           "q": "Michael's laptop is password-protected. What's the code?",
           "locations": ["Study"],
           "hints": [
-            "The code is a date that means something to Michael — look for it on something he wears.",
+            "The code is a date that means something to Michael.",
             "His wedding ring is engraved. Take it off and read the inscription.",
             "Answer: REMOVE RING, LOOK AT IT for the date, WEAR IT again, then TYPE 0628 ON LAPTOP."
           ]
@@ -223,7 +223,7 @@
           "hints": [
             "Two of the seven holes make the right-hand column resonate 'in harmony'; the rest only make it 'grow momentarily stronger.' Your job is to find those two.",
             "Test the holes one at a time: cover one, play, watch the column's reaction, then uncover and try the next.",
-            "Answer: For each hole 1 through 7 — COVER HOLE N, PLAY FLUTE, watch for 'resonating in harmony,' then REMOVE FINGER FROM FLUTE. Exactly two holes harmonize; remember which two — you'll need precisely those at the very end. Don't try to summon anything here yet."
+            "Answer: For each hole 1 through 7 — COVER HOLE N, PLAY FLUTE, watch for 'resonating in harmony,' then REMOVE FINGER FROM FLUTE. Exactly two holes harmonize; remember which two — you'll need exactly those later. Don't try to summon anything here yet."
           ]
         },
         {
@@ -244,7 +244,7 @@
             "The padlock won't pick, but it will break with the right heavy tool.",
             "The hook from the slaughterhouse is heavy enough to break it.",
             "Inside, a huge tome asks 'Will you read on?' — answer no. And to descend the rope shaft safely, tie off before you climb down.",
-            "Answer: BREAK PADLOCK WITH HOOK. At the tome, answer NO. At the shaft: TIE ROPE TO RAILING, DOWN, DROP ROPE — you plunge into water below. LIGHT FLASHLIGHT to see, and GET LANTERN from the floor here; you'll carry it from now on."
+            "Answer: BREAK PADLOCK WITH HOOK. At the tome, answer NO. At the shaft: TIE ROPE TO RAILING, DOWN, DROP ROPE — you plunge into water below. LIGHT FLASHLIGHT to see, and GET LANTERN from the floor here."
           ]
         },
         {
@@ -273,7 +273,7 @@
           "locations": ["Mill Floor", "Catwalk", "Maintenance Access Tunnel"],
           "hints": [
             "You have to shut the steam off at its source — and protect your hand on the hot valve wheel.",
-            "Something to wrap the wheel with would do it; there's a towel you found in the attic.",
+            "Something to wrap the wheel with would do it; there's a towel to be had in the house's attic if you don't already carry one.",
             "Answer: Light up first (LIGHT MATCH, TAKE LANTERN FROM POCKET, LIGHT LANTERN). PUT TOWEL ON VALVE, TURN WHEEL to stop the steam. To ride up to the lab, TIE CHAIN TO ME, then PULL LEVER."
           ]
         },
@@ -284,7 +284,7 @@
           "hints": [
             "The blueprint specifies one exact measurement, and only one mirror matches it.",
             "A figure on the blueprint has been scratched out and a new value written in. Read that value, then measure each mirror with the caliper until one matches.",
-            "Answer: READ BLUEPRINT for the written-in value. PUT each MIRROR IN CALIPER until the readout matches it. Then RUB OIL ON that mirror — a memo demands the mirrors be clean. Keep that mirror; it's the one you'll quietly hand over later."
+            "Answer: READ BLUEPRINT for the written-in value. PUT each MIRROR IN CALIPER until the readout matches it. Then RUB OIL ON that mirror — a memo demands the mirrors be clean."
           ]
         }
       ]
@@ -332,7 +332,7 @@
           "locations": ["At the Foot of the Lighthouse", "Breakwater"],
           "hints": [
             "Force alone won't do it — the thing is drawn to something you're carrying.",
-            "Offer it the gold locket from the attic, then strike.",
+            "Offer it the gold locket from the attic.",
             "Answer: GIVE GOLD LOCKET TO CREATURE, then HIT CREATURE WITH HOOK."
           ]
         },

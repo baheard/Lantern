@@ -142,7 +142,8 @@ export async function submitFeedback(feedbackText, gameName = 'None') {
  * @param {string} p.gameName
  * @param {string} p.sectionId
  * @param {string} p.questionId
- * @param {number} p.hintIndex     - 0-based index of the commented hint
+ * @param {number} p.hintIndex     - 0-based index of the commented hint; -1 means the
+ *                                   baseline question itself, not a revealed hint line
  * @param {number} p.total         - total hints in the question
  * @param {string} p.hintText      - the exact hint text being commented on
  * @param {string} [p.hintsVersion]- meta.appVersion (or generatedAt) of the hints file
@@ -153,9 +154,10 @@ export async function submitHintFeedback({
   gameName, sectionId, questionId, hintIndex, total,
   hintText, hintsVersion, comment,
 }) {
+  const hintLabel = hintIndex === -1 ? 'question' : `hint=${hintIndex + 1}/${total}`;
   const lines = [
     `[HINT] game=${gameName} · section=${sectionId} · q=${questionId} `
-      + `· hint=${hintIndex + 1}/${total} · hintsVersion=${hintsVersion || 'unknown'}`,
+      + `· ${hintLabel} · hintsVersion=${hintsVersion || 'unknown'}`,
     `"${hintText}"`,
     '',
     `Comment: ${comment && comment.trim() ? comment.trim() : '(none)'}`,

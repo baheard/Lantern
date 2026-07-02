@@ -1,0 +1,183 @@
+# Lost Pig - verified command list
+# Source: docs/games/walkthroughs/lostpig.txt (author's competition walkthrough)
+# Build: docs/games/lostpig.z8, Release 2 / Serial 080406
+# No randomization in this game; no seed required for command correctness.
+# Verified against tools/play.cjs --strict
+
+## [intro-outside] Outside the farm - find the trail
+x me
+inventory
+x farm
+x forest
+look for pig
+listen
+ne
+
+## [hole-entrance] The hole - torch, whistle, tube
+x stairs
+x metal thing
+take tube and torch
+look inside tube
+blow in tube
+x crack
+e
+
+## [catch-pig-first] First pig encounter (escapes)
+x pig
+follow pig
+catch it
+
+## [fountain-room] Fountain room - coin and statue setup
+x fountain
+x bowl
+x coin
+x curtain
+x man
+n
+x west mural
+x east mural
+x statue
+x hat
+take it
+wear it
+s
+sw
+
+## [vending-box] Table room - coin box and bricks
+x box
+put coin in slot
+pull lever
+x brick
+take it
+smell it
+taste it
+eat it
+x dent
+hit box
+take coin
+put coin in slot
+pull lever
+hit box
+take all from basket
+put coin in slot
+take all from basket
+x chair
+take it
+e
+
+## [gnome-intro] Closet - waking and befriending the gnome
+x shadow
+listen
+shout
+greet gnome
+tell gnome about grunk
+ask gnome about statue
+ask what gnome looking for
+look under bed
+talk to gnome about mogglev
+look
+look under bed
+open trunk
+x ball
+take ball
+show torch to gnome
+ask gnome about fire
+show brick to gnome
+ask gnome about mother
+e
+
+## [shelf-room] Shelf room - book and pole
+x shelf
+x top shelf
+drop chair
+stand on chair
+x top shelf
+take book
+x book
+get down
+open chest
+take pole
+x pole
+w
+
+## [gnome-book] Give gnome the book, learn about the page
+show pole to gnome
+ask gnome about color magnet
+show book to gnome
+give book to gnome
+e
+ask gnome about page
+e
+nw
+e
+
+## [river-crossing] Stream - fishing hook and water
+x river
+x thing
+take thing
+cross river
+touch thing with pole
+x key
+take water
+fill hat with water
+w
+se
+
+## [powder-fire] Unlock chest, mix powder, light torch
+unlock chest
+open it
+pour water on powder
+light torch with fire
+nw
+w
+
+## [get-paper] Retrieve the paper from the crack (burn the pole to reach it)
+x crack
+take paper
+take paper with pole
+burn pole with torch
+take paper with pole
+e
+sw
+e
+
+## [gnome-paper] Give gnome the paper, wait for him to read it
+give paper to gnome
+wait
+
+## [catch-pig-final] Distract pig with bricks and grab it
+go to pig
+show brick to pig
+drop all bricks
+z
+z
+z
+z
+take pig
+
+## [statue-torch] Put torch in statue's hand to open the passage
+go to statue
+x hand
+put torch in hand
+n
+x windy tunnel
+n
+s
+take torch
+
+## [trade-ball] Trade torch to gnome for the ball/whistle
+go to gnome
+ask gnome for ball
+give torch to gnome
+thank gnome
+
+## [exit-maze] Play whistle in windy cave, exit through the maze
+go to windy cave
+n
+e
+drop pole
+nw
+play whistle
+se
+enter hole
+follow gnome

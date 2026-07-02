@@ -58,7 +58,7 @@
             "It's not a guard you have to beat — neither fighting it nor forcing your way past will get you anywhere.",
             "Have you found anything edible? A dog with something to chew on loses interest in you.",
             "There's a bone to be had down below the cemetery. Bring it here.",
-            "Answer: GIVE BONE TO POODLE. (The bone is down in the open grave / underground area near the cemetery. With the poodle busy, you can grab the slip of paper it was guarding — GET NOTE.)"
+            "Answer: GIVE BONE TO POODLE. (The bone is down in the open grave below the cemetery.) On the road just north, the librarian will offer you a violet note to carry to your boss — GET NOTE."
           ]
         },
         {
@@ -87,7 +87,7 @@
           "hints": [
             "This is the real game beginning. The shopkeeper gave you a task before night fell — that's your thread to follow.",
             "You were promised the Stone of Dreams in exchange for something that was stolen. First you have to find the Stone, then use it to recover what was taken.",
-            "Answer: Press on toward recovering the Stone (the Wishbringer) — it's hidden across the river, past a toll gate. The rest of the game flows from getting it."
+            "Answer: Press on toward recovering the Stone (the Wishbringer) — the trail leads down the cliffs to a toll gate by the river. The rest of the game flows from getting it."
           ]
         },
         {
@@ -96,8 +96,8 @@
           "locations": ["North of Bridge", "Bridge"],
           "hints": [
             "He's greedy, not tough. Look at what he wants rather than trying to force past.",
-            "He's eyeing something you picked up earlier — a sealed metal can with a tempting label. Let him have it.",
-            "He won't survive his own greed once he opens it. Hand it over and stand back.",
+            "Have you still got the sealed metal can with the tempting label from the Magick Shoppe? It's exactly to his taste.",
+            "His greed will get the better of him once he opens it. Hand it over and stand back.",
             "Answer: GIVE CAN TO TROLL. He opens it, a rattlesnake leaps out, and he flees across the bridge — leaving the gate clear."
           ]
         },
@@ -116,8 +116,8 @@
           "q": "There's a creature trapped in a pit at the lake's edge and I can't reach it. How do I free it?",
           "locations": ["Lake Edge"],
           "hints": [
-            "It's stuck five feet down in dry sand. What would let a trapped swimmer simply float up to you?",
-            "You're holding a Stone that grants wishes, and you brought something that keeps the rain off. Put them together — raise the umbrella before you wish, so you stay dry when the sky opens.",
+            "It's stuck five feet down in dry sand, well out of your reach — you won't be hauling it out by hand.",
+            "This is a job for the wishing Stone and the umbrella together — gather them first if you don't have both. Open the umbrella before you make your Wish, or the Stone will refuse.",
             "Once it's free it marks a spot in the sand before vanishing. Whatever it leaves there is worth digging up.",
             "Answer: OPEN UMBRELLA, WISH FOR RAIN (the downpour floods the pit and the platypus floats free, drawing an X), DIG X WITH HANDS to uncover a silver whistle, GET WHISTLE, then BLOW WHISTLE to be carried to Misty Island."
           ]
@@ -167,10 +167,10 @@
           "q": "There's a small, dangerous beast curled up in a dark nest and I daren't get near it. How do I get past?",
           "locations": ["Grue's Nest"],
           "hints": [
-            "You can't fight it and you can't outrun it. The trick is to take away what it relies on — but gently, not with light.",
+            "You can't fight it and you can't outrun it.",
             "A grue hates the light but is at home in the dark. Smother the nest in darkness rather than trying to brighten it.",
             "Something soft and heavy enough to throw over it would do. There's a thick blanket on the bunk in the cell back up the passage.",
-            "Answer: Fetch the blanket from the bunk (it has to be dropped down the hole to reach the lower level — GET BLANKET, DROP BLANKET DOWN HOLE, go DOWN, GET BLANKET), carry it to the nest, then COVER GRUE WITH BLANKET."
+            "Answer: The blanket is on the bunk in the Jail Cell above the tunnels. In the underground chamber with the hole overhead, MOVE THE BED aside, go UP, GET BLANKET, then DROP BLANKET DOWN HOLE (you can't squeeze through the hole carrying it), go DOWN, GET BLANKET, carry it to the nest and COVER GRUE WITH BLANKET."
           ]
         },
         {
@@ -178,8 +178,8 @@
           "q": "There's a refrigerator in the grue's nest. Anything in it worth taking?",
           "locations": ["Grue's Nest"],
           "hints": [
-            "Odd place for an appliance — which is exactly why it's worth a look. There's live bait inside.",
-            "Answer: OPEN REFRIGERATOR, GET WORM. Keep it — a hungry creature in the village will go for it."
+            "Odd place for an appliance — which is exactly why it's worth a look.",
+            "Answer: OPEN REFRIGERATOR, GET WORM."
           ]
         }
       ]
@@ -206,9 +206,9 @@
           "q": "There's a big seabird at the lighthouse. Does it want something?",
           "locations": ["Lighthouse"],
           "hints": [
-            "It does — and so do you. You're carrying something a bird that size might fancy wearing or hoarding.",
+            "It does — and so do you. Have you anything a bird that size might fancy wearing? If not, this bird can wait.",
             "Give it the hat you earned from the King. Then watch the sky above the lighthouse very carefully.",
-            "Answer: GIVE HAT TO BIRD. The lighthouse beam traces a magic word across the cloud. READ it and remember it exactly — you will need to SAY that word later at the Tower. (It is different in every game, so commit yours to memory; no walkthrough can tell you what it will be.)"
+            "Answer: GIVE HAT TO BIRD. The lighthouse beam traces a magic word across the cloud. READ it and remember it exactly — you will need to SAY that word later at the Tower. (The word is different in every playthrough, so commit yours to memory.)"
           ]
         }
       ]
@@ -228,7 +228,7 @@
           "hints": [
             "The arcade only spends tokens, never gives them. Look somewhere wetter.",
             "The fountain in the park holds one — but something with teeth is in there guarding it.",
-            "You're carrying live bait that a hungry fish can't resist. Use it as a distraction.",
+            "Live bait would draw it off. If you haven't found any, search below the cemetery first.",
             "Answer: PUT WORM IN FOUNTAIN — the piranha lunges for it — then GET TOKEN."
           ]
         },
@@ -259,7 +259,7 @@
           "q": "There's an arcade game here. Is it just for fun, or does it matter?",
           "locations": ["Video Arcade"],
           "hints": [
-            "It matters — winning it is your way up to the Tower. It costs the token you fished out of the fountain.",
+            "It matters — winning it is your way up to the Tower. It costs a token.",
             "It's a simple star-moving game: nudge the marker to its goal, then commit, even though the machine warns you off.",
             "Answer: PUT TOKEN IN SLOT, then PUSH JOYSTICK WEST, PUSH JOYSTICK WEST, PUSH JOYSTICK SOUTH, PUSH JOYSTICK SOUTH, PRESS BUTTON, and answer YES to the prompts. Winning teleports you to the hilltop at the Tower."
           ]
@@ -282,7 +282,7 @@
           "hints": [
             "Force and climbing won't do it. The way in is spoken, not walked.",
             "Remember the word the lighthouse traced on the cloud when you gave away the hat? This is where it earns its keep.",
-            "Answer: SAY <the word the lighthouse showed you> at the hilltop and the drawbridge lowers. (Your word is unique to your game — it is not a value any hint can give you. If you never saw it, go back to the lighthouse and give the bird the hat.)"
+            "Answer: SAY <the word the lighthouse showed you> at the hilltop and the drawbridge lowers. (Your word is unique to your playthrough. If you never saw one, go back to the lighthouse and give the bird the hat.)"
           ]
         },
         {
@@ -290,7 +290,7 @@
           "q": "I'm chained up and a man is calmly stealing my belongings one at a time! How do I stop him before he takes everything?",
           "locations": ["Torture Chamber"],
           "hints": [
-            "You can't wrestle him while chained — but you're carrying something that will rattle him far more than a struggle would. It's personal.",
+            "You can't wrestle him while chained — and this man isn't the kind you beat with force anyway.",
             "Long ago the librarian asked you to pass a little violet note to your boss. The man robbing you is that boss, and the note is a love letter.",
             "Don't wait for him to find it himself — that risks him pocketing the glowing stone first. Hand it over at once.",
             "Answer: GIVE VIOLET NOTE TO MR CRISP. He reads it, melts, drops his lab coat, and scampers off — before he can take the Stone."
@@ -349,9 +349,10 @@
           "q": "A huge slavering hellhound is blocking the cottage and roaring at me. How do I get past it?",
           "locations": ["Outside Cottage"],
           "hints": [
-            "Brute force is suicide. This beast was once a harmless pet — it will answer to its old name, if you know it.",
+            "Fighting it is useless — the beast is far too mean to face head-on.",
+            "It was once a harmless little pet, and it will still answer to its proper name.",
             "The name isn't 'Corky' (that's just an embarrassing pet-name for someone else). The dog's real name was written down somewhere you've been carrying.",
-            "Read the violet note again — once your boss had opened it, it shows the name he uses to call the dog to heel.",
+            "Read the violet note again — once your boss had opened it, its postscript tells you exactly what to say.",
             "Answer: ALEXIS, HEEL — the hellhound sits and wags its tail. (The name comes from re-reading the opened violet note back in the Tower.) Then OPEN COTTAGE DOOR, ENTER COTTAGE, GET STEEL KEY."
           ]
         },
@@ -390,7 +391,7 @@
           "hints": [
             "You can — but think twice. Wishing is the lazy way, and the game quietly rewards restraint.",
             "Every puzzle here has an ordinary, wish-free solution. Leaning on Wishes costs you points, and finishing with Wishes to spare is the real mark of an Adventurer.",
-            "Answer: Treat the Wishes as a safety net, not a toolbox. The documented best line uses just a single Wish (to make it rain at the lake) and scores 95/100; spending more only lowers your score. Solve with your wits and your inventory wherever you can."
+            "Answer: Treat the Wishes as a safety net, not a toolbox. The documented best line uses just a single Wish and scores 95/100; spending more only lowers your score. Solve with your wits and your inventory wherever you can."
           ]
         },
         {
@@ -406,7 +407,7 @@
           "q": "There's a black cat asleep in the Laboratory. Is that the cat I'm looking for?",
           "hints": [
             "It's tempting to assume so — a black cat, right where the villain works.",
-            "Answer: No. It isn't Chaos and can't be carried out; the cat you're after is restored much later, elsewhere. This one is a decoy — leave it sleeping."
+            "Answer: No. It isn't Chaos, and it can't be carried out of the tower. This one is a decoy — leave it sleeping."
           ]
         }
       ]

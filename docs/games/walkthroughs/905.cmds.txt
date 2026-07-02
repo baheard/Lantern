@@ -1,0 +1,51 @@
+# 9:05 by Adam Cadre — verified command list
+# Build: docs/games/905.z5, v1.11 (release 1, serial 120724)
+# Verified: node tools/play.cjs 905 --strict --file docs/games/walkthroughs/905.cmds.txt  ->  exit 0
+# No RNG/seed dependency in this trunk (no @random gates on this path).
+# This trunk deliberately takes the TWIST-REVEALING branch (answer "yes" to stop at
+# Loungent Technologies, then sign the form) rather than the quiet "escape via freeway"
+# branch, because the twist branch is the game's actual content — see puzzle-notes.md.
+
+## [wake-and-clue] Wake up, discover the body
+answer phone
+stand
+look under bed
+x me
+
+## [shower-and-dress] Bathroom routine — swap the watch, dress in clean clothes
+s
+remove watch
+remove clothes
+drop all
+enter shower
+take watch
+wear watch
+n
+get all from table
+open dresser
+get clothes
+wear clothes
+
+## [leave-house] Exit the house to the car
+e
+s
+open front door
+s
+unlock car
+enter car
+
+## [drive-decision] Freeway-or-Loungent decision point (yes/no prompts)
+no
+yes
+
+## [loungent-twist] Enter Loungent Technologies, sign the form, twist revealed
+open wallet
+take id
+insert id in slot
+enter cubicle
+read note
+take form
+take pen
+sign form
+out
+w

@@ -1,0 +1,339 @@
+{
+  "schema": 1,
+  "game": "lostpig",
+  "sections": [
+    {
+      "id": "outside-farm",
+      "title": "Outside the Farm",
+      "verified": true,
+      "locations": ["Outside", "Farm"],
+      "questions": [
+        {
+          "id": "which-way-pig-go",
+          "q": "The pig ran off into the dark and Grunk can't see a trail. Which way did it go?",
+          "hints": [
+            "Grunk's eyes aren't much use out here in the dark — but Grunk has other senses.",
+            "Try using your ears, not your eyes.",
+            "LOOK FOR PIG, then LISTEN. The direction to go will become obvious after that."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-hole",
+      "title": "The Hole",
+      "verified": true,
+      "locations": ["Hole"],
+      "questions": [
+        {
+          "id": "torch-out",
+          "q": "Grunk's torch went out when he fell. Did he do something wrong?",
+          "hints": [
+            "No — that was just the fall. Nothing to fix yet, and nothing lost by exploring in the dark for now.",
+            "Pick up what's down here with you before moving on."
+          ]
+        },
+        {
+          "id": "metal-tube",
+          "q": "What's this metal tube for?",
+          "hints": [
+            "Grunk should find out what's inside it before deciding it's useless.",
+            "Try blowing into it.",
+            "BLOW IN TUBE. It's a whistle."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fountain-and-statue",
+      "title": "Fountain and Statue Rooms",
+      "verified": true,
+      "locations": ["Fountain Room", "Statue Room"],
+      "questions": [
+        {
+          "id": "pig-wont-be-caught",
+          "q": "The pig keeps running away whenever Grunk gets close.",
+          "hints": [
+            "Chasing it bare-handed isn't going to work — the pig is faster than Grunk.",
+            "Pigs care about one thing more than running away: food. Grunk needs something the pig wants.",
+            "Don't worry about the pig yet. Come back once Grunk has found something worth tempting it with."
+          ]
+        },
+        {
+          "id": "what-good-fountain",
+          "q": "Is there anything worth Grunk's attention in the Fountain Room?",
+          "hints": [
+            "Look closely at everything in here — the bowl, the statue, the walls.",
+            "The fountain's bowl holds something small and shiny that Grunk shouldn't leave behind.",
+            "X BOWL — Grunk spots the coin inside and pockets it on his own. Also X STATUE, then TAKE HAT and WEAR HAT."
+          ]
+        },
+        {
+          "id": "murals-meaning",
+          "q": "There are two carved murals in the Statue Room. Do they mean anything?",
+          "hints": [
+            "Grunk should study both walls closely — they're not just decoration.",
+            "One shows fire and water together. Water usually puts fire out — but is that really what this picture is showing?",
+            "Remember what's on these murals. The west one (fire and a bucket) and the east one (a pole and floating things) both describe things Grunk will need to do later."
+          ]
+        },
+        {
+          "id": "statue-pose",
+          "q": "The statue is posed strangely — one hand out, one hand raised. Does that matter?",
+          "hints": [
+            "A statue posed that deliberately is probably a clue, not just art.",
+            "One hand points toward a direction Grunk hasn't been able to go yet. The other hand looks like it's meant to be holding something.",
+            "Remember this pose. Later, once Grunk has a lit torch again, come back and try PUT TORCH IN HAND."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table-room",
+      "title": "Table Room",
+      "verified": true,
+      "locations": ["Table Room"],
+      "questions": [
+        {
+          "id": "coin-box-lever",
+          "q": "What is this box with a coin slot and a lever for?",
+          "hints": [
+            "It looks like it's built to be operated, not just looked at.",
+            "Put the coin in the slot, then see what the lever does.",
+            "PUT COIN IN SLOT, PULL LEVER — a brick drops into the basket below."
+          ]
+        },
+        {
+          "id": "coin-stuck",
+          "q": "Grunk used his coin in the box. Now what? Does he need to find more coins?",
+          "hints": [
+            "Look closely at the box itself — is there anything odd about it?",
+            "There's a dent in the box. Dents like that usually mean 'hit here.'",
+            "HIT BOX and the coin falls back out into the basket — Grunk can put it in and pull the lever again as many times as he needs."
+          ]
+        },
+        {
+          "id": "chair-use",
+          "q": "Is this chair worth carrying around?",
+          "hints": [
+            "Grunk should hang onto it — it may come in handy somewhere he can't quite reach something.",
+            "TAKE CHAIR and bring it along; there's a shelf elsewhere too high to reach on foot."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "closet-and-gnome-room",
+      "title": "Closet and Gnome's Room",
+      "verified": true,
+      "locations": ["Closet", "Gnome Room"],
+      "questions": [
+        {
+          "id": "gnome-wont-wake",
+          "q": "There's someone asleep in here, but nothing Grunk does gets a response.",
+          "hints": [
+            "Looking and listening quietly isn't going to rouse anyone.",
+            "Grunk needs to make some real noise.",
+            "SHOUT. That should wake him up — then GREET GNOME to start talking."
+          ]
+        },
+        {
+          "id": "what-to-say-gnome",
+          "q": "The gnome is awake and talking, but Grunk isn't sure what to ask him.",
+          "hints": [
+            "The gnome tells Grunk exactly what he can try next, right after most things he says — look for the bracketed suggestions in his dialogue.",
+            "Try greeting him, telling him about Grunk, and asking about the things Grunk has already seen — the statue, for instance.",
+            "Follow the bracketed [Grunk can try ...] suggestions as they appear; they'll walk Grunk through the whole conversation naturally."
+          ]
+        },
+        {
+          "id": "under-the-bed",
+          "q": "Is there anything else worth checking in here?",
+          "hints": [
+            "Grunk should look in more places than just what's in plain sight.",
+            "LOOK UNDER BED, and also OPEN TRUNK — there's something inside worth taking."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shelf-room",
+      "title": "Shelf Room",
+      "verified": true,
+      "locations": ["Shelf Room"],
+      "questions": [
+        {
+          "id": "top-shelf-out-of-reach",
+          "q": "There's something on the top shelf, but Grunk can't reach it.",
+          "hints": [
+            "Grunk needs to get higher up somehow.",
+            "Did Grunk bring anything along that he could stand on?",
+            "DROP CHAIR, then STAND ON CHAIR, then TAKE BOOK."
+          ]
+        },
+        {
+          "id": "book-for-gnome",
+          "q": "Grunk found a book missing a page. What should he do with it?",
+          "hints": [
+            "The gnome seemed like the kind of person who'd care about a book.",
+            "Bring it back to him, and ask about the page while you're at it.",
+            "GIVE BOOK TO GNOME, then ASK GNOME ABOUT PAGE. He can't fix the book yet — the missing page itself is somewhere else in the caves."
+          ]
+        },
+        {
+          "id": "chest-in-shelf-room",
+          "q": "There's a chest in here too. Worth opening?",
+          "hints": [
+            "Worth a try — but the chest has other ideas.",
+            "It's locked, and Grunk has no key yet — one will turn up as Grunk explores. Meanwhile, TAKE POLE — the long green pole leaning by the doorway."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cave-with-stream",
+      "title": "Cave with Stream",
+      "verified": true,
+      "locations": ["Cave With Stream"],
+      "questions": [
+        {
+          "id": "something-in-river",
+          "q": "There's a small red something on the far side of the stream, out of Grunk's reach. Worth investigating?",
+          "hints": [
+            "Grunk can't reach it by hand — something long might.",
+            "Poke it with the pole from the Shelf Room and see what happens.",
+            "TOUCH THING WITH POLE — the red thing sticks to the pole, and it turns out to be a key. While Grunk is here: FILL HAT WITH WATER."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "back-in-statue-room",
+      "title": "Shelf Room — the Locked Chest",
+      "verified": true,
+      "locations": ["Shelf Room"],
+      "questions": [
+        {
+          "id": "locked-chest-statue-room",
+          "q": "There's a locked chest in here. Grunk found a key somewhere — does it fit?",
+          "hints": [
+            "If Grunk has fished a key out of the stream, that's the one. If not, the stream cave deserves a closer look first.",
+            "Unlock the chest and look inside — a heap of black powder.",
+            "UNLOCK CHEST, OPEN CHEST. Then remember the west mural in the Statue Room — fire and a bucket of water — and read it backwards: POUR WATER ON POWDER (the water Grunk scooped up in his hat) makes it ignite, not douse. Then LIGHT TORCH WITH FIRE."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-crack-revisited",
+      "title": "Hole — the Crack, Revisited",
+      "verified": true,
+      "locations": ["Hole"],
+      "questions": [
+        {
+          "id": "reach-into-crack",
+          "q": "There's a piece of paper stuck down in that crack Grunk noticed earlier, but he can't quite grab it.",
+          "hints": [
+            "Grunk's fingers aren't going to reach it. He needs a tool.",
+            "The pole might reach, but plain wood won't grip the paper.",
+            "The pole needs to be sticky, not just long. BURN POLE WITH TORCH first, then TAKE PAPER WITH POLE."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gnome-paper-and-pig",
+      "title": "Delivering the Page, Catching the Pig",
+      "verified": true,
+      "locations": ["Gnome Room", "Fountain Room"],
+      "questions": [
+        {
+          "id": "give-gnome-paper",
+          "q": "Grunk has the missing page now. What next?",
+          "hints": [
+            "Bring it to the one person who's been missing it.",
+            "Hand it over — and don't wander off right away.",
+            "GIVE PAPER TO GNOME, then WAIT. He'll get to work fixing the book on his own."
+          ]
+        },
+        {
+          "id": "catch-pig-bricks",
+          "q": "Grunk has bricks now. How does he actually catch the pig with them?",
+          "hints": [
+            "Showing the pig the bricks is a start, but the pig needs a reason to stop running.",
+            "The pig cares about eating, not about being chased. Give it something to focus on, then be patient.",
+            "SHOW BRICK TO PIG, DROP ALL BRICKS, then wait several turns while the pig eats. Once it's absorbed in the bricks instead of watching Grunk, TAKE PIG."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "statue-passage-and-trade",
+      "title": "Statue Room — Opening the North Passage",
+      "verified": true,
+      "locations": ["Statue Room"],
+      "questions": [
+        {
+          "id": "statue-hand-torch",
+          "q": "That statue's raised hand looks like it's meant to hold something. What?",
+          "hints": [
+            "Remember its pose — one hand pointing, one hand raised, empty.",
+            "The lit torch would fit right in that raised hand.",
+            "PUT TORCH IN HAND. That opens a passage to the north."
+          ]
+        },
+        {
+          "id": "trade-torch-for-ball",
+          "q": "Grunk needs to get through the windy maze up ahead, but the torch alone won't cut it.",
+          "hints": [
+            "The gnome had a glowing ball earlier — that could serve as a light source too.",
+            "Go retrieve the torch from the statue's hand first, then see if the gnome will trade.",
+            "TAKE TORCH, then bring it to the gnome: ASK GNOME FOR BALL, GIVE TORCH TO GNOME."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "windy-maze",
+      "title": "Windy Cave and the Maze",
+      "verified": true,
+      "locations": ["Windy Cave", "Twisty Cave", "Dark Tunnel", "Twisty Place", "Probably New Tunnel", "Some Other Cave"],
+      "questions": [
+        {
+          "id": "lost-in-maze",
+          "q": "Grunk is completely lost in these twisty tunnels. Mapping isn't working. What now?",
+          "hints": [
+            "This place isn't meant to be solved by mapping it out.",
+            "Grunk has something that makes noise, from way back at the very start.",
+            "PLAY WHISTLE. The gnome will hear it and come find Grunk, then guide him out — just FOLLOW GNOME from there."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general-questions",
+      "title": "General Questions",
+      "questions": [
+        {
+          "id": "full-score",
+          "q": "Is it possible to get every point in this story?",
+          "hints": [
+            "The game itself will tell you once you've finished the main quest — look at the MENU option offered at the ending screen.",
+            "The last point is an optional bit of silliness outside the main quest, and the game's own end-of-game MENU spells out exactly how to get it — no need to hunt for it beforehand."
+          ]
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "sources": [
+      {
+        "name": "Lost Pig walkthrough (author-provided competition walkthrough, IF Archive)",
+        "url": "https://ifarchive.org/if-archive/games/competition2007/zcode/lostpig/walkthru.txt",
+        "file": "docs/games/walkthroughs/lostpig.txt"
+      }
+    ],
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.734"
+  }
+}

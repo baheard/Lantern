@@ -1,0 +1,1474 @@
+# Curses (Graham Nelson) — verified command list, trunk to 544/550
+# Build: docs/games/curses.z5 -- Z-machine v5, Release 16, Serial 951024
+# VERIFY WITH: node tools/play.cjs curses --strict --seed 1 --file docs/games/walkthroughs/curses.cmds.txt
+#
+# Sources: "The Solution to Curses 1.6" (Marc Leduc, CursesR16.txt) is the PRIMARY trunk (terse
+# commands). Russ Bryan's 554-point prose walkthrough (R12-orig/R16-revised) fills ambiguities
+# and cross-checks. See docs/games/walkthroughs/curses.txt for both sources verbatim.
+#
+# No @random-seeded puzzle steps identified in the trunk (Curses doesn't use a dice/combo RNG
+# gate the way Anchorhead does; the sailor dice-game is optional flavor, excluded from the trunk).
+#
+# EXCLUDED FROM TRUNK (see puzzle-notes.md for rationale):
+#   - Evans mascot theft (Leduc "Amusing things" #1, Bryan's optional aside) — not required for score/ending.
+# INCLUDED IN TRUNK (verified required, despite being "optional" in Bryan's framing):
+#   - The bomb/castle-card timer scene IS in Leduc's main walkthrough (lines ~175-183) and is
+#     kept in the trunk per skill instructions.
+#
+# ANCHOR MAP: each `## [slug] label` marker maps to the matching heading in curses.puzzle-notes.md
+# (validate: node tools/_check_walkthrough_map.cjs curses).
+
+# ============ ATTIC / HOUSE — GATHERING GEAR ============
+## [attic-start] Wake in the attic, drop the attic key down a crack
+n
+## [radio-gloves] Airing cupboard, radio to Jemima's lair, wait for gloves
+w
+s
+look under sheets
+push radio n
+turn on radio
+w
+z
+z
+z
+z
+z
+z
+take gloves
+wear gloves
+## [torch-battery] East annexe — new battery for the torch, take the rucksack
+e
+e
+open demijohn
+s
+s
+se
+e
+examine insulation rolls
+take new battery
+open torch
+empty torch
+put new battery in torch
+close torch
+s
+take rucksack
+## [painting-mask] Cupboard: painting of Mad Isaac, gas mask
+n
+open cupboard
+n
+take painting
+take gas mask
+s
+w
+nw
+take bottle
+n
+n
+take nasty red battery
+take map
+e
+## [dumbwaiter-basement] Dumbwaiter down to the basement, wrench, chicken bone
+take wrench
+enter dumbwaiter
+take wishbone
+pull rope
+out
+## [mouse-hole] Robot mouse maze puzzle — recover the attic key
+take mouse
+s
+drop mouse
+mouse, w
+hole, w
+hole, w
+hole, w
+hole, n
+hole, w
+hole, n
+hole, s
+hole, e
+hole, s
+hole, e
+hole, e
+hole, e
+hole, e
+take attic key
+n
+enter dumbwaiter
+pull rope
+out
+## [ghastly-door] Gas mask, unlock north basement door (10-pt door for later)
+wear gas mask
+n
+unlock door with brass key
+open door
+s
+enter dumbwaiter
+pull rope
+out
+## [teachest-dream] History book, sleep, the mascot dream, escape
+w
+s
+examine teachest
+look in teachest
+e
+lie down
+sleep
+e
+n
+take mascot
+drop mascot
+s
+w
+sw
+e
+## [chocolates-daisy] Dictionary/scarf, parcel, calendar, chocolates for Jemima
+get up
+take dictionary
+take scarf
+w
+s
+take all
+open parcel
+n
+n
+w
+examine calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+flip calendar
+w
+give chocolates to jemima
+remove gas mask
+say yellow
+## [darkroom] Postcard, flash + red battery, photograph, Roger lookup
+e
+e
+s
+s
+se
+w
+pull cord
+examine postcard
+take flash
+open flash
+put red battery in flash
+close flash
+look at photograph
+look up roger in history book
+## [ghost-key] Roof, key guarded by a ghost, wishbone bribe
+e
+e
+n
+turn crank
+u
+nw
+take key
+give wishbone to ghost
+se
+d
+## [priests-hole] Fireplace squeeze, priest's hole, hatch down to cellar
+take brass key
+put torch in fireplace
+put brass key in fireplace
+drop all
+enter fireplace
+d
+take all
+unlock hatch with brass key
+open hatch
+d
+## [wheel-quirk] The dumbwaiter wheel — turn off then on, back to attic loop
+e
+turn off wheel
+turn wheel
+enter dumbwaiter
+pull rope
+pull rope
+out
+w
+s
+s
+se
+e
+n
+drop all
+take rucksack
+take all
+## [medicine-bottle] Old Furniture room medicine bottle (carried; crushed by roller later for the tablet)
+s
+w
+nw
+n
+n
+e
+take bottle
+## [library-storage] Observatory glass ball, library storage pipe/books
+w
+w
+w
+e
+e
+s
+s
+se
+d
+clean glass ball
+w
+take wrench
+fix pipe
+take books
+read romantic novel
+read poetry
+# ============ FRANCE DREAM (Belle Epoque Paris) ============
+## [sosostris-tarot] Madame Sosostris consultation, take the discarded Tarot cards, Bohemia mural
+n
+u
+push bell
+say even
+n
+u
+take tarot cards
+d
+e
+examine mural
+w
+## [boat-to-garden] Silk handkerchief lures the boat, ride it back to the Garden Stream
+s
+w
+take handkerchief
+wave handkerchief
+board boat
+say time
+## [maze-roller] Garden roller through the hedge maze; get the miniature
+nw
+climb tree
+look at maze
+d
+w
+w
+take all
+board roller
+turn on roller
+e
+e
+n
+n
+w
+w
+n
+n
+n
+n
+w
+w
+w
+turn off roller
+out
+take miniature
+## [medicine-bottle-crack] Drive the roller over the plaster bust (reveals well); crack the medicine bottle for the red tablet
+board roller
+turn on roller
+e
+e
+e
+s
+s
+s
+s
+e
+e
+s
+s
+e
+out
+w
+take medicine bottle
+drop medicine bottle
+e
+enter roller
+w
+turn off roller
+out
+take tablet
+## [wine-cellars-shortcut] Wine Cellars hatch shortcut down; dumbwaiter wheel back up to the attic
+se
+e
+push tub
+open hatch
+d
+w
+turn off wheel
+turn wheel
+enter dumbwaiter
+pull rope
+pull rope
+out
+## [slide-ace-cups] Slide projector + Ace of Cups: sail the model ship, storm, and wake back in the attic
+w
+s
+s
+se
+s
+s
+turn on slide projector
+turn dial
+take ace of cups
+put ace of cups in slot
+s
+search crates
+take mounted bottle
+pull anchor
+put ship in mounted bottle
+examine ship
+climb mast
+take flag
+go port
+take all
+go fore
+take green branch
+go aft
+go aft
+turn wheel
+d
+## [alison-dream] Fool card, Roman cross, Alison's writing room, the melancholy dream
+take ace of cups
+take fool
+put fool in slot
+n
+n
+e
+s
+e
+ne
+n
+examine cross
+look up alison in history book
+s
+sw
+w
+push south wall
+s
+take flag
+put flag on bed
+lie down
+sleep
+z
+e
+e
+turn wheel
+pinch me
+get up
+take stick
+look in mirror
+## [daisy-chain] Detour to Aunt Jemima's Lair to collect the finished daisy chain (Merlyn's Hat) -- required to reveal disguised Rods; NOT ready right after "say yellow", must wait here
+out
+n
+n
+w
+nw
+n
+n
+w
+w
+z
+examine daisy chain
+## [gold-key-clover] Break the window, gold key on the balcony, four-leaf clover from the locked box
+e
+u
+s
+s
+se
+e
+s
+s
+break window
+s
+look under window
+take gold key
+n
+n
+n
+w
+nw
+n
+close door
+take box
+open door
+unlock box with gold key
+open box
+take clover
+n
+e
+enter dumbwaiter
+pull rope
+pull rope
+out
+## [octagon-rods] Sandstone passage opens (dream unlocked it); The Octagon: sketch/letter/scroll, name three Rods (stick, spar, clover) in the coffin
+wear gas mask
+n
+e
+e
+remove gas mask
+take charcoal sketch
+break frame
+take letter
+take sketch
+open coffin
+read inscription
+read letter
+take scroll
+examine scroll
+take stick
+wave stick
+put mahogany rod in coffin
+close coffin
+open coffin
+take all from coffin
+take spar
+wave spar
+put mahogany rod in coffin
+close coffin
+open coffin
+take all from coffin
+take clover
+wave clover
+put mahogany rod in coffin
+close coffin
+open coffin
+take all from coffin
+## [sceptre-hamburg] Sceptre from the umbrella stand; lagach-free trip via the Hamburg map to the Museum of Arcana
+se
+take painting
+hang painting on hook
+search umbrella stand
+take sceptre
+u
+u
+look up 1420 in map
+turn door
+ne
+push ball sw
+push ball s
+take tarot box
+open tarot box
+e
+remove gas mask
+break cabinet
+take all from cabinet
+## [museum-capture] Trip the alarm, get drugged/jailed by Doktor Stein, eat the antidote tablet, escape with the Rod of Returning
+take tablet
+take rod of returning
+strike rod of returning
+z
+eat tablet
+take crook
+point returning at me
+## [maze-foundations] Rod of Returning: back to the attic (random landing spot -- route below assumes Attic; adjust if it lands elsewhere), then into the "building the hedge maze" past for the bean pole (Rod of Stalking). MUST squeeze the weed-killer bottle on the seedbed BEFORE taking the bean pole, or the Folly collapses on you.
+s
+se
+s
+s
+take fool
+take miniature
+put miniature in slot
+n
+s
+s
+examine bean pole
+examine folly
+e
+e
+e
+e
+e
+e
+e
+e
+s
+s
+s
+s
+w
+take weed killer bottle
+squeeze weed killer bottle
+n
+n
+n
+n
+w
+w
+w
+w
+w
+w
+w
+take rod of returning
+strike rod of returning
+take bean pole
+point returning at me
+## [marble-rose-lagach] Back through the France dream (poetry book stays behind in the present -- it never travels), maze roller to the marble rose, then lagach-chain via Bohemia/still-life/painting to name the last three Rods and open the bronze mural
+s
+w
+w
+w
+e
+e
+s
+s
+se
+d
+w
+take poetry book
+read poetry
+w
+take handkerchief
+wave handkerchief
+board boat
+say time
+nw
+board roller
+turn on roller
+n
+n
+e
+e
+e
+get off roller
+take marble rose
+d
+examine mural
+mural, lagach
+w
+u
+take eight of wands
+put eight of wands on deck
+take maiden
+put maiden on deck
+take star
+put star on deck
+push bell
+n
+u
+take all cards
+d
+e
+mural, lagach
+still life, lagach
+nw
+take bean pole
+wave bean pole
+put mahogany rod in coffin
+close coffin
+open coffin
+take stalking
+take crook
+wave crook
+put mahogany rod in coffin
+close coffin
+open coffin
+take husbandry
+take staff
+wave staff
+put mahogany rod in coffin
+close coffin
+open coffin
+take bronze
+se
+painting, lagach
+strike rod of bronze
+point rod of bronze at mural
+d
+take key
+## [contraption-panel] Gravestone, Universe Maintenance Room switch, and the HENRI BLACK POST letter-panel puzzle (bronze wall trick must be done first, or the panel is unsolvable)
+e
+e
+read tombstone
+w
+w
+s
+smell
+smell
+d
+turn off switch
+u
+w
+examine panel
+examine bronze wall
+strike rod of bronze
+point rod of bronze at wall
+n
+examine panel
+slide i
+slide k
+slide c
+slide a
+slide n
+slide e
+slide l
+slide o
+slide s
+slide t
+s
+slide k
+slide k
+e
+u
+u
+u
+board roller
+w
+w
+w
+s
+s
+e
+turn off roller
+get off roller
+take golden orb
+## [temple-of-zeus] Slide projector Maiden card -> ancient Alexandria/Zeus's temple: burn the wall of thorns, use luck to bypass Zeus, Homer's three questions, push the gods into place, amber gem
+take rod of returning
+strike rod of returning
+point returning at me
+s
+s
+se
+s
+s
+take maiden
+take miniature
+put maiden in slot
+s
+u
+e
+s
+take rod of fire
+strike rod of fire
+point rod of fire at wall
+take rod of luck
+strike rod of luck
+point rod of luck at me
+s
+s
+take copper coin
+se
+take inscribed stone
+examine inscribed stone
+sw
+wake homer
+say agamemnon
+say ptolemy
+say yellow
+d
+sw
+push statue ne
+nw
+push dionysus se
+push dionysus sw
+ne
+ne
+push demeter sw
+push demeter nw
+se
+push poseidon ne
+sw
+put inscribed stone in opening
+d
+take amber gem
+u
+u
+ne
+nw
+n
+n
+n
+## [priestess-oracle] Rod of Husbandry clears the goats; fig/dessert/Andromeda's hairband; the priestess's riddle gives the croquet-lawn dig coordinates (FIXED text at seed 1: "eight paces and a pace" -- not randomized, it's authored verse)
+take rod of husbandry
+strike rod of husbandry
+point rod of husbandry at goats
+e
+take fig
+s
+give coin to bartender
+take dessert
+n
+w
+w
+d
+give dessert to andromeda
+u
+sw
+take pan pipes
+play pan pipes
+put fig in urn
+priestess, tell me about fig
+## [bomb-defusal] Souvenirs Room + Castle card: the Ruined Castle Cafe bomb, defuse by pulling wires in the priestess's colour order (blue/green/black/red)
+take rod of returning
+strike rod of returning
+point returning at me
+s
+s
+se
+s
+s
+take castle
+take maiden
+put castle in slot
+s
+look under table
+examine scarf
+pull blue wire
+pull green wire
+pull black wire
+pull red wire
+z
+z
+z
+z
+strike rod of returning
+point returning at me
+## [frieze-kraken] Souvenirs Room + Star card: examine the Greek frieze, then rig the photographer's flash (red battery + bomb timer) in the Lighthouse's mirrored device to summon and kill the Kraken -- this KILLS you (intentionally); you resurrect at Family Tree stripped of inventory, then lagach back (mosaic -> mural x2 -> still life -> painting) to the Lighthouse to reclaim everything
+# NOTE: Rod of Returning lands at one of 4 random attic spots (seed 1 -> Old Winery here); route below is FROM Old Winery
+s
+s
+se
+s
+s
+take star
+take castle
+put star in slot
+s
+d
+examine frieze
+u
+take flash
+open flash
+take red battery
+put red battery in flash
+take timer
+put timer in flash
+set timer
+close flash
+put flash in device
+z
+z
+z
+z
+z
+z
+z
+z
+e
+e
+mosaic, lagach
+mural, lagach
+mural, lagach
+still life, lagach
+painting, lagach
+u
+wear gloves
+take all
+take rod of returning
+strike rod of returning
+point returning at me
+## [austin-alexandria] Push Austin (the wandering house cat) into Souvenirs Room and JUMP to startle him through the charcoal-sketch wall into Alexandria. Austin's wander is deterministic at seed 1 but on an irregular, long-period cycle through the attic rooms -- the 364 "z" waits below are EMPIRICALLY TIMED (via full replay-from-start, not snapshot-based probing: Austin's schedule depends on interpreter-level Math.random, which snapshot/restore does NOT capture bit-exact, unlike the story's own seeded @random) to land exactly when he visits Over the East Wing. Fragile to any edit upstream of this marker -- if you change earlier commands, re-derive the wait count via full `--seed 1 --status` replay searching for "Over the East Wing" + "Austin". Also fetches the bird whistle from Old Furniture (missed on the original attic pass -- genuine trunk gap, needed here for the Necropolis tombstone).
+take charcoal sketch
+s
+take miniature
+s
+take star
+put charcoal sketch in slot
+n
+n
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+z
+look
+examine austin
+push austin south
+push austin south
+jump
+take rod of returning
+strike rod of returning
+point returning at me
+s
+s
+take whistle
+se
+s
+s
+s
+## [necropolis-cloak] Grating/writings (lagachable Alexandria anchor), bird-whistle-guided cloak of many colours, join the Dionysus procession, anoint with oil
+n
+take smooth round stone
+drop smooth round stone in grating
+s
+se
+sw
+s
+examine writings
+smell
+n
+blow whistle
+take cloak
+wear cloak
+ne
+ne
+se
+s
+anoint me
+## [callimachus-scrolls] Spindle, courier tubes, swap the poets' scrolls to spark a librarian brawl (+7), smooth stone/rusty key wash up at the port, sail home
+n
+se
+take spindle
+nw
+z
+z
+z
+z
+z
+take tubes
+take short poem from kappa tube
+take epic poem from alpha tube
+put short poem in alpha tube
+put epic poem in kappa tube
+e
+give kappa tube to callimachus
+s
+give alpha tube to apollonius
+take all
+n
+w
+nw
+n
+w
+take smooth stone
+take rusty key
+e
+s
+sw
+nw
+n
+unlock grating with rusty key
+open grating
+d
+take heart
+board skiff
+sail
+z
+z
+## [spindle-hairband-rods] Name the last two mahogany rods (spindle, hairband) in the Octagon coffin -- Rod of Ice and Rod of Sacrifice
+out
+take spindle
+wave spindle
+take hairband
+wave hairband
+se
+e
+push tub
+open hatch
+d
+w
+turn off wheel
+turn wheel
+enter dumbwaiter
+pull rope
+out
+wear gas mask
+n
+e
+e
+remove gas mask
+put mahogany rod in coffin
+close coffin
+open coffin
+take all from coffin
+drop rod of ice
+put mahogany rod in coffin
+close coffin
+open coffin
+take rod of luck
+take rod of ice
+take rod of sacrifice
+## [hollow-nuts-mosaic] Fire escape route to the Hollow; wave green branch to scare the bird off the nest, take nuts; Mosaic room's wooden ball; lagach-chain (mosaic -> mural x2 -> still life -> writings) back to White Hallway
+se
+u
+u
+w
+s
+se
+e
+s
+e
+ne
+d
+wave green branch
+take nuts
+nw
+take wooden ball
+mosaic, lagach
+mural, lagach
+mural, lagach
+still life, lagach
+writings, lagach
+## [croquet-dig-squirrel] Croquet mallet from the Summer House; priestess coordinates (FIXED at seed 1: "eight paces west and a pace north" of the peg -- of the four direction-pairs Leduc lists, west/north is the one that hits; the other three dig an empty hole) unlock strongbox -> astrolabe; hit ball into the hedge to spook a squirrel open a crack, feed it nuts to clear the summer house, then whistle the sparrows quiet to reach the gold watch on its chain
+ne
+e
+n
+take croquet mallet
+s
+e
+pace 8 west
+pace 1 north
+take bladed agricultural implement
+dig
+look in hole
+take strongbox
+unlock strongbox with gothic key
+open strongbox
+x astrolabe
+take astrolabe
+look in astrolabe
+fill hole
+take wooden ball
+drop wooden ball
+take croquet mallet
+hit ball with croquet mallet
+nw
+take nuts
+put nuts in crack
+s
+blow whistle
+look
+take watch
+## [necropolis-amber-gem] Lagach 5-step cycle (painting -> frieze -> mosaic -> mural x2 -> still life) lands at XIIth Dynasty Pyramid, one step from the Necropolis; amber gem in the tombstone's socket opens the modern-day funerary chamber below
+s
+w
+sw
+painting, lagach
+frieze, lagach
+mosaic, lagach
+mural, lagach
+mural, lagach
+still life, lagach
+n
+x tombstone
+take amber gem
+put amber gem in socket
+d
+## [sphinx-time-loop] Sleep on the couch four times to fast-forward centuries, wait out a pair of Napoleonic officers -- EXACT z/look interleaving below is load-bearing: this scene's flavor text (and whether "turn nose" is examinable) is turn-count-sensitive, and stripping the `look`s (as an earlier pass here did) desyncs it against full replay-from-start even though a snapshot-restored probe with the same net commands still passes -- a genuine snapshot-vs-full-replay divergence, NOT reproducible via snapshot probing (must verify any edit here with a full `--seed 1 --status` replay). Then STAND before each subsequent westward step (the couch traps you if you try to leave while lying down; the FIRST west succeeds directly from lying down) -- each step west/death sends you one era further back until you land in the modern "Height of Fashion", where twisting the sphinx's nose opens the passage west
+lie down on couch
+sleep
+lie down on couch
+sleep
+lie down on couch
+sleep
+lie down on couch
+sleep
+look
+z
+look
+z
+z
+look
+z
+look
+w
+look
+stand
+w
+look
+stand
+w
+look
+stand
+w
+look
+stand
+turn nose
+w
+look
+## [sceptre-socket-turn] Quite an Undertaking: the sceptre must be explicitly held (take sceptre) before each put-and-turn -- "turn sceptre to <word>" is NOT recognized, bare "turn sceptre" spins to a @random word. Turn-counts below are FIXED at seed 1 for THIS EXACT full-replay turn count upstream (socket 1: 8 turns for "si", socket 2: 14 turns for "huth", socket 3: 4 turns for "thu") -- re-derive via full `--seed 1 --status` replay (not a snapshot probe -- this scene is snapshot/full-replay RNG-divergent, see the sphinx-time-loop note above) if anything upstream of this marker changes. Correct third word springs the coffin open; entering + closing the lid twice then sends your spirit up through the coffin to the Sarcophagus (old parish church crypt)
+take model
+w
+ne
+take oak
+take sceptre
+put sceptre in first socket
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+take sceptre
+put sceptre in second socket
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+take sceptre
+put sceptre in third socket
+turn sceptre
+turn sceptre
+turn sceptre
+turn sceptre
+enter coffin
+close lid
+close lid
+u
+## [sosostris-oak-timber] Crypt lagach-cycle continues (mural x2 -> still life) to Pyramid -> Necropolis -> Crossroads -> A Tower; the grey (inside-out) cloak of many colours is required to enter Sosostris's Consulting Room -- open/enter the defaced door, put the green oak timber on her table for the (delayed, two-thousand-year) sceptre payoff and a silver keepsake
+w
+w
+u
+mural, lagach
+mural, lagach
+still life, lagach
+n
+ne
+se
+remove cloak
+turn cloak
+wear cloak
+open door
+enter door
+put oak on table
+## [parade-into-palace] Back at Crossroads, turn the cloak right-way-out again (colourful cloak lets the Dionysus procession wave you through NE); remove the cloak entirely before going N into the palace guards (keeping it on here is fatal); purple sash lets you walk the twisty maze; papyrus-fragment solution (read backwards, smooth stone as compass): NE, E, S, then "anoppe" to be led to the Palace Balustrade
+nw
+remove cloak
+turn cloak
+wear cloak
+ne
+n
+n
+remove cloak
+n
+wear purple sash
+ne
+e
+s
+anoppe
+## [spire-to-hand] Astrolabe on the mounting + look through eyepiece teleports from ancient Alexandria to the PRESENT DAY church spire; take the loose adamantine hand, climb down twice to the Parish Church, then west to the headless knight statue in the West Side Chapel
+take astrolabe
+put astrolabe on mounting
+look through eyepiece
+take hand
+d
+d
+w
+## [knight-assembly] Hand/skull/heart must be PUT then explicitly TIGHTENED (put alone leaves them loose) before Rod of Fire animates the knight; "point <direction>" then walking that direction yourself is how you lead him (he only moves on your own subsequent step, so the point+step pair must be repeated -- one pair isn't enough to actually relocate him, confirmed empirically)
+put hand on statue
+tighten hand
+put skull on statue
+tighten skull
+put heart in statue
+take rod of fire
+strike rod of fire
+point rod of fire at statue
+point east
+e
+point east
+e
+give rose to knight
+show keepsake to knight
+point west
+w
+knight, open moonstone
+point down
+## [high-rod-of-love] Three High Rods (Life/Love/Death) appear once the knight descends through the Moonstone; take rod of ice + strike it (must be explicitly held first, not auto-taken by "point") + point at the target High Rod to cool it enough to touch; the FIRST "take rod of love" only prints a one-time balance warning and does NOT take it -- a second "take rod of love" actually takes it (and sends the other two High Rods tumbling away forever, so choose which one to grab BEFORE the first take attempt)
+take rod of ice
+strike rod of ice
+point rod of ice at rod of love
+take rod of love
+take rod of love
+## [orb-chess-sacrifice] Clean the golden orb to be sucked inside an eight-by-eight crystal lattice (a chess board, per the history book's Anton/Helene entry -- Anton had "a flair for sacrifices"); wait for the sphere's rotating flavor text to confirm you're identified with WHITE (which is attacking), then point the Rod of Sacrifice AT WHITE, not "at board" or "at black" -- pointing at the board/black kills you (checkmated by White) since the parser resolves both nouns to the same object but only "white" triggers White's own sacrifice-and-mate combo
+take golden orb
+clean orb
+z
+z
+z
+take rod of sacrifice
+strike rod of sacrifice
+point rod of sacrifice at white

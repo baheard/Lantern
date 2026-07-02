@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "game": "galatea",
+  "title": "Galatea",
+  "meta": {
+    "gameAuthor": "Emily Short (2000-2004)",
+    "sources": [
+      {
+        "name": "Compiled walkthrough / ending catalogue (heasm66, aggregating Emily Short's own cheat page, IFWiki, and fan documentation)",
+        "url": "https://github.com/heasm66/walkthroughs/raw/main/galatea_walkthrough.pdf",
+        "file": "docs/games/walkthroughs/galatea.txt"
+      },
+      {
+        "name": "Emily Short's own \"Cheats and Walkthroughs\" page",
+        "url": "https://web.archive.org/web/20180929015031/http://emshort.home.mindspring.com/cheats.htm",
+        "file": "docs/games/walkthroughs/galatea.txt"
+      },
+      {
+        "name": "IFWiki, \"User:Cassandra Palop/Galatea\"",
+        "url": "http://ifwiki.org/index.php/User:Cassandra_Palop/Galatea",
+        "file": "docs/games/walkthroughs/galatea.txt"
+      },
+      {
+        "name": "Endings catalogue (rbishopgalatea)",
+        "url": "https://rbishopgalatea.wordpress.com/endings/",
+        "file": "docs/games/walkthroughs/galatea.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.734"
+  },
+  "sections": [
+    {
+      "id": "the-gallery",
+      "title": "The Gallery's End",
+      "verified": true,
+      "locations": ["Facing View", "Back View"],
+      "questions": [
+        {
+          "id": "gallery-what-do-i-do",
+          "q": "I'm alone with a statue in a closing gallery. What am I even supposed to do here?",
+          "hints": [
+            "There's no map to draw and nothing to collect. This is a conversation, and the statue is who you're having it with.",
+            "Start with what's in front of you — look her over, and read whatever the gallery has posted about her.",
+            "Then just talk. Ask her about things and tell her about things; whatever she says will usually hand you something new to ask about next.",
+            "Answer: X HER, X PLACARD, then follow whatever names or topics come up — ASK HER ABOUT ARTIST, ASK HER ABOUT [anything she just mentioned], and so on. There's no fixed order and no wrong opening move."
+          ]
+        },
+        {
+          "id": "gallery-running-out-of-things",
+          "q": "I've asked her about everything I can think of and the conversation is stalling.",
+          "hints": [
+            "You don't always have to be the one talking.",
+            "Try just waiting instead of reaching for another question. See what she does with a quiet moment.",
+            "Answer: type WAIT (or Z) a few times in a row, especially once you've already drawn her into something personal. Given enough trust and enough silence, she'll start filling it herself rather than waiting on you."
+          ]
+        },
+        {
+          "id": "gallery-touching-her",
+          "q": "Can I touch her, or is this purely a conversation?",
+          "hints": [
+            "She's not just a statue to talk at — she reacts to being touched, looked at, even turned.",
+            "Go carefully. Physical closeness has its own pace here, separate from the conversation, and pushing it too fast changes how she responds to you.",
+            "Answer: TOUCH HER, TOUCH [a specific part she's mentioned or you've examined], LOOK AT HER, or TURN HER all get reactions — read what comes back before escalating further."
+          ]
+        },
+        {
+          "id": "gallery-her-past",
+          "q": "Something's clearly wrong between her and the man who made her. What's the story there?",
+          "hints": [
+            "She wasn't always able to talk to anyone at all — ask about the person responsible for that.",
+            "He's the thread almost everything else pulls back to. Ask about him, and follow up on whatever comes up about how he behaved, and about her own waking.",
+            "Don't just collect the facts of what happened to him — pay attention to how she talks about it, and let that guide whether you press further or ease off.",
+            "Answer: ASK HER ABOUT ARTIST, ASK HER ABOUT HIM, ASK HER ABOUT STRANGENESS, and eventually TELL HER ABOUT SUICIDE (or ASK HER ABOUT SUICIDE) once it's come up naturally. How gently you get there matters more than getting there."
+          ]
+        },
+        {
+          "id": "gallery-she-got-upset",
+          "q": "Something I said clearly hurt her, or made things tense. Did I break something?",
+          "hints": [
+            "Nothing here is unrecoverable — but she has feelings about her own history, and pushing on a sore spot has a real effect on the conversation's tone.",
+            "This isn't a puzzle with a wrong answer to undo. Notice the shift in what she says next, and let that tell you whether to back off or stay with it.",
+            "If a topic clearly wounded her, easing up and giving her room — including just waiting — tends to bring things back around better than plowing ahead."
+          ]
+        },
+        {
+          "id": "gallery-endings-in-general",
+          "q": "The conversation ended and the game is over. Was that the ending, or did I miss something?",
+          "hints": [
+            "That was a complete ending — this game doesn't have a single correct one to find.",
+            "How the conversation went is the point; different tones and choices lead to very different, equally valid conclusions.",
+            "If you want to see how a different approach plays out, RESTART and try talking to her differently — warmer, more distant, more probing, more patient. There's no ending you're supposed to be aiming for."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "for-your-amusement",
+      "title": "For Your Amusement (expose only after finishing)",
+      "verified": false,
+      "locations": [],
+      "questions": [
+        {
+          "id": "amusement-how-many-endings",
+          "q": "How many different ways can this conversation end?",
+          "hints": [
+            "Many more than you'd guess from one playthrough — this is one of the most heavily branching conversation games ever written.",
+            "Answer: there are roughly 70 documented endings, ranging from quiet, friendly departures to violent, romantic, and even mythological ones. They're reached by tone and approach, not by a checklist of topics — there's no ending-by-ending walkthrough to chase, and hunting for a specific one works against how the game wants to be played."
+          ]
+        },
+        {
+          "id": "amusement-is-she-really-alive",
+          "q": "Is she just a very good chatbot, or is there something more going on?",
+          "hints": [
+            "The game is happy to let you wonder — and even lets you ask her directly.",
+            "A few very unusual, very out-of-character words can pull back the curtain further than a normal conversation ever would, if you already happen to know them from elsewhere.",
+            "Answer: XYZZY. Speaking the classic magic word breaks the fourth wall entirely — and ends the story on the spot. It's a wink from the author, not something the game points you toward; no in-world clue suggests trying it."
+          ]
+        }
+      ]
+    }
+  ]
+}

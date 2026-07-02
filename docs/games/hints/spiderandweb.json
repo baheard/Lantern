@@ -1,0 +1,320 @@
+{
+  "schema": 1,
+  "game": "spiderandweb",
+  "sections": [
+    {
+      "id": "alley",
+      "title": "The Alley",
+      "verified": true,
+      "locations": ["End of Alley", "Mouth of Alley"],
+      "questions": [
+        {
+          "id": "alley-door-open",
+          "q": "There's a plain metal door at the end of the alley, with a black plate beside it. Pushing the plate does nothing.",
+          "locations": ["End of Alley"],
+          "hints": [
+            "The plate isn't a button. Whatever opens this door has to be more deliberate than a push.",
+            "You're a spy on a mission, not a sightseer who wandered in here empty-handed. Think about what you'd have brought for exactly this kind of door.",
+            "No amount of poking at the door will turn up a tool in the alley. If you're stuck, there's no harm in giving up and walking away — see where that leads.",
+            "The right tool enters the story from outside the scene: once the man questioning you decides your account needs it, it will be in your hand. Trying the door in front of him is a good way to hurry that along.",
+            "Go S twice to leave the alley — the scene shifts to the interrogator; answer YES. Back at the door, KNOCK ON DOOR and G until he produces a rod-shaped lockpick, and answer YES again. Then PUT ROD ON PLATE, WAIT, and G until the status dot cycles yellow to green to blue and the door slides open."
+          ]
+        },
+        {
+          "id": "alley-interrogation-frame",
+          "q": "I keep being yanked out of the alley into a dim room with a man asking me questions. What's going on?",
+          "hints": [
+            "You aren't actually in the alley right now — you're strapped in a chair somewhere, telling this story to an interrogator. Everything you type is a memory you're reliving for him.",
+            "Answer his yes/no questions honestly about what you actually did; the story only continues when he's satisfied with an answer.",
+            "If a scene ends badly instead of moving the story forward, that isn't a real death — it's the interrogator catching a lie and making you relive the scene properly. Just play the flashback out again."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "white-junction-area",
+      "title": "White Junction and the Ceiling Hole",
+      "verified": true,
+      "locations": ["White Junction", "Corner At Doors", "Corridor Boundary"],
+      "questions": [
+        {
+          "id": "corner-at-doors-hole",
+          "q": "There's a gap in the ceiling panels at a corner with two doors. Is there anything up there?",
+          "locations": ["Corner At Doors"],
+          "hints": [
+            "A missing panel is worth a closer look, even if it's over your head.",
+            "You won't reach it just by looking — you'll need to jump for the edge and hang on.",
+            "Once you're up and holding the lip, look around inside before you let go.",
+            "JUMP to catch the hole's edge, then LOOK IN HOLE to spot a package, GET PACKAGE, and D to drop back down."
+          ]
+        },
+        {
+          "id": "corridor-boundary-line",
+          "q": "A dotted red line crosses the floor at a corridor boundary. Is it safe to cross?",
+          "locations": ["Corridor Boundary"],
+          "hints": [
+            "A marked line like that is usually a sensor boundary, not decoration — but it doesn't announce what it's watching for.",
+            "This particular line is just a scan boundary you pass on your way through, not an active hazard in itself.",
+            "SE crosses the line safely and continues the corridor."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tee-junction-area",
+      "title": "Tee Junction",
+      "verified": true,
+      "locations": ["Tee Junction", "Dead End South"],
+      "questions": [
+        {
+          "id": "tee-junction-guards",
+          "q": "I hear guards' footsteps to the north, and there's a dead end to the east. How do I get past them unseen?",
+          "locations": ["Tee Junction"],
+          "hints": [
+            "Running isn't an option here — you need the guards looking somewhere other than at you.",
+            "The dead end to the east is a trap you can turn to your advantage: if something makes noise from over there, that's where they'll go to check.",
+            "Wait until you can hear the guards clearly, then give them a reason to head into that dead end instead of your way.",
+            "WAIT once, then G once more so the guards round the corner — then THROW ROD EAST to draw them into the dead end, and slip N while they're distracted."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outside-laboratory-area",
+      "title": "Outside Laboratory",
+      "verified": true,
+      "locations": ["Outside Laboratory", "Lab Junction"],
+      "questions": [
+        {
+          "id": "lab-junction-crossing",
+          "q": "Six guards are down the hall at a junction near the laboratory. How do I get past them?",
+          "locations": ["Lab Junction"],
+          "hints": [
+            "Rushing across now will get you spotted immediately — but guards absorbed in their own conversation stop watching the hall.",
+            "Listen to them first. Their talk builds toward a lull where their attention is elsewhere; crossing too early or too late both go badly.",
+            "The window is narrow — just a couple of beats after they start talking amongst themselves, before the conversation moves on.",
+            "LISTEN, then G twice (waiting for the guards to start chatting), then E to cross while they're distracted."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security-annex-area",
+      "title": "Security Annex",
+      "verified": true,
+      "locations": ["Security Annex", "Security Storage Room", "Security Office"],
+      "questions": [
+        {
+          "id": "annex-scan-web",
+          "q": "Three rooms open off this hallway, but each doorway has a faint band of scan-web across it. How do I get through without triggering it?",
+          "locations": ["Security Annex"],
+          "hints": [
+            "You came prepared for scanners like this — check what's in your toolcase.",
+            "One item detects and jams scan frequencies; another lets you switch things on and off without touching them, from a distance.",
+            "Connect the voice module to the scan scrambler, drop the scrambler where its jamming field will cover the doorways, and use the audio keywords printed on the transmitter to turn it on and off as needed.",
+            "GET SCAN, GET VOICE MODULE, CONNECT VOICE MODULE TO SCAN, DROP SCAN, then SAY TANGO to activate the scrambler (SAY WALTZ to shut it off) before passing through a scan-webbed doorway."
+          ]
+        },
+        {
+          "id": "annex-storage-pen",
+          "q": "What's this pen doing on a table in the storage room?",
+          "locations": ["Security Storage Room"],
+          "hints": [
+            "An ordinary pen wouldn't be worth mentioning. Take a closer look at the tip.",
+            "The nib isn't a ball point — it's some kind of sharp crystal sliver. That's not for writing.",
+            "GET PEN. It's a weapon in disguise."
+          ]
+        },
+        {
+          "id": "annex-north-room-chair",
+          "q": "The room north of the Annex is bare metal, holding nothing but a squat chair and a console. Is it worth going in?",
+          "locations": ["Security Annex"],
+          "hints": [
+            "You've seen a chair like this before — somewhere much less comfortable. Sit and look around a while; something may surface.",
+            "Keep looking, patiently, even if nothing seems to happen at first. What resolves into view might not be entirely real.",
+            "When you leave and the interrogator asks whether you were truly here, answer carefully — this whole visit may not have gone the way you're picturing it.",
+            "SIT IN CHAIR, then LOOK repeatedly (about four times) until a ghostly figure appears; a few more LOOKs let it fade again. Afterward, when the interrogator asks if this was a true memory, say NO — you'll redo this section using the timer instead of voice commands."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagonal-branch-area",
+      "title": "Diagonal Branch",
+      "verified": true,
+      "locations": ["Diagonal Branch", "Dead End"],
+      "questions": [
+        {
+          "id": "dead-end-guard-ambush",
+          "q": "I'm cornered in a dead end with footsteps closing in from two directions, and a filing cabinet against the wall.",
+          "locations": ["Dead End"],
+          "hints": [
+            "You're not getting out the way you came, and there's no time to think your way past this — you'll have to deal with whoever finds you first.",
+            "The pen you picked up in Security isn't just sharp for show.",
+            "Once the first guard is down, the cabinet gets you access to something up near the ceiling — worth a look, and it's a good place to stash gear you don't want found on you.",
+            "When the guard bursts in, STAB GUARD WITH PEN to drop him quietly. CLIMB CABINET, OPEN VENT, and PUT ALL IN VENT to hide your equipment, then D, GET GUN from the fallen guard, and SHOOT GUARDS WITH GUN (twice) when the squad rounds the corner. You will be captured — that's the story moving forward, not a failure."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interrogation-escape-area",
+      "title": "The Interrogation Chamber (Captured)",
+      "verified": true,
+      "locations": ["Interrogation Chamber"],
+      "questions": [
+        {
+          "id": "interrogation-missing-package",
+          "q": "I've been captured and my confiscated gear is laid out on the man's desk. He's furious that the package isn't among it. How do I get free?",
+          "locations": ["Interrogation Chamber"],
+          "hints": [
+            "Look carefully at exactly which items made it onto that desk, and which didn't. What's missing might still be within reach.",
+            "You planned further ahead than you're letting on — something about this chair itself isn't quite what it seems.",
+            "A voice-activated device doesn't have to be in your hands to work. If you rigged something into the chair before all this began, saying the right word now could still trigger it.",
+            "SAY TANGO to trigger the acid pack wired into the chair, freeing you. Then HIT MAN and GET ALL FROM DESK to recover your equipment before slipping out S and SW."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiring-closet-area",
+      "title": "Dead End South",
+      "verified": true,
+      "locations": ["Angle Branch", "Tee Junction", "Dead End South", "Wiring Closet"],
+      "questions": [
+        {
+          "id": "wiring-closet-blast-door",
+          "q": "There's a closed steel door at the dead end south of Tee Junction. Can I get through it now?",
+          "locations": ["Dead End South", "Wiring Closet"],
+          "hints": [
+            "That door takes the same lockpick charging you've used before — set the rod on the plate and give it a couple of turns to cycle through.",
+            "Inside, look for something already wired up that wasn't your doing — components left connected are rarely accidental.",
+            "There's a blast tab connected to a radio module on one of the junction nodes. Disconnecting the radio frees the blast tab for other uses.",
+            "The blast tab can be triggered manually instead of by radio, if you connect it to the right kind of switch.",
+            "PUT ROD ON PLATE, WAIT, G, G to open the door, then N into the closet. DISCONNECT RADIO, CONNECT BUTTON TO BLAST, and PUSH BUTTON — this cuts power to the whole complex, and the lights go dim."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "laboratory-approach",
+      "title": "Return to the Laboratory",
+      "verified": true,
+      "locations": ["Dead End South", "Tee Junction", "Diagonal Branch", "Corridor Boundary", "White Junction", "Corner At Doors", "Sharp Corner", "Lab Junction", "Outside Laboratory"],
+      "questions": [
+        {
+          "id": "retrieve-stashed-gun",
+          "q": "My gun and gear are still stashed somewhere I hid them earlier. Where do I find them again?",
+          "hints": [
+            "Think back to the vent where you hid everything before you were captured — the same one, not a different one.",
+            "It's up near the ceiling at the corner with the two doors, the same spot you found the package in the first place.",
+            "JUMP to reach the ceiling hole at Corner At Doors, OPEN VENT, and GET GUN."
+          ]
+        },
+        {
+          "id": "guards-blocking-return",
+          "q": "There are guards blocking the corridors on the way back to the lab. How do I fight through in the dark?",
+          "hints": [
+            "The power's out now — that works in your favor as much as theirs. Use the dark.",
+            "Keep firing at anything blocking your path; the guards can't see you as well as you fear.",
+            "SHOOT GUARDS with your gun at Corridor Boundary (repeat until they're clear), then continue SE toward Sharp Corner and N to Lab Junction, shooting again as needed."
+          ]
+        },
+        {
+          "id": "second-lab-door-charge",
+          "q": "The laboratory's heavy door needs the lockpick again — will it work the same way?",
+          "locations": ["Outside Laboratory"],
+          "hints": [
+            "Same trick as before: charge it and wait for the color cycle.",
+            "PUT ROD ON PLATE, WAIT, G, G, then GET ROD and W through as it swings open."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-laboratory",
+      "title": "The Laboratory",
+      "verified": true,
+      "locations": ["The Laboratory"],
+      "questions": [
+        {
+          "id": "lab-seal-the-door",
+          "q": "I'm inside the lab now, but guards will be coming through that door eventually. Is there any way to slow them down?",
+          "locations": ["The Laboratory"],
+          "hints": [
+            "There's an access panel right beside the door — electronics can be destroyed as easily as picked.",
+            "OPEN PANEL, then SHOOT LAYER to fry the door's control circuitry from the inside, buying yourself time."
+          ]
+        },
+        {
+          "id": "lab-table-clutter",
+          "q": "There's a mess of papers and clutter on a long table. Is anything here worth taking?",
+          "locations": ["The Laboratory"],
+          "hints": [
+            "A plain look at the table won't turn up everything — try actually digging through the clutter.",
+            "SEARCH TABLE turns up both a stack of important papers and a logic plate hidden underneath the mess. GET PAPERS and GET PLATE."
+          ]
+        },
+        {
+          "id": "lab-teleporter-escape",
+          "q": "There's a strange platform wrapped in scan-web with a console beside it. How do I actually get out of here with the papers?",
+          "locations": ["The Laboratory"],
+          "hints": [
+            "This isn't a way back the way you came — it's a one-way jump, and you don't want to end up back here anyway.",
+            "As found, the console is dead — its readout says it's shut down for adjustment, with a unit removed. Whatever's missing may not be far away.",
+            "The console has controls in sequence: power it on, set where it sends you, then start the charge before you climb in.",
+            "Once you're sealed inside and the countdown starts, there's nothing left to do but wait it out — the guards breaking in outside won't stop it in time.",
+            "OPEN CABINET and PUT PLATE IN CABINET (the logic plate from under the table clutter), CLOSE CABINET, then PUSH UPPER to power the console, PUSH OVAL to set a destination, OPEN FLAP, PUSH LOWER to start the charge, ENTER PLATFORM, CLOSE FLAP, then WAIT and G through the remaining countdown ticks. You'll vanish with the papers just as the guards break in."
+          ]
+        },
+        {
+          "id": "lab-logic-plate-purpose",
+          "q": "Is there anything else worth doing with the logic plate before I leave?",
+          "locations": ["The Laboratory"],
+          "hints": [
+            "There's a cabinet nearby with a gap in its circuitry, sized for exactly what you're carrying.",
+            "OPEN CABINET, PUT PLATE IN CABINET, and CLOSE CABINET. The teleporter console cannot even initialize until that missing unit is back in place."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "title": "General Questions",
+      "verified": false,
+      "locations": [],
+      "questions": [
+        {
+          "id": "general-what-is-going-on",
+          "q": "What am I supposed to be doing here? I'm confused about the frame story.",
+          "hints": [
+            "You're not actually experiencing this mission live — you're a captured agent narrating it, under interrogation, to a man who wants the whole truth about how you broke into a research complex.",
+            "Your job right now is simply to keep replaying and narrating what you actually did, action by action, and answer his questions about it honestly.",
+            "If a scene suddenly cuts short with something jarring — an execution, a flash of light — that's the interrogator catching a lie, not a real ending. You'll be sent back to redo that part of the story properly.",
+            "Keep going scene by scene, telling it straight — the shape of the mission will come clear as the story unfolds."
+          ]
+        },
+        {
+          "id": "general-perfect-score",
+          "q": "Is there a way to get the best possible ending?",
+          "hints": [
+            "The story can end several ways depending on what you do in the lab at the very end — some are cleaner escapes than others.",
+            "What separates the best ending from the hollow one is dealing with the research papers — taking them with you (or destroying them) rather than leaving them behind.",
+            "In the Laboratory: SEARCH TABLE, GET PAPERS, GET PLATE, restore the console (OPEN CABINET, PUT PLATE IN CABINET, CLOSE CABINET), then use the teleporter platform — PUSH UPPER, PUSH OVAL, OPEN FLAP, PUSH LOWER, ENTER PLATFORM, CLOSE FLAP, and wait out the countdown — escaping with the papers still in hand."
+          ]
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "sources": [
+      {
+        "name": "Spider and Web walkthrough (tangle.sol, IF Archive, Paul J. Godfrey / Nils Barth)",
+        "url": "https://www.ifarchive.org/if-archive/solutions/tangle.sol",
+        "file": "docs/games/walkthroughs/spiderandweb.txt"
+      }
+    ],
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.734"
+  }
+}

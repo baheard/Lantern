@@ -1,0 +1,341 @@
+{
+  "schema": 1,
+  "game": "photopia",
+  "title": "Photopia",
+  "meta": {
+    "gameAuthor": "Adam Cadre (1998)",
+    "sources": [
+      {
+        "name": "CASA solution by Graham Pearce",
+        "url": "https://www.solutionarchive.com/file/id,7757/",
+        "file": "docs/games/walkthroughs/photopia.txt"
+      }
+    ],
+    "generatedBy": "generate-hints skill",
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.736"
+  },
+  "sections": [
+    {
+      "id": "general",
+      "title": "General Questions",
+      "verified": true,
+      "locations": [],
+      "questions": [
+        {
+          "id": "general-whats-going-on",
+          "q": "The story keeps jumping between different people, places, and times. Am I missing something?",
+          "hints": [
+            "You're not missing anything, and you can't take a wrong turn between scenes — each one leads on its own.",
+            "The scenes aren't in chronological order on purpose. Pay attention to who's speaking and who's listening; the connections reveal themselves as you go.",
+            "Answer: just play each scene through to its natural end. There is no way to lose or get stuck permanently — every vignette has exactly one route through it, and a handful of things that look like puzzles are really just short scripted sequences. If a scene ever seems like a maze, it almost certainly isn't one."
+          ]
+        },
+        {
+          "id": "general-cant-progress",
+          "q": "A scene seems to just be repeating itself and I can't find a way forward.",
+          "hints": [
+            "You're not lost — the game doesn't have real mazes, even when a place looks maze-like.",
+            "In every 'exploration' scene, any reasonable direction word moves the story forward by one step; there is no wrong compass direction to worry about.",
+            "Look at what you're carrying and what's directly in front of you — the way forward is almost always a single object, not a route.",
+            "Answer: keep issuing simple one- or two-word actions (a direction, GET, EXAMINE, TALK TO) in response to what the text shows you. Each area resolves after a short, fixed sequence of such actions."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "opening-car",
+      "title": "Speeding Down Montgomery Boulevard",
+      "verified": true,
+      "locations": ["\"Will you read me a story?\"", "RED"],
+      "questions": [
+        {
+          "id": "opening-rob",
+          "q": "Rob is ranting and I don't know what I'm supposed to do in this car.",
+          "hints": [
+            "There's nothing to solve here — this scene is pure atmosphere leading to an inevitable moment.",
+            "Talking to Rob just adds flavor text; it doesn't change what happens next.",
+            "Answer: WAIT (twice) is enough to carry the scene through to the intersection."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mars",
+      "title": "The Red Planet",
+      "verified": true,
+      "locations": ["RED"],
+      "questions": [
+        {
+          "id": "mars-layout",
+          "q": "I'm salvaging colony pieces on an alien landscape. Do I need to map this out carefully?",
+          "locations": ["RED"],
+          "hints": [
+            "Don't overthink the geography — you can't wander off and strand yourself out here.",
+            "Everything here sits along a single line leading away from your ship and back again; there's no branching to worry about.",
+            "Keep heading the same direction until something changes underfoot — your helmet's clicking is a clue that you're getting close to what you need.",
+            "Answer: from the Landing Site, go N five times to reach the greenhouse ruins, GET UNDAMAGED CONTAINER, then S five times and UP to return to your ship."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pool-rescue",
+      "title": "The Back Yard",
+      "verified": true,
+      "locations": ["RED", "SEA-BLUE"],
+      "questions": [
+        {
+          "id": "pool-cpr",
+          "q": "Alley is floating face-down in the pool and Gabriel is calling for the ambulance. What do I do?",
+          "locations": ["RED"],
+          "hints": [
+            "Seconds count, but you don't need to guess — Gabriel talks you through each step as you go.",
+            "Get to her first — you can't perform CPR from dry land.",
+            "Follow Gabriel's instructions one at a time, in the exact order he gives them; the game will repeat the next step if you do anything else.",
+            "Answer: GET IN POOL, then TILT HER HEAD BACK, BREATHE INTO HER MOUTH, PRESS HER CHEST."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "undersea-castle",
+      "title": "The Undersea Castle",
+      "verified": true,
+      "locations": ["SEA-BLUE"],
+      "questions": [
+        {
+          "id": "castle-airlock",
+          "q": "My ship has sunk and the engines are dead. There's a big button by the door — is it safe to press?",
+          "locations": ["SEA-BLUE"],
+          "hints": [
+            "You have no other way out, and your suit can take more punishment than you'd think.",
+            "Answer: PRESS BUTTON. The airlock floods and dumps you into the castle below; the door seals behind you, so there's no going back that way."
+          ]
+        },
+        {
+          "id": "castle-navigation",
+          "q": "I'm exploring a sunken castle with passages leading in several directions. How do I avoid getting lost?",
+          "locations": ["SEA-BLUE"],
+          "hints": [
+            "You can't actually get lost here, however many-way the doorways look.",
+            "The halls run in a single line — at worst a doorway refuses you, and you just try the other way.",
+            "Answer: from the great hall where you splash down, press on through the doorways — N, S, S, S takes you past the keep and through the dining hall to the throne room."
+          ]
+        },
+        {
+          "id": "castle-pickaxe",
+          "q": "There's a pickaxe and a shovel mounted on the wall of the throne room, in an X shape above the fireplace. Can I take them?",
+          "locations": ["SEA-BLUE"],
+          "hints": [
+            "The pickaxe doesn't come free easily — but persistence pays off.",
+            "Whatever you feel or hear when it moves, don't be alarmed — it settles down again quickly, and there's no danger in continuing.",
+            "Answer: GET PICKAXE (it takes a couple of tugs and the castle rumbles briefly, dislodging the shovel), then GET SHOVEL."
+          ]
+        },
+        {
+          "id": "castle-escape",
+          "q": "I have the pickaxe and shovel now. How do I get out of this castle?",
+          "locations": ["SEA-BLUE"],
+          "hints": [
+            "You won't need to dig or break through anything down here — the way out is a route, not a tool.",
+            "Head back toward the keep, where the stairs led upward.",
+            "Answer: from the throne room, N, N, N to reach the keep, then UP. The climb carries the scene onward automatically — there's no separate command needed to finish the escape."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "golden-beach",
+      "title": "The Golden Beach",
+      "verified": true,
+      "locations": ["GOLD"],
+      "questions": [
+        {
+          "id": "beach-first-move",
+          "q": "I've just washed up on a beach that's somehow made of gold. My first action failed — what's the right thing to try?",
+          "locations": ["GOLD"],
+          "hints": [
+            "Nothing was wrong with what you tried — you're just too dazed to act clearly for one more moment.",
+            "Answer: whatever you type first here fails automatically ('you still haven't fully recovered'); simply try again with LOOK, GET SEED POD, GET SHOVEL, and GET COIN."
+          ]
+        },
+        {
+          "id": "beach-treasure",
+          "q": "Something wooden is buried in the sand, but only a corner shows. Worth digging up?",
+          "locations": ["GOLD"],
+          "hints": [
+            "It's worth a look, though whatever tool you use may not survive the job.",
+            "Answer: DIG. Your shovel's handle snaps, but you free a small treasure chest — GET CHEST. Continue N, then NW to leave the beach."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crystal-labyrinth",
+      "title": "The Crystal Labyrinth",
+      "verified": true,
+      "locations": ["SKY-BLUE"],
+      "questions": [
+        {
+          "id": "labyrinth-maze",
+          "q": "I've stepped into a vast crystal labyrinth and immediately gotten lost. How do I find my way through?",
+          "locations": ["SKY-BLUE"],
+          "hints": [
+            "Finding a path on foot isn't the way through this one — no route through the crystal on the ground actually leads anywhere.",
+            "What's slowing you down isn't the maze — it's what you're wearing.",
+            "Something about you here isn't quite ordinary. What would happen if you were free of your suit?",
+            "Answer: TAKE OFF SPACESUIT, then UP. You'll find you can fly. Head W to fly through the gap in the mountains, the same way the bird goes. (A second UP first, to see the top of the sky, is optional.)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garage-yard",
+      "title": "The Garage and Front Yard",
+      "verified": true,
+      "locations": ["GOLD"],
+      "questions": [
+        {
+          "id": "garage-alley-wont-come-in",
+          "q": "Alley's stargazing on the front lawn and won't come inside no matter what I say.",
+          "locations": ["GOLD"],
+          "hints": [
+            "She's not refusing you — she's just easily distracted, and it takes more than one attempt.",
+            "Whatever else you talk to her about, keep steering the conversation back to going inside.",
+            "Answer: TALK TO ALLEY and choose ALLEY, COME INSIDE — repeat TALK TO ALLEY and choose the 'come inside' option again each time it reappears, until she finally heads in. Any of the small-talk options along the way are optional flavor."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "school-gym",
+      "title": "Queensport Middle School Gym",
+      "verified": true,
+      "locations": ["SKY-BLUE"],
+      "questions": [
+        {
+          "id": "gym-spotlight",
+          "q": "Alley's up on a ladder decorating for the dance and asks me to turn off a light. Which one?",
+          "locations": ["SKY-BLUE"],
+          "hints": [
+            "She's pointing right at it — a spotlight rigged to the ceiling, not the room's regular lights.",
+            "Answer: TURN OFF SPOTLIGHT. Naming just 'the light' will make the game ask you to clarify."
+          ]
+        },
+        {
+          "id": "gym-dance",
+          "q": "Now's my chance to talk to Alley — what do I say?",
+          "locations": ["SKY-BLUE"],
+          "hints": [
+            "You didn't come all this way to talk about oranges.",
+            "Say what you're actually here to say.",
+            "Answer: TALK TO ALLEY and choose ASK ALLEY TO THE DANCE ON FRIDAY. The other topics are flavor only."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "driving-home",
+      "title": "Driving Down Bartlett Hill Road",
+      "verified": true,
+      "locations": ["SKY-BLUE", "GREEN"],
+      "questions": [
+        {
+          "id": "driving-home-what-now",
+          "q": "I'm driving Alley home and making small talk. Is there anything I need to do here?",
+          "locations": ["SKY-BLUE"],
+          "hints": [
+            "Nothing you say changes where this drive is headed.",
+            "Answer: talk to Alley if you like (any topic works), then WAIT through the drive. The scene resolves on its own after a short string of waits."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "petrified-forest",
+      "title": "The Petrified Forest",
+      "verified": true,
+      "locations": ["GREEN"],
+      "questions": [
+        {
+          "id": "forest-strange",
+          "q": "Something feels wrong about this forest, but I can't place it.",
+          "locations": ["GREEN"],
+          "hints": [
+            "Take a closer look at what's actually holding this place up.",
+            "Answer: EXAMINE TREES. They turn out to be stone, not living wood."
+          ]
+        },
+        {
+          "id": "forest-wolf",
+          "q": "A wolf is charging straight at me! How do I defend myself?",
+          "locations": ["GREEN"],
+          "hints": [
+            "You don't have to defend yourself at all — this isn't the kind of threat it looks like.",
+            "Whatever you were doing when it lunged is fine to keep doing; the wolf isn't after a fight.",
+            "It turns out to be hungry, not vicious.",
+            "Answer: nothing — you can't be harmed. The wolf just knocks you down and licks your face, and you're free to carry on with what you were doing."
+          ]
+        },
+        {
+          "id": "forest-chest",
+          "q": "What do I do with the little chest I dug up on the beach?",
+          "locations": ["GREEN"],
+          "hints": [
+            "Gold isn't worth much where you are now — think about what actually is scarce in this stone forest.",
+            "Answer: OPEN CHEST reveals dirt, not treasure — but dirt is precious here, since nothing can grow without it. GET DIRT, then DROP DIRT and PLANT SEED POD."
+          ]
+        },
+        {
+          "id": "forest-nothing-happens",
+          "q": "I planted the seed pod on the dirt and nothing happened. Did I do something wrong?",
+          "locations": ["GREEN"],
+          "hints": [
+            "Nothing's wrong — you're just missing one ingredient a garden needs.",
+            "A stranger appears selling something you'd never think to buy. Hear him out.",
+            "Answer: TALK TO SALESMAN and ASK SALESMAN FOR SOME RAIN. He wants the gold coin from the beach — GIVE COIN TO SALESMAN. The pod sprouts a berry bush that feeds the wolf."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nursery-finale",
+      "title": "Wendy's Bedroom and Alley's Nursery",
+      "verified": true,
+      "locations": ["GREEN", "PURPLE", "PHOTOPIA"],
+      "questions": [
+        {
+          "id": "nursery-ideas",
+          "q": "Alley says the bedtime story is over, but I still have questions. What now?",
+          "locations": ["GREEN"],
+          "hints": [
+            "There's one topic in particular worth raising with her before the night is done.",
+            "Ask her something no one usually gets a straight answer to.",
+            "Answer: TALK TO ALLEY and choose ASK ALLEY WHERE SHE GETS HER IDEAS."
+          ]
+        },
+        {
+          "id": "nursery-queen",
+          "q": "I'm dreaming as someone else now, face to face with a strange queen in a barren purple realm. What do I say to her?",
+          "locations": ["PURPLE"],
+          "hints": [
+            "There's no wrong thing to ask her — this conversation can't be lost or fumbled.",
+            "She already knows how this exchange goes, in a way you don't yet.",
+            "Answer: TALK TO QUEEN and pick whichever topics interest you. When only 'ASK QUEEN HOW TO GET OUT' remains, choosing 0 (say nothing) is the fitting way to close this conversation, though asking changes nothing important either."
+          ]
+        },
+        {
+          "id": "nursery-photopia",
+          "q": "Baby Alley's nursery has a strange screen mounted on the ceiling with a single white button and a remote. What do I do?",
+          "locations": ["PHOTOPIA"],
+          "hints": [
+            "It's a night-light with more than one mode — worth seeing all of them before you're done here.",
+            "The remote has exactly one button that matters, and it's not labeled ambiguously.",
+            "Answer: PRESS WHITE BUTTON twice to cycle the screen through its star field and its drifting colored circles, then TURN OFF LIGHT to close out the story. The button must be named exactly — 'push button' or 'press button' alone won't be recognized."
+          ]
+        }
+      ]
+    }
+  ]
+}

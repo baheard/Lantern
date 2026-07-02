@@ -86,7 +86,7 @@
             "It isn't for admiring the view. Peer into it and the world turns — it takes you somewhere.",
             "Where it sends you isn't fixed. Notice what's on display on the easel beside it.",
             "The telescope carries you into the world of whatever painting stands on the easel. Change what's displayed to change where you go; to come back, simply head south.",
-            "Answer: LOOK IN TELESCOPE. With the mountain painting on the easel (where it starts), you arrive at a Mountain Pool holding the brown mask — TAKE BROWN MASK, then S to return. Put other things on the easel for other destinations."
+            "Answer: LOOK IN TELESCOPE. With the mountain painting on the easel (where it starts), you arrive at a Mountain Pool holding the brown mask — TAKE BROWN MASK, then S to return."
           ]
         },
         {
@@ -121,7 +121,7 @@
           "q": "The huge domed room is too dark to make anything out.",
           "locations": ["Dark Dome, East", "Dark Dome, North", "Dark Dome, West", "Dark Dome, South", "Dark Dome, Center"],
           "hints": [
-            "You need to bring light up here. Have you seen a source of cool, carry-able light anywhere in the house?",
+            "You need to bring light up here.",
             "The Sitting Room fire is no ordinary fire — its glowing spheres can be lifted (with your gloved hand). Bring one up.",
             "In the centre of the dome stands a metal pyramid that opens. There's a wire basket inside, plainly meant to hold something.",
             "Answer: TAKE SPHERE from the Sitting Room fireplace, carry it to the Dark Dome centre, OPEN PYRAMID, PUT SPHERE IN WIRE, then CLOSE PYRAMID. The dome floods with light and cycles through images — WAIT through them until it fills with stars."
@@ -153,7 +153,7 @@
             "A shadow, with a strong enough light behind it, can be solid as a plank in this house.",
             "There's a dome at the top of the stairs with a pile of wood and a tall copper \"sail\" — get a real blaze going beneath it.",
             "Once the fire is roaring, climb to the catwalk outside (it's night up there) and find where the sail's shadow stretches out across the ravine.",
-            "Answer: PUT ORANGE BERRY IN WOOD to light the bonfire, go UP to the catwalk, walk round to Catwalk North, and go N out onto the band of shadow. It bears your weight across to the ledge — TAKE BLACK MASK."
+            "Answer: PUT ORANGE BERRY IN WOOD to light the bonfire, go UP to the catwalk, walk round to Catwalk North, EXAMINE SHADOW (the game requires a look before it will let you walk it), then go N out onto the band of shadow. It bears your weight across to the ledge — TAKE BLACK MASK."
           ]
         }
       ]
@@ -190,7 +190,7 @@
           "locations": ["North Alcove"],
           "hints": [
             "It looks like rubbish, but keep it — its holes are oddly regular, as if meant to line up with something.",
-            "Answer: TAKE RAG. Its use is far below, at a brass grate that needs sealing — hold onto it until then."
+            "Answer: TAKE RAG. Its use is far below, at a brass grate that needs sealing."
           ]
         }
       ]
@@ -275,7 +275,7 @@
             "Pull the lever and step down; wait, and the black tide drains away, carrying you to the bottom and uncovering a catwalk that rings the room above.",
             "Your real goal is the opposite — to flood the room and ride the rising black tide up to the ceiling, where it meets the roof and lets you through. But first you must stop the liquid escaping.",
             "It leaks two ways: through cracked holes in the glass catwalk-trough, and through a grate in the floor. Seal them all, redirect the flow into the trough, then refill.",
-            "Answer: Plug the three catwalk holes by size — the small and big gum blobs and the curved glass slab each fit one hole — and TURN SPOUT so the black liquid pours into the trough. PUT GAUZE ON GRATE to seal the floor grate (the holed rag from the orrery alcove). Then PUSH LEVER and WAIT — the tide rises and lifts you up through the roof into the Grey Chamber."
+            "Answer: PULL LEVER and step down; WAIT while the tide drains you to the bottom, then TURN WHEEL — the black column shifts, exposing the brass floor grate and a ladder up to the catwalk. Up on the catwalk, plug the three holes by size — the small and big gum blobs and the curved glass slab (they lie in the trough) each fit one hole — and TURN SPOUT so the black liquid pours into the trough. Down at the bottom, PUT GAUZE ON GRATE to seal the floor grate (the holed rag from the orrery alcove). Then PUSH LEVER and WAIT — the tide rises and lifts you up through the roof into the Grey Chamber."
           ]
         },
         {
@@ -321,7 +321,8 @@
           "hints": [
             "Think back — was every mask whole? One of the seven came to you damaged.",
             "The black mask was torn; its missing piece has to turn up somewhere things tend to surface in this house.",
-            "Answer: A torn black shred now lies on the study desk — TAKE SHRED, return to the chair, SIT, and PUT SHRED ON MIRROR. Your reflection completes, and the last, darkest memory falls into place."
+            "It hasn't surfaced yet — there is still work of the wizard's left to finish first. It will appear when you're nearly done.",
+            "Answer: Once you've mixed the ink in the laboratory, a torn black shred lies on the study desk — TAKE SHRED, return to the chair, SIT ON CHAIR, and PUT SHRED ON MIRROR. Your reflection completes, and the last, darkest memory falls into place — this is itself one of the game's endings, and the game will offer UNDO if you mean to go on to the portal instead."
           ]
         }
       ]
@@ -349,7 +350,7 @@
           "hints": [
             "You need a special ink — the one for redrawing the portal diagram. The recipe is on the scrap of paper on the table.",
             "It calls for resin and the blue dust, fused together by the optical apparatus.",
-            "Answer: PUT RESIN IN FLASK (from the basket), POUR DUST IN FLASK (from the leaden jar), PUT FLASK IN LOOP of the apparatus, then PULL CHAIN twice (resin to gel to ink). TAKE FLASK."
+            "Answer: PUT RESIN IN FLASK (from the basket), POUR DUST IN FLASK (from the leaden jar), then PUT JAR ON TABLE — you can't leave the laboratory carrying it. PUT FLASK IN LOOP of the apparatus, PULL CHAIN twice (resin to gel to ink), and TAKE FLASK."
           ]
         },
         {
@@ -386,7 +387,7 @@
           "locations": ["Harp Chamber"],
           "hints": [
             "It's a sad, scorched wreck — the game itself wonders aloud what destroyed it.",
-            "Answer: Nothing to be done. The harp is pure atmosphere — a mystery with no solution and no use. (The bundle of straw on the floor, on the other hand, is worth taking.)"
+            "Answer: Nothing to be done. The harp is pure atmosphere — a mystery with no solution and no use."
           ]
         },
         {

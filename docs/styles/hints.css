@@ -129,7 +129,7 @@ body.hints-resizing .hints-overlay * {
 
 .hints-title {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   font-size: 1rem;
   font-weight: 600;
@@ -137,8 +137,18 @@ body.hints-resizing .hints-overlay * {
 }
 
 .hints-title-icon {
+  align-self: center;
   color: #fbbf24;
   font-size: 1.25rem;
+}
+
+.hints-used-count {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .hints-close-btn {
@@ -204,6 +214,49 @@ body.hints-resizing .hints-overlay * {
   padding: 1px 5px;
   border-radius: 3px;
   font-family: monospace;
+}
+
+/* ============================================================
+   ACK INTERSTITIAL — one-time "hints ahead" beat before first reveal
+   ============================================================ */
+
+.hints-ack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 28px;
+  text-align: center;
+}
+
+.hints-ack-icon {
+  display: block;
+  font-size: 2.25rem;
+  color: #fbbf24;
+  margin-bottom: 14px;
+}
+
+.hints-ack-line {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 8px;
+}
+
+.hints-ack-sub {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  max-width: 36ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Base sizing only — color/hover comes from the shared .btn.btn-primary class
+   (base.css) so this matches the app's real primary button, not a one-off. */
+.hints-ack-btn {
+  padding: 10px 20px;
+  min-height: 44px;
 }
 
 /* ============================================================
