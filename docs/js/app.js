@@ -508,6 +508,20 @@ function initUIComponents() {
     });
   }
 
+  // Mute the hints entry points for games with no hints file. Still clickable —
+  // the panel's empty state explains — but they LOOK unavailable. Lives here (not
+  // hints-panel.js) because that module only loads on first click; the button
+  // must dim without it. loadHints caches, so the later panel open costs nothing.
+  window.addEventListener('gameLoaded', async (e) => {
+    const gameName = e.detail?.gameName;
+    if (!gameName) return;
+    const { loadHints } = await import('./features/hints/hints-data.js');
+    const data = await loadHints(gameName);
+    for (const id of ['hintsBtn', 'mobileHintsIcon']) {
+      document.getElementById(id)?.classList.toggle('hints-none', !data);
+    }
+  });
+
   // Initialize mute button state to match default (muted)
   if (dom.muteBtn) {
     const icon = dom.muteBtn.querySelector('.material-icons');

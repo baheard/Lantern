@@ -101,7 +101,7 @@ function _doSilentRefresh() {
  * Tries silent refresh first; only shows UI if that fails.
  * Only shows the confirm dialog on first-ever sign-in — returning users go straight to Google.
  */
-export async function ensureAuthenticated() {
+export async function ensureAuthenticated(fromAutoSync = false) {
   if (hasValidToken()) return true;
 
   // Try silent refresh before bothering the user
@@ -110,9 +110,19 @@ export async function ensureAuthenticated() {
     if (refreshed) return true;
   }
 
-  // Only show confirm dialog on first-ever sign-in
   const tokenData = JSON.parse(localStorage.getItem('gdrive_token') || '{}');
-  if (!tokenData.email) {
+  if (fromAutoSync) {
+    // Timer-driven path: a bare signIn() popup here has no user gesture backing
+    // it, so browsers block it. Always confirm first — the dialog tap supplies
+    // the transient activation the popup needs.
+    const { confirmDialog } = await import('../../ui/confirm-dialog.js');
+    const confirmed = await confirmDialog(
+      'Auto-sync is on — connect to Google Drive?',
+      { title: 'Connect Google Drive' }
+    );
+    if (!confirmed) return false;
+  } else if (!tokenData.email) {
+    // Only show confirm dialog on first-ever sign-in
     const { confirmDialog } = await import('../../ui/confirm-dialog.js');
     const confirmed = await confirmDialog(
       'Sign in to Google Drive to sync your saves?',
@@ -120,7 +130,7 @@ export async function ensureAuthenticated() {
     );
     if (!confirmed) return false;
   }
-  // Previously authenticated — skip the dialog and go straight to sign-in
+  // Previously authenticated (manual path) — skip the dialog, go straight to sign-in
 
   await signIn();
 

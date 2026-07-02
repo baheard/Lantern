@@ -453,9 +453,11 @@ function locationsFor(gameSlug) {
     // filenames never match — compare bytes instead so already-promoted images flag too.
     const committed = images[r.name] || null;
     let committedSource = null;
+    let committedMtime = 0;   // in-game file mtime (ms) so Selected Images can sort by date
     if (committed) {
       const cp = path.join(g.dir, committed);
       if (fs.existsSync(cp)) {
+        try { committedMtime = fs.statSync(cp).mtimeMs; } catch (e) { /* keep 0 */ }
         const cb = fs.readFileSync(cp);
         committedSource = candidates.find((f) => {
           const fp = candPath(f);
@@ -467,7 +469,7 @@ function locationsFor(gameSlug) {
     }
     return {
       slug: r.slug, name: r.name, description: r.description || '', exits: r.exits || [],
-      committed, committedSource, candidates, candidatePrompts, auditions, mtimes, candMeta,
+      committed, committedSource, committedMtime, candidates, candidatePrompts, auditions, mtimes, candMeta,
       sceneDefault, sceneOverride: style.scenes[r.slug] || '',
       sceneExtras: r.sceneExtras || [],   // examine/look detail beyond the first-visit description
     };

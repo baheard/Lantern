@@ -382,7 +382,9 @@ export function toggleHints() {
  */
 function renderHintsOrInterstitial() {
     updateHintsUsedCount();
-    if (_currentGameName && !getHintsAcknowledged(_currentGameName)) {
+    // No hints data → skip the "hints ahead" interstitial and go straight to the
+    // empty state; there's nothing to gate behind an acknowledgement.
+    if (_currentHintsData && _currentGameName && !getHintsAcknowledged(_currentGameName)) {
         renderAckInterstitial();
     } else {
         renderHintsContent();
@@ -409,6 +411,18 @@ function renderAckInterstitial() {
       </div>`;
 }
 
+/**
+ * Human-facing name for the current game, for the no-hints empty state.
+ * The game-select cards already carry the proper title ("Spider and Web"),
+ * so read it from there; fall back to a capitalized slug.
+ */
+function gameDisplayName() {
+    if (!_currentGameName) return 'this game';
+    const t = document.querySelector(`.game-card[data-game^="${_currentGameName}."] .game-title`);
+    const txt = t?.childNodes[0]?.textContent?.trim();
+    return txt || (_currentGameName.charAt(0).toUpperCase() + _currentGameName.slice(1));
+}
+
 function renderHintsContent() {
     const contentEl = document.getElementById('hintsContent');
     if (!contentEl) return;
@@ -417,8 +431,8 @@ function renderHintsContent() {
         contentEl.innerHTML = `
           <div class="hints-empty">
             <span class="material-icons hints-empty-icon">lightbulb_outline</span>
-            <p>No hints available for this game.</p>
-            <p class="hints-empty-sub">Hints can be added by running the <code>generate-hints</code> skill.</p>
+            <p>No hints available for ${gameDisplayName()}. Try your best!</p>
+            <p class="hints-empty-sub">Want hints for this game? Let us know via Feedback.</p>
           </div>`;
         document.getElementById('hintsFooter')?.classList.add('hidden');
         return;

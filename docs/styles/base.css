@@ -494,3 +494,12 @@ body {
   background: var(--drag-handle-active);
   height: 54px;   /* gentle grow, not a big pop */
 }
+
+/* Games with no hints file: the hints entry points LOOK unavailable but stay
+   clickable — the panel's empty state does the explaining ("Try your best!").
+   Class toggled by the gameLoaded listener in app.js. */
+#hintsBtn.hints-none,
+#mobileHintsIcon.hints-none {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
