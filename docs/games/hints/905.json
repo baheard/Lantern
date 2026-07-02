@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "game": "905",
+  "meta": {
+    "generatedAt": "2026-07-01",
+    "appVersion": "1.5.734",
+    "sources": [
+      {
+        "name": "CASA (solutionarchive.com) walkthrough",
+        "url": "https://www.solutionarchive.com/file/id,11126/",
+        "file": "docs/games/walkthroughs/905.txt"
+      },
+      {
+        "name": "IFDB game page — 9:05 by Adam Cadre",
+        "url": "https://ifdb.org/viewgame?id=js4a2h4gs2gcvfva",
+        "file": "docs/games/walkthroughs/905.txt"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "waking-up",
+      "title": "The Bedroom",
+      "verified": true,
+      "locations": ["Bedroom"],
+      "questions": [
+        {
+          "id": "phone-is-yelling",
+          "q": "The phone won't stop ringing and a voice is yelling at me to get to work. What now?",
+          "hints": [
+            "The voice on the phone wants you moving fast — but fast isn't the same as thorough.",
+            "Everything in this house will let you hurry past it. That doesn't mean you should.",
+            "Before you do anything else, get up and take a good look around.",
+            "ANSWER PHONE, then STAND. Then look around the room instead of rushing out."
+          ]
+        },
+        {
+          "id": "anywhere-unlooked",
+          "q": "Is there anywhere in this room I haven't really looked?",
+          "hints": [
+            "A bedroom has more to it than the parts you can see standing up.",
+            "Think about what's usually out of sight, low down, easy to ignore on a rushed morning.",
+            "Try looking underneath something large and low to the floor.",
+            "LOOK UNDER BED."
+          ]
+        },
+        {
+          "id": "how-do-i-feel",
+          "q": "Something about last night feels off. What do I notice if I check myself?",
+          "hints": [
+            "Whatever happened last night, your own body might remember more than you do.",
+            "X ME."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "getting-ready",
+      "title": "Bathroom and Bedroom — Getting Dressed",
+      "verified": true,
+      "locations": ["Bathroom", "Bedroom"],
+      "questions": [
+        {
+          "id": "morning-routine",
+          "q": "I need to get cleaned up and dressed before I can leave. What's the routine?",
+          "hints": [
+            "You'll need to be undressed before the shower will do you any good.",
+            "The shower won't let you carry anything in with you, either — set everything down first.",
+            "REMOVE WATCH, REMOVE CLOTHES, DROP ALL, then ENTER SHOWER. Afterward TAKE WATCH, WEAR WATCH, head back to the Bedroom (N), GET ALL FROM TABLE, OPEN DRESSER, GET CLOTHES, WEAR CLOTHES."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leaving-the-house",
+      "title": "Living Room and Driveway",
+      "verified": true,
+      "locations": ["Living room", "Driveway"],
+      "questions": [
+        {
+          "id": "get-out-to-car",
+          "q": "I'm dressed. How do I get out to the car?",
+          "hints": [
+            "This house has more than one door — be specific about which one you mean.",
+            "From the Living Room, OPEN FRONT DOOR, go S to the Driveway, then UNLOCK CAR and ENTER CAR — the keys you're already holding do it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "on-the-road",
+      "title": "Driving",
+      "verified": true,
+      "locations": ["Driving"],
+      "questions": [
+        {
+          "id": "freeway-or-not",
+          "q": "The car asks me questions as I drive. How should I answer them?",
+          "hints": [
+            "One of these questions offers you a quick, quiet way out of town. Taking it ends things early — and thinly.",
+            "The phone call at the start already told you where you work. Has the drive actually offered you a way to go there?",
+            "Skip the freeway on-ramp, and say yes the next time somewhere familiar comes up.",
+            "Answer NO to the freeway question, then YES when Loungent Technologies is mentioned."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "loungent-technologies",
+      "title": "Loungent Technologies",
+      "verified": true,
+      "locations": ["Loungent Technologies parking lot", "Loungent Technologies"],
+      "questions": [
+        {
+          "id": "get-inside-building",
+          "q": "There's a locked employee entrance with a card slot by the door. How do I get in?",
+          "hints": [
+            "You're carrying more than one piece of identification. Only one of them means anything to this door.",
+            "Open the wallet and see what's actually in it.",
+            "OPEN WALLET, TAKE ID, then INSERT ID IN SLOT — not the driver's license."
+          ]
+        },
+        {
+          "id": "hadley-cubicle",
+          "q": "There's a cubicle here marked with a name. What's expected of me at my desk?",
+          "hints": [
+            "Someone left something for you here, and it sounds urgent. Read it before you do anything else.",
+            "The note wants a form signed and returned immediately — take it seriously.",
+            "ENTER CUBICLE, READ NOTE, then TAKE FORM, TAKE PEN, SIGN FORM."
+          ]
+        },
+        {
+          "id": "deliver-the-form",
+          "q": "I've signed the form. What do I do with it?",
+          "hints": [
+            "The note is signed with initials. Someone in this building matches them.",
+            "There's an office door with a fuller name on it, just west of the cubicle.",
+            "Fair warning: delivering it ends the story — there's no undoing what happens in that office.",
+            "OUT, then W into the office marked \"MATTHEW BOWMAN.\""
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "title": "General Questions",
+      "verified": false,
+      "locations": [],
+      "questions": [
+        {
+          "id": "whats-this-game-about",
+          "q": "This all feels very ordinary — showering, dressing, driving to work. Am I missing something?",
+          "hints": [
+            "The game keeps insisting you're late and should hurry. Insisting that hard is itself worth noticing.",
+            "Try not rushing. Look under things, read what's handed to you, and take the option that actually leads somewhere rather than the one that gets you out of town fastest.",
+            "The 'quick escape' answers exist, and they end the game quickly too — with almost nothing in them. The version of this story worth seeing is the slower one."
+          ]
+        }
+      ]
+    }
+  ]
+}
