@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "disabled": true,
   "game": "905",
   "meta": {
     "generatedAt": "2026-07-01",

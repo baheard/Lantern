@@ -42,6 +42,14 @@ export async function loadHints(gameName) {
 
         const data = await resp.json();
 
+        // Explicit off-switch: a hints file with `"disabled": true` behaves exactly like a
+        // missing file (no panel, no badges) without deleting the authored content. Lets us
+        // pull a game's hints from the app while keeping the JSON in the repo for later rework.
+        if (data.disabled === true) {
+            _cache.set(gameName, null);
+            return null;
+        }
+
         if (data.schema !== 1) {
             console.warn('[hints-data] Unsupported schema version:', data.schema);
             _cache.set(gameName, null);
