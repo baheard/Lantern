@@ -141,6 +141,14 @@ Review mode grades each. Grouped:
    the source establishes: a named lamp/fire, daylight through a described window, or plain darkness
    where a space is simply unlit. Do NOT invent glows, colour casts, or emotional mood. Tonal register
    is the ARTIST's job — keep it out of framing. Stay consistent with time-of-day and neighbors.
+   - **Unresolved light = go hunting, not defaulting.** When a room names NO light source and NO
+     window/opening to daylight, its lighting is UNRESOLVED — do not let the game aesthetic's default
+     ("warm and softly lit") fill the vacuum. The evidence usually lives OUTSIDE the room's own facts:
+     travel messages entering/leaving it, and neighbours' descriptions of the shared stair/passage
+     (e.g. Dreamhold's "stairs descend into dimness" + "dim stone walls (where is the light coming
+     from?)" establish the whole lower level as dim and sourceless, though the Cell's own text never
+     says so). Probe via the replay harness if needed. An enclosed, windowless, sourceless room with
+     no counter-evidence is DIM by default — state the grounded finding explicitly in the framing.
 
 **Composition** — factor 10 is the big one; six named sub-factors, each graded independently.
 10. **Composition (state the frame; don't leave it to the model).** Every room names one plausible
