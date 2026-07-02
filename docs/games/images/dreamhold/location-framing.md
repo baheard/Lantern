@@ -221,6 +221,11 @@ one strong shared register, authored once here:
 ### cell
 - **Vantage:** inside the tiny raw-stone cell, facing the one narrow gap in the wall ahead; the cell is
   barely shoulder-wide. Smooth white floor underfoot is the one finished surface.
+- **Surfaces (examines):** the four walls are unseamed, unsmoothed grey rock; the stone ceiling is low,
+  crowding roughly down; the fine white floor shows faint smudges where the sleeper lay.
+- **Gap (examine + occlusion, verified in-game):** a narrow, OBLONG opening — "not much of a doorway,
+  but big enough to get through." `look through gap` reveals nothing, and the Narrow Hallway beyond is
+  windowless → render the gap as a pitch-dark slot; NO light, glow, view or scenery through it.
 - **Persistence:** DROP the quill pen (held inventory item, not in the room).
 - **Scale:** cramped — width of outstretched arms.
 
@@ -340,6 +345,10 @@ one strong shared register, authored once here:
   (`landmarks.statue`) towers at balcony centre, also looking out: abstract, genderless marble curves,
   weight forward, head turned and chin raised as if something in the valley caught its eye; an absurdly
   small flat **gold mask balanced on its brow** over where the eyes would be.
+- **Detail (examines):** the mask reads as a flat paper cutout of a human face, half life size —
+  balanced, not worn. The balustrade is carved in a decorative pattern of arches, all from a single
+  immense piece of marble. The balcony is broad, tiled in white marble; the valley trees are spread in
+  afternoon sunlight.
 - **Persistence:** KEEP the gold mask (statue-landmark signature — the EXCEPTION to the mask-drop rule).
 
 ### mosaic-room
