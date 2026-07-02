@@ -226,6 +226,11 @@ one strong shared register, authored once here:
 - **Gap (examine + occlusion, verified in-game):** a narrow, OBLONG opening — "not much of a doorway,
   but big enough to get through." `look through gap` reveals nothing, and the Narrow Hallway beyond is
   windowless → render the gap as a pitch-dark slot; NO light, glow, view or scenery through it.
+- **Light (verified in-game):** the whole lower level is canonically DIM with an unexplained,
+  sourceless light — the stair-climb text asks "where is the light coming from? You haven't seen a
+  window yet," and from the Study the "stairs descend into dimness." Render the cell dim and
+  shadow-pooled, lit by a faint sourceless half-light; the white floor is the brightest value in the
+  frame. No lamp, window, torch or light shaft.
 - **Persistence:** DROP the quill pen (held inventory item, not in the room).
 - **Scale:** cramped — width of outstretched arms.
 
