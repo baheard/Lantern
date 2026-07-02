@@ -46,6 +46,12 @@
  *                  A line `@char <key> [count]` sends raw CHARACTER input instead of a line —
  *                  for driving interactive char readers/menus (e.g. `read clippings` then
  *                  `@char return 40` / `@char q`). <key> = a char or Glk name (return/space/escape).
+ *                  A line `@until <command> :: <pattern> [:: <max>]` repeats <command> (usually
+ *                  `z`) until the turn's output or status line matches the case-insensitive
+ *                  regex <pattern>, up to <max> iterations (default 200). Use for schedule-
+ *                  dependent waits (NPC arrivals, timed events) instead of hardcoded z-counts —
+ *                  self-healing when upstream edits shift the timing. The iteration count used
+ *                  is reported to stderr as [UNTIL]. Exhausting <max> is a strict-mode failure.
  *   --stdin        read commands from stdin (one per line)
  *   --cmds "a ; b" one quoted arg split on ';' into commands — avoids shell array/quoting pain
  *                  for ad-hoc tails (e.g. with --snapshot-in). Appended after --file/--stdin.
@@ -79,6 +85,11 @@
  *                  so it sidesteps the char-bootstrap bug class. A headless GiDispa +
  *                  GlkOte.restore_allstate (defined below) back the restore. Snapshots are
  *                  seed-/build-specific: replay with the same --seed and game file.
+ *                  Snapshots also carry the CLI's seeded Math.random state (math_rng_state),
+ *                  so interpreter-level RNG (zvm's random() fallback: NPC schedules, word
+ *                  spins) continues bit-exact with a full replay — snapshot probes are now
+ *                  valid even for scenes like curses [austin-alexandria]. Older snapshots
+ *                  without the field restore as before (stream restarts from the seed).
  *
  * NOTE ON RANDOMNESS: command sequencing is deterministic, but in-game @random is seeded
  * from the clock, so randomized puzzles (Anchorhead: safe combo, flute holes, mirror
@@ -107,21 +118,32 @@ const REPO = path.resolve(__dirname, '..');
 // never the value — a real player in the app gets a different (real-random) value.
 function mulberry32(seed) {
   let a = seed >>> 0;
-  return function () {
+  const fn = function () {
     a |= 0; a = (a + 0x6D2B79F5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+  // Expose the generator's whole state (one uint32) so snapshots can carry it. Without this,
+  // a snapshot-restored run re-draws the Math.random stream from the seed, and any scene whose
+  // outcome depends on interpreter-level Math.random (zvm random() fallback: NPC schedules,
+  // word-spins) diverges between a snapshot probe and a full replay — the exact divergence
+  // documented at curses [austin-alexandria]/[sceptre-socket-turn]. See getState/setState use
+  // in captureAndWriteSnapshot() and the --snapshot-in restore path.
+  fn.getState = () => a >>> 0;
+  fn.setState = (v) => { a = v >>> 0; };
+  return fn;
 }
 
 function makeInterpreterContext(seed) {
   const sandbox = { console, setTimeout, clearTimeout, setInterval, clearInterval };
   // Seeded Math (delegates to real Math for everything except random) when seed is a number;
   // null seed → real Math.random (true per-run randomness, like a real player).
+  let rng = null;
   if (seed !== null && seed !== undefined) {
     const M = Object.create(Math);
-    M.random = mulberry32(seed);
+    rng = mulberry32(seed);
+    M.random = rng;
     sandbox.Math = M;
   }
   sandbox.window = sandbox;
@@ -143,7 +165,7 @@ function makeInterpreterContext(seed) {
   // what makes the in-process `--probe-exits` batch (12 fresh contexts per call) cheap: each
   // context still re-runs the scripts to initialise its own globals, but never re-parses them.
   for (const script of getLibScripts()) script.runInContext(ctx);
-  return ctx;
+  return { ctx, rng };
 }
 
 // Minimal GiDispa — only the methods glkapi's save_allstate/restore_allstate touch. The browser app
@@ -340,7 +362,7 @@ function createHeadlessGlkote(getCurrentLocation, getStatusContext) {
 // Replay engine
 // ---------------------------------------------------------------------------
 function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
-  const ctx = makeInterpreterContext(opts.seed);
+  const { ctx, rng } = makeInterpreterContext(opts.seed);
   const storyData = fs.readFileSync(storyPath);
   ctx.__storyArr = Array.from(storyData); // plain array crosses realm cleanly
   const { glkote, state } = createHeadlessGlkote(getCurrentLocation, getStatusContext);
@@ -353,6 +375,10 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
     // restore_file) instead of a fresh restart()+run(). No char-bootstrap, no Glk.init
     // re-launch issue: restore_allstate runs BEFORE any fresh window is opened.
     ctx.__snapshot = JSON.parse(fs.readFileSync(opts.snapshotIn, 'utf8'));
+    // Resume the interpreter-level Math.random stream where the snapshot left it, so scenes
+    // gated on it (NPC wander schedules, word-spins) are bit-exact with a full replay. Older
+    // snapshots (no math_rng_state field) restore as before: stream restarts from the seed.
+    if (rng && ctx.__snapshot.math_rng_state != null) rng.setState(ctx.__snapshot.math_rng_state);
     vmMod.runInContext(
       '(function(){' +
       '  var bytes = new Uint8Array(__storyArr);' +
@@ -413,7 +439,7 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
     if (_snappedAt || opts.snapshotAtIndex == null || i !== opts.snapshotAtIndex) return;
     if (!opts.snapshotOut) throw new Error('--snapshot-at requires --snapshot-out <file>');
     if (state.exited) return;
-    captureAndWriteSnapshot(ctx, opts.snapshotOut);
+    captureAndWriteSnapshot(ctx, opts.snapshotOut, rng);
     _snappedAt = true;
   }
 
@@ -442,7 +468,16 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
   // char or a Glk special name (return, space, escape, up, down, …).
   const parsed = commands.map((raw) => {
     const m = /^@char\s+(\S+)(?:\s+(\d+))?$/.exec(raw);
-    return m ? { raw, isChar: true, key: m[1] === 'space' ? ' ' : m[1], count: m[2] ? parseInt(m[2], 10) : 1 } : { raw, isChar: false };
+    if (m) return { raw, isChar: true, key: m[1] === 'space' ? ' ' : m[1], count: m[2] ? parseInt(m[2], 10) : 1 };
+    // `@until <command> :: <pattern> [:: <max>]` — repeat <command> (a line command, usually
+    // `z`) until the turn's output matches <pattern> (case-insensitive regex) or <max>
+    // iterations (default 200) pass without a match. Replaces guessed wait-counts (curses
+    // Austin: "364 z's" found by binary-searching full replays) with a self-timing, self-healing
+    // directive: upstream edits shift the schedule, and the directive just absorbs the shift.
+    // The count actually used is reported to stderr as [UNTIL] for the transcript log.
+    const u = /^@until\s+(.+?)\s*::\s*(.+?)(?:\s*::\s*(\d+))?$/.exec(raw);
+    if (u) return { raw, isUntil: true, cmd: u[1].trim(), pattern: new RegExp(u[2].trim(), 'i'), max: u[3] ? parseInt(u[3], 10) : 200 };
+    return { raw, isChar: false };
   });
   const mk = (cmd, text) => ({ cmd, location: state.location, phase: state.phase, statusRaw: state.statusRaw, text });
 
@@ -473,6 +508,35 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
       for (let k = 0; k < p.count; k++) { send(p.key, 'char'); text += drain(); }
       if (process.env.DBG) process.stderr.write(`DBG @char ${p.key}x${p.count} -> inputType=${state.inputType} gen=${state.gen} bufLen=${text.length}\n`);
       turns.push(mk(p.raw, text));
+      maybeSnapshotAt(i);
+      continue;
+    }
+
+    // @until loop: send p.cmd repeatedly until the pattern matches this turn's text (checked
+    // against the buffer text AND the status line, since arrivals sometimes only show in the
+    // status). Recorded as ONE turn whose text is the matching iteration's output, so --quiet /
+    // --strict / rendering behave as if a single command ran. No match within max = a desync:
+    // fail strict-style (halt under --strict, annotate otherwise).
+    if (p.isUntil) {
+      let matched = false, text = '', n = 0;
+      while (n < p.max && !state.exited) {
+        if (state.inputType !== 'line') advanceCharPrompts();
+        if (state.exited || state.inputType !== 'line') break;
+        send(p.cmd, 'line');
+        text = drain();
+        text += advanceCharPrompts();
+        n++;
+        if (p.pattern.test(text) || p.pattern.test(state.statusRaw || '')) { matched = true; break; }
+      }
+      const turn = mk(p.raw, text);
+      if (matched) {
+        process.stderr.write(`[UNTIL] matched after ${n} x "${p.cmd}" (pattern: ${p.pattern.source})\n`);
+      } else {
+        const why = `@until exhausted ${n}/${p.max} x "${p.cmd}" without matching: ${p.pattern.source}`;
+        process.stderr.write('[UNTIL] ' + why + '\n');
+        if (opts.strict) { turn.strictFail = why; turns.push(turn); break; }
+      }
+      turns.push(turn);
       maybeSnapshotAt(i);
       continue;
     }
@@ -514,7 +578,7 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
   // inside the loop handles that case). The VM must be paused at a line-input prompt (the
   // normal end-of-replay state) for the saved pc to resume cleanly on restore.
   if (opts.snapshotOut && opts.snapshotAtIndex == null && !state.exited) {
-    captureAndWriteSnapshot(ctx, opts.snapshotOut);
+    captureAndWriteSnapshot(ctx, opts.snapshotOut, rng);
   }
 
   return turns;
@@ -525,7 +589,7 @@ function play(storyPath, commands, opts, getCurrentLocation, getStatusContext) {
 // non-serialisable `buffer`/`str` refs). We build it directly rather than via do_autosave() so we
 // don't round-trip through Dialog.autosave_write's localStorage/HTML plumbing. Caller must ensure
 // the VM is paused at a line-input prompt (not exited) so the saved pc resumes cleanly on restore.
-function captureAndWriteSnapshot(ctx, outPath) {
+function captureAndWriteSnapshot(ctx, outPath, rng) {
   ctx.__snapOut = null;
   vmMod.runInContext(
     '(function(){' +
@@ -547,6 +611,9 @@ function captureAndWriteSnapshot(ctx, outPath) {
     '})();',
     ctx, { filename: 'harness-snapshot-out' }
   );
+  // Carry the CLI-level seeded Math.random state (one uint32) alongside the VM state, so a
+  // restored run continues the SAME random stream a full replay would see at this point.
+  if (rng) ctx.__snapOut.math_rng_state = rng.getState();
   fs.writeFileSync(outPath, JSON.stringify(ctx.__snapOut));
   process.stderr.write('[SNAPSHOT] wrote ' + outPath + ' (pc-paused VM state)\n');
 }

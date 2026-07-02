@@ -124,7 +124,25 @@ correctly preserved the `@random` power word (FRATTO) via `xorshift_seed` — RN
 
 **Caveats.** A snapshot is **seed- and build-specific**: restore with the same `--seed` and the
 same game file. (The pc/RAM/stack are tied to the exact story bytes; the RNG continuation to the
-seed.) The first "intro" turn of a restored run re-emits the restored scrollback (`win.reserve`,
+seed.)
+
+**Math.random state is snapshot-carried (added 2026-07-02).** Snapshots include `math_rng_state`
+(the mulberry32 generator's single uint32 of state) and `--snapshot-in` resumes the stream, so
+interpreter-level RNG (zvm's `random()` fallback — NPC wander schedules, word-spins) is bit-exact
+between a snapshot-restored tail and a full replay. This closes the divergence class documented
+at curses `[austin-alexandria]`/`[sceptre-socket-turn]` ("not snapshot-probeable" — the root cause
+of the 4-hour Curses trace runaway: every trial forced a full replay). Validated by snapshotting
+at the austin marker and strict-replaying the remaining 819 commands (incl. the empirically-timed
+364-z wait) to the win; stripping the field reproduces the old desync at exactly the Austin turn.
+Old snapshots without the field restore as before (stream restarts from the seed) — re-cut them
+if a probe touches an RNG-dependent scene.
+
+**`@until` directive (added 2026-07-02).** `@until <command> :: <pattern> [:: <max>]` in a cmds
+file repeats `<command>` (usually `z`) until the turn's output or status line matches the
+case-insensitive regex, up to `<max>` (default 200; exhaustion = strict failure). Recorded as one
+turn; count used goes to stderr as `[UNTIL]`. Use for schedule-dependent waits instead of
+hardcoded z-counts — self-healing when upstream edits shift the timing, and kills the
+derive-wait-counts-by-binary-search workflow. The first "intro" turn of a restored run re-emits the restored scrollback (`win.reserve`,
 last ~100 blocks) — harmless, and the validation compares only tail turns. Keep snapshot JSON out
 of git (the validator writes to the OS temp dir via `mkdtempSync`).
 

@@ -133,6 +133,18 @@ Iterate until `exit=0` (or only documented char-input residual gates remain).
   ```
   Re-snapshot with the **same `--seed` and game file** (snapshots are seed-/build-specific). Once a tail verifies, append it to `<game>.cmds.txt` and re-snapshot at a later `## marker`. Write `snap.json` to a temp/throwaway path — don't commit it. Design + validation: `.tome/headless-replay-harness.md`.
 - Without snapshots, the harness is **replay-from-start**, so each probe re-runs the whole prefix. Either way, **append each verified segment to `<game>.cmds.txt` as you go** rather than holding a growing command array in your working context.
+- **Snapshots carry the seeded `Math.random` state** (`math_rng_state`, added 2026-07-02), so even interpreter-RNG-dependent scenes (NPC wander schedules, random word-spins — the class the Curses trace originally burned hours full-replaying) are validly snapshot-probeable: a `--snapshot-in` tail is bit-exact with a full replay. If a probe against an OLD snapshot (no `math_rng_state` field) touches such a scene, re-cut the snapshot with current `play.cjs` first.
+- **Never hardcode a guessed wait-count for a schedule-dependent event** (waiting for an NPC to arrive, a timed interruption). Use the `@until` directive in the cmds file — it self-times and self-heals when upstream edits shift the schedule:
+  ```
+  @until z :: Austin.*Over the East Wing :: 400   # repeat "z" until output/status matches (max 400)
+  ```
+  The count actually used is reported to stderr as `[UNTIL]`; exhausting the max is a strict failure. This replaces the old derive-by-binary-search-of-full-replays workflow entirely.
+
+**Session discipline (hard-learned from the 4-hour Curses runaway, 2026-07-01):**
+- **Work foreground — do NOT spawn nested sub-agents** for the trace itself. Sub-agents hide progress; a stuck trace looks identical to a working one and gets killed, losing everything.
+- **One game per session/ember.** Batch jobs juggling several games make wall-clock unreadable and multiply the blast radius of a kill.
+- **Checkpoint at every verified `## [slug]` section**: append to `<game>.cmds.txt` on disk immediately and commit (or at minimum update the track file) every few sections. A killed session should cost minutes of work, not the run. Untracked working files are NOT safe from cleanup — commit early.
+- **Resume, never restart.** If a prior partial `<game>.cmds.txt` verifies clean to turn N, snapshot at its end and extend — re-deriving the prefix is pure waste (a full-replay verify of even a 1600-line file takes seconds; it's LLM round-trips that cost hours).
 
 ---
 
