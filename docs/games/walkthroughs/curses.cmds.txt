@@ -1,4 +1,4 @@
-# Curses (Graham Nelson) — verified command list, trunk to 544/550
+# Curses (Graham Nelson) — verified command list, complete game to 541/550 (win)
 # Build: docs/games/curses.z5 -- Z-machine v5, Release 16, Serial 951024
 # VERIFY WITH: node tools/play.cjs curses --strict --seed 1 --file docs/games/walkthroughs/curses.cmds.txt
 #
@@ -1472,3 +1472,152 @@ z
 take rod of sacrifice
 strike rod of sacrifice
 point rod of sacrifice at white
+## [nine-rod-sockets] Master-game prep: back to Meldrew Hall via the village footpath (Stone Cross S to the stile, SW along the drive, W/N up through East Annexe into the attic rooms), dumbwaiter down to the cellars, wrought iron key unlocks the ironbound west door; NW is the Infinity Symbol cave -- nine sockets take the nine rods (Bronze, Fire, Ice, Husbandry, Luck, Returning, Stalking, Sacrifice, High Rod of Love); each rod must be explicitly HELD before "put ... in socket" (the auto-swap "putting X into rucksack to make room" otherwise silently stows the next rod and the put fails); first rod home opens a small spherical opening in the wall
+s
+s
+sw
+w
+n
+w
+nw
+n
+n
+e
+turn off wheel
+turn wheel
+enter dumbwaiter
+pull rope
+out
+w
+unlock door with wrought iron key
+open door
+nw
+take rod of bronze
+put rod of bronze in socket
+take rod of fire
+put rod of fire in socket
+take rod of ice
+put rod of ice in socket
+take rod of husbandry
+put rod of husbandry in socket
+take rod of luck
+put rod of luck in socket
+take rod of returning
+put rod of returning in socket
+take rod of stalking
+put rod of stalking in socket
+take rod of sacrifice
+put rod of sacrifice in socket
+take high rod of love
+put high rod of love in socket
+## [rod-of-infinity] The TENTH rod is the Eight of Wands Tarot card -- "wave wands" (NOT "wave eight of wands", which trips the parser's multiple-object check) while wearing the daisy chain melts it into a featureless mahogany rod; name it in the Octagon coffin (dumbwaiter up ONE stop to Dark Shaft, N through Dark Passage, E E along the sandstone passage) = Rod of Infinity; return via Garden Stream (N from Dark Passage) E to Beside the Wall and down the one-way barrel-hatch to the Wine Cellars
+take eight of wands
+wave wands
+se
+e
+enter dumbwaiter
+pull rope
+out
+n
+e
+e
+put mahogany rod in coffin
+close coffin
+open coffin
+take rod of infinity
+w
+w
+n
+e
+d
+w
+w
+nw
+## [lemniscus-launch] Golden orb in the spherical opening + strike Rod of Infinity + point it at the lemniscus launches the MASTER GAME (Murky Cave, druid-era Britain, empty-handed)
+put orb in opening
+strike rod of infinity
+point rod of infinity at lemniscus
+## [master-game-druids] Torch from the cave bracket; swing the rope to reach the yellow daisy (wear it -- it is this era's Merlyn's Hat, needed for every disguised-rod wave from here on); horn from the Atrium Cloister, sandals from the Guard Quarters (worn -- they let you cross hot coals later); torch into the well BEFORE going down (depth gauge); from the Hypocaust blow the horn to summon the druids, then wave it (= Rod of Language) and point it at yourself to understand their Celtic -- the five waits let the full druid council scene play out (the origin of the family curse)
+take torch
+w
+d
+swing rope
+take daisy
+wear daisy
+u
+e
+ne
+e
+s
+take horn
+s
+e
+take sandals
+wear sandals
+w
+w
+open cover
+put torch in well
+d
+e
+blow horn
+wave horn
+strike rod of language
+point rod of language at me
+z
+z
+z
+z
+z
+## [master-game-tent] Surrender W and UP into the guards' hands; wait 4 turns in the Rough Tent until the Saxon spy is thrown in (nearly snapping the pole), take the pole (tent collapses, you crawl out), E over the hot coals to Beneath Dolmen, take the blue stone, wave the tent pole (= Rod of Returning) and point it at yourself to teleport home to the Infinity Symbol
+w
+u
+z
+z
+z
+z
+take pole
+e
+take blue stone
+wave tent pole
+strike rod of returning
+point rod of returning at me
+## [paris-map] Belongings are heaped on the cave floor -- take the rucksack and (still-lit) torch, do NOT "open torch" (that opens the battery compartment and kills the light); dumbwaiter to the attic (turn wheel at Cellars summons it down; two rope-pulls go up), across to Library Storage for the poetry book; reading it dreams you to Unreal City -- at Chatelet-les-Halles wave the blue stone (= fifty-franc note), pay the map man, SAY CARTE for the tourist map of Paris (the sixty-generation quest object); the Phlebas + "say time" sails you home
+take rucksack
+take torch
+se
+e
+turn wheel
+enter dumbwaiter
+pull rope
+pull rope
+out
+w
+s
+s
+se
+d
+w
+take poetry book
+read poetry
+e
+d
+wave blue stone
+give note to man
+say carte
+u
+w
+w
+board boat
+say time
+## [ending-attic] The boat lands you back at the Infinity Symbol; dumbwaiter up to the attic one last time and DOWN through the trapdoor where the game began -- *** You have won *** (541/550, master Druid; the missing 9 pts are the excluded Evans-mascot detour and minor optionals)
+se
+e
+turn wheel
+enter dumbwaiter
+pull rope
+pull rope
+out
+w
+s
+d
