@@ -208,11 +208,12 @@
         },
         {
           "id": "d3-winerack",
-          "q": "There's a wine rack down in the cellar with lettered bottles. What do they do?",
+          "q": "I watched Michael open a hidden passage in the wine cellar. How do I open it myself?",
           "locations": ["Wine Cellar"],
           "hints": [
-            "The bottles aren't for drinking. The letters spell something, and you turn each bottle in that order.",
-            "Look the rack over first, then work the letters in the order C, W, H, E, M.",
+            "Some of those bottles have been handled much more recently than the rest.",
+            "The raised letters are a family's initials.",
+            "Work through the family eldest first.",
             "Answer: SEARCH WINE RACK, then TURN C, TURN W, TURN H, TURN E, TURN M — a passage opens north. Follow it down the Great Stairs and across the bridge; at the door at the bottom, SAY IALDABAOLOTH, then go NORTH into the Burial Mound."
           ]
         },

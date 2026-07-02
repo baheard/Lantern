@@ -290,6 +290,7 @@
           "q": "I'm chained up and a man is calmly stealing my belongings one at a time! How do I stop him before he takes everything?",
           "locations": ["Torture Chamber"],
           "hints": [
+            "If Miss Voss offers you something, take it and keep it.",
             "You can't wrestle him while chained — and this man isn't the kind you beat with force anyway.",
             "Long ago the librarian asked you to pass a little violet note to your boss. The man robbing you is that boss, and the note is a love letter.",
             "Don't wait for him to find it himself — that risks him pocketing the glowing stone first. Hand it over at once.",
@@ -311,6 +312,7 @@
           "q": "I climbed to the top room but everything is an unwatchable blur and I can't move.",
           "locations": ["Fuzziness", "Round Chamber"],
           "hints": [
+            "Don't leave the theater without the glasses.",
             "This is the same kind of blur you fixed once before, at the movies.",
             "Answer: WEAR GLASSES — the room snaps into focus as the Laboratory. Keep them ON to move around up here; take them off only once you're back down in the (clear) Round Chamber."
           ]
@@ -320,6 +322,7 @@
           "q": "There's a control panel up in the Laboratory with labelled switches. Do they do anything useful?",
           "locations": ["Laboratory"],
           "hints": [
+            "Don't leave the tower until you've settled things at the control panel.",
             "One of them quietly removes an obstacle waiting for you at the very end of the game. The other is a distraction.",
             "Think about what's keeping you from a certain locked-away exhibit later — something needs its power cut.",
             "Answer: PUSH SECOND SWITCH — it cuts power to the library's glass display case so you can break into it later. (The first switch only controls the cinema; ignore it.)"

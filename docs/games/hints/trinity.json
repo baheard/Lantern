@@ -344,6 +344,7 @@
           "q": "There's a boat and an oarsman here, but he won't let me board. What does he want?",
           "locations": ["The River"],
           "hints": [
+            "Don't board until everything you still need is in hand.",
             "He's ferrying the dead, and right now you very obviously aren't one.",
             "The crypt in the garden's cemetery held burial props — if you haven't claimed them yet, do that before trying to cross.",
             "He'll also want paying, the old way — not with anything modern.",

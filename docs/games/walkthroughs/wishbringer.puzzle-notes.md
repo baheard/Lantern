@@ -70,7 +70,9 @@ value**, because a real player in the app gets a true-random word.
 ## [crisp] Mr. Crisp + the violet note (it's not a bribe)
 `say <word>` at Hilltop lowers the drawbridge; `s` drops you into the **Torture Chamber**,
 chained, with Mr. Crisp **looting your inventory one item per turn** (the small glowing stone
-he'd pocket *is* the Wishbringer — losing it makes the game unwinnable). **Insight:** the violet
+he'd pocket *is* the Wishbringer — with no note to give him, he strips you of everything and
+the floor-chute **kills you** ~6 turns after capture; probe-confirmed 2026-07-01, it's a death
+scene, not a lingering unwinnable state). **Insight:** the violet
 note is a love-letter from "Violet" (Miss Voss) to Crisp; once it reaches him he reads it, melts
 ("*Violet scolds me when I'm late!*"), drops the lab coat, and **scampers off up the ladder** —
 removing the threat. Two ways it plays:

@@ -76,15 +76,6 @@
             "One shows fire and water together. Water usually puts fire out — but is that really what this picture is showing?",
             "Remember what's on these murals. The west one (fire and a bucket) and the east one (a pole and floating things) both describe things Grunk will need to do later."
           ]
-        },
-        {
-          "id": "statue-pose",
-          "q": "The statue is posed strangely — one hand out, one hand raised. Does that matter?",
-          "hints": [
-            "A statue posed that deliberately is probably a clue, not just art.",
-            "One hand points toward a direction Grunk hasn't been able to go yet. The other hand looks like it's meant to be holding something.",
-            "Remember this pose. Later, once Grunk has a lit torch again, come back and try PUT TORCH IN HAND."
-          ]
         }
       ]
     },
@@ -144,14 +135,6 @@
             "The gnome tells Grunk exactly what he can try next, right after most things he says — look for the bracketed suggestions in his dialogue.",
             "Try greeting him, telling him about Grunk, and asking about the things Grunk has already seen — the statue, for instance.",
             "Follow the bracketed [Grunk can try ...] suggestions as they appear; they'll walk Grunk through the whole conversation naturally."
-          ]
-        },
-        {
-          "id": "under-the-bed",
-          "q": "Is there anything else worth checking in here?",
-          "hints": [
-            "Grunk should look in more places than just what's in plain sight.",
-            "LOOK UNDER BED, and also OPEN TRUNK — there's something inside worth taking."
           ]
         }
       ]

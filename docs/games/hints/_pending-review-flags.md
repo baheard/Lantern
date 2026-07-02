@@ -4,7 +4,15 @@ Green fixes from this pass are already applied in each `<game>.json` (shipped as
 Everything below is 🟡/🔴 awaiting a user ruling — **not applied**. Apply per the generate-hints
 skill's Review Mode (preserve IDs; re-validate JSON; version bump after edits).
 
-## 🔴 Red flags
+## 🔴 Red flags — ALL RESOLVED 2026-07-02 (v1.5.746)
+
+All 7 reds ruled by user and applied, with wording tightened per the philosophy's
+"favor cutting" mantra (single-sentence gate rungs, no rationale tails — not the
+longer proposals below): lostpig 2 deletions; trinity gate rung; anchorhead
+winerack rewrite (spyhole-symptom question, family-initials rungs, no genealogy
+rationale); wishbringer 3 gate rungs + puzzle-notes [crisp] death-scene
+correction; theatre goblin rung 3 → zero-instance gate. Original proposals kept
+below for the record.
 
 ### lostpig
 - `statue-pose` — answer fully spoils the late `statue-hand-torch` puzzle ("come back and try PUT TORCH IN HAND") and anchors to an EXAMINE-only pose. Proposed: **delete** (later entry keeps the callback).
