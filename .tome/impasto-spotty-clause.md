@@ -42,8 +42,12 @@ calms but loses some warmth).
   of mountain gardens). The batch `--sandbox` path DOES pull per-room scene overrides; the
   ad-hoc `--sbx` path does not.
 - Stored artist `style` is just the medium; the tool appends the shared `ARTIST_LEAD`
-  ("This medium is the PRIMARY instruction for STYLE…") at compose time — don't paste that
-  suffix into `artists.json`.
+  at compose time — don't paste that suffix into `artists.json`.
+- **`ARTIST_LEAD` is TRIPLICATED**: `tools/artview/client.js` (artview composes the prompt
+  client-side), `tools/artview/lib/core.cjs`, and `tools/gen-room-images.cjs`. The 06-29
+  brightness rewrite ("Light each space by what the scene names…") updated only the latter
+  two; client.js kept sending the old low-key wording until 2026-07-02. Any future edit
+  must touch all three (or, better, dedupe them to one source).
 - Heavy medium rewrites (MEASURED economy, WASH, grouped-strokes) all traded spottiness for
   fidelity/mood loss when applied as a whole-string swap. The minimal single-clause edit is
   what isolated the real driver.

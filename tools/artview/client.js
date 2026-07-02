@@ -301,46 +301,62 @@ function wireNote(key){const n=$('#inote');if(n)n.onblur=()=>saveNote(key,n.valu
 // acting on the selection. Both bulk actions call the SAME /api/demote-bulk (→ core's demote()) —
 // non-destructive, moves each <slug>.png to _demoted/ and unpublishes it; "Delete" is just a
 // stronger-worded confirm on the identical safe action (see .tome note on why: never rm, always move).
-let bulkSel=new Set(), bulkLastIdx=null, bulkGame=null;
+// Selection follows the file-manager idiom: click = select just that one (and show it big),
+// ctrl/cmd-click = toggle into the multi-selection, shift-click = range from the last click.
+// bulkShow tracks the image in the right-hand enlarge panel (last clicked, independent of Set).
+let bulkSel=new Set(), bulkLastIdx=null, bulkGame=null, bulkShow=null, bulkSort='name';
 function bulkList(){
-  return (GAMES[curGame]||[]).filter(l=>l.committed).slice()
-    .sort((a,b)=>(a.name||a.slug).localeCompare(b.name||b.slug));
+  const list=(GAMES[curGame]||[]).filter(l=>l.committed).slice();
+  list.sort((a,b)=>bulkSort==='date'
+    ?(((b.committedMtime||0)-(a.committedMtime||0))||(a.name||a.slug).localeCompare(b.name||b.slug))   // newest first
+    :(a.name||a.slug).localeCompare(b.name||b.slug));
+  return list;
 }
+function bulkImgUrl(l){return '/img/committed?game='+encodeURIComponent(curGame)+'&f='+encodeURIComponent(l.committed)+'&v='+ver;}
 function detailBulk(){
   curLoc=null; sel=null;
-  if(bulkGame!==curGame){ bulkSel=new Set(); bulkLastIdx=null; bulkGame=curGame; }
+  if(bulkGame!==curGame){ bulkSel=new Set(); bulkLastIdx=null; bulkShow=null; bulkGame=curGame; }
   const list=bulkList();
   const cells=list.map((l,i)=>{
     const on=bulkSel.has(l.slug);
     return '<div class="cand bulkcell'+(on?' msel':'')+'" data-slug="'+esc(l.slug)+'" data-i="'+i+'" title="'+esc(l.name)+'">'+
-      '<img src="/img/committed?game='+encodeURIComponent(curGame)+'&f='+encodeURIComponent(l.committed)+'&v='+ver+'">'+
+      '<img src="'+bulkImgUrl(l)+'">'+
       '<div class="cap"><span class="meta">'+esc(l.name)+'</span></div></div>';
   }).join('');
   const count=bulkSel.size;
-  $('#detail').innerHTML='<div class="loc-wrap" style="flex-direction:column;height:100%;overflow:auto"><div class="loc-left" style="max-width:none">'+
-    '<h1>Selected Images</h1><div class="sub">'+list.length+' committed image(s) in '+esc(curGame)+'</div>'+
+  const shown=bulkShow?list.find(l=>l.slug===bulkShow):null;
+  const left='<h1>Selected Images</h1><div class="sub">'+list.length+' committed image(s) in '+esc(curGame)+' · click: view · ctrl-click: multi · shift-click: range</div>'+
     '<div class="btns">'+
       '<button id="bulkAll">Select all</button>'+
       '<button id="bulkNone">Clear</button>'+
+      '<select id="bulkSort" title="Sort order"><option value="name">name</option><option value="date">date</option></select>'+
       '<span id="bulkCount" style="margin-left:8px;color:#8a8398">'+count+' selected</span>'+
       '<button id="bulkDemote" style="margin-left:auto" '+(count?'':'disabled')+' title="Un-publish the selected images and unlock them for re-rendering (moved to _demoted/, not deleted)">▽ Bulk Demote</button>'+
       '<button class="danger" id="bulkDelete" '+(count?'':'disabled')+' title="Remove the selected images from the game (moved to _demoted/, not deleted)">🗑 Bulk Delete</button>'+
     '</div>'+
-    '<div class="cands">'+(cells||'<span class="none">No committed images yet.</span>')+'</div>'+
-    '</div></div>';
+    '<div class="cands">'+(cells||'<span class="none">No committed images yet.</span>')+'</div>';
+  const right=shown
+    ?'<div class="bigprev" id="bigprev"><img alt="'+esc(shown.name)+'" src="'+bulkImgUrl(shown)+'"></div>'
+    :'<div class="bigprev empty" id="bigprev"><span>no image selected</span></div>';
+  $('#detail').innerHTML='<div class="loc-wrap"><div class="loc-left">'+left+'</div><div class="loc-right">'+right+'</div></div>';
   document.querySelectorAll('.bulkcell').forEach(c=>{
     c.onclick=(e)=>{
       const i=+c.dataset.i, slug=c.dataset.slug;
       if(e.shiftKey && bulkLastIdx!=null){
         const lo=Math.min(bulkLastIdx,i), hi=Math.max(bulkLastIdx,i);
         for(let k=lo;k<=hi;k++) bulkSel.add(list[k].slug);
-      } else {
+      } else if(e.ctrlKey||e.metaKey){
         if(bulkSel.has(slug)) bulkSel.delete(slug); else bulkSel.add(slug);
         bulkLastIdx=i;
+      } else {
+        bulkSel=new Set([slug]);
+        bulkLastIdx=i;
       }
+      bulkShow=slug;
       detailBulk();
     };
   });
+  const bs=$('#bulkSort'); if(bs){ bs.value=bulkSort; bs.onchange=()=>{ bulkSort=bs.value; bulkLastIdx=null; detailBulk(); }; }
   $('#bulkAll').onclick=()=>{ list.forEach(l=>bulkSel.add(l.slug)); detailBulk(); };
   $('#bulkNone').onclick=()=>{ bulkSel.clear(); bulkLastIdx=null; detailBulk(); };
   $('#bulkDemote').onclick=()=>bulkAct('demote');
@@ -354,7 +370,7 @@ async function bulkAct(kind){
   const r=await (await postJSON('/api/demote-bulk',{game:curGame,slugs})).json();
   if(r.ok){
     toast(word+'d '+slugs.length+' image(s)');
-    bulkSel.clear(); bulkLastIdx=null; ver++;
+    bulkSel.clear(); bulkLastIdx=null; bulkShow=null; ver++;
     await loadGame(curGame); renderItems(); openItem('__bulk__');
   } else toast('Error: '+(r.error||'failed'));
 }
@@ -577,7 +593,7 @@ function renderNoteStatus(k){
 // Scene box or the In-game prose updates the Composed prompt in real time).
 // Artist medium leads + governs lighting (keep in sync with ARTIST_LEAD in review-server.cjs
 // server scope and gen-room-images.cjs).
-const ARTIST_LEAD='This medium is the PRIMARY instruction for STYLE: render the entire image in this medium and let it govern the linework, palette, colour treatment and finish. But the SCENE itself sets the overall brightness and value key: when the scene describes a dim, dark, or barely-lit space, render it genuinely low-key and shadow-dominated, mostly dark with only the light the scene names, and do NOT add light sources, glow, bright skies or bright reflective surfaces the scene does not mention in order to manufacture contrast.';
+const ARTIST_LEAD='Render entirely in this medium; let it govern linework, palette and finish. Light each space by what the scene names: genuinely dark where it calls for dark, lit by any source it names, otherwise soft, even and clearly readable — never a murky gloom or an invented dramatic spotlight.';
 function composedPrompt(){
   const gi=GAMEINFO[curGame]||{}; const l=curLoc||{};
   const app=gi.app||'';

@@ -34,12 +34,31 @@
         "inside → Cell, Possibly"
       ],
       "description": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
-      "scene": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
-      "prompt": "Scene: This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. Only the floor is smooth -- a fine white surface beneath your feet. There is a narrow gap in the east wall.",
+      "scene": "This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. The four walls are unseamed, unsmoothed grey rock; the stone ceiling is low, crowding roughly down. Only the floor is smooth -- fine-grained white stone beneath your feet, white enough to show faint smudges where you lay. The only opening is a narrow, oblong gap in the east wall -- not much of a doorway, but big enough to get through.",
+      "prompt": "Scene: This space, barely wider than outstretched arms, seems to have been chopped raw and square from unfinished stone. The four walls are unseamed, unsmoothed grey rock; the stone ceiling is low, crowding roughly down. Only the floor is smooth -- fine-grained white stone beneath your feet, white enough to show faint smudges where you lay. The only opening is a narrow, oblong gap in the east wall -- not much of a doorway, but big enough to get through.",
       "enteredBy": [
         "west ← Narrow Hallway"
       ],
-      "defaultFacing": "west"
+      "defaultFacing": "west",
+      "sceneExtras": [
+        {
+          "cmd": "examine gap",
+          "text": "You see a narrow, oblong opening in the east wall. Not much of a doorway, but big enough to get through."
+        },
+        {
+          "cmd": "examine wall",
+          "text": "The four walls are unseamed, unsmoothed grey rock. The only opening is a narrow gap to the east."
+        },
+        {
+          "cmd": "examine floor",
+          "text": "The floor is also stone, but fine-grained and smooth -- not quite polished. It is very white; white enough to show faint smudges where you lay."
+        },
+        {
+          "cmd": "examine ceiling",
+          "text": "The stone ceiling is low, crowding roughly down on your head."
+        }
+      ],
+      "recapturedFrom": "manual-probe 2026-07-02 (x gap / x wall / x floor / x ceiling verified via play.cjs; look through gap = nothing of interest, Narrow Hallway beyond is windowless)"
     },
     {
       "name": "Narrow Hallway",
