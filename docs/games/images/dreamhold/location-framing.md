@@ -667,11 +667,18 @@ one strong shared register, authored once here:
 - **Vantage:** a stone passage where great columns and masses of stone rise floor-to-ceiling and the
   tunnel divides and rejoins around them in a confusing tangle of minor branches; twisted stalactite
   vault above.
+- **Light (verified — cross-room evidence):** deep unlit natural caverns; the player carries the lit
+  straw torch through this whole region ("your torchlight", Vaulting Cavern transcript). Lit by
+  flickering handheld torchlight from the viewpoint (no bearer shown); the branch tunnels fall away
+  into cave-blackness beyond its reach.
 
 ### dead-end
 - **Vantage:** a round water-worn rock alcove where the passage abruptly ends; the far wall is dressed
   granite (an intrusion in the natural cave) set with a heavy tightly-shut iron door (high sill, iron
   bar handle, no keyhole). Show the iron door as the focal feature.
+- **Light (verified — cross-room evidence):** same cavern region as confusing-passage — unlit, seen by
+  the carried torch. Flickering torchlight from the viewpoint (no bearer shown) on the granite and
+  iron; darkness pooling back down the passage behind.
 
 ### cistern-west  — member: Cistern (ANCHOR)
 - **Vantage (10a):** at the **west** edge, the heavy iron door just swung shut **behind the viewpoint**
