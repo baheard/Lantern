@@ -117,9 +117,10 @@ exists in the dark states.
   a "red bauble."
 - **Shadow Path (Night/Unearthly only):** the sail-shadow becomes a literal **solid black tongue of
   shadow bridging the ravine** — you walk out on it, away from the dome toward the mountain face; it
-  narrows to a point ("far west"). It ends at a **ledge** on the cliff face (a torn black mask sits
-  there — DROP, takeable). Render the shadow as a flat black ribbon hanging impossibly in air, the lit
-  dome behind, the cliff ahead.
+  narrows to a point ("far west"). It ends at a **ledge** on the cliff face — NOT a broad rock shelf
+  but a thin **shelved crack in the stone, only a few inches wide, angling diagonally across several
+  feet of the cliff face**, with a torn black mask balanced on it (DROP, takeable). Render the shadow
+  as a flat black ribbon hanging impossibly in air, the lit dome behind, the cliff ahead.
 - **Vantage convention:** stand on the walkway, dome on the mountain side at your shoulder, the open
   drop and valley on the other side. Keep the same dome + valley + ravine across all stations; only the
   sky and the shadow-bridge change.

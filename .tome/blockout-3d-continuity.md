@@ -198,6 +198,18 @@ locked renderer: dome+walkway+opening+valley and the brass disk+globe all build 
   bare `?game=&volume=`.
 - **Lighting/sky states are NOT separate blockouts** — one geometry serves day/night/unearthly
   (catwalk) and dark/lit/starry (dome); the state is a restyle prompt delta on the same clay.
+- **Prose omission is CONTINGENT on the final vantage — scrub the scene AFTER you position the
+  camera, not before (dreamhold `ledge-night`, 2026-07-01).** The restyle paints the WORDS, even a
+  background clause with no clay behind it and even when the frame is already full: `ledge-night`
+  pitched straight up at a rock cliff that filled the frame, yet a trailing "Black star-thick sky,
+  haloed moon." still forced sky into the shot. Filling the frame with clay does NOT suppress it —
+  only deleting the words does. But you cannot know WHICH words to delete until the vantage is set,
+  because what's legitimately in frame decides what's describable: sky belongs in `catwalk-north-night`
+  (looks across the ravine, sky above the mountain) but NOT in `ledge-night` (points up into rock).
+  So the order is: position the camera → see what the frame actually contains → then strip the scene
+  of anything the frame no longer shows. Replace a deleted environment clause with a pure LIGHTING cue
+  that names no object ("lit only by the fire-glow of the dome behind, the rock in deep night shadow")
+  so the night mood survives without re-summoning the sky.
 - First-pass cameras are deliberately rough; the render→look→adjust loop (renderer "Update
   vantage") is the human refine phase, exactly as the theatre took 3–4 iterations.
 

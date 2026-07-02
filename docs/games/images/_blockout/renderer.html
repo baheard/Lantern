@@ -36,6 +36,13 @@
   #resultCap .cap-file{display:block;margin-top:2px;font-weight:400;font-size:11px;color:#cfc6dc;
        word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;pointer-events:auto;user-select:text}
   #result .ph{color:#6a6478;text-align:center;padding:24px;line-height:1.6}
+  /* Clay reference chip — the clay frame this vantage was last rendered from, pinned top-right
+     over the result so you can eyeball render-vs-clay. Click to open full size. Hidden if no clay
+     exists (prose-only shots, or a vantage never generated via the blockout). */
+  #clayChip{position:absolute;top:6px;right:6px;z-index:3;cursor:zoom-in;display:flex;flex-direction:column;
+       align-items:center;gap:1px;background:rgba(0,0,0,.55);padding:3px;border-radius:5px}
+  #clayChip img{height:74px;width:auto;border:1px solid #6c6c74;border-radius:3px;display:block;object-fit:contain}
+  #clayChip span{font-size:9px;color:#cbbf9a;letter-spacing:.5px;pointer-events:none}
   /* height = thumb (96) + room for the horizontal scrollbar, so the scrollbar never overlaps
      the thumbnails. align-items:flex-start keeps thumbs pinned to top. */
   #gallery{flex:0 0 auto;height:116px;display:flex;align-items:flex-start;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px}
@@ -621,8 +628,12 @@ function setResult(file) {
   lastFile = file || null;
   const name = (INFO[currentView] || {}).name || currentView || '';
   const gInGame = !!(GENS.find((x) => x.file === file) || {}).inGame;
+  const clayUrl = currentView ? imgUrl(currentView + '.clay.png') : '';
+  const clayChip = file && clayUrl
+    ? `<div id="clayChip" title="Last clay this vantage was rendered from — click to open full size" onclick="window.open('${clayUrl}','_blank')"><img src="${clayUrl}" alt="clay" onerror="this.closest('#clayChip').style.display='none'"><span>CLAY</span></div>`
+    : '';
   document.getElementById('result').innerHTML = file
-    ? `<div id="resultCap">${name}${gInGame ? ' <span class="ingame-tag">★ in game</span>' : ''}<span class="cap-file">${file}</span></div><img src="${imgUrl(file)}" alt="gen">`
+    ? `<div id="resultCap">${name}${gInGame ? ' <span class="ingame-tag">★ in game</span>' : ''}<span class="cap-file">${file}</span></div>${clayChip}<img src="${imgUrl(file)}" alt="gen">`
     : '<div class="ph">No shot yet from this vantage — Generate one.</div>';
   document.querySelectorAll('#gallery .thumb').forEach((t) => t.classList.toggle('on', t.dataset.f === file));
   // Image note (shared with the reviewer's _review-notes.json, keyed per shot).

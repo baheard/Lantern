@@ -4,51 +4,51 @@
   "volume": "outer-catwalk",
   "title": "Outer Catwalk",
   "source": "location-framing.md → Volume: Outer Catwalk (anchor catwalk-south)",
-  "frame": "+X east, +Z south, +Y up; north (mountain side) at -Z. Geometry is state-independent: day/night/unearthly differ only in sky+light, so one blockout serves all three states (relight on the clay).",
+  "frame": "+X east, +Z south, +Y up; north (mountain side) at -Z. Geometry is state-independent: day/night/unearthly differ only in sky+light, so one blockout serves all three states (relight on the clay). Dome is a full sphere sunk so its equator sits AT the deck plane (y0) — only the top hemisphere shows, giving a flat-based dome with no inward bottom curve; the buried lower half is occluded by the deck + near frame.",
   "background": "#9a9a9a",
   "fog": {
-    "near": 45,
-    "far": 140
+    "near": 55,
+    "far": 170
   },
   "parts": [
     {
       "name": "promontory + iron walkway disk",
       "cyl": {
-        "r": 7,
-        "len": 0.5,
+        "r": 9.5,
+        "len": 0.6,
         "axis": "y"
       },
       "at": [
         0,
-        -0.25,
+        -0.3,
         0
       ],
       "color": "#6c6c74",
       "role": "floor",
-      "detail": "railless iron catwalk girdling the dome — its outer ring IS the walkway, edges drop straight off"
+      "detail": "railless iron catwalk girdling the dome — its outer ring IS the walkway (~2.5 units of deck between the dome base and the edge), edges drop straight off"
     },
     {
       "name": "translucent dome",
-      "sphere": 5,
+      "sphere": 7,
       "at": [
         0,
-        4.4,
+        0,
         0
       ],
       "role": "dome",
-      "detail": "small pale translucent dome the catwalk circles"
+      "detail": "pale translucent dome the catwalk circles — a FULL sphere sunk to y0 so its equator meets the deck; render only the flat-based hemisphere above the walkway, NOT a ball (no inward curve at the base)"
     },
     {
       "name": "round opening (ladder down) - south flank",
       "box": [
-        1.3,
-        1.3,
+        1.6,
+        1.6,
         0.4
       ],
       "at": [
         0,
-        1.9,
-        4.7
+        2.6,
+        6.5
       ],
       "role": "opening",
       "detail": "round opening in the dome's south flank, ladder down inside"
@@ -56,29 +56,45 @@
     {
       "name": "iron steps to opening - south",
       "box": [
-        1.5,
-        0.5,
-        1.3
+        1.8,
+        0.6,
+        1.5
       ],
       "at": [
         0,
-        0.4,
-        5.7
+        0.5,
+        7.8
       ],
       "role": "steps",
       "detail": "few iron steps climbing the dome flank to the opening"
     },
     {
+      "name": "promontory rock pillar (below deck)",
+      "cyl": {
+        "r": 9.2,
+        "len": 30,
+        "axis": "y"
+      },
+      "at": [
+        0,
+        -15.6,
+        0
+      ],
+      "color": "#73695e",
+      "role": "rock",
+      "detail": "the promontory's rock pillar falling sheer away below the catwalk"
+    },
+    {
       "name": "mountain cliff (north, across ravine)",
       "box": [
-        44,
-        42,
-        9
+        56,
+        56,
+        12
       ],
       "at": [
         0,
-        13,
-        -18
+        18,
+        -24
       ],
       "color": "#73695e",
       "role": "rock",
@@ -88,30 +104,30 @@
     {
       "name": "ledge on cliff face - north",
       "box": [
-        2.4,
+        2.6,
         0.4,
         1.3
       ],
       "at": [
         0,
-        6.5,
-        -13.2
+        8.5,
+        -17.8
       ],
       "color": "#7a7066",
       "role": "rock",
-      "detail": "tiny ledge just visible on the cliff face across the ravine"
+      "detail": "thin shelved crack just visible on the cliff face across the ravine, a torn black mask balanced on it at night"
     },
     {
       "name": "valley floor far below",
       "box": [
-        90,
+        120,
         1,
-        90
+        120
       ],
       "at": [
         0,
-        -26,
-        18
+        -34,
+        24
       ],
       "role": "valley",
       "detail": "vast bright-green valley a long way down on the open side"
@@ -119,14 +135,14 @@
     {
       "name": "terraced garden below (south)",
       "box": [
-        12,
-        0.6,
-        7
+        15,
+        0.7,
+        9
       ],
       "at": [
         0,
-        -7,
-        12
+        -9,
+        16
       ],
       "role": "valley",
       "detail": "small terraced garden of knotted spiralled paths, just below the south edge"
@@ -134,14 +150,14 @@
     {
       "name": "terraced garden lower step (south)",
       "box": [
-        9,
-        0.6,
-        5
+        11,
+        0.7,
+        6
       ],
       "at": [
         0,
-        -14,
-        16
+        -18,
+        21
       ],
       "role": "valley"
     }
@@ -149,55 +165,55 @@
   "cameras": {
     "catwalk-south": {
       "pos": [
-        -2.89,
+        -4.05,
         2.55,
-        11.28
+        15.8
       ],
       "look": [
-        -0.35,
+        -0.49,
         1.94,
-        5.88
+        8.2
       ],
       "fov": 62
     },
     "catwalk-west": {
       "pos": [
-        -6,
-        1.3,
-        -1.2
+        -8.4,
+        1.6,
+        -1.68
       ],
       "look": [
-        -5.4,
-        -0.4,
-        5
+        -5.0,
+        0.6,
+        7
       ],
-      "fov": 60
+      "fov": 68
     },
     "catwalk-north": {
       "pos": [
-        7.23,
+        10.1,
         1.61,
-        -1.08
+        -1.5
       ],
       "look": [
-        2.94,
+        4.1,
         1.62,
-        -5.27
+        -7.4
       ],
       "fov": 64
     },
     "catwalk-east": {
       "pos": [
-        2.83,
-        3.45,
-        7.85
+        8.6,
+        1.8,
+        -2.5
       ],
       "look": [
-        5.3,
-        2.69,
-        2.44
+        5.2,
+        0.9,
+        6.6
       ],
-      "fov": 60
+      "fov": 62
     }
   },
   "members": [
